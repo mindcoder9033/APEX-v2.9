@@ -1,0 +1,1336 @@
+/* ==========================================================================
+   APEX - Racing Telemetry Analysis Tool
+   Design System & Master Stylesheet (F1 Pit-Wall OLED Theme)
+   ========================================================================== */
+
+/* --- CSS Variables & Design Tokens --- */
+:root {
+  /* Color Palette */
+  --color-bg: #000000;
+  --color-surface: #121212;
+  --color-surface-card: #1A1A1A;
+  --color-surface-elevated: #242424;
+  --color-surface-input: #2A2A2A;
+  
+  --color-border: #2A2A2A;
+  --color-border-bright: #3A3A3A;
+  --color-border-focus: #E10600;
+
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #8A8A8A;
+  --color-text-muted: #555555;
+  --color-text-accent: #E10600;
+
+  /* Motorsport Accents */
+  --color-f1-red: #E10600;
+  --color-f1-red-dark: #B80500;
+  --color-f1-red-glow: rgba(225, 6, 0, 0.25);
+  --color-f1-red-subtle: rgba(225, 6, 0, 0.08);
+
+  /* Status Colors */
+  --color-success: #00CC66;
+  --color-success-glow: rgba(0, 204, 102, 0.3);
+  --color-warning: #FFCC00;
+  --color-warning-glow: rgba(255, 204, 0, 0.3);
+  --color-error: #FF3333;
+  --color-error-glow: rgba(255, 51, 51, 0.3);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* 45° Angle Chamfer Cut Metrics */
+  --cut-sm: 8px;
+  --cut-md: 14px;
+  --cut-lg: 20px;
+
+  /* Transitions */
+  --trans-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Reset & Base Styles --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* --- Precision 45° Angle Chamfer Cuts --- */
+.chamfer-br {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-md)), calc(100% - var(--cut-md)) 100%, 0 100%);
+}
+
+.chamfer-tl-br {
+  clip-path: polygon(var(--cut-md) 0, 100% 0, 100% calc(100% - var(--cut-md)), calc(100% - var(--cut-md)) 100%, 0 100%, 0 var(--cut-md));
+}
+
+.chamfer-all-corners {
+  clip-path: polygon(
+    var(--cut-sm) 0,
+    calc(100% - var(--cut-sm)) 0,
+    100% var(--cut-sm),
+    100% calc(100% - var(--cut-sm)),
+    calc(100% - var(--cut-sm)) 100%,
+    var(--cut-sm) 100%,
+    0 calc(100% - var(--cut-sm)),
+    0 var(--cut-sm)
+  );
+}
+
+/* --- Layout Architecture --- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: var(--space-md) var(--space-lg);
+  gap: var(--space-lg);
+}
+
+/* --- Top Navigation Header --- */
+.pit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.pit-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-f1-red) 0%, transparent 60%);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.brand-logo {
+  font-family: var(--font-sans);
+  font-weight: 900;
+  font-size: 24px;
+  letter-spacing: 0.15em;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-logo span.accent {
+  color: var(--color-f1-red);
+}
+
+.brand-tagline {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.12em;
+  padding-left: var(--space-md);
+  border-left: 1px solid var(--color-border);
+}
+
+.header-status-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* Status Indicator Pill */
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #0D0D0D;
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-error);
+  box-shadow: 0 0 10px var(--color-error-glow);
+  transition: var(--trans-smooth);
+}
+
+.status-pill.connected .status-dot {
+  background-color: var(--color-success);
+  box-shadow: 0 0 12px var(--color-success);
+  animation: pulse-success 2s infinite;
+}
+
+.status-pill.connecting .status-dot {
+  background-color: var(--color-warning);
+  box-shadow: 0 0 12px var(--color-warning);
+  animation: pulse-warning 1s infinite;
+}
+
+@keyframes pulse-success {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* --- Buttons & CTAs --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--trans-fast);
+  color: var(--color-text-primary);
+  background: var(--color-surface-card);
+  user-select: none;
+}
+
+.btn:hover {
+  transform: translateY(-1px) scale(1.02);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--color-f1-red);
+  color: #FFFFFF;
+  border-color: var(--color-f1-red);
+  box-shadow: 0 4px 15px var(--color-f1-red-glow);
+}
+
+.btn-primary:hover {
+  background: var(--color-f1-red-dark);
+  box-shadow: 0 6px 20px rgba(225, 6, 0, 0.4);
+}
+
+.btn-recording {
+  background: #CC0000;
+  animation: record-pulse 1.5s infinite;
+}
+
+@keyframes record-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(204, 0, 0, 0.5); }
+  50% { box-shadow: 0 0 25px rgba(204, 0, 0, 0.9); }
+}
+
+.btn-secondary {
+  background: var(--color-surface-input);
+  border-color: var(--color-border-bright);
+}
+
+.btn-secondary:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-f1-red);
+}
+
+.btn-icon {
+  padding: 8px 12px;
+}
+
+/* --- Main Dashboard Grid --- */
+.pit-dashboard-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr 340px;
+  gap: var(--space-lg);
+  align-items: start;
+}
+
+/* --- Panels & Cards --- */
+.pit-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  position: relative;
+  transition: var(--trans-smooth);
+}
+
+.pit-card:hover {
+  border-color: var(--color-border-bright);
+}
+
+.pit-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pit-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pit-card-title::before {
+  content: '';
+  width: 4px;
+  height: 12px;
+  background: var(--color-f1-red);
+  display: inline-block;
+}
+
+/* --- Center Cockpit HUD --- */
+.center-hud-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Shift Lights RPM Bar */
+.shift-lights-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #0E0E0E;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+}
+
+.shift-lights-header {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.shift-lights-bar {
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 4px;
+  height: 14px;
+}
+
+.shift-led {
+  background: #202020;
+  border: 1px solid #141414;
+  transition: background 0.05s ease;
+}
+
+.shift-led.green.active {
+  background: #00FF66;
+  box-shadow: 0 0 10px #00FF66;
+}
+
+.shift-led.yellow.active {
+  background: #FFCC00;
+  box-shadow: 0 0 10px #FFCC00;
+}
+
+.shift-led.red.active {
+  background: #FF0000;
+  box-shadow: 0 0 10px #FF0000;
+}
+
+.shift-led.purple.active {
+  background: #CC00FF;
+  box-shadow: 0 0 12px #CC00FF;
+  animation: flash-redline 0.15s infinite alternate;
+}
+
+@keyframes flash-redline {
+  from { opacity: 1; }
+  to { opacity: 0.4; }
+}
+
+/* Speed & Gear Readout HUD */
+.hud-telemetry-display {
+  display: grid;
+  grid-template-columns: 1fr 140px 1fr;
+  align-items: center;
+  background: #0A0A0A;
+  border: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  text-align: center;
+  position: relative;
+}
+
+.hud-telemetry-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, var(--color-f1-red-subtle) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.speed-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.speed-value {
+  font-family: var(--font-mono);
+  font-size: 64px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-unit {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.15em;
+  margin-top: 4px;
+}
+
+.gear-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #161616;
+  border: 2px solid var(--color-f1-red);
+  padding: 12px;
+  min-height: 110px;
+  box-shadow: 0 0 20px var(--color-f1-red-glow);
+}
+
+.gear-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.1em;
+}
+
+.gear-value {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  font-weight: 900;
+  color: var(--color-f1-red);
+  line-height: 1;
+}
+
+.rpm-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.rpm-value {
+  font-family: var(--font-mono);
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.rpm-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.1em;
+}
+
+/* Driver Inputs (Pedals & Steering) */
+.pedals-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.pedal-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.pedal-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.pedal-meter-bg {
+  width: 100%;
+  height: 140px;
+  background: #0E0E0E;
+  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.pedal-meter-fill {
+  width: 100%;
+  height: 0%;
+  transition: height 0.05s ease-out;
+}
+
+.pedal-meter-fill.throttle {
+  background: linear-gradient(to top, #008844, #00FF66);
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
+}
+
+.pedal-meter-fill.brake {
+  background: linear-gradient(to top, #880000, #FF0000);
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.4);
+}
+
+.pedal-meter-fill.clutch {
+  background: linear-gradient(to top, #005588, #0099FF);
+  box-shadow: 0 0 10px rgba(0, 153, 255, 0.4);
+}
+
+.pedal-percent {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Steering Angle Bar */
+.steering-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: var(--space-md);
+}
+
+.steering-track {
+  width: 100%;
+  height: 16px;
+  background: #0E0E0E;
+  border: 1px solid var(--color-border);
+  position: relative;
+}
+
+.steering-center-mark {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-text-secondary);
+  transform: translateX(-50%);
+}
+
+.steering-indicator {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 12px;
+  background: var(--color-f1-red);
+  left: 50%;
+  transform: translateX(-50%);
+  transition: left 0.05s ease-out;
+  box-shadow: 0 0 8px var(--color-f1-red);
+}
+
+/* --- Left Column: Stint & Session Manager --- */
+.timer-hero-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #0D0D0D;
+  border: 1px solid var(--color-border);
+  padding: var(--space-md);
+  margin-top: var(--space-xs);
+}
+
+.timer-hero-value {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-hero-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.1em;
+}
+
+.lap-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.stat-cell {
+  background: #141414;
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-cell-label {
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-cell-value {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: 2px;
+}
+
+.stat-cell-value.accent {
+  color: var(--color-f1-red);
+}
+
+/* --- Right Column: G-G Diagram & Tire Dynamics --- */
+.g-target-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+#gg-canvas {
+  background: #0B0B0B;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.g-readout-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.tires-matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-top: var(--space-xs);
+}
+
+.tire-card {
+  background: #141414;
+  border: 1px solid var(--color-border);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tire-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.tire-temp {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+/* --- Glowing Separators --- */
+.separator-glow {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(225, 6, 0, 0.4) 20%,
+    rgba(225, 6, 0, 0.4) 80%,
+    transparent
+  );
+  margin: var(--space-sm) 0;
+}
+
+/* --- Settings Modal --- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border-bright);
+  width: 90%;
+  max-width: 520px;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 30px var(--color-f1-red-glow);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-md);
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-primary);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.form-input {
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color var(--trans-fast);
+}
+
+.form-input:focus {
+  border-color: var(--color-f1-red);
+  box-shadow: 0 0 10px var(--color-f1-red-glow);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-md);
+}
+
+/* --- Coaching & Analysis Report Styles --- */
+.coaching-feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+
+.coaching-card {
+  background: #141414;
+  border: 1px solid var(--color-border);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.coaching-card.severity-high {
+  border-left: 3px solid var(--color-f1-red);
+}
+
+.coaching-card.severity-medium {
+  border-left: 3px solid var(--color-warning);
+}
+
+.coaching-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coaching-rule-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.coaching-corner-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: #202020;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  color: var(--color-f1-red);
+  font-weight: 700;
+}
+
+.coaching-quote {
+  font-style: italic;
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  border-left: 2px solid var(--color-border-bright);
+  padding-left: 8px;
+  margin: 4px 0;
+}
+
+.coaching-action {
+  font-size: 12px;
+  color: #E0E0E0;
+  font-weight: 500;
+}
+
+/* Corner Telemetry Table */
+.table-container {
+  overflow-x: auto;
+}
+
+.corner-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-align: left;
+}
+
+.corner-table th {
+  background: #111111;
+  color: var(--color-text-secondary);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.corner-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #1C1C1C;
+  color: var(--color-text-primary);
+}
+
+.corner-table tr:hover td {
+  background: #181818;
+}
+
+/* --- 2D Vector Track Map Styles --- */
+.track-map-dashboard-card {
+  background: #0D0D0D;
+  border: 1px solid var(--color-border);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: 4px;
+}
+
+.track-map-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.track-map-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.track-map-render-container {
+  width: 100%;
+  min-height: 320px;
+  background: #080808;
+  border: 1px solid #1A1A1A;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.track-map-svg {
+  width: 100%;
+  height: auto;
+  max-height: 440px;
+  display: block;
+}
+
+.track-segment {
+  transition: stroke-width 0.2s ease, opacity 0.2s ease;
+}
+
+.track-segment:hover {
+  stroke-width: 7;
+  cursor: pointer;
+}
+
+.turn-overlay-marker {
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.turn-overlay-marker:hover {
+  transform: scale(1.3);
+}
+
+.track-map-issues-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: #111111;
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  border-radius: 2px;
+  flex-wrap: wrap;
+}
+
+.issues-bar-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-f1-red);
+  letter-spacing: 0.05em;
+}
+
+.issues-tags-list {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.issue-tag-pill {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: #1C1C1C;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.issue-tag-pill.severity-high {
+  border-color: var(--color-f1-red);
+  color: var(--color-f1-red);
+  background: rgba(225, 6, 0, 0.1);
+}
+
+.issue-tag-pill.severity-medium {
+  border-color: var(--color-warning);
+  color: var(--color-warning);
+  background: rgba(229, 169, 16, 0.1);
+}
+
+/* --- Tire Dynamics & Management Section --- */
+.tire-management-dashboard-card {
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-top: var(--space-md);
+}
+
+.tire-grid-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+}
+
+@media (max-width: 900px) {
+  .tire-grid-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.tire-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tire-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 6px;
+}
+
+.tire-name {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.tire-status-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.tire-status-badge.status-optimal {
+  background: rgba(0, 204, 102, 0.15);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.tire-status-badge.status-cold {
+  background: rgba(0, 153, 255, 0.15);
+  color: #0099FF;
+  border: 1px solid #0099FF;
+}
+
+.tire-status-badge.status-overheated {
+  background: rgba(225, 6, 0, 0.15);
+  color: var(--color-f1-red);
+  border: 1px solid var(--color-f1-red);
+}
+
+.tire-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.tire-metric-label {
+  color: var(--color-text-secondary);
+  font-size: 10px;
+}
+
+.tire-metric-value {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.tire-diagnostics-bar {
+  background: #111111;
+  border: 1px solid var(--color-border);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* --- Delta Comparison & Skip Barber Badges --- */
+.badge-type1 {
+  background: rgba(255, 215, 0, 0.15);
+  color: #FFD700;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.badge-type2 {
+  background: rgba(255, 165, 0, 0.15);
+  color: #FFA500;
+  border: 1px solid rgba(255, 165, 0, 0.4);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.badge-type3 {
+  background: rgba(0, 204, 255, 0.15);
+  color: #00CCFF;
+  border: 1px solid rgba(0, 204, 255, 0.4);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.delta-priority-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-f1-red);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform var(--trans-fast), border-color var(--trans-fast);
+}
+
+.delta-priority-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-border-bright);
+}
+
+.delta-priority-card.type1 { border-left-color: #FFD700; }
+.delta-priority-card.type2 { border-left-color: #FFA500; }
+.delta-priority-card.type3 { border-left-color: #00CCFF; }
+
+/* --- Responsive Breakpoints --- */
+@media (max-width: 1280px) {
+  .pit-dashboard-grid {
+    grid-template-columns: 300px 1fr 300px;
+    gap: var(--space-md);
+  }
+  .speed-value { font-size: 52px; }
+  .gear-value { font-size: 44px; }
+}
+
+@media (max-width: 1024px) {
+  .pit-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .hud-telemetry-display {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-container {
+    padding: var(--space-sm);
+  }
+  .pit-header {
+    flex-direction: column;
+    gap: var(--space-md);
+    align-items: stretch;
+  }
+  .hud-telemetry-display {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+  }
+}
+
+/* ==========================================================================
+   Modals, Dialogs & Settings Forms
+   ========================================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: var(--space-md);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--trans-smooth);
+}
+
+.modal-backdrop.active {
+  display: flex;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-bright);
+  max-width: 520px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(225, 6, 0, 0.15);
+  position: relative;
+  animation: modal-enter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modal-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.form-input {
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color var(--trans-fast), box-shadow var(--trans-fast);
+}
+
+.form-input:focus {
+  border-color: var(--color-f1-red);
+  box-shadow: 0 0 10px var(--color-f1-red-glow);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+

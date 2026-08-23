@@ -1,0 +1,27 @@
+{
+  "name": "apex-telemetry",
+  "version": "1.0.0",
+  "description": "APEX: Racing Telemetry Analysis Tool for Forza Motorsport 2023",
+  "main": "src/server/udp-proxy.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server/udp-proxy.js",
+    "proxy": "node src/server/udp-proxy.js",
+    "mock:stream": "node src/server/mock-telemetry-feed.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "keywords": [
+    "forza",
+    "telemetry",
+    "udp",
+    "websocket",
+    "racecraft",
+    "skip-barber"
+  ],
+  "author": "APEX Team",
+  "license": "MIT",
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "ws": "^8.18.0"
+  }
+}

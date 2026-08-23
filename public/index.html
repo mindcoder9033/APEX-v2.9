@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>APEX // Motorsport Pit-Wall Telemetry</title>
+  <meta name="description" content="APEX: Real-Time Racing Telemetry Analysis Tool & Pit-Wall Command Center for Forza Motorsport 2023.">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+  <!-- PDF-Lib for Local Offline Client-Side PDF Generation -->
+  <script src="js/vendor/pdf-lib.min.js"></script>
+
+  <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Top Pit Navigation Header -->
+    <header class="pit-header chamfer-br">
+      <div class="brand-section">
+        <div class="brand-logo">
+          APEX <span class="accent">//</span>
+        </div>
+        <div class="brand-tagline">
+          Telemetry & Racecraft Engine
+        </div>
+      </div>
+
+      <div class="header-status-group">
+        <div id="status-pill" class="status-pill disconnected chamfer-all-corners">
+          <span class="status-dot"></span>
+          <span id="status-text">Bridge Offline</span>
+          <span id="rate-text" style="color: #666; font-size: 10px; margin-left: 4px;">0 pkt/s</span>
+        </div>
+
+        <button id="btn-open-udp-guide" class="btn btn-secondary chamfer-all-corners" title="Forza UDP Setup Guide (U)">
+          <span>📡</span> UDP GUIDE
+        </button>
+
+        <button id="btn-open-settings" class="btn btn-secondary chamfer-all-corners" title="Open Settings (S)">
+          <span>⚙️</span> SETTINGS
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Pit-Wall Dashboard Grid -->
+    <main class="pit-dashboard-grid">
+
+      <!-- LEFT COLUMN: Stint & Session Manager -->
+      <section class="pit-card chamfer-tl-br" aria-label="Session & Stint Controls">
+        <div class="pit-card-header">
+          <h2 class="pit-card-title">Session Control</h2>
+          <span id="display-session-name" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary);">Track Day</span>
+        </div>
+
+        <button id="btn-record" class="btn btn-primary chamfer-br" style="height: 52px; font-size: 14px;">
+          <span>⏺</span> START RECORDING
+        </button>
+
+        <div class="timer-hero-display chamfer-all-corners">
+          <span class="timer-hero-label">Stint Duration</span>
+          <span id="stint-timer-val" class="timer-hero-value">00:00.0</span>
+        </div>
+
+        <div class="separator-glow"></div>
+
+        <div class="lap-stats-grid">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Current Lap</span>
+            <span id="lap-counter-val" class="stat-cell-value accent">L00</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Best Lap</span>
+            <span id="best-lap-val" class="stat-cell-value">--:--.---</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Last Lap</span>
+            <span id="last-lap-val" class="stat-cell-value">--:--.---</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Samples Logged</span>
+            <span id="samples-count-val" class="stat-cell-value">0</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER COLUMN: Cockpit Telemetry HUD -->
+      <section class="center-hud-cluster" aria-label="Live Telemetry HUD">
+        
+        <!-- F1 Shift Lights Tachometer -->
+        <div class="shift-lights-container chamfer-all-corners">
+          <div class="shift-lights-header">
+            <span>ENGINE RPM</span>
+            <span><span id="rpm-val">0</span> <span id="rpm-max" style="color: #666;">/ 8,000</span></span>
+          </div>
+          <div id="shift-lights-bar" class="shift-lights-bar">
+            <!-- Dynamically populated 16 LEDs -->
+          </div>
+        </div>
+
+        <!-- Big Telemetry Speed & Gear Gauge -->
+        <div class="hud-telemetry-display chamfer-tl-br">
+          <div class="speed-metric">
+            <div id="speed-val" class="speed-value">0</div>
+            <div id="speed-unit" class="speed-unit">KM/H</div>
+            <button id="btn-toggle-unit" class="btn btn-secondary chamfer-all-corners" style="padding: 2px 8px; font-size: 9px; margin-top: 6px;">TOGGLE UNIT</button>
+          </div>
+
+          <div class="gear-display chamfer-all-corners">
+            <span class="gear-label">GEAR</span>
+            <span id="gear-val" class="gear-value">N</span>
+          </div>
+
+          <div class="rpm-metric">
+            <span class="rpm-label">POWERBAND</span>
+            <span id="car-class-badge" class="stat-cell-value accent" style="font-size: 28px; margin-top: 4px;">S</span>
+            <span id="car-pi-val" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">PI 798</span>
+          </div>
+        </div>
+
+        <!-- Pedals & Inputs Matrix -->
+        <div class="pit-card chamfer-br">
+          <div class="pit-card-header">
+            <h3 class="pit-card-title">Driver Inputs</h3>
+          </div>
+
+          <div class="pedals-grid">
+            <div class="pedal-column">
+              <span class="pedal-label">Throttle</span>
+              <div class="pedal-meter-bg chamfer-all-corners">
+                <div id="throttle-fill" class="pedal-meter-fill throttle"></div>
+              </div>
+              <span id="throttle-text" class="pedal-percent" style="color: var(--color-success);">0%</span>
+            </div>
+
+            <div class="pedal-column">
+              <span class="pedal-label">Brake</span>
+              <div class="pedal-meter-bg chamfer-all-corners">
+                <div id="brake-fill" class="pedal-meter-fill brake"></div>
+              </div>
+              <span id="brake-text" class="pedal-percent" style="color: var(--color-error);">0%</span>
+            </div>
+
+            <div class="pedal-column">
+              <span class="pedal-label">Clutch</span>
+              <div class="pedal-meter-bg chamfer-all-corners">
+                <div id="clutch-fill" class="pedal-meter-fill clutch"></div>
+              </div>
+              <span id="clutch-text" class="pedal-percent" style="color: #0099FF;">0%</span>
+            </div>
+          </div>
+
+          <div class="steering-container">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary);">
+              <span>STEERING LOCK</span>
+              <span id="steering-text">0%</span>
+            </div>
+            <div class="steering-track chamfer-all-corners">
+              <div class="steering-center-mark"></div>
+              <div id="steering-indicator" class="steering-indicator chamfer-all-corners"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- RIGHT COLUMN: G-G Diagram & Tire Dynamics -->
+      <section class="pit-card chamfer-tl-br" aria-label="Dynamics & Tire Matrix">
+        <div class="pit-card-header">
+          <h2 class="pit-card-title">G-G Friction Target</h2>
+        </div>
+
+        <div class="g-target-container">
+          <canvas id="gg-canvas" width="220" height="220" class="chamfer-all-corners"></canvas>
+          <div class="g-readout-row">
+            <span>LAT: <strong id="g-lat-val" style="color: var(--color-f1-red);">0.00G</strong></span>
+            <span>LONG: <strong id="g-long-val" style="color: var(--color-text-primary);">0.00G</strong></span>
+          </div>
+        </div>
+
+        <div class="separator-glow"></div>
+
+        <div class="pit-card-header">
+          <h3 class="pit-card-title">Tire Temperatures</h3>
+        </div>
+
+        <div class="tires-matrix-grid">
+          <div class="tire-card chamfer-all-corners">
+            <div class="tire-header"><span>FRONT LEFT</span><span>FL</span></div>
+            <div id="tire-temp-fl" class="tire-temp">--°C</div>
+          </div>
+          <div class="tire-card chamfer-all-corners">
+            <div class="tire-header"><span>FRONT RIGHT</span><span>FR</span></div>
+            <div id="tire-temp-fr" class="tire-temp">--°C</div>
+          </div>
+          <div class="tire-card chamfer-all-corners">
+            <div class="tire-header"><span>REAR LEFT</span><span>RL</span></div>
+            <div id="tire-temp-rl" class="tire-temp">--°C</div>
+          </div>
+          <div class="tire-card chamfer-all-corners">
+            <div class="tire-header"><span>REAR RIGHT</span><span>RR</span></div>
+            <div id="tire-temp-rr" class="tire-temp">--°C</div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- POST-STINT ANALYSIS & CORNER COACHING PANEL -->
+    <section id="analysis-report-section" class="pit-card chamfer-tl-br" style="display: none; margin-top: var(--space-md);" aria-label="Post-Stint Racecraft Report">
+      <div class="pit-card-header">
+        <h2 class="pit-card-title">Stint Analysis & Racecraft Coaching</h2>
+        <div style="display: flex; align-items: center; gap: var(--space-md);">
+          <span id="analysis-laps-summary" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">0 Laps Analyzed</span>
+          <button id="btn-export-csv" class="btn btn-secondary chamfer-br" style="padding: 6px 16px; font-size: 11px;">
+            <span>📊</span> EXPORT RAW CSV
+          </button>
+          <button id="btn-download-pdf" class="btn btn-primary chamfer-br" style="padding: 6px 16px; font-size: 11px;">
+            <span>📄</span> DOWNLOAD PDF REPORT
+          </button>
+        </div>
+      </div>
+
+      <!-- SECTION 3: 2D VECTOR TRACK MAP & THE LINE ANALYSIS -->
+      <div class="track-map-dashboard-card chamfer-all-corners">
+        <div class="track-map-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="color: var(--color-f1-red); font-size: 14px;">🏎️</span>
+            <h3 class="pit-card-title">The Line // 2D Vector Track Map & Apex Analysis</h3>
+          </div>
+          <div class="track-map-legend">
+            <span class="legend-item"><span class="legend-color-dot" style="background: #00CC66; box-shadow: 0 0 6px #00CC66;"></span> Full Throttle (>80%)</span>
+            <span class="legend-item"><span class="legend-color-dot" style="background: #E5A910; box-shadow: 0 0 6px #E5A910;"></span> Partial Throttle</span>
+            <span class="legend-item"><span class="legend-color-dot" style="background: #E10600; box-shadow: 0 0 6px #E10600;"></span> Braking (>10%)</span>
+            <span class="legend-item"><span class="legend-color-dot" style="background: #0099FF; box-shadow: 0 0 6px #0099FF;"></span> Coasting</span>
+          </div>
+        </div>
+
+        <div id="track-map-container" class="track-map-render-container">
+          <!-- Dynamic SVG Vector Track Map injected here -->
+        </div>
+
+        <!-- Problem Zones & Line Diagnostics Callout -->
+        <div id="track-map-issues-bar" class="track-map-issues-bar">
+          <span class="issues-bar-label">LINE DIAGNOSTICS:</span>
+          <div id="track-map-issues-tags" class="issues-tags-list">
+            <!-- Dynamic tags for detected line faults -->
+          </div>
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- Coaching Recommendations Grid -->
+      <div class="pit-card-header" style="margin-top: 4px;">
+        <h3 class="pit-card-title">Skip Barber "Going Faster!" Racecraft Feed</h3>
+      </div>
+      <div id="coaching-feed" class="coaching-feed-grid">
+        <!-- Dynamically rendered Skip Barber coaching cards -->
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- Corner Telemetry Table -->
+      <div class="table-container">
+        <h3 class="pit-card-title" style="margin-bottom: var(--space-sm);">Corner-By-Corner Telemetry Breakdown</h3>
+        <table class="corner-table">
+          <thead>
+            <tr>
+              <th>TURN</th>
+              <th>TYPE</th>
+              <th>ENTRY SPD</th>
+              <th>APEX SPD</th>
+              <th>EXIT SPD</th>
+              <th>TAP DELTA</th>
+              <th>TRAIL-BRAKE</th>
+              <th>GEAR</th>
+            </tr>
+          </thead>
+          <tbody id="corner-table-body">
+            <!-- Dynamically rendered rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 4: DELTA LAP COMPARISON MATRIX & SKIP BARBER PRIORITY RANKING -->
+      <div id="delta-comparison-card" class="pit-card chamfer-tl-br" style="background: #151515; border-color: rgba(255, 215, 0, 0.2);">
+        <div class="pit-card-header">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="color: #FFD700;">Delta Lap Comparison Matrix & Skip Barber Priority Ranking</h3>
+            <span class="pit-card-subtitle">Segment Time Loss Attribution (Braking, Mid-Corner, Exit) & Compound Straight Potential</span>
+          </div>
+          <div id="delta-total-gain-badge" class="badge" style="background: rgba(255, 215, 0, 0.15); color: #FFD700; border: 1px solid rgba(255, 215, 0, 0.4); font-family: var(--font-mono); font-size: 11px;">
+            +0.000s POTENTIAL GAIN
+          </div>
+        </div>
+
+        <!-- Delta KPI Summary Grid -->
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md); margin-top: var(--space-sm);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Baseline Comparison</span>
+            <span id="delta-baseline-laps" class="stat-cell-value" style="font-size: 12px;">Best L1 vs Ref L2</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Stint Lap Delta</span>
+            <span id="delta-stint-time" class="stat-cell-value">+0.000s</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Corner vs Straight Loss</span>
+            <span id="delta-corner-straight-split" class="stat-cell-value" style="font-size: 12px;">-- / --</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Skip Barber Corner Types</span>
+            <span id="delta-corner-types-count" class="stat-cell-value" style="font-size: 12px;">0 Type I / 0 Type II / 0 Type III</span>
+          </div>
+        </div>
+
+        <!-- Skip Barber Priority Table -->
+        <div class="table-container">
+          <table class="corner-table">
+            <thead>
+              <tr>
+                <th>TURN</th>
+                <th>SKIP BARBER TYPE</th>
+                <th>BRAKE ZONE Δ</th>
+                <th>MID-CORNER Δ</th>
+                <th>EXIT DRIVE Δ</th>
+                <th>TOTAL LOSS</th>
+                <th>EXIT SPD Δ</th>
+                <th>PROJECTED GAIN</th>
+                <th>RANK</th>
+              </tr>
+            </thead>
+            <tbody id="delta-table-body">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Prioritized Tactical Opportunities Cards -->
+        <div class="pit-card-header" style="margin-top: var(--space-md); margin-bottom: var(--space-xs);">
+          <h4 style="font-size: 11px; font-weight: bold; color: var(--color-f1-red); text-transform: uppercase; letter-spacing: 1px;">Top Coaching Priorities (Ranked By Projected Gain)</h4>
+        </div>
+        <div id="delta-priorities-feed" class="coaching-feed-grid">
+          <!-- Dynamically populated priority coaching cards -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 5: BRAKING & ENTERING (THRESHOLD BRAKING & G-FORCE PROFILES) -->
+      <div id="braking-zones-card" class="braking-zones-dashboard-card chamfer-all-corners" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-f1-red);">🛑</span> Braking & Entering // Threshold Braking & G-Forces
+            </h3>
+            <span class="pit-card-subtitle">Skip Barber "The Procedure" & Peak Deceleration Limits</span>
+          </div>
+          <div id="braking-efficiency-badge" class="badge badge-accent" style="background: rgba(0, 204, 102, 0.15); border: 1px solid var(--color-success); color: var(--color-success); font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            THRESHOLD: --%
+          </div>
+        </div>
+
+        <!-- Braking KPI Cards -->
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Stint Peak Deceleration</span>
+            <span id="braking-peak-decel-val" class="stat-cell-value">-- G</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Threshold Efficiency</span>
+            <span id="braking-avg-efficiency-val" class="stat-cell-value">--%</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">"The Procedure" Consistency</span>
+            <span id="braking-procedure-score-val" class="stat-cell-value">--%</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Total Braking Distance</span>
+            <span id="braking-total-distance-val" class="stat-cell-value" style="font-size: 13px;">-- m</span>
+          </div>
+        </div>
+
+        <!-- Corner Braking Matrix Table -->
+        <div class="table-container">
+          <table class="corner-table">
+            <thead>
+              <tr>
+                <th>TURN</th>
+                <th>TYPE</th>
+                <th>ENTRY SPEED</th>
+                <th>TURN-IN SPEED</th>
+                <th>BRAKE DISTANCE</th>
+                <th>PEAK DECEL</th>
+                <th>THRESHOLD EFFICIENCY</th>
+                <th>THE PROCEDURE STEPPING</th>
+              </tr>
+            </thead>
+            <tbody id="braking-table-body">
+              <!-- Dynamically populated braking zone rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 6: SHIFTING & POWERBAND OPTIMIZATION (POWERTRAIN DYNAMICS & HEEL-AND-TOE QUALITY) -->
+      <div id="shifting-powerband-card" class="shifting-powerband-dashboard-card chamfer-all-corners" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-gold, #FFD700);">⚙️</span> Shifting & Powerband // Powertrain Optimization
+            </h3>
+            <span class="pit-card-subtitle">Skip Barber RPM Powerband Management & Heel-and-Toe Rev-Match Diagnostics</span>
+          </div>
+          <div id="shifting-grade-badge" class="badge" style="background: rgba(0, 204, 102, 0.15); border: 1px solid var(--color-success); color: var(--color-success); font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            GRADE A: OPTIMAL POWERTRAIN
+          </div>
+        </div>
+
+        <!-- Shifting KPI Grid -->
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Powerband Efficiency</span>
+            <span id="shifting-powerband-eff-val" class="stat-cell-value">--%</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Throttle Blip Compliance</span>
+            <span id="shifting-blip-comp-val" class="stat-cell-value">--%</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Brake Modulation Stability</span>
+            <span id="shifting-brake-stab-val" class="stat-cell-value">--%</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Downshift Transitions</span>
+            <span id="shifting-total-downshifts-val" class="stat-cell-value" style="font-size: 13px;">0 shifts</span>
+          </div>
+        </div>
+
+        <!-- Powerband Banner -->
+        <div id="powerband-status-banner" class="guide-step-card chamfer-all-corners" style="background: #141414; border: 1px solid var(--color-border); padding: 12px; margin-bottom: var(--space-md); display: flex; flex-direction: column; gap: 4px;">
+          <div style="font-weight: 700; font-size: 11px; color: #FFD700; text-transform: uppercase;">
+            Engine Torque & Powerband Sweet-Spot Range
+          </div>
+          <div id="powerband-range-text" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">
+            Engine Range: 1,000 RPM (Idle) - 8,000 RPM (Redline) | Target Exit Powerband: 5,550 - 7,440 RPM (65% - 92%)
+          </div>
+          <div id="powerband-faults-text" style="font-size: 11px; font-weight: 600; color: var(--color-success);">
+            Status: 0 Bogging Corners (R-007) | 0 Over-Rev Corners (R-008)
+          </div>
+        </div>
+
+        <!-- Corner Shifting Matrix Table -->
+        <div class="table-container">
+          <table class="corner-table">
+            <thead>
+              <tr>
+                <th>TURN</th>
+                <th>TYPE</th>
+                <th>SELECTED GEAR</th>
+                <th>MIN RPM</th>
+                <th>EXIT RPM</th>
+                <th>POWERBAND %</th>
+                <th>SUGGESTED GEAR</th>
+                <th>STATUS / ADVICE</th>
+              </tr>
+            </thead>
+            <tbody id="shifting-table-body">
+              <!-- Dynamically populated shifting rows -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Heel-and-Toe Downshift Diagnostics Callout -->
+        <div id="downshift-diagnostics-card" class="guide-step-card chamfer-all-corners" style="background: #101010; border-left: 3px solid #0099FF; padding: 12px 14px; margin-top: var(--space-md);">
+          <div style="font-weight: 700; font-size: 11px; color: #0099FF; text-transform: uppercase; margin-bottom: 4px;">
+            Heel-and-Toe & Downshift Quality Diagnostics
+          </div>
+          <div id="downshift-summary-text" style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.5;">
+            Telemetry monitoring downshift rev-matching and pedal modulation stability.
+          </div>
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- 4-Corner Tire Dynamics & Thermal Matrix -->
+      <div id="tire-management-card" class="tire-management-dashboard-card chamfer-tl-br">
+        <div class="pit-card-header">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title">4-Corner Tire Dynamics & Thermal Management</h3>
+
+        <!-- THE PROCEDURE COACHING CARD (SPRINT 9) -->
+        <div class="procedure-coaching-box" style="margin-top: var(--space-md); padding: var(--space-md); background: rgba(0, 204, 102, 0.05); border: 1px solid rgba(0, 204, 102, 0.2); border-radius: 4px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="font-family: var(--font-header); font-size: 12px; font-weight: bold; color: var(--color-success); letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+              <span>🎯</span> SKIP BARBER RACING TECHNIQUE: "THE PROCEDURE"
+            </div>
+            <span id="procedure-status-badge" class="badge badge-accent" style="font-size: 10px; padding: 2px 6px;">BASELINE CALIBRATING</span>
+          </div>
+          <div id="procedure-coaching-text" style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.5;">
+            Practice The Procedure: Step your brake point in small bites (2-meter increments) to find the limit of deceleration without lockup or ABS cycling.
+          </div>
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SPRINT 10: 4-CORNER TIRE DYNAMICS & HEAT DISSIPATION MATRIX -->
+      <div class="analysis-card chamfer-tl-br" style="margin-top: var(--space-md);">
+        <div class="analysis-card-header">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-warning);">🌡️</span> 4-Corner Tire Dynamics // Slip & Thermal Balance
+            </h3>
+            <span class="pit-card-subtitle">Peak Slip Angle Ratio, Core Temps & Axle Wear Diagnostics</span>
+          </div>
+          <div id="tire-balance-badge" class="badge badge-accent" style="font-size: 10px; padding: 3px 8px;">
+            OPTIMAL THERMAL BIAS
+          </div>
+        </div>
+
+        <!-- 4-Corner Tire Cards -->
+        <div class="tire-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-sm);">
+          <div class="tire-card chamfer-all-corners" id="tire-card-fl">
+            <div class="tire-card-header">
+              <span class="tire-name">FRONT LEFT (FL)</span>
+              <span class="tire-status-badge" id="tire-status-fl">OPTIMAL</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Avg / Peak Temp:</span>
+              <span class="tire-metric-value" id="tire-temp-fl">-- / -- °C</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Peak Slip Ratio:</span>
+              <span class="tire-metric-value" id="tire-slip-fl">--</span>
+            </div>
+          </div>
+
+          <div class="tire-card chamfer-all-corners" id="tire-card-fr">
+            <div class="tire-card-header">
+              <span class="tire-name">FRONT RIGHT (FR)</span>
+              <span class="tire-status-badge" id="tire-status-fr">OPTIMAL</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Avg / Peak Temp:</span>
+              <span class="tire-metric-value" id="tire-temp-fr">-- / -- °C</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Peak Slip Ratio:</span>
+              <span class="tire-metric-value" id="tire-slip-fr">--</span>
+            </div>
+          </div>
+
+          <div class="tire-card chamfer-all-corners" id="tire-card-rl">
+            <div class="tire-card-header">
+              <span class="tire-name">REAR LEFT (RL)</span>
+              <span class="tire-status-badge" id="tire-status-rl">OPTIMAL</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Avg / Peak Temp:</span>
+              <span class="tire-metric-value" id="tire-temp-rl">-- / -- °C</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Peak Slip Ratio:</span>
+              <span class="tire-metric-value" id="tire-slip-rl">--</span>
+            </div>
+          </div>
+
+          <div class="tire-card chamfer-all-corners" id="tire-card-rr">
+            <div class="tire-card-header">
+              <span class="tire-name">REAR RIGHT (RR)</span>
+              <span class="tire-status-badge" id="tire-status-rr">OPTIMAL</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Avg / Peak Temp:</span>
+              <span class="tire-metric-value" id="tire-temp-rr">-- / -- °C</span>
+            </div>
+            <div class="tire-metric-row">
+              <span class="tire-metric-label">Peak Slip Ratio:</span>
+              <span class="tire-metric-value" id="tire-slip-rr">--</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="tire-diagnostics-text" class="tire-diagnostics-bar">
+          <!-- Axle balance & tire guidance text -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Settings Drawer / Modal -->
+  <div id="settings-modal" class="modal-backdrop">
+    <div class="modal-card chamfer-tl-br">
+      <div class="modal-header">
+        <h2 class="modal-title">APEX Configuration</h2>
+        <button id="btn-close-settings" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="setting-udp-port">UDP Listener Port (Forza Telemetry)</label>
+        <input type="number" id="setting-udp-port" class="form-input chamfer-all-corners" value="9999">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="setting-ws-url">WebSocket Bridge URL</label>
+        <input type="text" id="setting-ws-url" class="form-input chamfer-all-corners" value="ws://127.0.0.1:8080">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="setting-driver-name">Driver Name</label>
+        <input type="text" id="setting-driver-name" class="form-input chamfer-all-corners" value="APEX Driver">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="setting-session-name">Session / Track Name</label>
+        <input type="text" id="setting-session-name" class="form-input chamfer-all-corners" value="Track Day Session">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="setting-speed-unit">Speed & Distance Units</label>
+        <select id="setting-speed-unit" class="form-input chamfer-all-corners">
+          <option value="kmh" selected>Kilometers Per Hour (KM/H)</option>
+          <option value="mph">Miles Per Hour (MPH)</option>
+        </select>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-save-settings" class="btn btn-primary chamfer-br">SAVE CONFIGURATION</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UDP Setup Guide Modal -->
+  <div id="udp-guide-modal" class="modal-backdrop">
+    <div class="modal-card chamfer-tl-br" style="max-width: 620px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--color-f1-red); font-size: 18px;">📡</span>
+          <h2 class="modal-title">Forza Telemetry UDP Setup Guide</h2>
+        </div>
+        <button id="btn-close-udp-guide" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+      </div>
+
+      <div class="guide-content" style="display: flex; flex-direction: column; gap: var(--space-md);">
+        
+        <p style="color: var(--color-text-secondary); font-size: 13px;">
+          To stream live telemetry from <strong>Forza Motorsport 2023</strong> or <strong>Forza Horizon 5</strong> into APEX, enable Data Out in your game settings:
+        </p>
+
+        <div class="guide-step-card chamfer-all-corners" style="background: #141414; border: 1px solid var(--color-border); padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="font-weight: 700; font-size: 12px; color: var(--color-text-primary); text-transform: uppercase;">
+            1. Open In-Game Settings
+          </div>
+          <p style="font-size: 12px; color: var(--color-text-secondary);">
+            Navigate to: <strong style="color: var(--color-white);">Settings</strong> ➔ <strong style="color: var(--color-white);">Gameplay & HUD</strong> ➔ Scroll down to the <strong style="color: var(--color-f1-red);">Data Out</strong> section.
+          </p>
+        </div>
+
+        <div class="guide-step-card chamfer-all-corners" style="background: #141414; border: 1px solid var(--color-border); padding: 14px; display: flex; flex-direction: column; gap: 10px;">
+          <div style="font-weight: 700; font-size: 12px; color: var(--color-text-primary); text-transform: uppercase;">
+            2. Configure Data Out Parameters
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-family: var(--font-mono); font-size: 11px;">
+            <div style="background: #0D0D0D; border: 1px solid var(--color-border); padding: 8px 10px;">
+              <span style="color: var(--color-text-muted); font-size: 10px; display: block;">DATA OUT</span>
+              <strong style="color: var(--color-success); font-size: 13px;">ON</strong>
+            </div>
+
+            <div style="background: #0D0D0D; border: 1px solid var(--color-border); padding: 8px 10px;">
+              <span style="color: var(--color-text-muted); font-size: 10px; display: block;">PACKET FORMAT</span>
+              <strong style="color: var(--color-white); font-size: 13px;">CAR DASH</strong>
+            </div>
+
+            <div style="background: #0D0D0D; border: 1px solid var(--color-border); padding: 8px 10px;">
+              <span style="color: var(--color-text-muted); font-size: 10px; display: block;">IP ADDRESS</span>
+              <strong style="color: var(--color-white); font-size: 13px;">127.0.0.1 <span style="font-size: 9px; color: #888;">(or LAN IP)</span></strong>
+            </div>
+
+            <div style="background: #0D0D0D; border: 1px solid var(--color-border); padding: 8px 10px;">
+              <span style="color: var(--color-text-muted); font-size: 10px; display: block;">DATA OUT PORT</span>
+              <strong style="color: var(--color-f1-red); font-size: 13px;">9999</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-step-card chamfer-all-corners" style="background: #101010; border-left: 3px solid var(--color-f1-red); padding: 10px 14px;">
+          <div style="font-size: 11px; color: var(--color-text-secondary);">
+            💡 <strong>Xbox to PC Setup:</strong> If playing on an Xbox console, set the <em>Data Out IP Address</em> to your PC's local network IP (e.g. <code>192.168.1.xxx</code>), ensuring both devices are on the same Wi-Fi / LAN.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button id="btn-understood-udp" class="btn btn-primary chamfer-br">GOT IT / CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main ES Module Bootstrap -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
