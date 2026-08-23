@@ -1330,7 +1330,207 @@ html, body {
 .modal-footer {
   display: flex;
   justify-content: flex-end;
+  gap: var(--space-sm);
   padding-top: var(--space-sm);
   border-top: 1px solid var(--color-border);
 }
+
+/* ==========================================================================
+   Searchable Select & Stint Metadata Modal Styling
+   ========================================================================== */
+.searchable-select {
+  position: relative;
+  width: 100%;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border);
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  transition: border-color var(--trans-fast), box-shadow var(--trans-fast);
+  outline: none;
+}
+
+.select-trigger:focus,
+.select-trigger.active {
+  border-color: var(--color-f1-red);
+  box-shadow: 0 0 10px var(--color-f1-red-glow);
+}
+
+.select-value-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select-value-text.has-value {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.select-chevron {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-left: 8px;
+  transition: transform var(--trans-fast);
+}
+
+.select-trigger.active .select-chevron {
+  transform: rotate(180deg);
+  color: var(--color-f1-red);
+}
+
+.select-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #111111;
+  border: 1px solid var(--color-border-bright);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(225, 6, 0, 0.15);
+  z-index: 10005;
+  overflow: hidden;
+  animation: modal-enter 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.select-search-box {
+  padding: 8px;
+  background: #161616;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.select-search-input {
+  width: 100%;
+  background: #0A0A0A;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+}
+
+.select-search-input:focus {
+  border-color: var(--color-f1-red);
+}
+
+.select-options-list {
+  max-height: 220px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+}
+
+.select-group-header {
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-f1-red);
+  background: rgba(225, 6, 0, 0.08);
+  border-bottom: 1px solid rgba(225, 6, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: background var(--trans-fast);
+}
+
+.select-option:hover,
+.select-option.highlighted {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.select-option.selected {
+  background: rgba(225, 6, 0, 0.18);
+}
+
+.select-option.selected .select-option-label {
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+.select-option-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.select-option-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.select-option-sub {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+
+.select-check {
+  color: var(--color-f1-red);
+  font-weight: 800;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.select-no-results {
+  padding: 16px;
+  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.input-error {
+  border-color: var(--color-error) !important;
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.4) !important;
+}
+
+.form-error-msg {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-error);
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.stint-modal-info-box {
+  background: #141414;
+  border: 1px solid var(--color-border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stint-inherited-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
 

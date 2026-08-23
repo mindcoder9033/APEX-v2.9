@@ -7,6 +7,7 @@
 import { AnalysisEngine } from './analysis/index.js';
 import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
+import { StintMetadataModal } from './components/stint-modal.js';
 
 export class SessionManager {
   constructor() {
@@ -22,6 +23,8 @@ export class SessionManager {
 
     this.analysisEngine = new AnalysisEngine();
     this.pdfGenerator = new ClientPdfGenerator();
+    this.stintModal = new StintMetadataModal();
+    this.currentStintMetadata = null;
     this.latestAnalysisReport = null;
 
     // DOM Elements Cache
@@ -161,18 +164,30 @@ export class SessionManager {
         this.btnDownloadPdf.disabled = true;
       }
 
+      const latestSample = this.recordedSamples?.[this.recordedSamples.length - 1];
+      const carClass = latestSample?.vehicle?.carClass || 'S Class';
+      const carPi = latestSample?.vehicle?.carPerformanceIndex ? `PI ${latestSample.vehicle.carPerformanceIndex}` : '';
+
+      const sessionTitle = this.currentStintMetadata?.sessionName || this.settings.sessionName || 'Track Day Stint';
+      const trackTitle = this.currentStintMetadata?.trackName || 'Grand Prix Circuit';
+      const carTitle = this.currentStintMetadata?.carName || 'Custom Vehicle';
+
       const metadata = {
-        sessionName: this.settings.sessionName,
-        driverName: this.settings.driverName,
-        trackName: 'Grand Prix Circuit',
-        carClass: 'S Class',
+        sessionName: sessionTitle,
+        driverName: this.settings.driverName || 'APEX Driver',
+        trackName: trackTitle,
+        circuit: this.currentStintMetadata?.circuit || 'Circuit',
+        layout: this.currentStintMetadata?.layout || 'Full Circuit',
+        carName: carTitle,
+        carClass: carClass,
+        carPi: carPi,
         totalLaps: this.latestAnalysisReport.validLapsCount || 1,
         bestLapTimeStr: this.bestLapVal ? this.bestLapVal.textContent : '--:--.---',
         date: new Date().toISOString().split('T')[0]
       };
 
       const pdfBytes = await this.pdfGenerator.generate(this.latestAnalysisReport, metadata);
-      const safeName = (this.settings.sessionName || 'APEX_Stint').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const safeName = sessionTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
       this.pdfGenerator.download(pdfBytes, `${safeName}_Report.pdf`);
     } catch (err) {
       console.error('[PDF] Error generating PDF report:', err);
@@ -221,7 +236,7 @@ export class SessionManager {
     console.log('[SESSION] Stint recording started.');
   }
 
-  stopRecording() {
+  async stopRecording() {
     this.isRecording = false;
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -235,8 +250,22 @@ export class SessionManager {
 
     console.log(`[SESSION] Stint recording stopped. Total samples: ${this.recordedSamples.length}`);
 
-    // Trigger analysis engine
+    // Trigger metadata prompt & analysis engine
     if (this.recordedSamples.length > 50) {
+      try {
+        const metadata = await this.stintModal.open({
+          driverName: this.settings.driverName
+        });
+        this.currentStintMetadata = metadata;
+
+        const displaySessionName = document.getElementById('display-session-name');
+        if (displaySessionName) {
+          displaySessionName.textContent = metadata.sessionName;
+        }
+      } catch (err) {
+        console.warn('[SESSION] Stint metadata prompt error or dismissed:', err);
+      }
+
       this.runAnalysisReport();
     }
 

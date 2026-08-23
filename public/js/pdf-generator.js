@@ -364,11 +364,15 @@ export class ClientPdfGenerator {
       color: this.colors.f1Red
     });
 
+    const carDisplay = metadata.carName
+      ? (metadata.carClass ? `${metadata.carName} [${metadata.carClass}${metadata.carPi ? ' ' + metadata.carPi : ''}]` : metadata.carName)
+      : (metadata.carClass || 'S Class');
+
     const metaItems = [
       { label: 'DRIVER:', val: metadata.driverName || 'APEX Driver' },
-      { label: 'TRACK:', val: metadata.trackName || 'Grand Prix Circuit' },
+      { label: 'TRACK / LAYOUT:', val: metadata.trackName || 'Grand Prix Circuit' },
       { label: 'SESSION:', val: metadata.sessionName || 'Track Day Stint' },
-      { label: 'CAR CLASS:', val: metadata.carClass || 'S Class' },
+      { label: 'VEHICLE:', val: carDisplay },
       { label: 'DATE RECORDED:', val: metadata.date || new Date().toISOString().split('T')[0] },
       { label: 'LAPS COMPLETED:', val: String(metadata.totalLaps || report.totalLapsCount || 1) },
       { label: 'BEST LAP TIME:', val: metadata.bestLapTimeStr || this.formatTime(report.bestLap?.lapTime) }
@@ -376,9 +380,9 @@ export class ClientPdfGenerator {
 
     let rowY = y - 42;
     metaItems.forEach(item => {
-      page.drawText(item.label, { x: this.margin + 20, y: rowY, size: 9, font: fonts.bold, color: this.colors.textSecondary });
-      page.drawText(item.val, { x: this.margin + 150, y: rowY, size: 9, font: fonts.monoBold, color: this.colors.textPrimary });
-      rowY -= 16;
+      page.drawText(item.label, { x: this.margin + 20, y: rowY, size: 8.5, font: fonts.bold, color: this.colors.textSecondary });
+      page.drawText(item.val, { x: this.margin + 140, y: rowY, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
+      rowY -= 15.5;
     });
 
     // Drawing a minimal, clean outline of the 2D Track Map in the lower bottom right as a graphic
