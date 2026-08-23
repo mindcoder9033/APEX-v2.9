@@ -21,31 +21,33 @@
 gantt
     title APEX Development Roadmap Timeline
     dateFormat  YYYY-MM-DD
-    section Phase 1: MVP Core (v1.0.0)
-    Sprint 1: UDP Pipeline & Parser        :p1_s1, 2026-08-24, 7d
-    Sprint 2: UI Foundation & Design System :p1_s2, 2026-08-31, 7d
-    Sprint 3: Lap Segmentation & Algorithms:p1_s3, 2026-09-07, 7d
-    Sprint 4: PDF Generator & Integration   :p1_s4, 2026-09-14, 7d
-    section Phase 2: Enhanced Analysis (v1.1.0)
-    Sprint 5: Track Map & Geometry Line    :p2_s5, 2026-09-28, 7d
-    Sprint 6: Trail-Braking & Apex Timing  :p2_s6, 2026-10-05, 7d
-    Sprint 7: Tire Dynamics & Persistence  :p2_s7, 2026-10-12, 7d
-    section Phase 3: Advanced Telemetry (v1.2.0)
-    Sprint 8: Best vs Avg Lap Comparison   :p3_s8, 2026-10-26, 7d
-    Sprint 9: Braking Zones & G-Forces     :p3_s9, 2026-11-02, 7d
-    Sprint 10: Shifting & Telemetry Export :p3_s10, 2026-11-09, 7d
+    section Phase 1: MVP Core (v1.0.0) ✅
+    Sprint 1: UDP Pipeline & Parser        :done, p1_s1, 2026-08-01, 7d
+    Sprint 2: UI Foundation & Design System :done, p1_s2, after p1_s1, 7d
+    Sprint 3: Lap Segmentation & Algorithms :done, p1_s3, after p1_s2, 7d
+    Sprint 4: PDF Generator & Integration   :done, p1_s4, after p1_s3, 7d
+    section Phase 2: Enhanced Analysis (v1.1.0) ✅
+    Sprint 5: Track Map & Geometry Line     :done, p2_s5, after p1_s4, 7d
+    Sprint 6: Trail-Braking & Apex Timing   :done, p2_s6, after p2_s5, 7d
+    Sprint 7: Tire Dynamics & Persistence   :done, p2_s7, after p2_s6, 7d
+    section Phase 3: Advanced Telemetry (v1.2.0) ✅
+    Sprint 8: Best vs Avg Lap Comparison    :done, p3_s8, after p2_s7, 7d
+    Sprint 9: Braking Zones & G-Forces      :done, p3_s9, after p3_s8, 7d
+    Sprint 10: Shifting & Telemetry Export  :done, p3_s10, after p3_s9, 7d
+    section Phase 3.5: Visualization & Scoring (v1.3.0) 🔄
+    Sprint 10.5: Friction Circle & Perf Score UI/PDF :active, p35_s105, 2026-08-23, 7d
     section Phase 4: Standalone & Multi-Session (v2.0.0)
-    Sprint 11: Electron Packaging & CI/CD  :p4_s11, 2026-11-23, 7d
-    Sprint 12: Session Archive & Multi-Stint:p4_s12, 2026-11-30, 7d
-    Sprint 13: G-G Friction Circle & Release:p4_s13, 2026-12-07, 7d
+    Sprint 11: Electron Packaging & CI/CD   :p4_s11, 2026-08-30, 7d
+    Sprint 12: Session Archive & Multi-Stint :p4_s12, after p4_s11, 7d
+    Sprint 13: PDF v2.0 Overhaul & Release  :p4_s13, after p4_s12, 7d
 ```
 
 ---
 
 ## 3. Detailed Work Breakdown Structure (WBS)
 
-### Phase 1: Core Foundation & MVP (v1.0.0)
-*Target: 4 Weeks | Goal: End-to-end working pipeline from XBOX UDP packet to automated PDF report.*
+### Phase 1: Core Foundation & MVP (v1.0.0) ✅ COMPLETE
+*Completed | Goal: End-to-end working pipeline from XBOX UDP packet to automated PDF report.*
 
 #### Sprint 1: Network Ingestion & Telemetry Parser
 - [x] **Task 1.1: UDP Socket Listener (`udp-proxy.js`)**
@@ -109,8 +111,8 @@ gantt
 
 ---
 
-### Phase 2: Enhanced Analysis & Visualizations (v1.1.0)
-*Target: 3 Weeks | Goal: Vector track maps, trail-braking telemetry, apex geometry, and tire slip.*
+### Phase 2: Enhanced Analysis & Visualizations (v1.1.0) ✅ COMPLETE
+*Completed | Goal: Vector track maps, trail-braking telemetry, apex geometry, and tire slip.*
 
 ```
 Phase 2 Delivery Scope:
@@ -150,8 +152,8 @@ Phase 2 Delivery Scope:
 
 ---
 
-### Phase 3: Advanced Telemetry & Comparative Analytics (v1.2.0)
-*Target: 3 Weeks | Goal: Delta comparisons against best lap, threshold braking analysis, shifting powerband.*
+### Phase 3: Advanced Telemetry & Comparative Analytics (v1.2.0) ✅ COMPLETE
+*Completed | Goal: Delta comparisons against best lap, threshold braking analysis, shifting powerband.*
 
 #### Sprint 8: Delta Lap Comparison Matrix
 - [x] **Task 8.1: Best Lap vs. Average Lap Baseline**
@@ -185,8 +187,50 @@ Phase 2 Delivery Scope:
 
 ---
 
-### Phase 4: Standalone Distribution, Multi-Stint & G-G Diagram (v2.0.0)
-*Target: 4 Weeks | Goal: Standalone Electron desktop app, multi-session archiving, friction circle.*
+### Phase 3.5: Visualization & Performance Scoring (v1.3.0) 🔄 IN PROGRESS
+*Target: 1 Week (Aug 23 – Aug 30) | Goal: Render Friction Circle G-G diagram and Performance Score in both PDF and browser UI. Analysis engines already built — this phase is pure visualization.*
+
+> **Context**: The `FrictionCircleAnalyzer` and `PerformanceSummaryEngine` / `RecommendationEngine` were implemented ahead of schedule during Phase 3. They produce rich analysis data but have no visual output yet. This phase bridges the gap.
+
+```
+Phase 3.5 Delivery Scope:
+├── G-G Friction Circle scatter plot in PDF (vector, phase-colored)
+├── G-G Friction Circle section in browser UI (canvas/SVG, interactive)
+├── Performance Score dashboard card in browser UI (grade + breakdown)
+├── Performance Score header polish in PDF report
+├── Top-3 Priority Recommendations panel in browser UI
+└── Priority Recommendations section in PDF report
+```
+
+#### Sprint 10.5: Friction Circle, Performance Score & Recommendations Rendering
+- [ ] **Task 10.5.1: G-G Friction Circle PDF Section**
+  - Render vector scatter plot of lateral G vs longitudinal G using `pdf-lib` drawing primitives.
+  - Phase-color data points: Red (Braking), Green (Accelerating), Gold (Brake+Turn), Blue (Accel+Turn), Purple (Cornering), Gray (Straight).
+  - Annotate traction circle utilization percentage and peak combined G.
+  - Reference boundary circle at session maximum G magnitude.
+- [ ] **Task 10.5.2: G-G Friction Circle Browser UI Section**
+  - Implement interactive canvas or SVG visualization in the analysis report panel.
+  - Render phase-colored scatter with hover tooltips showing sample detail (speed, Gs, phase).
+  - Display summary stats: traction utilization %, peak lateral G, peak longitudinal G, dominant phase breakdown.
+- [ ] **Task 10.5.3: Performance Score Dashboard Card (Browser UI)**
+  - Build a prominent dashboard card showing overall 0–100 score with letter grade (A+ through F).
+  - Render 4-component breakdown bars: Consistency, Line Quality, Braking Score, Exit Speed.
+  - Apply grade-based color coding: Green (A/B), Amber (C), Red (D/F).
+- [ ] **Task 10.5.4: Performance Score PDF Header Polish**
+  - Refine the existing `performanceSummary` usage in the PDF header section.
+  - Ensure consistent grade rendering with colored badge, score breakdown grid, and session-over-session context.
+- [ ] **Task 10.5.5: Priority Recommendations Panel (Browser UI)**
+  - Display Top-3 actionable coaching recommendations in the analysis report.
+  - Each recommendation: corner reference, category icon, coaching quote, and projected time gain.
+  - Sort by highest projected lap time improvement.
+- [ ] **Task 10.5.6: Priority Recommendations PDF Section**
+  - Render prioritized coaching recommendations as a dedicated PDF section.
+  - Include per-corner coaching narrative, Skip Barber quotes, severity badges, and category grouping.
+
+---
+
+### Phase 4: Standalone Distribution & Multi-Session History (v2.0.0)
+*Target: 3 Weeks (Aug 30 – Sep 20) | Goal: Standalone Electron desktop app, multi-session archiving, consultant-grade PDF overhaul.*
 
 #### Sprint 11: Electron Standalone Architecture & Native Packaging
 - [ ] **Task 11.1: Electron Main Process Integration (`electron-main.js`)**
@@ -206,15 +250,13 @@ Phase 2 Delivery Scope:
 - [ ] **Task 12.3: Session JSON Interchange**
   - Allow importing and exporting complete session datasets in JSON format.
 
-#### Sprint 13: Friction Circle (G-G Diagram) & v2.0 Release
-- [ ] **Task 13.1: Friction Circle / G-G Diagram Generation**
-  - Plot lateral G (`AccelerationX`) vs longitudinal G (`AccelerationY/Z`) across 100% of cornering samples.
-  - Calculate traction circle utilization percentage to assess vehicle limit exploitation.
-- [ ] **Task 13.2: PDF Report Overhaul (v2.0)**
-  - Integrate vector G-G scatter plot directly into the PDF report.
-  - Polish layout for 8-page consultant-grade printout.
-- [ ] **Task 13.3: Production Release & Documentation**
+#### Sprint 13: PDF v2.0 Overhaul & Production Release
+- [ ] **Task 13.1: PDF Report v2.0 Overhaul**
+  - Polish layout for 8-page consultant-grade printout with all analysis sections integrated.
+  - Ensure consistent pagination, visual hierarchy, and section cross-references.
+- [ ] **Task 13.2: Production Release & Documentation**
   - Publish `README.md`, `TROUBLESHOOTING.md`, user guides, and release binaries.
+  - Tag v2.0.0 release with changelog and migration notes.
 
 ---
 
@@ -229,7 +271,7 @@ graph TD
     subgraph Backend [APEX Core Proxy Layer]
         UDP[UDP Socket Listener :9999]
         Parser[331-Byte Binary Packet Parser]
-        WS_Server[WebSocket Server :8080]
+        WS_Server[WebSocket Server :3000]
     end
 
     subgraph Client [Browser / Electron UI]
@@ -237,6 +279,7 @@ graph TD
         Buffer[Circular In-Memory Buffer]
         StateMgr[Session & Stint Manager]
         UI[F1 Pitch Black UI / Controls]
+        HUD[Real-Time HUD Renderer]
     end
 
     subgraph Engine [Analysis & Rules Engine]
@@ -244,6 +287,13 @@ graph TD
         CornerDetect[Corner Feature Extractor]
         GoingFaster[Skip Barber Rules Engine R-001..R-012]
         PriorityRank[Type I/II/III Corner Prioritizer]
+        DeltaEngine[Delta Lap Comparison Matrix]
+        BrakingEngine[Braking Zone G-Force Analyzer]
+        ShiftingEngine[Shifting & Powerband Engine]
+        TireEngine[Tire Dynamics & Thermal Engine]
+        FrictionEngine[Friction Circle G-G Analyzer]
+        PerfSummary[Performance Summary Scorer]
+        RecEngine[Recommendation Engine]
     end
 
     subgraph Output [Report Generation Layer]
@@ -256,15 +306,33 @@ graph TD
     XBOX -->|UDP Broadcast :9999| UDP
     UDP --> Parser
     Parser --> WS_Server
-    WS_Server -->|ws://127.0.0.1:8080| WS_Client
+    WS_Server -->|ws://127.0.0.1:3000| WS_Client
     WS_Client --> Buffer
     Buffer --> StateMgr
     StateMgr --> UI
+    StateMgr --> HUD
     StateMgr -->|Stint Stopped| LapSeg
     LapSeg --> CornerDetect
     CornerDetect --> GoingFaster
     GoingFaster --> PriorityRank
+    CornerDetect --> DeltaEngine
+    CornerDetect --> BrakingEngine
+    CornerDetect --> ShiftingEngine
+    Buffer --> TireEngine
+    Buffer --> FrictionEngine
+    DeltaEngine --> PerfSummary
+    BrakingEngine --> PerfSummary
+    ShiftingEngine --> PerfSummary
+    TireEngine --> PerfSummary
+    PerfSummary --> RecEngine
     PriorityRank --> PDFGen
+    DeltaEngine --> PDFGen
+    BrakingEngine --> PDFGen
+    ShiftingEngine --> PDFGen
+    TireEngine --> PDFGen
+    FrictionEngine --> PDFGen
+    PerfSummary --> PDFGen
+    RecEngine --> PDFGen
     CornerDetect --> TrackMap
     TrackMap --> PDFGen
     PDFGen --> PDFDoc
@@ -310,13 +378,35 @@ graph TD
 
 ### 6.2 Test Suites Breakdown
 
-| Suite | Scope | Target Metrics | Automation Tool |
-|---|---|---|---|
-| **Binary Parser Suite** | Verify exact byte offset decoding against FM23 UDP specification. Validate endianness, negative values, and NaN handling. | 100% field test coverage, 0 corrupted packets | Jest / Node.js Runner |
-| **Corner Detection Suite** | Test speed minima algorithms across standard circuits (hairpins, chicanes, high-speed sweepers, carousel). | ≥ 98% corner detection accuracy against ground truth | Jest |
-| **Rules Engine Suite** | Verify R-001 through R-012 trigger exact severity ratings, messages, and calculations for known boundary conditions. | 100% rule condition test coverage | Jest |
-| **Memory & Performance** | Ingest continuous 60Hz telemetry stream for 100+ laps (2 hours). Monitor heap usage and GC behavior. | Heap < 500MB, 0 frame drops, latency < 10ms | Chrome DevTools / Node profiler |
-| **PDF Generation Suite** | Generate 10, 20, and 50-lap PDF reports. Validate layout bounds, fonts, table pagination, and vector rendering. | Generation time < 10s (20 laps), File size < 2MB | Jest + pdf-lib validator |
+**Current Status: 14 test files | 52 tests | 52 passing | 0 failing** *(as of v1.2.0)*
+
+| Suite | Test File | Scope | Target Metrics | Status |
+|---|---|---|---|---|
+| **Binary Parser** | `parser.test.js` | Verify exact byte offset decoding against FM23 UDP specification. Validate endianness, negative values, and NaN handling. | 100% field coverage | ✅ Pass |
+| **Circular Buffer** | `buffer.test.js` | Ring buffer overflow, eviction, and capacity limit enforcement. | 0 leaks at 100K samples | ✅ Pass |
+| **Corner Detection** | `analysis.test.js` | Speed minima algorithms across circuit types (hairpins, chicanes, sweepers). | ≥ 98% detection accuracy | ✅ Pass |
+| **Rules Engine** | (integrated in `analysis.test.js`) | R-001 through R-012 trigger exact severity ratings and calculations. | 100% rule condition coverage | ✅ Pass |
+| **Track Map** | `track-map.test.js` | 2D vector coordinate normalization, color encoding, SVG generation. | Correct bounds & annotations | ✅ Pass |
+| **Trail-Braking** | `trail-braking.test.js` | Trail-brake overlap %, snap-off detection, R-005/R-006 rules. | Accurate overlap metrics | ✅ Pass |
+| **Tire Dynamics** | `tire-dynamics.test.js` | 4-corner slip ratios, thermal status, R-009 wheelspin detection. | All 4 wheels validated | ✅ Pass |
+| **Delta Comparison** | `delta-comparison.test.js` | Best vs average lap deltas, Type I/II/III classification, time loss attribution. | Correct segment deltas | ✅ Pass |
+| **Braking Zones** | `braking-zones.test.js` | Threshold braking efficiency, "The Procedure" scoring, decel G profiles. | Grade accuracy validated | ✅ Pass |
+| **Shifting & Powerband** | `shifting-powerband.test.js` | Powerband optimization, downshift quality, R-007/R-008 rules. | Shift quality grades match | ✅ Pass |
+| **Friction Circle** | `friction-circle.test.js` | G-G scatter generation, phase classification, traction utilization %. | Phase colors & utilization | ✅ Pass |
+| **Performance Summary** | `performance-summary.test.js` | Overall 0–100 scoring, 4-component breakdown, grade assignment. | Grade boundaries correct | ✅ Pass |
+| **CSV Export** | `csv-export.test.js` | Full telemetry CSV formatting, header row, field mapping. | All columns present | ✅ Pass |
+| **PDF Generation** | `pdf.test.js` | PDF compilation, layout bounds, section rendering, multi-lap pagination. | < 10s generation, < 2MB | ✅ Pass |
+| **E2E Pipeline** | `pipeline.test.js` | End-to-end: raw samples → analysis → PDF output validation. | Full pipeline integrity | ✅ Pass |
+
+### 6.3 Performance Benchmarks
+
+| Metric | Target | Tool |
+|---|---|---|
+| Heap usage (100+ laps, 2hr continuous) | < 500MB | Chrome DevTools / Node profiler |
+| Frame drops during 60Hz ingestion | 0 | Performance Observer |
+| WebSocket latency | < 10ms | Network tab / custom instrumentation |
+| PDF generation (20 laps) | < 10s | `console.time` benchmark |
+| PDF file size (20 laps) | < 2MB | File system validation |
 
 ---
 
@@ -330,12 +420,13 @@ graph TD
 | **PDF Memory Spike on Large Multi-Page Output** | Medium | Medium | Stream page generation sequentially using `pdf-lib` without keeping redundant canvas bitmaps in memory. |
 | **Forza Motorsport Telemetry Spec Updates** | Medium | Low | Maintain versioned telemetry parser schema with modular field mapping. |
 | **Cross-Platform Electron Portability Issues** | Low | Medium | Utilize standard multi-platform `electron-builder` configuration; isolate OS-specific file paths. |
+| **Canvas/SVG Rendering Performance (G-G scatter)** | Medium | Medium | Downsample scatter points to ≤ 2000 for browser rendering; use full dataset only in PDF vector output. |
 
 ---
 
 ## 8. Release Checklist & Acceptance Criteria
 
-### v1.0.0 (MVP) Launch Criteria
+### v1.0.0 (MVP) Launch Criteria ✅
 - [x] Connects seamlessly to Forza Motorsport 2023 UDP stream on LAN.
 - [x] UI reflects accurate real-time connection state and stint timer.
 - [x] Accurately segments laps and identifies corners with > 95% reliability.
@@ -343,23 +434,33 @@ graph TD
 - [x] Follows F1-inspired pitch black design system with 45° cut components.
 - [x] Operates 100% locally with zero cloud dependencies, accounts, or trackers.
 
-### v1.1.0 Feature Release Criteria
+### v1.1.0 Feature Release Criteria ✅
 - [x] PDF includes 2D vector track map with throttle/braking color encoding.
 - [x] Trail-braking overlap and snap-off detection fully operational.
 - [x] Geometry line analysis detects early and late apexes accurately.
 - [x] Settings persist across browser sessions in `localStorage`.
 
-### v1.2.0 Telemetry Release Criteria
-- [ ] Best lap vs average lap delta tables integrated in PDF.
-- [ ] Threshold braking G-force and deceleration distances calculated.
-- [ ] Powerband and shifting optimization rules active.
-- [ ] Full stint raw data exportable to CSV.
+### v1.2.0 Telemetry Release Criteria ✅
+- [x] Best lap vs average lap delta tables integrated in PDF.
+- [x] Threshold braking G-force and deceleration distances calculated.
+- [x] Powerband and shifting optimization rules active.
+- [x] Full stint raw data exportable to CSV.
+
+### v1.3.0 Visualization & Scoring Release Criteria 🔄
+- [ ] G-G Friction Circle scatter plot rendered in PDF report with phase-colored data points.
+- [ ] G-G Friction Circle interactive visualization in browser UI.
+- [ ] Performance Score dashboard card visible in browser UI with grade + 4-component breakdown.
+- [ ] Performance Score header polished and consistently rendered in PDF.
+- [ ] Top-3 Priority Recommendations panel displayed in browser UI.
+- [ ] Priority Recommendations section rendered in PDF report.
 
 ### v2.0.0 Desktop Suite Launch Criteria
 - [ ] Standalone installer and portable executable available for Windows, macOS, and Linux.
 - [ ] Historical session archive powered by local IndexedDB.
-- [ ] Traction circle (G-G diagram) rendered in PDF reports.
+- [ ] Session import/export via JSON interchange format.
+- [ ] 8-page consultant-grade PDF report with all sections polished.
+- [ ] Production documentation: README, troubleshooting guide, and user guide published.
 
 ---
 
-*Document Version: 1.0.0 | Status: APPROVED | Reference Documents: [PRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PRD.md), [TRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20TRD.md), [DESIGN.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20DESIGN.md), [PDF.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PDF.md)*
+*Document Version: 2.0.0 | Last Updated: 2026-08-23 | Status: APPROVED | Reference Documents: [PRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PRD.md), [TRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20TRD.md), [DESIGN.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20DESIGN.md), [PDF.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PDF.md)*
