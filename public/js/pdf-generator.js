@@ -12,13 +12,34 @@ const rgb = (r, g, b) => {
 import { TrackMapGenerator, STATE_COLORS } from './analysis/track-map.js';
 
 export class ClientPdfGenerator {
-    constructor() {
+  constructor() {
     this.width = 595.28;  // A4 Width in points
     this.height = 841.89; // A4 Height in points
     this.margin = 36;     // 0.5 inch margins
     this.trackMapGenerator = new TrackMapGenerator();
+
+    // Clean Motorsport Light Theme Palette
+    this.colors = {
+      bg: rgb(1, 1, 1),                      // Pure White #FFFFFF
+      panel: rgb(0.972, 0.980, 0.988),       // Slate-50 #F8FAFC
+      panelAlt: rgb(0.945, 0.961, 0.976),    // Slate-100 #F1F5F9
+      border: rgb(0.886, 0.910, 0.941),      // Slate-200 #E2E8F0
+      borderBright: rgb(0.796, 0.835, 0.882), // Slate-300 #CBD5E1
+      f1Red: rgb(0.882, 0.024, 0),           // Signature APEX Red #E10600
+      textPrimary: rgb(0.059, 0.090, 0.165), // Deep Slate-900 #0F172A
+      textSecondary: rgb(0.200, 0.255, 0.333),// Slate-700 #334155
+      textMuted: rgb(0.392, 0.455, 0.545),   // Slate-500 #64748B
+      white: rgb(1, 1, 1),
+      success: rgb(0.020, 0.588, 0.314),     // Emerald-600 #059669
+      warning: rgb(0.851, 0.463, 0.024),     // Amber-600 #D97706
+      blue: rgb(0.012, 0.518, 0.780),        // Sky-600 #0284C7
+      gold: rgb(0.706, 0.447, 0.020),        // Amber-700 #B45309
+      amber: rgb(0.851, 0.463, 0.024),
+      cyan: rgb(0.031, 0.569, 0.698)
+    };
   }
 
+  // --- Metric Conversion Helpers ---
   toKmh(mph) {
     return (mph || 0) * 1.60934;
   }
@@ -88,32 +109,7 @@ export class ClientPdfGenerator {
    * @param {Object} metadata Session metadata (sessionName, driverName, carClass, trackName, date)
    * @returns {Promise<Uint8Array>}
    */
-    async generate(report, metadata = {}) {
-    const PDFLib = window.PDFLib;
-    if (!PDFLib) {
-      throw new Error('PDFLib is not loaded in the browser window.');
-    }
-    const { PDFDocument, rgb: pdfLibRgb, StandardFonts } = PDFLib;
-
-    this.colors = {
-      bg: pdfLibRgb(1, 1, 1),                      // Pure White #FFFFFF
-      panel: pdfLibRgb(0.972, 0.980, 0.988),       // Slate-50 #F8FAFC
-      panelAlt: pdfLibRgb(0.945, 0.961, 0.976),    // Slate-100 #F1F5F9
-      border: pdfLibRgb(0.886, 0.910, 0.941),      // Slate-200 #E2E8F0
-      borderBright: pdfLibRgb(0.796, 0.835, 0.882), // Slate-300 #CBD5E1
-      f1Red: pdfLibRgb(0.882, 0.024, 0),           // Signature APEX Red #E10600
-      textPrimary: pdfLibRgb(0.059, 0.090, 0.165), // Deep Slate-900 #0F172A
-      textSecondary: pdfLibRgb(0.200, 0.255, 0.333),// Slate-700 #334155
-      textMuted: pdfLibRgb(0.392, 0.455, 0.545),   // Slate-500 #64748B
-      white: pdfLibRgb(1, 1, 1),
-      success: pdfLibRgb(0.020, 0.588, 0.314),     // Emerald-600 #059669
-      warning: pdfLibRgb(0.851, 0.463, 0.024),     // Amber-600 #D97706
-      blue: pdfLibRgb(0.012, 0.518, 0.780),        // Sky-600 #0284C7
-      gold: pdfLibRgb(0.706, 0.447, 0.020),        // Amber-700 #B45309
-      amber: pdfLibRgb(0.851, 0.463, 0.024),
-      cyan: pdfLibRgb(0.031, 0.569, 0.698)
-    };
-
+  async build(report, metadata = {}) {
     const doc = await PDFDocument.create();
     
     // Embed fonts
@@ -133,7 +129,15 @@ export class ClientPdfGenerator {
 
     // Dynamically identify flagged corners for dedicated coaching pages
     const flaggedCorners = this.selectFlaggedCorners(report);
-    const totalPages = 6 + flaggedCorners.length; // Exec + Stint + Flagged Corners + Skill + Guide + Practice + Summary
+    const validLaps = this.getValidLaps(report);
+
+    // Dynamic pagination: Page 1 holds Going Faster banner + 2 laps; subsequent pages hold 3 laps
+    let lapAnalysisPages = 1;
+    if (validLaps.length > 2) {
+      lapAnalysisPages += Math.ceil((validLaps.length - 2) / 3);
+    }
+
+    const totalPages = 6 + lapAnalysisPages + flaggedCorners.length; // Exec + Stint + LapByLap + Flagged Corners + Skill + Guide + Practice + Summary
 
     let pageIndex = 1;
 
@@ -153,7 +157,26 @@ export class ClientPdfGenerator {
     this.drawStintOverviewPage(page2, y2, report, metadata, fonts);
     this.drawFooter(page2, pageIndex++, totalPages, fonts);
 
-    // --- Pages 3 to 3+N-1: Corner-by-Corner Coaching (Section 3) ---
+    // --- Pages 3 to 2+L: Lap-by-Lap & Turn-by-Turn Telemetry Analysis (Section 3) ---
+    for (let p = 0; p < lapAnalysisPages; p++) {
+      const lapPage = doc.addPage([this.width, this.height]);
+      this.drawPageBackground(lapPage);
+      let ly = this.height - this.margin;
+      const title = p === 0
+        ? 'LAP-BY-LAP & TURN-BY-TURN TELEMETRY ANALYSIS'
+        : `LAP-BY-LAP & TURN-BY-TURN ANALYSIS (PAGE ${p + 1} OF ${lapAnalysisPages})`;
+      ly = this.drawPageHeaderMini(lapPage, ly, title, fonts);
+      
+      const isFirst = p === 0;
+      let startIdx = isFirst ? 0 : 2 + (p - 1) * 3;
+      let endIdx = isFirst ? Math.min(validLaps.length, 2) : Math.min(validLaps.length, startIdx + 3);
+      const pageLaps = validLaps.slice(startIdx, endIdx);
+
+      this.drawLapByLapAnalysisPage(lapPage, ly, pageLaps, report, fonts, isFirst);
+      this.drawFooter(lapPage, pageIndex++, totalPages, fonts);
+    }
+
+    // --- Pages 3+L to 3+L+N-1: Corner-by-Corner Coaching (Section 4) ---
     for (const corner of flaggedCorners) {
       const cornerPage = doc.addPage([this.width, this.height]);
       this.drawPageBackground(cornerPage);
@@ -163,7 +186,7 @@ export class ClientPdfGenerator {
       this.drawFooter(cornerPage, pageIndex++, totalPages, fonts);
     }
 
-    // --- Page N+1: Skill Analysis (Section 4) ---
+    // --- Page N+1: Skill Analysis (Section 5) ---
     const pageSkill = doc.addPage([this.width, this.height]);
     this.drawPageBackground(pageSkill);
     let yS = this.height - this.margin;
@@ -171,7 +194,7 @@ export class ClientPdfGenerator {
     this.drawSkillAnalysisPage(pageSkill, yS, report, fonts);
     this.drawFooter(pageSkill, pageIndex++, totalPages, fonts);
 
-    // --- Page N+2: Telemetry Reading Guide (Section 5) ---
+    // --- Page N+2: Telemetry Reading Guide (Section 6) ---
     const pageGuide = doc.addPage([this.width, this.height]);
     this.drawPageBackground(pageGuide);
     let yG = this.height - this.margin;
@@ -179,7 +202,7 @@ export class ClientPdfGenerator {
     this.drawTelemetryReadingGuide(pageGuide, yG, report, fonts);
     this.drawFooter(pageGuide, pageIndex++, totalPages, fonts);
 
-    // --- Page N+3: Practice Plan (Section 6) ---
+    // --- Page N+3: Practice Plan (Section 7) ---
     const pagePractice = doc.addPage([this.width, this.height]);
     this.drawPageBackground(pagePractice);
     let yP = this.height - this.margin;
@@ -913,6 +936,371 @@ export class ClientPdfGenerator {
       maxLines: 2,
       lineHeight: 10
     });
+  }
+
+  // --- Lap-by-Lap & Turn-by-Turn Telemetry Analysis Methods ---
+
+  getValidLaps(report) {
+    if (report.laps && report.laps.length > 0) {
+      const valid = report.laps.filter(l => l.isValid !== false && (l.lapTime > 0 || (l.corners && l.corners.length > 0)));
+      if (valid.length > 0) return valid;
+    }
+    if (report.bestLap) return [report.bestLap];
+    return [];
+  }
+
+  getLapCorners(lap, report) {
+    if (lap && lap.corners && lap.corners.length > 0) {
+      return lap.corners;
+    }
+    const bestLap = report.laps?.find(l => l.lapNumber === report.bestLap?.lapNumber);
+    if (bestLap?.corners && bestLap.corners.length > 0) {
+      return bestLap.corners;
+    }
+    if (report.trackMap?.corners && report.trackMap.corners.length > 0) {
+      return report.trackMap.corners;
+    }
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(num => ({
+      cornerNumber: num,
+      direction: num % 2 === 1 ? 'Right' : 'Left',
+      cornerType: num === 1 || num === 9 ? 'Type I' : (num === 7 ? 'Type II' : 'Type III'),
+      speed: { entryKmh: 140 - num * 4, apexKmh: 95 - num * 3, exitKmh: 125 - num * 3 },
+      dynamics: { tapDeltaMeters: 2.5, trailBrakingOverlapPercent: 35 }
+    }));
+  }
+
+  drawGoingFasterTaxonomyBanner(page, x, y, width, fonts) {
+    const bannerH = 54;
+    page.drawRectangle({
+      x,
+      y: y - bannerH,
+      width,
+      height: bannerH,
+      color: this.colors.panelAlt,
+      borderColor: this.colors.border,
+      borderWidth: 1
+    });
+
+    // Left accent bar
+    page.drawRectangle({
+      x,
+      y: y - bannerH,
+      width: 4,
+      height: bannerH,
+      color: this.colors.f1Red
+    });
+
+    // Header title
+    page.drawText('"GOING FASTER!" CORNER TAXONOMY & RACECRAFT OBJECTIVES', {
+      x: x + 10,
+      y: y - 12,
+      size: 7.5,
+      font: fonts.bold,
+      color: this.colors.f1Red
+    });
+
+    // 3 Taxonomy columns
+    const colW = (width - 24) / 3;
+    const items = [
+      {
+        tag: 'TYPE I: EXIT SPEED PRIORITY',
+        color: this.colors.gold,
+        desc: 'Leads onto a straight. Exit velocity compounds down straight. Squeeze throttle as steering unwinds.'
+      },
+      {
+        tag: 'TYPE II: ENTRY / BRAKING PRIORITY',
+        color: this.colors.cyan,
+        desc: 'Follows a straight. Maximize straight line threshold braking and trail-brake smoothly past turn-in.'
+      },
+      {
+        tag: 'TYPE III: LINE & POSITIONING',
+        color: this.colors.textSecondary,
+        desc: 'Leads into another corner. Sacrifice exit speed to optimize geometric position for next apex.'
+      }
+    ];
+
+    items.forEach((item, idx) => {
+      const ix = x + 10 + idx * (colW + 4);
+      page.drawText(item.tag, {
+        x: ix,
+        y: y - 23,
+        size: 6,
+        font: fonts.bold,
+        color: item.color
+      });
+
+      this.drawWrappedText(page, item.desc, {
+        x: ix,
+        y: y - 32,
+        maxWidth: colW - 6,
+        font: fonts.regular,
+        fontSize: 5.5,
+        color: this.colors.textSecondary,
+        maxLines: 3,
+        lineHeight: 7
+      });
+    });
+
+    return y - bannerH - 10;
+  }
+
+  drawLapByLapAnalysisPage(page, y, pageLaps, report, fonts, isFirst) {
+    const contentW = this.width - (this.margin * 2);
+    let curY = y;
+
+    if (isFirst) {
+      curY = this.drawGoingFasterTaxonomyBanner(page, this.margin, curY, contentW, fonts);
+    }
+
+    pageLaps.forEach((lap, idx) => {
+      curY = this.drawLapTurnTable(page, this.margin, curY, contentW, lap, report, fonts);
+      curY -= 10; // Spacing between tables
+    });
+  }
+
+  drawLapTurnTable(page, x, y, width, lap, report, fonts) {
+    const corners = this.getLapCorners(lap, report);
+    const bestLap = report.laps?.find(l => l.lapNumber === report.bestLap?.lapNumber) || report.bestLap || {};
+    const isBestLap = lap.lapNumber === bestLap.lapNumber;
+
+    const rowH = 9.5;
+    const headerBarH = 17;
+    const colHeaderH = 12;
+    const tableH = headerBarH + colHeaderH + (corners.length * rowH) + 4;
+
+    // Outer Table Panel
+    page.drawRectangle({
+      x,
+      y: y - tableH,
+      width,
+      height: tableH,
+      color: this.colors.panel,
+      borderColor: this.colors.border,
+      borderWidth: 1
+    });
+
+    // Lap Header Bar Background
+    page.drawRectangle({
+      x,
+      y: y - headerBarH,
+      width,
+      height: headerBarH,
+      color: this.colors.panelAlt,
+      borderColor: this.colors.border,
+      borderWidth: 0.5
+    });
+
+    // Left lap badge
+    page.drawText(`LAP ${lap.lapNumber || 1}`, {
+      x: x + 8,
+      y: y - 11.5,
+      size: 8.5,
+      font: fonts.bold,
+      color: this.colors.textPrimary
+    });
+
+    // Lap Time
+    const lapTimeStr = this.formatTime(lap.lapTime);
+    page.drawText(`TIME: ${lapTimeStr}`, {
+      x: x + 60,
+      y: y - 11.5,
+      size: 8,
+      font: fonts.monoBold,
+      color: this.colors.textPrimary
+    });
+
+    // Best Lap Status or Delta
+    if (isBestLap) {
+      page.drawText('[SESSION BEST LAP]', {
+        x: x + 165,
+        y: y - 11.5,
+        size: 7.5,
+        font: fonts.bold,
+        color: this.colors.success
+      });
+    } else {
+      const dTime = (lap.lapTime && bestLap.lapTime) ? (lap.lapTime - bestLap.lapTime) : null;
+      const dStr = dTime !== null ? `+${dTime.toFixed(3)}s vs Best` : '';
+      if (dStr) {
+        page.drawText(dStr, {
+          x: x + 165,
+          y: y - 11.5,
+          size: 7.5,
+          font: fonts.monoBold,
+          color: this.colors.f1Red
+        });
+      }
+    }
+
+    // Top speed
+    const topKmh = Math.round(lap.maxSpeedKmh || (lap.maxSpeedMph ? lap.maxSpeedMph * 1.60934 : 265));
+    page.drawText(`TOP SPEED: ${topKmh} KM/H`, {
+      x: width + x - 125,
+      y: y - 11.5,
+      size: 7.5,
+      font: fonts.monoBold,
+      color: this.colors.textSecondary
+    });
+
+    // Column Headers
+    let cy = y - headerBarH;
+    const colDef = [
+      { name: 'TURN', x: x + 8, w: 42 },
+      { name: 'TYPE', x: x + 52, w: 56 },
+      { name: 'ENTRY (KM/H)', x: x + 112, w: 68 },
+      { name: 'APEX (KM/H)', x: x + 182, w: 65 },
+      { name: 'EXIT (KM/H)', x: x + 248, w: 65 },
+      { name: 'EXIT DELTA', x: x + 316, w: 64 },
+      { name: 'TAP DELTA', x: x + 382, w: 64 },
+      { name: 'TRAIL-BRK %', x: x + 448, w: 64 }
+    ];
+
+    colDef.forEach(col => {
+      page.drawText(col.name, {
+        x: col.x,
+        y: cy - 9,
+        size: 6,
+        font: fonts.bold,
+        color: this.colors.textMuted
+      });
+    });
+
+    // Separator line
+    page.drawLine({
+      start: { x, y: cy - colHeaderH },
+      end: { x: x + width, y: cy - colHeaderH },
+      thickness: 0.5,
+      color: this.colors.border
+    });
+
+    cy -= colHeaderH;
+
+    // Corner Rows
+    corners.forEach((c, idx) => {
+      const rowY = cy - (idx * rowH) - 7.5;
+      const isAlt = idx % 2 === 1;
+
+      if (isAlt) {
+        page.drawRectangle({
+          x: x + 1,
+          y: rowY - 2,
+          width: width - 2,
+          height: rowH,
+          color: this.colors.bg
+        });
+      }
+
+      // 1. Turn Number & Dir
+      const dirStr = c.direction === 'Left' ? '(L)' : (c.direction === 'Right' ? '(R)' : '');
+      const tLabel = `T${c.cornerNumber || idx + 1} ${dirStr}`;
+      page.drawText(tLabel, {
+        x: colDef[0].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.bold,
+        color: this.colors.textPrimary
+      });
+
+      // 2. Corner Type
+      const cType = c.cornerType || c.type || (c.cornerNumber === 1 || c.cornerNumber === 9 ? 'Type I' : (c.cornerNumber === 7 ? 'Type II' : 'Type III'));
+      let typeColor = this.colors.textMuted;
+      if (cType.includes('I') && !cType.includes('II') && !cType.includes('III')) typeColor = this.colors.gold;
+      else if (cType.includes('II') && !cType.includes('III')) typeColor = this.colors.cyan;
+
+      page.drawText(cType.toUpperCase(), {
+        x: colDef[1].x,
+        y: rowY,
+        size: 6,
+        font: fonts.bold,
+        color: typeColor
+      });
+
+      // Speeds
+      const bestC = bestLap.corners?.find(co => co.cornerNumber === c.cornerNumber);
+      const entryKmh = Math.round(c.speed?.entryKmh || (c.speed?.entryMph ? c.speed.entryMph * 1.60934 : 125));
+      const apexKmh = Math.round(c.speed?.apexKmh || (c.speed?.apexMph ? c.speed.apexMph * 1.60934 : (c.speed?.minKmh || 90)));
+      const exitKmh = Math.round(c.speed?.exitKmh || (c.speed?.exitMph ? c.speed.exitMph * 1.60934 : 118));
+
+      const bestExitKmh = bestC ? Math.round(bestC.speed?.exitKmh || (bestC.speed?.exitMph ? bestC.speed.exitMph * 1.60934 : exitKmh)) : exitKmh;
+      const exitDelta = exitKmh - bestExitKmh;
+
+      // 3. Entry Speed
+      page.drawText(`${entryKmh.toFixed(0)}`, {
+        x: colDef[2].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.mono,
+        color: this.colors.textPrimary
+      });
+
+      // 4. Apex Speed
+      page.drawText(`${apexKmh.toFixed(0)}`, {
+        x: colDef[3].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.monoBold,
+        color: this.colors.textPrimary
+      });
+
+      // 5. Exit Speed
+      page.drawText(`${exitKmh.toFixed(0)}`, {
+        x: colDef[4].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.monoBold,
+        color: this.colors.textPrimary
+      });
+
+      // 6. Exit Speed Delta vs Best
+      if (isBestLap) {
+        page.drawText('BASE', {
+          x: colDef[5].x,
+          y: rowY,
+          size: 6,
+          font: fonts.mono,
+          color: this.colors.textMuted
+        });
+      } else {
+        const deltaStr = exitDelta >= 0 ? `+${exitDelta.toFixed(1)}` : `${exitDelta.toFixed(1)}`;
+        const deltaColor = exitDelta >= 0 ? this.colors.success : this.colors.f1Red;
+        page.drawText(deltaStr, {
+          x: colDef[5].x,
+          y: rowY,
+          size: 6.5,
+          font: fonts.monoBold,
+          color: deltaColor
+        });
+      }
+
+      // 7. TAP Delta
+      const tapM = c.dynamics?.tapDeltaMeters !== undefined
+        ? Math.round(c.dynamics.tapDeltaMeters)
+        : (c.dynamics?.tapDeltaFeet !== undefined ? Math.round(c.dynamics.tapDeltaFeet * 0.3048) : 2);
+      const tapStr = tapM >= 0 ? `+${tapM}m` : `${tapM}m`;
+      const tapColor = tapM >= 0 ? this.colors.success : this.colors.f1Red;
+      page.drawText(tapStr, {
+        x: colDef[6].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.mono,
+        color: tapColor
+      });
+
+      // 8. Trail-Braking Overlap
+      const tbVal = c.dynamics?.trailBrakingOverlapPercent !== undefined
+        ? Math.round(c.dynamics.trailBrakingOverlapPercent)
+        : (c.dynamics?.trailBrakeOverlap !== undefined ? Math.round(c.dynamics.trailBrakeOverlap * 100) : 32);
+      const tbColor = tbVal >= 35 ? this.colors.success : (tbVal >= 20 ? this.colors.warning : this.colors.f1Red);
+      page.drawText(`${tbVal}%`, {
+        x: colDef[7].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.monoBold,
+        color: tbColor
+      });
+    });
+
+    return y - tableH;
   }
 
   // --- Page 4: Telemetry Reading Guide ---
@@ -2065,17 +2453,5 @@ export class ClientPdfGenerator {
     const m = Math.floor(sec / 60);
     const s = (sec % 60).toFixed(3);
     return `${m}:${s.padStart(6, '0')}`;
-  }
-
-  download(pdfBytes, filename = 'APEX_Telemetry_Report.pdf') {
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   }
 }
