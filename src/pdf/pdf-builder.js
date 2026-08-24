@@ -2270,10 +2270,12 @@ export class ApexPdfBuilder {
     });
 
     const potentialGain = report.deltaComparison?.totalPotentialGainSec || 2.1;
-    page.drawText(`GRADE: ${gradeObj.grade}   |   SCORE: ${score}%   |   POTENTIAL IMPROVEMENT: ${potentialGain.toFixed(1)}s`, {
-      x: this.margin + 16,
+    const rcScore = report.racecraft?.overallRacecraftScore || score;
+    const rcGrade = report.racecraft?.overallGrade || gradeObj.grade;
+    page.drawText(`PERFORMANCE: ${gradeObj.grade} (${score}%)  |  RACECRAFT SCORECARD: ${rcGrade} (${rcScore}%)  |  POTENTIAL: ${potentialGain.toFixed(1)}s`, {
+      x: this.margin + 12,
       y: y - 26,
-      size: 10,
+      size: 8.5,
       font: fonts.bold,
       color: this.colors.textPrimary
     });

@@ -745,6 +745,200 @@
           </div>
         </div>
       </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 9: VEHICLE DYNAMICS & SKID CONTROL (CPR STATE MACHINE) -->
+      <div id="car-control-card" class="car-control-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #FF0055;">🔄</span> Vehicle Dynamics // Skid Control & CPR State Machine
+            </h3>
+            <span class="pit-card-subtitle">True Yaw vs Slip Angle Differential, "The Pause" & Trailing Throttle Oversteer (TTO)</span>
+          </div>
+          <div id="car-control-score-badge" class="badge" style="background: rgba(0, 204, 102, 0.15); border: 1px solid var(--color-success); color: var(--color-success); font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            CONTROL SCORE: 100/100
+          </div>
+        </div>
+
+        <!-- Car Control KPI Summary -->
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Handling Balance</span>
+            <span id="car-control-balance-val" class="stat-cell-value" style="font-size: 12px;">--% N / --% U / --% O</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Peak Yaw Angle</span>
+            <span id="car-control-max-yaw-val" class="stat-cell-value">--°</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">TTO Events</span>
+            <span id="car-control-tto-val" class="stat-cell-value">0</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Tankslapper Snaps</span>
+            <span id="car-control-tankslapper-val" class="stat-cell-value">0</span>
+          </div>
+        </div>
+
+        <div id="car-control-notes-feed" class="coaching-feed-grid" style="margin-top: var(--space-sm);">
+          <!-- Dynamic CPR coaching cards -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 10: 4-BLOCK CORNER ENTRY & OVERSLOWING DIAGNOSTICS -->
+      <div id="braking-entry-card" class="braking-entry-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-f1-red);">⏱️</span> 4-Block Corner Entry // Squeeze & Overslowing
+            </h3>
+            <span class="pit-card-subtitle">Blocks 1-4 Transition Latency, Downshift Brake Dips & Straightaway Delta</span>
+          </div>
+          <div id="braking-entry-score-badge" class="badge" style="background: rgba(0, 204, 102, 0.15); border: 1px solid var(--color-success); color: var(--color-success); font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            ENTRY SCORE: 100/100
+          </div>
+        </div>
+
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Overslow Time Penalty</span>
+            <span id="entry-overslow-loss-val" class="stat-cell-value" style="color: var(--color-f1-red);">+0.000s</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Downshift Brake Dips</span>
+            <span id="entry-downshift-dips-val" class="stat-cell-value">0</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Hammer Slams</span>
+            <span id="entry-slam-events-val" class="stat-cell-value">0</span>
+          </div>
+        </div>
+
+        <div id="braking-entry-notes-feed" class="coaching-feed-grid" style="margin-top: var(--space-sm);">
+          <!-- Dynamic Entry coaching cards -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 11: SUSPENSION LOAD TRANSFER & CHASSIS SETUP COACH -->
+      <div id="chassis-advisory-card" class="chassis-advisory-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #00FFCC;">🛠️</span> Suspension Dynamics // Chassis Setup Coach
+            </h3>
+            <span class="pit-card-subtitle">4-Corner Travel, Bottoming-Out Strikes & Prescriptive Mechanical Adjustments</span>
+          </div>
+          <div id="chassis-health-badge" class="badge" style="background: rgba(0, 204, 102, 0.15); border: 1px solid var(--color-success); color: var(--color-success); font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            CHASSIS HEALTH: 100/100
+          </div>
+        </div>
+
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Bottoming Strikes</span>
+            <span id="chassis-bottoming-val" class="stat-cell-value">0</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Max Body Roll</span>
+            <span id="chassis-max-roll-val" class="stat-cell-value">--°</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Max Pitch Angle</span>
+            <span id="chassis-max-pitch-val" class="stat-cell-value">--°</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">High-Speed Aero Rake</span>
+            <span id="chassis-rake-val" class="stat-cell-value">--</span>
+          </div>
+        </div>
+
+        <!-- Setup Adjustments List -->
+        <div id="chassis-setup-adjustments-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: var(--space-sm);">
+          <!-- Dynamic setup advice -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 12: DYNAMIC SURFACE & WET-WEATHER INTELLIGENCE -->
+      <div id="surface-intelligence-card" class="surface-intelligence-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: #00BFFF;">🌧️</span> Track Surface // Wet Weather & Camber Intelligence
+            </h3>
+            <span class="pit-card-subtitle">Puddle Drag, Hydroplaning Risk, Rim-Shot Lines & Road Camber G-Multipliers</span>
+          </div>
+          <div id="surface-condition-badge" class="badge" style="background: rgba(0, 191, 255, 0.15); border: 1px solid #00BFFF; color: #00BFFF; font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            DRY TRACK CONDITIONS
+          </div>
+        </div>
+
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Max Puddle Depth</span>
+            <span id="surface-puddle-val" class="stat-cell-value">0.0 mm</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Asymmetric Water Drag</span>
+            <span id="surface-asymmetric-val" class="stat-cell-value">0</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Hydroplaning Risk Alerts</span>
+            <span id="surface-hydro-val" class="stat-cell-value">0</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Max Track Banking</span>
+            <span id="surface-banking-val" class="stat-cell-value">--°</span>
+          </div>
+        </div>
+
+        <div id="surface-notes-feed" class="coaching-feed-grid" style="margin-top: var(--space-sm);">
+          <!-- Dynamic surface notes -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 13: 14-POINT SKIP BARBER POST-SESSION SCORECARD -->
+      <div id="scorecard-card" class="scorecard-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-gold, #FFD700);">🏆</span> Official 14-Point Skip Barber Critique Card
+            </h3>
+            <span class="pit-card-subtitle">Comprehensive Post-Session Self-Critique from "Going Faster!" Chapter 10</span>
+          </div>
+          <div id="scorecard-overall-badge" class="badge" style="background: rgba(255, 215, 0, 0.15); border: 1px solid #FFD700; color: #FFD700; font-family: var(--font-mono); font-size: 11px; padding: 3px 10px; border-radius: 2px;">
+            RACECRAFT GRADE: A
+          </div>
+        </div>
+
+        <div class="table-container" style="margin-top: var(--space-sm);">
+          <table class="corner-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>CRITIQUE CATEGORY</th>
+                <th>SCORE</th>
+                <th>GRADE</th>
+                <th>STATUS</th>
+                <th>EVALUATION FOCUS</th>
+                <th>MASTER COACHING QUOTE</th>
+              </tr>
+            </thead>
+            <tbody id="scorecard-table-body">
+              <!-- Dynamically populated 14 categories -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
   </div>

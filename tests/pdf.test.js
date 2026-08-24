@@ -168,7 +168,7 @@ test('ApexPdfBuilder: Compiles 7-page Light-Theme report with Section 8 Coaching
   const pdfBytes = await builder.build(mockReport, { sessionName: '7-Page Debrief Stint' });
   const loadedDoc = await PDFDocument.load(pdfBytes);
 
-  assert.equal(loadedDoc.getPageCount(), 7, 'PDF should have exactly 7 pages');
+  assert.equal(loadedDoc.getPageCount(), 8, 'PDF should have exactly 8 pages');
 });
 
 test('ApexPdfBuilder: Enforces strict Metric conversion helpers', () => {

@@ -9,6 +9,11 @@ import { BrakingZoneEngine, CLASS_THEORETICAL_MAX_DECEL_G, THRESHOLD_EFFICIENCY_
 import { ShiftingPowerbandEngine, SHIFT_QUALITY_GRADES } from './shifting-powerband.js';
 import { FrictionCircleAnalyzer, FRICTION_PHASE, FRICTION_PHASE_COLORS } from './friction-circle.js';
 import { PerformanceSummaryEngine, RecommendationEngine, PERFORMANCE_GRADES } from './performance-summary.js';
+import { CarControlEngine } from './car-control.js';
+import { BrakingEntryEngine } from './braking-entry.js';
+import { ChassisAdvisoryEngine } from './chassis-advisory.js';
+import { SurfaceIntelligenceEngine } from './surface-intelligence.js';
+import { RacecraftEngine } from './racecraft-engine.js';
 
 export class AnalysisEngine {
   constructor(options = {}) {
@@ -21,6 +26,11 @@ export class AnalysisEngine {
     this.deltaEngine = new DeltaComparisonEngine(options.deltaEngine);
     this.brakingEngine = new BrakingZoneEngine(options.brakingEngine);
     this.shiftingEngine = new ShiftingPowerbandEngine(options.shiftingEngine);
+    this.carControlEngine = new CarControlEngine(options.carControl);
+    this.brakingEntryEngine = new BrakingEntryEngine(options.brakingEntry);
+    this.chassisEngine = new ChassisAdvisoryEngine(options.chassis);
+    this.surfaceEngine = new SurfaceIntelligenceEngine(options.surface);
+    this.racecraftEngine = new RacecraftEngine(options.racecraft);
   }
 
   analyzeStint(samples, options = {}) {
@@ -38,7 +48,12 @@ export class AnalysisEngine {
         shiftingAnalysis: null,
         frictionCircle: null,
         performanceSummary: null,
-        recommendations: []
+        recommendations: [],
+        carControl: null,
+        brakingEntry: null,
+        chassisAdvisory: null,
+        surfaceIntelligence: null,
+        racecraft: null
       };
     }
 
@@ -128,6 +143,30 @@ export class AnalysisEngine {
     const recEngine = new RecommendationEngine(mapCorners, allAnalysisResults);
     const recommendations = recEngine.generateRecommendations();
 
+    // Vehicle Dynamics & CPR Skid Control Engine (Sprint 14)
+    const carControl = this.carControlEngine.analyze(mapSamples, mapCorners);
+
+    // 4-Block Corner Entry & Overslowing Engine (Sprint 15)
+    const brakingEntry = this.brakingEntryEngine.analyze(mapSamples, mapCorners, bestLapAnalyzed);
+
+    // Suspension Load Transfer & Chassis Setup Coach (Sprint 16)
+    const chassisAdvisory = this.chassisEngine.analyze(mapSamples, carControl);
+
+    // Dynamic Surface & Wet-Weather Intelligence (Sprint 17)
+    const surfaceIntelligence = this.surfaceEngine.analyze(mapSamples, mapCorners);
+
+    // Racecraft Engine & 14-Point Skip Barber Scorecard (Sprint 18)
+    const racecraft = this.racecraftEngine.analyze({
+      laps: analyzedLaps,
+      samples: mapSamples,
+      carControl,
+      brakingEntry,
+      shifting: shiftingAnalysis,
+      surface: surfaceIntelligence,
+      tireDynamics,
+      perfSummary: performanceSummary
+    });
+
     return {
       laps: analyzedLaps,
       validLapsCount: validLaps.length,
@@ -153,7 +192,12 @@ export class AnalysisEngine {
       shiftingAnalysis,
       frictionCircle,
       performanceSummary,
-      recommendations
+      recommendations,
+      carControl,
+      brakingEntry,
+      chassisAdvisory,
+      surfaceIntelligence,
+      racecraft
     };
   }
 }
@@ -171,6 +215,11 @@ export {
   FrictionCircleAnalyzer,
   PerformanceSummaryEngine,
   RecommendationEngine,
+  CarControlEngine,
+  BrakingEntryEngine,
+  ChassisAdvisoryEngine,
+  SurfaceIntelligenceEngine,
+  RacecraftEngine,
   DRIVING_STATE,
   STATE_COLORS,
   TIRE_THERMAL_STATUS,
@@ -184,5 +233,3 @@ export {
   FRICTION_PHASE_COLORS,
   PERFORMANCE_GRADES
 };
-
-

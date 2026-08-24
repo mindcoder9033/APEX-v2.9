@@ -446,21 +446,28 @@ graph TD
 - [x] Powerband and shifting optimization rules active.
 - [x] Full stint raw data exportable to CSV.
 
-### v1.3.0 Visualization & Scoring Release Criteria 🔄
-- [ ] G-G Friction Circle scatter plot rendered in PDF report with phase-colored data points.
-- [ ] G-G Friction Circle interactive visualization in browser UI.
-- [ ] Performance Score dashboard card visible in browser UI with grade + 4-component breakdown.
-- [ ] Performance Score header polished and consistently rendered in PDF.
-- [ ] Top-3 Priority Recommendations panel displayed in browser UI.
-- [ ] Priority Recommendations section rendered in PDF report.
+### v1.3.0 Visualization & Scoring Release Criteria ✅
+- [x] G-G Friction Circle scatter plot rendered in PDF report with phase-colored data points.
+- [x] G-G Friction Circle interactive visualization in browser UI.
+- [x] Performance Score dashboard card visible in browser UI with grade + 4-component breakdown.
+- [x] Performance Score header polished and consistently rendered in PDF.
+- [x] Top-3 Priority Recommendations panel displayed in browser UI.
+- [x] Priority Recommendations section rendered in PDF report.
 
-### v2.0.0 Desktop Suite Launch Criteria
+### v3.0.0 "Going Faster!" Racecraft & Dynamics Expansion Criteria ✅
+- [x] **Sprint 14: Vehicle Dynamics & CPR Skid Control Engine**: True Yaw vs Slip differential, CPR (Correction-Pause-Recovery) state machine, TTO classifier, Tankslapper / Death Wiggle detection.
+- [x] **Sprint 15: 4-Block Corner Entry & Overslowing Diagnostics**: Blocks 1-4 segmentation, squeeze vs slam rate, downshift brake pressure dips, and straightaway time penalty attribution.
+- [x] **Sprint 16: Suspension Load Transfer & Chassis Setup Coach**: 4-wheel travel tracking, bottoming-out strike alerts, dynamic aero rake, and prescriptive mechanical adjustments (ARBs, springs, dampers, brake bias).
+- [x] **Sprint 17: Dynamic Track Surface & Wet-Weather Intelligence**: Puddle telemetry, single-side water drag alert, hydroplaning risk, rim-shot wet line vs dry line analysis, and camber G-multiplier.
+- [x] **Sprint 18: Racecraft Engine & 14-Point Skip Barber Scorecard**: Heel-and-toe downshift rev match quality, upshift speed, draft tow calculator, and official 14-category post-session scorecard in UI & PDF.
+
+### v4.0.0 Desktop Suite Launch Criteria
 - [ ] Standalone installer and portable executable available for Windows, macOS, and Linux.
 - [ ] Historical session archive powered by local IndexedDB.
 - [ ] Session import/export via JSON interchange format.
-- [ ] 8-page consultant-grade PDF report with all sections polished.
+- [ ] Multi-stint progression tracking across weeks/months.
 - [ ] Production documentation: README, troubleshooting guide, and user guide published.
 
 ---
 
-*Document Version: 2.0.0 | Last Updated: 2026-08-23 | Status: APPROVED | Reference Documents: [PRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PRD.md), [TRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20TRD.md), [DESIGN.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20DESIGN.md), [PDF.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PDF.md)*
+*Document Version: 3.0.0 | Last Updated: 2026-08-24 | Status: COMPLETED | Reference Documents: [Going faster.pdf](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/Going%20faster.pdf), [PRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20PRD.md), [TRD.md](file:///d:/AI%20Workspace/APEX%20v2.9/Docs/APEX%20TRD.md)*

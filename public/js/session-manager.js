@@ -70,6 +70,41 @@ export class SessionManager {
     this.shiftingTableBody = document.getElementById('shifting-table-body');
     this.downshiftSummaryText = document.getElementById('downshift-summary-text');
 
+    // Section 9: Vehicle Dynamics & CPR Skid Control Elements
+    this.carControlScoreBadge = document.getElementById('car-control-score-badge');
+    this.carControlBalanceVal = document.getElementById('car-control-balance-val');
+    this.carControlMaxYawVal = document.getElementById('car-control-max-yaw-val');
+    this.carControlTtoVal = document.getElementById('car-control-tto-val');
+    this.carControlTankslapperVal = document.getElementById('car-control-tankslapper-val');
+    this.carControlNotesFeed = document.getElementById('car-control-notes-feed');
+
+    // Section 10: 4-Block Braking & Overslowing Elements
+    this.brakingEntryScoreBadge = document.getElementById('braking-entry-score-badge');
+    this.entryOverslowLossVal = document.getElementById('entry-overslow-loss-val');
+    this.entryDownshiftDipsVal = document.getElementById('entry-downshift-dips-val');
+    this.entrySlamEventsVal = document.getElementById('entry-slam-events-val');
+    this.brakingEntryNotesFeed = document.getElementById('braking-entry-notes-feed');
+
+    // Section 11: Suspension Dynamics & Chassis Setup Coach Elements
+    this.chassisHealthBadge = document.getElementById('chassis-health-badge');
+    this.chassisBottomingVal = document.getElementById('chassis-bottoming-val');
+    this.chassisMaxRollVal = document.getElementById('chassis-max-roll-val');
+    this.chassisMaxPitchVal = document.getElementById('chassis-max-pitch-val');
+    this.chassisRakeVal = document.getElementById('chassis-rake-val');
+    this.chassisSetupAdjustmentsList = document.getElementById('chassis-setup-adjustments-list');
+
+    // Section 12: Track Surface & Wet Intelligence Elements
+    this.surfaceConditionBadge = document.getElementById('surface-condition-badge');
+    this.surfacePuddleVal = document.getElementById('surface-puddle-val');
+    this.surfaceAsymmetricVal = document.getElementById('surface-asymmetric-val');
+    this.surfaceHydroVal = document.getElementById('surface-hydro-val');
+    this.surfaceBankingVal = document.getElementById('surface-banking-val');
+    this.surfaceNotesFeed = document.getElementById('surface-notes-feed');
+
+    // Section 13: 14-Point Scorecard Elements
+    this.scorecardOverallBadge = document.getElementById('scorecard-overall-badge');
+    this.scorecardTableBody = document.getElementById('scorecard-table-body');
+
     // Load saved settings
     this.settings = this.loadSettings();
 
@@ -422,6 +457,21 @@ export class SessionManager {
 
     // Render G-G Friction Circle & Limit Utilization (Sprint 10.5)
     this.renderFrictionCircle(report.frictionCircle);
+
+    // Render Vehicle Dynamics & CPR Skid Control (Sprint 14)
+    this.renderCarControl(report.carControl);
+
+    // Render 4-Block Braking & Overslowing (Sprint 15)
+    this.renderBrakingEntry(report.brakingEntry);
+
+    // Render Suspension Dynamics & Chassis Setup (Sprint 16)
+    this.renderChassisAdvisory(report.chassisAdvisory);
+
+    // Render Track Surface & Wet Intelligence (Sprint 17)
+    this.renderSurfaceIntelligence(report.surfaceIntelligence);
+
+    // Render 14-Point Skip Barber Scorecard (Sprint 18)
+    this.renderScorecard(report.racecraft);
   }
 
   renderDeltaComparison(delta) {
@@ -1089,4 +1139,214 @@ export class SessionManager {
       });
     }
   }
+
+  // --- SECTION 9: VEHICLE DYNAMICS & CPR SKID CONTROL ---
+  renderCarControl(carControl) {
+    if (!carControl) return;
+
+    if (this.carControlScoreBadge) {
+      this.carControlScoreBadge.textContent = `CONTROL SCORE: ${carControl.carControlScore}/100`;
+      this.carControlScoreBadge.style.color = carControl.carControlScore >= 80 ? 'var(--color-success)' : 'var(--color-warning)';
+    }
+
+    if (this.carControlBalanceVal && carControl.balancePercentages) {
+      const b = carControl.balancePercentages;
+      this.carControlBalanceVal.textContent = `${b.neutralPct}% N / ${b.understeerPct}% U / ${b.oversteerPct}% O`;
+    }
+
+    if (this.carControlMaxYawVal) {
+      this.carControlMaxYawVal.textContent = `${(carControl.maxYawAngleDeg || 0).toFixed(1)}°`;
+    }
+
+    if (this.carControlTtoVal) {
+      this.carControlTtoVal.textContent = carControl.ttoEventsCount || 0;
+      this.carControlTtoVal.style.color = carControl.ttoEventsCount > 0 ? 'var(--color-f1-red)' : 'var(--color-text-primary)';
+    }
+
+    if (this.carControlTankslapperVal) {
+      this.carControlTankslapperVal.textContent = carControl.tankslapperEventsCount || 0;
+      this.carControlTankslapperVal.style.color = carControl.tankslapperEventsCount > 0 ? 'var(--color-f1-red)' : 'var(--color-text-primary)';
+    }
+
+    if (this.carControlNotesFeed) {
+      this.carControlNotesFeed.innerHTML = '';
+      (carControl.coachingNotes || []).forEach(note => {
+        const card = document.createElement('div');
+        card.className = `coaching-card chamfer-all-corners ${note.severity === 'High' ? 'severity-high' : 'severity-medium'}`;
+        card.innerHTML = `
+          <div class="coaching-header">
+            <span class="coaching-rule-title">${note.title}</span>
+            <span class="badge ${note.severity === 'High' ? 'badge-danger' : 'badge-accent'}">${note.severity}</span>
+          </div>
+          <p class="coaching-action">${note.text}</p>
+          <div style="font-size: 10px; color: var(--color-gold, #FFD700); font-style: italic; margin-top: 4px;">${note.quote}</div>
+        `;
+        this.carControlNotesFeed.appendChild(card);
+      });
+    }
+  }
+
+  // --- SECTION 10: 4-BLOCK CORNER ENTRY & OVERSLOWING ---
+  renderBrakingEntry(brakingEntry) {
+    if (!brakingEntry) return;
+
+    if (this.brakingEntryScoreBadge) {
+      this.brakingEntryScoreBadge.textContent = `ENTRY SCORE: ${brakingEntry.brakingEntryScore}/100`;
+      this.brakingEntryScoreBadge.style.color = brakingEntry.brakingEntryScore >= 80 ? 'var(--color-success)' : 'var(--color-warning)';
+    }
+
+    if (this.entryOverslowLossVal) {
+      const loss = brakingEntry.totalOverslowTimeLossSec || 0;
+      this.entryOverslowLossVal.textContent = `+${loss.toFixed(3)}s`;
+      this.entryOverslowLossVal.style.color = loss > 0.15 ? 'var(--color-f1-red)' : 'var(--color-success)';
+    }
+
+    if (this.entryDownshiftDipsVal) {
+      this.entryDownshiftDipsVal.textContent = brakingEntry.totalDownshiftDips || 0;
+      this.entryDownshiftDipsVal.style.color = brakingEntry.totalDownshiftDips > 0 ? 'var(--color-warning)' : 'var(--color-text-primary)';
+    }
+
+    if (this.entrySlamEventsVal) {
+      this.entrySlamEventsVal.textContent = brakingEntry.totalSlamEvents || 0;
+      this.entrySlamEventsVal.style.color = brakingEntry.totalSlamEvents > 0 ? 'var(--color-f1-red)' : 'var(--color-text-primary)';
+    }
+
+    if (this.brakingEntryNotesFeed) {
+      this.brakingEntryNotesFeed.innerHTML = '';
+      (brakingEntry.coachingNotes || []).forEach(note => {
+        const card = document.createElement('div');
+        card.className = `coaching-card chamfer-all-corners ${note.severity === 'High' ? 'severity-high' : 'severity-medium'}`;
+        card.innerHTML = `
+          <div class="coaching-header">
+            <span class="coaching-rule-title">${note.title}</span>
+            <span class="badge ${note.severity === 'High' ? 'badge-danger' : 'badge-accent'}">${note.severity}</span>
+          </div>
+          <p class="coaching-action">${note.text}</p>
+          <div style="font-size: 10px; color: var(--color-gold, #FFD700); font-style: italic; margin-top: 4px;">${note.quote}</div>
+        `;
+        this.brakingEntryNotesFeed.appendChild(card);
+      });
+    }
+  }
+
+  // --- SECTION 11: SUSPENSION LOAD TRANSFER & CHASSIS COACH ---
+  renderChassisAdvisory(chassis) {
+    if (!chassis) return;
+
+    if (this.chassisHealthBadge) {
+      this.chassisHealthBadge.textContent = `CHASSIS HEALTH: ${chassis.chassisHealthScore}/100`;
+      this.chassisHealthBadge.style.color = chassis.chassisHealthScore >= 80 ? 'var(--color-success)' : 'var(--color-warning)';
+    }
+
+    if (this.chassisBottomingVal) {
+      this.chassisBottomingVal.textContent = chassis.bottomingStrikes?.total || 0;
+      this.chassisBottomingVal.style.color = (chassis.bottomingStrikes?.total || 0) > 0 ? 'var(--color-f1-red)' : 'var(--color-text-primary)';
+    }
+
+    if (this.chassisMaxRollVal && chassis.maxBodyAngles) {
+      this.chassisMaxRollVal.textContent = `${(chassis.maxBodyAngles.maxRollDeg || 0).toFixed(1)}°`;
+    }
+
+    if (this.chassisMaxPitchVal && chassis.maxBodyAngles) {
+      this.chassisMaxPitchVal.textContent = `${(chassis.maxBodyAngles.maxPitchDeg || 0).toFixed(1)}°`;
+    }
+
+    if (this.chassisRakeVal) {
+      this.chassisRakeVal.textContent = `${(chassis.dynamicRakeIndex || 0).toFixed(3)}`;
+    }
+
+    if (this.chassisSetupAdjustmentsList) {
+      this.chassisSetupAdjustmentsList.innerHTML = '';
+      (chassis.setupAdjustments || []).forEach(adj => {
+        const item = document.createElement('div');
+        item.className = 'guide-step-card chamfer-all-corners';
+        item.style.background = '#141414';
+        item.style.border = '1px solid var(--color-border)';
+        item.style.padding = '10px 12px';
+        item.innerHTML = `
+          <div style="font-size: 11px; font-weight: bold; color: #00FFCC; text-transform: uppercase;">
+            ${adj.component} ➔ <span style="color: #FFF;">${adj.action}</span>
+          </div>
+          <div style="font-size: 10px; color: var(--color-text-secondary); margin-top: 3px; line-height: 1.4;">
+            ${adj.rationale}
+          </div>
+        `;
+        this.chassisSetupAdjustmentsList.appendChild(item);
+      });
+    }
+  }
+
+  // --- SECTION 12: DYNAMIC SURFACE & WET INTELLIGENCE ---
+  renderSurfaceIntelligence(surface) {
+    if (!surface) return;
+
+    if (this.surfaceConditionBadge) {
+      this.surfaceConditionBadge.textContent = surface.isWetSession ? '🌧️ WET TRACK CONDITIONS' : '☀️ DRY TRACK CONDITIONS';
+      this.surfaceConditionBadge.style.color = surface.isWetSession ? '#00BFFF' : 'var(--color-success)';
+      this.surfaceConditionBadge.style.borderColor = surface.isWetSession ? '#00BFFF' : 'var(--color-success)';
+    }
+
+    if (this.surfacePuddleVal) {
+      this.surfacePuddleVal.textContent = `${(surface.maxPuddleDepthMm || 0).toFixed(1)} mm`;
+    }
+
+    if (this.surfaceAsymmetricVal) {
+      this.surfaceAsymmetricVal.textContent = surface.asymmetricDragEvents || 0;
+      this.surfaceAsymmetricVal.style.color = surface.asymmetricDragEvents > 0 ? 'var(--color-f1-red)' : 'var(--color-text-primary)';
+    }
+
+    if (this.surfaceHydroVal) {
+      this.surfaceHydroVal.textContent = surface.hydroplaningRiskEvents || 0;
+      this.surfaceHydroVal.style.color = surface.hydroplaningRiskEvents > 0 ? 'var(--color-f1-red)' : 'var(--color-text-primary)';
+    }
+
+    if (this.surfaceBankingVal) {
+      this.surfaceBankingVal.textContent = `${(surface.maxBankingAngleDeg || 0).toFixed(1)}°`;
+    }
+
+    if (this.surfaceNotesFeed) {
+      this.surfaceNotesFeed.innerHTML = '';
+      (surface.coachingNotes || []).forEach(note => {
+        const card = document.createElement('div');
+        card.className = `coaching-card chamfer-all-corners ${note.severity === 'High' ? 'severity-high' : 'severity-medium'}`;
+        card.innerHTML = `
+          <div class="coaching-header">
+            <span class="coaching-rule-title">${note.title}</span>
+            <span class="badge ${note.severity === 'High' ? 'badge-danger' : 'badge-accent'}">${note.severity}</span>
+          </div>
+          <p class="coaching-action">${note.text}</p>
+          <div style="font-size: 10px; color: var(--color-gold, #FFD700); font-style: italic; margin-top: 4px;">${note.quote}</div>
+        `;
+        this.surfaceNotesFeed.appendChild(card);
+      });
+    }
+  }
+
+  // --- SECTION 13: 14-POINT SKIP BARBER SCORECARD ---
+  renderScorecard(racecraft) {
+    if (!racecraft || !racecraft.scorecard) return;
+
+    if (this.scorecardOverallBadge) {
+      this.scorecardOverallBadge.textContent = `RACECRAFT: ${racecraft.overallRacecraftScore}/100 (GRADE ${racecraft.overallGrade})`;
+    }
+
+    if (this.scorecardTableBody) {
+      this.scorecardTableBody.innerHTML = '';
+      racecraft.scorecard.forEach(cat => {
+        const tr = document.createElement('tr');
+        const statusColor = cat.status === 'Mastered' ? 'var(--color-success)' : (cat.status === 'Proficient' ? 'var(--color-gold, #FFD700)' : 'var(--color-f1-red)');
+        tr.innerHTML = `
+          <td style="font-family: var(--font-mono); font-weight: bold; color: var(--color-text-secondary);">${cat.id}</td>
+          <td style="font-weight: 600;">${cat.name}</td>
+          <td style="font-family: var(--font-mono); font-weight: 700;">${cat.score}</td>
+          <td><span class="badge" style="font-family: var(--font-mono); padding: 2px 6px;">${cat.grade}</span></td>
+          <td style="color: ${statusColor}; font-weight: 600;">${cat.status}</td>
+          <td style="font-size: 11px; color: var(--color-text-secondary);">${cat.focus}</td>
+          <td style="font-size: 10px; font-style: italic; color: #BBB;">${cat.quote}</td>
+        `;
+        this.scorecardTableBody.appendChild(tr);
+      });
+    }
+  }
 }
+
