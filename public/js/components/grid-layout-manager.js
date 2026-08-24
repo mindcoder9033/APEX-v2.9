@@ -420,7 +420,7 @@ export class GridLayoutManager {
     // Backdrop for drawer
     const backdrop = document.createElement('div');
     backdrop.id = 'widget-drawer-backdrop';
-    backdrop.className = 'modal-backdrop';
+    backdrop.className = 'modal-backdrop widget-backdrop';
     document.body.appendChild(backdrop);
   }
 

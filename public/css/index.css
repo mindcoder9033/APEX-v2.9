@@ -511,21 +511,27 @@ body.layout-edit-active .widget-resize-handle {
 .widget-catalog-drawer {
   position: fixed;
   top: 0;
-  right: -460px;
-  width: 440px;
+  right: -480px;
+  width: 460px;
   max-width: 90vw;
   height: 100vh;
   background: #0E0E0E;
   border-left: 1px solid var(--color-border-bright);
-  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.8);
-  z-index: 1000;
+  box-shadow: -10px 0 40px rgba(0, 0, 0, 0.9);
+  z-index: 10002;
   display: flex;
   flex-direction: column;
   transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
 
 .widget-catalog-drawer.active {
   right: 0;
+  pointer-events: auto;
+}
+
+#widget-drawer-backdrop {
+  z-index: 10001;
 }
 
 .drawer-header {
