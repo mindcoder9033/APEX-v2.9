@@ -199,45 +199,12 @@ export class SessionManager {
       }
     }
   }
-        if (!this.latestAnalysisReport) {
-          alert('No stint analysis report available. Record a session first!');
-          return;
-        }
 
-        try {
-          this.btnDownloadPdf.disabled = true;
-          this.btnDownloadPdf.textContent = 'GENERATING PDF...';
-
-          const metadata = {
-            driverName: this.currentStintMetadata?.driverName || this.settings.driverName || 'APEX Driver',
-            trackName: this.currentStintMetadata?.trackName || 'Grand Prix Circuit',
-            sessionName: this.currentStintMetadata?.sessionName || this.settings.sessionName || 'Track Day Session',
-            carName: this.currentStintMetadata?.carName || 'Race Spec Vehicle',
-            carClass: this.currentStintMetadata?.carClass || 'S Class',
-            carPi: this.currentStintMetadata?.carPi || '800',
-            date: this.currentStintMetadata?.date || new Date().toISOString().split('T')[0],
-            totalLaps: this.latestAnalysisReport.validLapsCount || 1,
-            bestLapTimeStr: this.formatLapTime(this.latestAnalysisReport.bestLap?.lapTime)
-          };
-
-          const pdfBytes = await this.pdfGenerator.generatePdf(this.latestAnalysisReport, metadata);
-          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `APEX_Report_${metadata.trackName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        } catch (err) {
-          console.error('[PDF] Export error:', err);
-          alert(`PDF Generation failed: ${err.message}`);
-        } finally {
-          this.btnDownloadPdf.disabled = false;
-          this.btnDownloadPdf.innerHTML = '<span>📄</span> DOWNLOAD PDF REPORT';
-        }
-      });
+  toggleRecording() {
+    if (this.isRecording) {
+      this.stopRecording();
+    } else {
+      this.startRecording();
     }
   }
 

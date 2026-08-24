@@ -1177,7 +1177,6 @@ export class ClientPdfGenerator {
       color: this.colors.textPrimary
     });
   }
-  }
 
   // --- Page 5-6 (Dynamic): Corner-by-Corner Coaching Page ---
   drawCornerCoachingPage(page, y, corner, report, fonts) {
