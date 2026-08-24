@@ -225,6 +225,86 @@
         </div>
       </div>
 
+      <!-- PERFORMANCE SCORE HERO CARD (SPRINT 10.5) -->
+      <div id="performance-score-card" class="performance-score-dashboard-card chamfer-all-corners">
+        <div class="score-hero-main">
+          <div class="score-badge-cluster">
+            <div id="score-grade-badge" class="score-grade-badge grade-b">B+</div>
+            <div class="score-hero-details">
+              <div class="score-hero-title">Overall Performance Score</div>
+              <div id="score-hero-label" class="score-hero-subtitle">Competent — Clear Areas to Improve</div>
+            </div>
+          </div>
+          <div class="score-number-display">
+            <span id="score-overall-val" class="score-number-value">78</span>
+            <span class="score-number-max">/ 100</span>
+          </div>
+        </div>
+
+        <div class="score-breakdown-grid">
+          <div class="score-component-card chamfer-all-corners">
+            <div class="comp-header">
+              <span class="comp-label">Consistency</span>
+              <span id="comp-consistency-val" class="comp-value">72%</span>
+            </div>
+            <div class="comp-progress-bg">
+              <div id="comp-consistency-bar" class="comp-progress-fill" style="width: 72%;"></div>
+            </div>
+            <span class="comp-subtext">Lap time standard deviation</span>
+          </div>
+
+          <div class="score-component-card chamfer-all-corners">
+            <div class="comp-header">
+              <span class="comp-label">Line Quality</span>
+              <span id="comp-line-val" class="comp-value">82%</span>
+            </div>
+            <div class="comp-progress-bg">
+              <div id="comp-line-bar" class="comp-progress-fill" style="width: 82%;"></div>
+            </div>
+            <span class="comp-subtext">Apex accuracy & path tracking</span>
+          </div>
+
+          <div class="score-component-card chamfer-all-corners">
+            <div class="comp-header">
+              <span class="comp-label">Braking Score</span>
+              <span id="comp-braking-val" class="comp-value">78%</span>
+            </div>
+            <div class="comp-progress-bg">
+              <div id="comp-braking-bar" class="comp-progress-fill" style="width: 78%;"></div>
+            </div>
+            <span class="comp-subtext">Threshold + trail-brake overlap</span>
+          </div>
+
+          <div class="score-component-card chamfer-all-corners">
+            <div class="comp-header">
+              <span class="comp-label">Exit Speed</span>
+              <span id="comp-exit-val" class="comp-value">76%</span>
+            </div>
+            <div class="comp-progress-bg">
+              <div id="comp-exit-bar" class="comp-progress-fill" style="width: 76%;"></div>
+            </div>
+            <span class="comp-subtext">Exit efficiency & throttle timing</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TOP-3 PRIORITY RECOMMENDATIONS PANEL (SPRINT 10.5) -->
+      <div id="priority-recommendations-card" class="priority-recs-dashboard-card chamfer-all-corners">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-gold, #FFD700);">🏆</span> Top Priority Coaching Directives
+            </h3>
+            <span class="pit-card-subtitle">Ranked by projected lap time improvement & Skip Barber racecraft principles</span>
+          </div>
+        </div>
+        <div id="priority-recs-list" class="priority-recs-grid">
+          <!-- Dynamically populated top 3 recommendations -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
       <!-- SECTION 3: 2D VECTOR TRACK MAP & THE LINE ANALYSIS -->
       <div class="track-map-dashboard-card chamfer-all-corners">
         <div class="track-map-header">
@@ -594,6 +674,71 @@
 
         <div id="tire-diagnostics-text" class="tire-diagnostics-bar">
           <!-- Axle balance & tire guidance text -->
+        </div>
+      </div>
+
+      <div class="separator-glow"></div>
+
+      <!-- SECTION 8: G-G FRICTION CIRCLE & TRACTION LIMIT ANALYSIS (SPRINT 10.5) -->
+      <div id="friction-circle-card" class="friction-circle-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
+          <div class="pit-card-title-group">
+            <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-gold, #FFD700);">🎯</span> G-G Friction Circle // Limit Driving & Traction Budget
+            </h3>
+            <span class="pit-card-subtitle">Skip Barber Traction Circle Utilization & Phase-Classified G-Force Transition Dynamics</span>
+          </div>
+          <div id="friction-util-badge" class="badge" style="background: rgba(229, 169, 16, 0.15); border: 1px solid var(--color-gold, #FFD700); color: var(--color-gold, #FFD700); font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 2px;">
+            LIMIT UTILIZATION: --%
+          </div>
+        </div>
+
+        <!-- Friction Circle KPI Summary -->
+        <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-md);">
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">High Limit Utilization</span>
+            <span id="friction-util-val" class="stat-cell-value">--%</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Peak Combined G</span>
+            <span id="friction-peak-g-val" class="stat-cell-value">-- G</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Peak Lateral G</span>
+            <span id="friction-peak-lat-val" class="stat-cell-value">-- G</span>
+          </div>
+          <div class="stat-cell chamfer-all-corners">
+            <span class="stat-cell-label">Peak Longitudinal G</span>
+            <span id="friction-peak-long-val" class="stat-cell-value">-- G</span>
+          </div>
+        </div>
+
+        <!-- Friction Circle Visualization Grid: Canvas on Left, Phase Legend & Diagnostics on Right -->
+        <div class="friction-viz-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); align-items: center;">
+          <div class="friction-canvas-wrapper chamfer-all-corners" style="position: relative; background: #0A0A0A; border: 1px solid var(--color-border); padding: 12px; display: flex; justify-content: center; align-items: center;">
+            <canvas id="friction-circle-canvas" width="380" height="380" style="width: 100%; max-width: 380px; aspect-ratio: 1/1; cursor: crosshair;"></canvas>
+            <div id="friction-canvas-tooltip" class="friction-tooltip" style="display: none; position: absolute; pointer-events: none; background: rgba(10, 10, 10, 0.95); border: 1px solid var(--color-border-bright); padding: 6px 10px; border-radius: 4px; font-family: var(--font-mono); font-size: 10px; z-index: 10;">
+              <!-- Tooltip info injected dynamically -->
+            </div>
+          </div>
+
+          <div class="friction-details-panel" style="display: flex; flex-direction: column; gap: var(--space-sm);">
+            <div style="font-size: 11px; font-weight: bold; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 0.5px;">
+              Driving Phase Traction Breakdown
+            </div>
+            <div id="friction-phase-breakdown-list" class="friction-phase-list" style="display: flex; flex-direction: column; gap: 6px;">
+              <!-- Dynamically populated phase percentage items -->
+            </div>
+
+            <div class="guide-step-card chamfer-all-corners" style="background: #121212; border-left: 3px solid var(--color-gold, #FFD700); padding: 10px 12px; margin-top: 6px;">
+              <div style="font-size: 10px; font-weight: bold; color: var(--color-gold, #FFD700); text-transform: uppercase; margin-bottom: 2px;">
+                "Going Faster!" Ch.5 Traction Budget Principle
+              </div>
+              <div style="font-size: 10px; color: var(--color-text-secondary); line-height: 1.4;">
+                "The friction circle allows you to think about what happens to one ability of the tire as you increase or decrease the demands for another ability." Stay on the boundary rim during combined transitions.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

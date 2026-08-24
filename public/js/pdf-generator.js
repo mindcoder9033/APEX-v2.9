@@ -177,7 +177,7 @@ export class ClientPdfGenerator {
     this.drawPageBackground(pageGuide);
     let yG = this.height - this.margin;
     yG = this.drawPageHeaderMini(pageGuide, yG, 'HOW TO READ YOUR TELEMETRY - A GUIDE FOR RACERS', fonts);
-    this.drawTelemetryReadingGuide(pageGuide, yG, fonts);
+    this.drawTelemetryReadingGuide(pageGuide, yG, report, fonts);
     this.drawFooter(pageGuide, pageIndex++, totalPages, fonts);
 
     // --- Page N+3: Practice Plan (Section 6) ---
@@ -364,15 +364,11 @@ export class ClientPdfGenerator {
       color: this.colors.f1Red
     });
 
-    const carDisplay = metadata.carName
-      ? (metadata.carClass ? `${metadata.carName} [${metadata.carClass}${metadata.carPi ? ' ' + metadata.carPi : ''}]` : metadata.carName)
-      : (metadata.carClass || 'S Class');
-
     const metaItems = [
       { label: 'DRIVER:', val: metadata.driverName || 'APEX Driver' },
-      { label: 'TRACK / LAYOUT:', val: metadata.trackName || 'Grand Prix Circuit' },
+      { label: 'TRACK:', val: metadata.trackName || 'Grand Prix Circuit' },
       { label: 'SESSION:', val: metadata.sessionName || 'Track Day Stint' },
-      { label: 'VEHICLE:', val: carDisplay },
+      { label: 'CAR CLASS:', val: metadata.carClass || 'S Class' },
       { label: 'DATE RECORDED:', val: metadata.date || new Date().toISOString().split('T')[0] },
       { label: 'LAPS COMPLETED:', val: String(metadata.totalLaps || report.totalLapsCount || 1) },
       { label: 'BEST LAP TIME:', val: metadata.bestLapTimeStr || this.formatTime(report.bestLap?.lapTime) }
@@ -380,9 +376,9 @@ export class ClientPdfGenerator {
 
     let rowY = y - 42;
     metaItems.forEach(item => {
-      page.drawText(item.label, { x: this.margin + 20, y: rowY, size: 8.5, font: fonts.bold, color: this.colors.textSecondary });
-      page.drawText(item.val, { x: this.margin + 140, y: rowY, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
-      rowY -= 15.5;
+      page.drawText(item.label, { x: this.margin + 20, y: rowY, size: 9, font: fonts.bold, color: this.colors.textSecondary });
+      page.drawText(item.val, { x: this.margin + 150, y: rowY, size: 9, font: fonts.monoBold, color: this.colors.textPrimary });
+      rowY -= 16;
     });
 
     // Drawing a minimal, clean outline of the 2D Track Map in the lower bottom right as a graphic
@@ -419,6 +415,11 @@ export class ClientPdfGenerator {
     const gradeObj = summary.grade || { grade: 'B+', label: 'Competent — Clear Areas to Improve' };
     const score = summary.overallScore || 78;
 
+    // Grade color selection
+    let gradeColor = this.colors.success;
+    if (gradeObj.grade.startsWith('C')) gradeColor = this.colors.warning;
+    else if (gradeObj.grade.startsWith('D') || gradeObj.grade === 'F') gradeColor = this.colors.f1Red;
+
     // 1. Overall Grade and Score Badge
     const badgeH = 50;
     page.drawRectangle({
@@ -431,23 +432,81 @@ export class ClientPdfGenerator {
       borderWidth: 1
     });
 
-    page.drawText(`GRADE: ${gradeObj.grade}`, {
+    // Left accent bar
+    page.drawRectangle({
+      x: this.margin,
+      y: y - badgeH,
+      width: 4,
+      height: badgeH,
+      color: gradeColor
+    });
+
+    page.drawText(`OVERALL PERFORMANCE GRADE: ${gradeObj.grade}`, {
       x: this.margin + 16,
-      y: y - 22,
-      size: 14,
+      y: y - 20,
+      size: 13,
       font: fonts.bold,
-      color: this.colors.f1Red
+      color: gradeColor
+    });
+
+    page.drawText(gradeObj.label || 'Skip Barber Performance Index', {
+      x: this.margin + 16,
+      y: y - 36,
+      size: 8,
+      font: fonts.italic,
+      color: this.colors.textSecondary
     });
 
     page.drawText(`SCORE: ${score}%`, {
-      x: this.width - this.margin - 110,
-      y: y - 32,
+      x: this.width - this.margin - 120,
+      y: y - 30,
       size: 16,
       font: fonts.monoBold,
       color: this.colors.textPrimary
     });
 
-    y -= (badgeH + 16);
+    y -= (badgeH + 12);
+
+    // 1.5 Four-Component Breakdown Grid
+    const compH = 34;
+    const compW = (contentW - 18) / 4;
+    const comps = [
+      { label: 'CONSISTENCY', val: `${summary.components?.consistency ?? 75}%` },
+      { label: 'LINE QUALITY', val: `${summary.components?.lineQuality ?? 80}%` },
+      { label: 'BRAKING SCORE', val: `${summary.components?.brakingScore ?? 78}%` },
+      { label: 'EXIT SPEED', val: `${summary.components?.exitSpeedScore ?? 76}%` }
+    ];
+
+    comps.forEach((c, idx) => {
+      const cx = this.margin + idx * (compW + 6);
+      page.drawRectangle({
+        x: cx,
+        y: y - compH,
+        width: compW,
+        height: compH,
+        color: this.colors.panelAlt,
+        borderColor: this.colors.border,
+        borderWidth: 0.5
+      });
+
+      page.drawText(c.label, {
+        x: cx + 6,
+        y: y - 13,
+        size: 6,
+        font: fonts.bold,
+        color: this.colors.textMuted
+      });
+
+      page.drawText(c.val, {
+        x: cx + 6,
+        y: y - 26,
+        size: 9,
+        font: fonts.monoBold,
+        color: this.colors.textPrimary
+      });
+    });
+
+    y -= (compH + 14);
 
     // 2. Two side-by-side KPI Cards
     const boxW = (contentW - 12) / 2;
@@ -498,10 +557,10 @@ export class ClientPdfGenerator {
     page.drawText('Best Lap #:', { x: this.margin + boxW + 24, y: y - 50, size: 8, font: fonts.bold, color: this.colors.textSecondary });
     page.drawText(String(report.bestLap?.lapNumber || 7), { x: this.margin + boxW + 115, y: y - 50, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
 
-    y -= (boxH + 16);
+    y -= (boxH + 14);
 
     // 3. Positive vs Opportunity Stack
-    const sectionH = 140;
+    const sectionH = 120;
 
     // What you did right panel
     page.drawRectangle({
@@ -525,8 +584,8 @@ export class ClientPdfGenerator {
 
     page.drawText('WHAT YOU DID RIGHT [SUCCESS]', {
       x: this.margin + 16,
-      y: y - 18,
-      size: 9.5,
+      y: y - 16,
+      size: 9,
       font: fonts.bold,
       color: this.colors.success
     });
@@ -534,12 +593,12 @@ export class ClientPdfGenerator {
     // Dynamically retrieve positive findings or use clean guidelines
     const positiveFindings = report.findings?.filter(f => f.severity === 'Low').slice(0, 2) || [];
     const rightBullets = [
-      positiveFindings[0] ? positiveFindings[0].actionPlan : 'Your line through Turns 3-6 is excellent. You\'re using all the track and maintaining consistent apex speeds.',
-      positiveFindings[1] ? positiveFindings[1].actionPlan : 'Your upshifting is crisp and consistent. No missed shifts.',
-      'Your best lap shows you have the pace. The car is capable.'
+      positiveFindings[0] ? positiveFindings[0].actionPlan : 'Your line through complex turns is excellent. You\'re using full track width and maintaining apex speed.',
+      positiveFindings[1] ? positiveFindings[1].actionPlan : 'Upshifting and powerband engagement are crisp and consistent with zero over-rev events.',
+      'Your best lap shows strong pace capability across all sectors.'
     ];
 
-    let bulletY = y - 34;
+    let bulletY = y - 30;
     rightBullets.slice(0, 3).forEach(bullet => {
       page.drawText('+', { x: this.margin + 16, y: bulletY, size: 8, font: fonts.bold, color: this.colors.success });
       bulletY = this.drawWrappedText(page, bullet, {
@@ -547,14 +606,14 @@ export class ClientPdfGenerator {
         y: bulletY,
         maxWidth: contentW - 40,
         font: fonts.regular,
-        fontSize: 8,
+        fontSize: 7.5,
         color: this.colors.textPrimary,
         maxLines: 2,
-        lineHeight: 10
-      }) - 3;
+        lineHeight: 9.5
+      }) - 2;
     });
 
-    y -= (sectionH + 12);
+    y -= (sectionH + 10);
 
     // Opportunity panel
     page.drawRectangle({
@@ -576,73 +635,76 @@ export class ClientPdfGenerator {
       color: this.colors.f1Red
     });
 
-    page.drawText('YOUR BIGGEST OPPORTUNITY [ALERT]', {
+    page.drawText('TOP COACHING PRIORITY [MAX LAP TIME GAIN]', {
       x: this.margin + 16,
-      y: y - 18,
-      size: 9.5,
+      y: y - 16,
+      size: 9,
       font: fonts.bold,
       color: this.colors.f1Red
     });
 
     const topRecommendation = report.recommendations?.[0] || {
-      title: 'Turn 9 Exit Speed',
-      description: 'Turn 9 exit speed is 3.4 mph slower than your best lap. This corner leads onto the longest straight. You\'re losing approximately 0.6 seconds per lap here.',
-      action: 'Focus on Turn 9 corner exit. Do 5-10 laps focusing only on this.',
-      quote: '"The greatest part of a lap is spent on corner exits and straights." — Going Faster!, Chapter 1'
+      title: 'Turn 9 Exit Speed Optimization',
+      description: 'Turn 9 exit speed is 3.4 mph slower than theoretical maximum. This corner leads onto the longest straight. You are losing approx 0.6s per lap here.',
+      action: 'Focus on progressive throttle application as steering unwinds. Feed power on smoothly rather than stabbing it.',
+      quote: '"The biggest gain in lap time comes from corner exit speed." — Going Faster!, Ch.1'
     };
 
     page.drawText(topRecommendation.title.toUpperCase(), {
       x: this.margin + 16,
-      y: y - 32,
-      size: 8.5,
+      y: y - 30,
+      size: 8,
       font: fonts.bold,
       color: this.colors.textPrimary
     });
 
     this.drawWrappedText(page, topRecommendation.description, {
       x: this.margin + 16,
-      y: y - 44,
+      y: y - 42,
       maxWidth: contentW - 32,
       font: fonts.regular,
-      fontSize: 8,
+      fontSize: 7.5,
       color: this.colors.textSecondary,
       maxLines: 2,
-      lineHeight: 10
+      lineHeight: 9.5
     });
 
-    page.drawText('WHY THIS MATTERS', {
+    page.drawText('SKIP BARBER COACHING PRINCIPLE', {
       x: this.margin + 16,
-      y: y - 72,
-      size: 8,
+      y: y - 66,
+      size: 7,
       font: fonts.bold,
       color: this.colors.textSecondary
     });
 
     this.drawWrappedText(page, topRecommendation.quote, {
       x: this.margin + 16,
-      y: y - 84,
+      y: y - 76,
       maxWidth: contentW - 32,
       font: fonts.italic,
-      fontSize: 8,
+      fontSize: 7,
       color: this.colors.textMuted,
       maxLines: 2,
-      lineHeight: 10
+      lineHeight: 9
     });
 
-    page.drawText('RECOMMENDED PRACTICE FOCUS', {
+    page.drawText('ACTION PLAN:', {
       x: this.margin + 16,
-      y: y - 110,
-      size: 8,
+      y: y - 98,
+      size: 7,
       font: fonts.bold,
-      color: this.colors.textSecondary
+      color: this.colors.gold
     });
 
-    page.drawText(`1. ${topRecommendation.action}`, {
-      x: this.margin + 16,
-      y: y - 124,
-      size: 8,
+    this.drawWrappedText(page, topRecommendation.action, {
+      x: this.margin + 68,
+      y: y - 98,
+      maxWidth: contentW - 84,
       font: fonts.regular,
-      color: this.colors.textPrimary
+      fontSize: 7,
+      color: this.colors.textPrimary,
+      maxLines: 2,
+      lineHeight: 9
     });
   }
 
@@ -855,7 +917,7 @@ export class ClientPdfGenerator {
   }
 
   // --- Page 4: Telemetry Reading Guide ---
-  drawTelemetryReadingGuide(page, y, fonts) {
+  drawTelemetryReadingGuide(page, y, report, fonts) {
     const contentW = this.width - (this.margin * 2);
     const boxH = 160;
 
@@ -951,7 +1013,7 @@ export class ClientPdfGenerator {
 
     y -= (boxH + 16);
 
-    // Graph 3: Friction Circle Guide
+    // Graph 3: Friction Circle Guide (Split horizontally with Vector Scatter Plot)
     page.drawRectangle({
       x: this.margin,
       y: y - boxH,
@@ -962,7 +1024,7 @@ export class ClientPdfGenerator {
       borderWidth: 1
     });
 
-    page.drawText('DIAGRAM 3: THE FRICTION CIRCLE (TRACTION BUDGET)', {
+    page.drawText('DIAGRAM 3: THE FRICTION CIRCLE (TRACTION BUDGET & G-G DIAGRAM)', {
       x: this.margin + 12,
       y: y - 16,
       size: 8.5,
@@ -971,15 +1033,15 @@ export class ClientPdfGenerator {
     });
 
     const frictionGuideText = 'The Friction Circle visualizes combined G-forces (Longitudinal G vs Lateral G):\n' +
-      '  - THE EDGE: Represents the physical grip limit of the tires. The driver should stay near the edge.\n' +
-      '  - BRAKE-TURN QUADRANT: Smooth transition from straight braking (pure Longitudinal G) into cornering (Lateral G).\n' +
-      '  - ACCELERATE-TURN QUADRANT: Progressive squeeze of throttle as steering angle is released (unwound).\n' +
-      '  - EMPTY QUADRANTS: Signals coasting dead-zones where the tire budget is wasted, leaving time on the table.';
+      '  - THE EDGE: Represents physical tire grip limits. Driver aims to stay on perimeter.\n' +
+      '  - BRAKE-TURN (Gold): Smooth blend from threshold braking into turn-in rotation.\n' +
+      '  - ACCEL-TURN (Blue): Progressive throttle squeeze as steering wheel unwinds.\n' +
+      '  - EMPTY ZONES: Signals coasting or under-driving the car\'s adhesion limits.';
 
     this.drawWrappedText(page, frictionGuideText, {
       x: this.margin + 12,
       y: y - 30,
-      maxWidth: contentW - 24,
+      maxWidth: 300,
       font: fonts.regular,
       fontSize: 7.5,
       color: this.colors.textSecondary,
@@ -987,13 +1049,134 @@ export class ClientPdfGenerator {
       lineHeight: 11
     });
 
-    page.drawText('"Tires have a finite traction budget. Any longitudinal slip steals from lateral capability." -- Chapter 13', {
+    page.drawText('"Tires have a finite traction budget." -- Chapter 13', {
       x: this.margin + 12,
       y: y - 146,
       size: 7.5,
       font: fonts.italic,
       color: this.colors.textMuted
     });
+
+    // Draw Vector G-G Scatter Plot inside Diagram 3 right pane
+    const plotW = 185;
+    const plotH = 136;
+    const plotX = this.margin + contentW - plotW - 12;
+    const plotY = y - boxH + 12;
+    this.drawFrictionCircleVectorPlot(page, plotX, plotY, plotW, plotH, report?.frictionCircle, fonts);
+  }
+
+  // --- G-G Friction Circle Vector Scatter Plot Engine ---
+  drawFrictionCircleVectorPlot(page, x, y, width, height, frictionCircle, fonts) {
+    const cx = x + width / 2;
+    const cy = y + height / 2;
+    const radius = Math.min(width, height) / 2 - 12;
+
+    const maxG = frictionCircle?.maxG || 1.4;
+    const points = frictionCircle?.points || [];
+
+    // Background card
+    page.drawRectangle({
+      x,
+      y,
+      width,
+      height,
+      color: this.colors.bg,
+      borderColor: this.colors.border,
+      borderWidth: 0.5
+    });
+
+    // Concentric Reference G-Rings (0.5G, 1.0G)
+    const ringSteps = [0.5, 1.0];
+    ringSteps.forEach(gVal => {
+      if (gVal < maxG) {
+        const r = (gVal / maxG) * radius;
+        page.drawCircle({
+          x: cx,
+          y: cy,
+          size: r,
+          borderColor: this.colors.border,
+          borderWidth: 0.5
+        });
+        page.drawText(`${gVal.toFixed(1)}G`, {
+          x: cx + 2,
+          y: cy + r - 4,
+          size: 5,
+          font: fonts.mono,
+          color: this.colors.textMuted
+        });
+      }
+    });
+
+    // Outer Boundary circle at Max G
+    page.drawCircle({
+      x: cx,
+      y: cy,
+      size: radius,
+      borderColor: this.colors.f1Red,
+      borderWidth: 0.8
+    });
+
+    // Crosshairs
+    page.drawLine({
+      start: { x: cx - radius - 2, y: cy },
+      end: { x: cx + radius + 2, y: cy },
+      thickness: 0.5,
+      color: this.colors.borderBright
+    });
+    page.drawLine({
+      start: { x: cx, y: cy - radius - 2 },
+      end: { x: cx, y: cy + radius + 2 },
+      thickness: 0.5,
+      color: this.colors.borderBright
+    });
+
+    // Axis Labels
+    page.drawText('+ACC', { x: cx - 8, y: cy + radius + 2, size: 4.5, font: fonts.bold, color: this.colors.textMuted });
+    page.drawText('-BRK', { x: cx - 8, y: cy - radius - 7, size: 4.5, font: fonts.bold, color: this.colors.textMuted });
+    page.drawText('L', { x: cx - radius - 8, y: cy - 2, size: 5, font: fonts.bold, color: this.colors.textMuted });
+    page.drawText('R', { x: cx + radius + 3, y: cy - 2, size: 5, font: fonts.bold, color: this.colors.textMuted });
+
+    // Render phase-colored scatter points
+    const step = Math.max(1, Math.floor(points.length / 300));
+    for (let i = 0; i < points.length; i += step) {
+      const pt = points[i];
+      const px = cx + (pt.latG / maxG) * radius;
+      const py = cy + (pt.longG / maxG) * radius;
+
+      let ptColor = this.colors.textMuted;
+      if (pt.phase === 'brake-turn') ptColor = this.colors.gold;
+      else if (pt.phase === 'braking') ptColor = this.colors.f1Red;
+      else if (pt.phase === 'accelerate-turn') ptColor = this.colors.blue;
+      else if (pt.phase === 'accelerating') ptColor = this.colors.success;
+      else if (pt.phase === 'cornering') ptColor = rgb(0.6, 0.4, 1.0);
+
+      if (px >= x && px <= x + width && py >= y && py <= y + height) {
+        page.drawCircle({
+          x: px,
+          y: py,
+          size: 1.2,
+          color: ptColor
+        });
+      }
+    }
+
+    // Header metrics in plot
+    const util = frictionCircle?.utilization?.highUtilization ?? 0;
+    page.drawText(`LIMIT: ${util}%`, {
+      x: x + 4,
+      y: y + height - 8,
+      size: 5,
+      font: fonts.monoBold,
+      color: this.colors.gold
+    });
+    page.drawText(`PEAK: ${maxG.toFixed(2)}G`, {
+      x: x + width - 36,
+      y: y + height - 8,
+      size: 5,
+      font: fonts.monoBold,
+      color: this.colors.textPrimary
+    });
+  }
   }
 
   // --- Page 5-6 (Dynamic): Corner-by-Corner Coaching Page ---
@@ -1712,83 +1895,121 @@ export class ClientPdfGenerator {
       color: this.colors.textPrimary
     });
 
-    y -= (boxH + 20);
+    y -= (boxH + 16);
 
-    // 2. What you did well
-    page.drawText('WHAT YOU DID WELL', {
+    // 2. Top Priority Coaching Recommendations
+    page.drawText('TOP-3 PRIORITY COACHING RECOMMENDATIONS (SKIP BARBER RACECRAFT)', {
       x: this.margin,
       y: y,
-      size: 9.5,
-      font: fonts.bold,
-      color: this.colors.success
-    });
-    y -= 12;
-
-    const wellItems = [
-      'Line consistency through complex corners',
-      'Upshifting technique',
-      'Apex speed management'
-    ];
-
-    wellItems.forEach(item => {
-      page.drawText('+', { x: this.margin + 4, y: y, size: 8, font: fonts.bold, color: this.colors.success });
-      page.drawText(item, { x: this.margin + 16, y: y, size: 8, font: fonts.regular, color: this.colors.textPrimary });
-      y -= 12;
-    });
-
-    y -= 10;
-
-    // 3. What needs work
-    page.drawText('WHAT NEEDS WORK', {
-      x: this.margin,
-      y: y,
-      size: 9.5,
+      size: 9,
       font: fonts.bold,
       color: this.colors.f1Red
     });
-    y -= 12;
-
-    const workItems = [
-      'Corner exit speed (especially Turn 9)',
-      'Trail-braking technique',
-      'Brake point consistency'
-    ];
-
-    workItems.forEach(item => {
-      page.drawText('!', { x: this.margin + 6, y: y, size: 8, font: fonts.bold, color: this.colors.f1Red });
-      page.drawText(item, { x: this.margin + 16, y: y, size: 8, font: fonts.regular, color: this.colors.textPrimary });
-      y -= 12;
-    });
-
     y -= 10;
 
-    // 4. Your Action Plan
-    page.drawText('YOUR ACTION PLAN', {
+    const recs = (report.recommendations || []).slice(0, 3);
+    const recH = 50;
+
+    if (recs.length === 0) {
+      recs.push({
+        category: 'Exit Speed',
+        corner: 9,
+        title: 'Turn 9 Exit Speed Optimization',
+        description: 'Corner exit speed is slower than theoretical limit. Focus on progressive throttle squeeze on unwinding.',
+        action: 'Feed throttle on earlier as steering unwinds. Count to 2 on throttle squeeze.',
+        impact: 0.6,
+        quote: '"The biggest gain in lap time comes from corner exit speed." — Going Faster!, Ch.1'
+      });
+    }
+
+    recs.forEach((rec, idx) => {
+      const cy = y - idx * (recH + 6) - recH;
+      page.drawRectangle({
+        x: this.margin,
+        y: cy,
+        width: contentW,
+        height: recH,
+        color: this.colors.panel,
+        borderColor: this.colors.border,
+        borderWidth: 0.8
+      });
+
+      // Priority badge bar
+      page.drawRectangle({
+        x: this.margin,
+        y: cy,
+        width: 3,
+        height: recH,
+        color: idx === 0 ? this.colors.f1Red : (idx === 1 ? this.colors.gold : this.colors.blue)
+      });
+
+      const cornerStr = rec.corner !== undefined && rec.corner !== 'All' ? `TURN ${rec.corner}` : 'GENERAL';
+      page.drawText(`#${idx + 1} [${rec.category.toUpperCase()}] ${cornerStr}: ${rec.title}`, {
+        x: this.margin + 10,
+        y: cy + recH - 12,
+        size: 7.5,
+        font: fonts.bold,
+        color: this.colors.textPrimary
+      });
+
+      page.drawText(`+${(rec.impact || 0.2).toFixed(2)}s POTENTIAL`, {
+        x: this.width - this.margin - 85,
+        y: cy + recH - 12,
+        size: 7.5,
+        font: fonts.monoBold,
+        color: this.colors.gold
+      });
+
+      this.drawWrappedText(page, rec.action || rec.description, {
+        x: this.margin + 10,
+        y: cy + recH - 24,
+        maxWidth: contentW - 20,
+        font: fonts.regular,
+        fontSize: 7,
+        color: this.colors.textSecondary,
+        maxLines: 2,
+        lineHeight: 9
+      });
+
+      if (rec.quote) {
+        page.drawText(rec.quote, {
+          x: this.margin + 10,
+          y: cy + 7,
+          size: 6.5,
+          font: fonts.italic,
+          color: this.colors.textMuted
+        });
+      }
+    });
+
+    y -= (recs.length * (recH + 6) + 12);
+
+    // 3. Your Action Plan
+    page.drawText('NEXT STINT EXECUTION DIRECTIVES', {
       x: this.margin,
       y: y,
-      size: 9.5,
+      size: 8.5,
       font: fonts.bold,
       color: this.colors.textPrimary
     });
-    y -= 12;
+    y -= 10;
 
     const actionItems = [
-      '1. 5 laps focusing ONLY on Turn 9 exit speed',
-      '2. Run "The Procedure" for braking at T7',
-      '3. Practice trail-braking at T7',
-      '4. Run a full stint and compare to this report'
+      '1. Dedicate 5 laps focusing ONLY on the #1 priority corner exit throttle timing',
+      '2. Practice "The Procedure" for threshold braking in small incremental bites',
+      '3. Stabilize brake markers with fixed physical visual references'
     ];
 
     actionItems.forEach(item => {
-      page.drawText(item, { x: this.margin + 4, y: y, size: 8, font: fonts.regular, color: this.colors.textPrimary });
-      y -= 12;
+      page.drawText(item, { x: this.margin + 4, y: y, size: 7.5, font: fonts.regular, color: this.colors.textPrimary });
+      y -= 11;
     });
 
-    y -= 25;
+    y -= 14;
 
-    // 5. Quote Box
+    // 4. Quote Box
     const quoteW = contentW;
-    const quoteH = 50;
+    const quoteH = 40;
     page.drawRectangle({
       x: this.margin,
       y: y - quoteH,
@@ -1802,7 +2023,7 @@ export class ClientPdfGenerator {
     const quoteText = '"It is not reasonable to expect a relatively inexperienced driver to get this perfectly right out of the box. Even a skilled racer doesn\'t get it perfectly right on the first few attempts."';
     this.drawWrappedText(page, quoteText, {
       x: this.margin + 12,
-      y: y - 16,
+      y: y - 14,
       maxWidth: quoteW - 24,
       font: fonts.italic,
       fontSize: 7.5,

@@ -7,6 +7,8 @@ import { TireDynamicsEngine, TIRE_THERMAL_STATUS, THERMAL_THRESHOLDS } from './t
 import { DeltaComparisonEngine, CORNER_TYPE, CORNER_TYPE_INFO } from './delta-comparison.js';
 import { BrakingZoneEngine, CLASS_THEORETICAL_MAX_DECEL_G, THRESHOLD_EFFICIENCY_GRADES } from './braking-zones.js';
 import { ShiftingPowerbandEngine, SHIFT_QUALITY_GRADES } from './shifting-powerband.js';
+import { FrictionCircleAnalyzer, FRICTION_PHASE, FRICTION_PHASE_COLORS } from './friction-circle.js';
+import { PerformanceSummaryEngine, RecommendationEngine, PERFORMANCE_GRADES } from './performance-summary.js';
 
 export class AnalysisEngine {
   constructor(options = {}) {
@@ -23,7 +25,21 @@ export class AnalysisEngine {
 
   analyzeStint(samples, options = {}) {
     if (!samples || samples.length === 0) {
-      return { laps: [], validLapsCount: 0, totalLapsCount: 0, bestLap: null, findings: [], trackMap: null, tireDynamics: null, deltaComparison: null, brakingAnalysis: null, shiftingAnalysis: null };
+      return {
+        laps: [],
+        validLapsCount: 0,
+        totalLapsCount: 0,
+        bestLap: null,
+        findings: [],
+        trackMap: null,
+        tireDynamics: null,
+        deltaComparison: null,
+        brakingAnalysis: null,
+        shiftingAnalysis: null,
+        frictionCircle: null,
+        performanceSummary: null,
+        recommendations: []
+      };
     }
 
     const laps = this.segmenter.segmentStint(samples);
@@ -99,6 +115,19 @@ export class AnalysisEngine {
       vehicleMeta
     );
 
+    // Friction Circle / G-G Diagram (ANALYSIS.md §9)
+    const frictionAnalyzer = new FrictionCircleAnalyzer(mapSamples);
+    const frictionCircle = frictionAnalyzer.generateFrictionCircle();
+
+    // Performance Summary Score (ANALYSIS.md §10.1)
+    const allAnalysisResults = { brakingAnalysis, shiftingAnalysis, tireDynamics, deltaComparison };
+    const summaryEngine = new PerformanceSummaryEngine(analyzedLaps, mapCorners, allAnalysisResults);
+    const performanceSummary = summaryEngine.generateSummary();
+
+    // Recommendation Engine (ANALYSIS.md §10.2)
+    const recEngine = new RecommendationEngine(mapCorners, allAnalysisResults);
+    const recommendations = recEngine.generateRecommendations();
+
     return {
       laps: analyzedLaps,
       validLapsCount: validLaps.length,
@@ -121,7 +150,10 @@ export class AnalysisEngine {
       tireDynamics,
       deltaComparison,
       brakingAnalysis,
-      shiftingAnalysis
+      shiftingAnalysis,
+      frictionCircle,
+      performanceSummary,
+      recommendations
     };
   }
 }
@@ -136,6 +168,9 @@ export {
   DeltaComparisonEngine,
   BrakingZoneEngine,
   ShiftingPowerbandEngine,
+  FrictionCircleAnalyzer,
+  PerformanceSummaryEngine,
+  RecommendationEngine,
   DRIVING_STATE,
   STATE_COLORS,
   TIRE_THERMAL_STATUS,
@@ -144,6 +179,10 @@ export {
   CORNER_TYPE_INFO,
   CLASS_THEORETICAL_MAX_DECEL_G,
   THRESHOLD_EFFICIENCY_GRADES,
-  SHIFT_QUALITY_GRADES
+  SHIFT_QUALITY_GRADES,
+  FRICTION_PHASE,
+  FRICTION_PHASE_COLORS,
+  PERFORMANCE_GRADES
 };
+
 

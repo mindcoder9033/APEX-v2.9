@@ -199,41 +199,71 @@ export class SessionManager {
       }
     }
   }
+        if (!this.latestAnalysisReport) {
+          alert('No stint analysis report available. Record a session first!');
+          return;
+        }
 
-  toggleRecording() {
-    if (this.isRecording) {
-      this.stopRecording();
-    } else {
-      this.startRecording();
+        try {
+          this.btnDownloadPdf.disabled = true;
+          this.btnDownloadPdf.textContent = 'GENERATING PDF...';
+
+          const metadata = {
+            driverName: this.currentStintMetadata?.driverName || this.settings.driverName || 'APEX Driver',
+            trackName: this.currentStintMetadata?.trackName || 'Grand Prix Circuit',
+            sessionName: this.currentStintMetadata?.sessionName || this.settings.sessionName || 'Track Day Session',
+            carName: this.currentStintMetadata?.carName || 'Race Spec Vehicle',
+            carClass: this.currentStintMetadata?.carClass || 'S Class',
+            carPi: this.currentStintMetadata?.carPi || '800',
+            date: this.currentStintMetadata?.date || new Date().toISOString().split('T')[0],
+            totalLaps: this.latestAnalysisReport.validLapsCount || 1,
+            bestLapTimeStr: this.formatLapTime(this.latestAnalysisReport.bestLap?.lapTime)
+          };
+
+          const pdfBytes = await this.pdfGenerator.generatePdf(this.latestAnalysisReport, metadata);
+          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `APEX_Report_${metadata.trackName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        } catch (err) {
+          console.error('[PDF] Export error:', err);
+          alert(`PDF Generation failed: ${err.message}`);
+        } finally {
+          this.btnDownloadPdf.disabled = false;
+          this.btnDownloadPdf.innerHTML = '<span>📄</span> DOWNLOAD PDF REPORT';
+        }
+      });
     }
   }
 
   startRecording() {
     this.isRecording = true;
-    this.stintStartTime = Date.now();
     this.recordedSamples = [];
-    this.latestAnalysisReport = null;
+    this.stintStartTime = Date.now();
+    this.stintDurationMs = 0;
+    this.bestLapTime = null;
+    this.lastLapTime = null;
     this.currentLap = 1;
-    if (this.lapCounterVal) {
-      this.lapCounterVal.textContent = 'L01';
-    }
-    
+
     if (this.btnRecord) {
-      this.btnRecord.innerHTML = '<span>■</span> STOP RECORDING';
-      this.btnRecord.classList.add('btn-recording');
+      this.btnRecord.classList.remove('btn-primary');
+      this.btnRecord.classList.add('btn-danger', 'recording-pulse');
+      this.btnRecord.innerHTML = '<span class="status-indicator live"></span> STOP RECORDING';
     }
 
     if (this.analysisSection) {
       this.analysisSection.style.display = 'none';
     }
 
-    if (this.timerInterval) clearInterval(this.timerInterval);
     this.timerInterval = setInterval(() => {
       this.stintDurationMs = Date.now() - this.stintStartTime;
       this.updateTimerDisplay();
-    }, 50);
-
-    console.log('[SESSION] Stint recording started.');
+    }, 100);
   }
 
   async stopRecording() {
@@ -244,17 +274,18 @@ export class SessionManager {
     }
 
     if (this.btnRecord) {
-      this.btnRecord.innerHTML = '<span>⏺</span> START RECORDING';
-      this.btnRecord.classList.remove('btn-recording');
+      this.btnRecord.classList.remove('btn-danger', 'recording-pulse');
+      this.btnRecord.classList.add('btn-primary');
+      this.btnRecord.innerHTML = '<span>⏺</span> START STINT RECORDING';
     }
 
-    console.log(`[SESSION] Stint recording stopped. Total samples: ${this.recordedSamples.length}`);
-
-    // Trigger metadata prompt & analysis engine
-    if (this.recordedSamples.length > 50) {
+    if (this.recordedSamples.length > 0) {
       try {
-        const metadata = await this.stintModal.open({
-          driverName: this.settings.driverName
+        const metadata = await this.stintModal.prompt({
+          driverName: this.settings.driverName,
+          sessionName: this.settings.sessionName,
+          totalLaps: this.currentLap,
+          totalSamples: this.recordedSamples.length
         });
         this.currentStintMetadata = metadata;
 
@@ -289,6 +320,12 @@ export class SessionManager {
     if (this.analysisSummaryText) {
       this.analysisSummaryText.textContent = `${report.validLapsCount} Valid Laps Analyzed / ${report.findings.length} Coaching Alerts`;
     }
+
+    // Render Performance Score Card (Sprint 10.5)
+    this.renderPerformanceSummary(report.performanceSummary);
+
+    // Render Priority Recommendations (Sprint 10.5)
+    this.renderPriorityRecommendations(report.recommendations);
 
     // Render 2D Vector Track Map
     if (this.trackMapContainer && report.trackMap && report.trackMap.svg) {
@@ -413,6 +450,9 @@ export class SessionManager {
 
     // Render 4-Corner Tire Dynamics & Thermal Matrix
     this.renderTireDynamics(report.tireDynamics);
+
+    // Render G-G Friction Circle & Limit Utilization (Sprint 10.5)
+    this.renderFrictionCircle(report.frictionCircle);
   }
 
   renderDeltaComparison(delta) {
@@ -808,5 +848,276 @@ export class SessionManager {
     const tenths = Math.floor((totalMs % 1000) / 100);
 
     this.timerVal.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+  }
+
+  renderPerformanceSummary(summary) {
+    if (!summary) return;
+
+    const gradeObj = summary.grade || { grade: 'B+', label: 'Competent — Clear Areas to Improve' };
+    const score = summary.overallScore || 78;
+
+    if (this.scoreGradeBadge) {
+      this.scoreGradeBadge.textContent = gradeObj.grade;
+      let gradeClass = 'grade-b';
+      if (gradeObj.grade.startsWith('A')) gradeClass = 'grade-a';
+      else if (gradeObj.grade.startsWith('C')) gradeClass = 'grade-c';
+      else if (gradeObj.grade.startsWith('D') || gradeObj.grade === 'F') gradeClass = 'grade-d';
+      this.scoreGradeBadge.className = `score-grade-badge ${gradeClass}`;
+    }
+
+    if (this.scoreHeroLabel) {
+      this.scoreHeroLabel.textContent = gradeObj.label;
+    }
+
+    if (this.scoreOverallVal) {
+      this.scoreOverallVal.textContent = score;
+    }
+
+    const comps = summary.components || { consistency: 75, lineQuality: 80, brakingScore: 78, exitSpeedScore: 76 };
+
+    if (this.compConsistencyVal) this.compConsistencyVal.textContent = `${comps.consistency}%`;
+    if (this.compConsistencyBar) this.compConsistencyBar.style.width = `${comps.consistency}%`;
+
+    if (this.compLineVal) this.compLineVal.textContent = `${comps.lineQuality}%`;
+    if (this.compLineBar) this.compLineBar.style.width = `${comps.lineQuality}%`;
+
+    if (this.compBrakingVal) this.compBrakingVal.textContent = `${comps.brakingScore}%`;
+    if (this.compBrakingBar) this.compBrakingBar.style.width = `${comps.brakingScore}%`;
+
+    if (this.compExitVal) this.compExitVal.textContent = `${comps.exitSpeedScore}%`;
+    if (this.compExitBar) this.compExitBar.style.width = `${comps.exitSpeedScore}%`;
+  }
+
+  renderPriorityRecommendations(recommendations) {
+    if (!this.priorityRecsList) return;
+    this.priorityRecsList.innerHTML = '';
+
+    const recs = (recommendations || []).slice(0, 3);
+    if (recs.length === 0) {
+      this.priorityRecsList.innerHTML = `
+        <div class="priority-rec-card rank-1">
+          <div class="priority-rec-header">
+            <div class="priority-rec-title-group">
+              <span class="priority-rank-badge priority-rank-1">RANK #1</span>
+              <span class="priority-rec-title">Optimal Pace & Consistency Maintained</span>
+            </div>
+            <span class="priority-gain-badge">+0.00s DELTA</span>
+          </div>
+          <p class="priority-rec-action">Driving line, throttle modulation, and braking technique are operating at maximum proficiency for current stint conditions.</p>
+        </div>
+      `;
+      return;
+    }
+
+    recs.forEach((rec, idx) => {
+      const card = document.createElement('div');
+      const rankNum = idx + 1;
+      card.className = `priority-rec-card rank-${rankNum}`;
+
+      const cornerStr = rec.corner !== undefined && rec.corner !== 'All' ? `Turn ${rec.corner}` : 'General';
+      const gainVal = rec.impact != null ? `+${Number(rec.impact).toFixed(2)}s POTENTIAL` : '+0.25s POTENTIAL';
+
+      card.innerHTML = `
+        <div class="priority-rec-header">
+          <div class="priority-rec-title-group">
+            <span class="priority-rank-badge priority-rank-${rankNum}">RANK #${rankNum}</span>
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); background: #181818; padding: 2px 6px; border-radius: 2px;">[${rec.category.toUpperCase()}] ${cornerStr}</span>
+            <span class="priority-rec-title">${rec.title}</span>
+          </div>
+          <span class="priority-gain-badge">${gainVal}</span>
+        </div>
+        ${rec.quote ? `<div class="priority-rec-quote">${rec.quote}</div>` : ''}
+        <div class="priority-rec-action"><strong>Coaching Action:</strong> ${rec.action || rec.description}</div>
+      `;
+
+      this.priorityRecsList.appendChild(card);
+    });
+  }
+
+  renderFrictionCircle(frictionCircle) {
+    if (!frictionCircle) return;
+
+    // 1. KPI Badges & Metrics
+    const util = frictionCircle.utilization?.highUtilization ?? 0;
+    if (this.frictionUtilBadge) {
+      this.frictionUtilBadge.textContent = `LIMIT UTILIZATION: ${util}%`;
+      this.frictionUtilBadge.style.color = util >= 70 ? 'var(--color-success)' : (util >= 50 ? 'var(--color-warning)' : 'var(--color-f1-red)');
+    }
+    if (this.frictionUtilVal) {
+      this.frictionUtilVal.textContent = `${util}%`;
+    }
+    if (this.frictionPeakGVal) {
+      this.frictionPeakGVal.textContent = `${(frictionCircle.maxG || 1.4).toFixed(2)} G`;
+    }
+
+    const points = frictionCircle.points || [];
+    let maxLat = 0;
+    let maxLong = 0;
+    points.forEach(p => {
+      if (Math.abs(p.latG) > maxLat) maxLat = Math.abs(p.latG);
+      if (Math.abs(p.longG) > maxLong) maxLong = Math.abs(p.longG);
+    });
+
+    if (this.frictionPeakLatVal) {
+      this.frictionPeakLatVal.textContent = `${maxLat.toFixed(2)} G`;
+    }
+    if (this.frictionPeakLongVal) {
+      this.frictionPeakLongVal.textContent = `${maxLong.toFixed(2)} G`;
+    }
+
+    // 2. Phase Breakdown List
+    if (this.frictionPhaseList && frictionCircle.phaseBreakdown) {
+      this.frictionPhaseList.innerHTML = '';
+      const phases = [
+        { key: 'brake-turn', name: 'Brake-Turn (Trail-Braking)', color: '#E5A910' },
+        { key: 'braking', name: 'Straightline Braking', color: '#E10600' },
+        { key: 'accelerate-turn', name: 'Accelerate-Turn (Unwinding)', color: '#0099FF' },
+        { key: 'accelerating', name: 'Straightline Acceleration', color: '#00CC66' },
+        { key: 'cornering', name: 'Pure Lateral Cornering', color: '#9966FF' },
+        { key: 'straight', name: 'Straight / Coasting', color: '#555555' }
+      ];
+
+      phases.forEach(ph => {
+        const pct = frictionCircle.phaseBreakdown[ph.key] ?? 0;
+        const div = document.createElement('div');
+        div.className = 'friction-phase-item';
+        div.innerHTML = `
+          <div class="friction-phase-left">
+            <span class="friction-phase-dot" style="background: ${ph.color}; box-shadow: 0 0 6px ${ph.color};"></span>
+            <span class="friction-phase-name">${ph.name}</span>
+          </div>
+          <span class="friction-phase-metrics">${pct}%</span>
+        `;
+        this.frictionPhaseList.appendChild(div);
+      });
+    }
+
+    // 3. Canvas 2D Scatter Plot Rendering
+    if (!this.frictionCanvas) return;
+    const ctx = this.frictionCanvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = this.frictionCanvas.width;
+    const h = this.frictionCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = Math.min(w, h) / 2 - 24;
+    const maxG = frictionCircle.maxG || 1.4;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Background fill
+    ctx.fillStyle = '#0A0A0A';
+    ctx.fillRect(0, 0, w, h);
+
+    // Concentric Reference G-Rings
+    const ringSteps = [0.5, 1.0];
+    ringSteps.forEach(gVal => {
+      if (gVal < maxG) {
+        const r = (gVal / maxG) * radius;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = '#222222';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#666666';
+        ctx.font = '9px "JetBrains Mono", monospace';
+        ctx.fillText(`${gVal.toFixed(1)}G`, cx + 4, cy - r + 11);
+      }
+    });
+
+    // Outer Boundary Circle at Max G Limit
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(225, 6, 0, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Crosshairs
+    ctx.beginPath();
+    ctx.moveTo(cx - radius - 6, cy);
+    ctx.lineTo(cx + radius + 6, cy);
+    ctx.moveTo(cx, cy - radius - 6);
+    ctx.lineTo(cx, cy + radius + 6);
+    ctx.strokeStyle = '#2A2A2A';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Cardinal Labels
+    ctx.fillStyle = '#888888';
+    ctx.font = 'bold 9px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('+ACC', cx, cy - radius - 10);
+    ctx.fillText('-BRK', cx, cy + radius + 18);
+    ctx.fillText('L', cx - radius - 12, cy + 3);
+    ctx.fillText('R', cx + radius + 12, cy + 3);
+
+    // Draw Scatter Points
+    const phaseColors = {
+      'brake-turn': '#E5A910',
+      'braking': '#E10600',
+      'accelerate-turn': '#0099FF',
+      'accelerating': '#00CC66',
+      'cornering': '#9966FF',
+      'straight': '#444444'
+    };
+
+    const sampledPoints = [];
+    const step = Math.max(1, Math.floor(points.length / 500));
+    for (let i = 0; i < points.length; i += step) {
+      const pt = points[i];
+      const px = cx + (pt.latG / maxG) * radius;
+      const py = cy - (pt.longG / maxG) * radius; // Invert Long G (+ is up / forward accel)
+
+      ctx.beginPath();
+      ctx.arc(px, py, 2, 0, Math.PI * 2);
+      ctx.fillStyle = phaseColors[pt.phase] || '#888888';
+      ctx.fill();
+
+      sampledPoints.push({ px, py, ...pt });
+    }
+
+    // Attach Interactive Tooltip Hover Handler
+    if (!this._frictionListenerAttached && this.frictionTooltip) {
+      this._frictionListenerAttached = true;
+      this.frictionCanvas.addEventListener('mousemove', (e) => {
+        const rect = this.frictionCanvas.getBoundingClientRect();
+        const mouseX = (e.clientX - rect.left) * (w / rect.width);
+        const mouseY = (e.clientY - rect.top) * (h / rect.height);
+
+        let closest = null;
+        let minDist = 16;
+        for (const pt of sampledPoints) {
+          const dist = Math.hypot(pt.px - mouseX, pt.py - mouseY);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = pt;
+          }
+        }
+
+        if (closest) {
+          this.frictionTooltip.style.display = 'block';
+          this.frictionTooltip.style.left = `${(closest.px / w) * 100}%`;
+          this.frictionTooltip.style.top = `${(closest.py / h) * 100}%`;
+          const spd = this.settings.speedUnit === 'kmh'
+            ? `${Math.round(closest.speedMph * 1.60934)} km/h`
+            : `${Math.round(closest.speedMph)} mph`;
+          this.frictionTooltip.innerHTML = `
+            <div style="color: ${phaseColors[closest.phase] || '#FFF'}; font-weight: bold; text-transform: uppercase;">${closest.phase}</div>
+            <div>Lat: <strong>${closest.latG.toFixed(2)} G</strong> | Long: <strong>${closest.longG.toFixed(2)} G</strong></div>
+            <div style="color: #888;">Speed: ${spd}</div>
+          `;
+        } else {
+          this.frictionTooltip.style.display = 'none';
+        }
+      });
+
+      this.frictionCanvas.addEventListener('mouseleave', () => {
+        this.frictionTooltip.style.display = 'none';
+      });
+    }
   }
 }

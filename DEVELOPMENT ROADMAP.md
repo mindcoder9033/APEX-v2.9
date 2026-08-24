@@ -203,27 +203,27 @@ Phase 3.5 Delivery Scope:
 ```
 
 #### Sprint 10.5: Friction Circle, Performance Score & Recommendations Rendering
-- [ ] **Task 10.5.1: G-G Friction Circle PDF Section**
+- [x] **Task 10.5.1: G-G Friction Circle PDF Section**
   - Render vector scatter plot of lateral G vs longitudinal G using `pdf-lib` drawing primitives.
   - Phase-color data points: Red (Braking), Green (Accelerating), Gold (Brake+Turn), Blue (Accel+Turn), Purple (Cornering), Gray (Straight).
   - Annotate traction circle utilization percentage and peak combined G.
   - Reference boundary circle at session maximum G magnitude.
-- [ ] **Task 10.5.2: G-G Friction Circle Browser UI Section**
+- [x] **Task 10.5.2: G-G Friction Circle Browser UI Section**
   - Implement interactive canvas or SVG visualization in the analysis report panel.
   - Render phase-colored scatter with hover tooltips showing sample detail (speed, Gs, phase).
   - Display summary stats: traction utilization %, peak lateral G, peak longitudinal G, dominant phase breakdown.
-- [ ] **Task 10.5.3: Performance Score Dashboard Card (Browser UI)**
+- [x] **Task 10.5.3: Performance Score Dashboard Card (Browser UI)**
   - Build a prominent dashboard card showing overall 0–100 score with letter grade (A+ through F).
   - Render 4-component breakdown bars: Consistency, Line Quality, Braking Score, Exit Speed.
   - Apply grade-based color coding: Green (A/B), Amber (C), Red (D/F).
-- [ ] **Task 10.5.4: Performance Score PDF Header Polish**
+- [x] **Task 10.5.4: Performance Score PDF Header Polish**
   - Refine the existing `performanceSummary` usage in the PDF header section.
   - Ensure consistent grade rendering with colored badge, score breakdown grid, and session-over-session context.
-- [ ] **Task 10.5.5: Priority Recommendations Panel (Browser UI)**
+- [x] **Task 10.5.5: Priority Recommendations Panel (Browser UI)**
   - Display Top-3 actionable coaching recommendations in the analysis report.
   - Each recommendation: corner reference, category icon, coaching quote, and projected time gain.
   - Sort by highest projected lap time improvement.
-- [ ] **Task 10.5.6: Priority Recommendations PDF Section**
+- [x] **Task 10.5.6: Priority Recommendations PDF Section**
   - Render prioritized coaching recommendations as a dedicated PDF section.
   - Include per-corner coaching narrative, Skip Barber quotes, severity badges, and category grouping.
 

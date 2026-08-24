@@ -1,5 +1,5 @@
 /**
- * APEX Friction Circle (G-G Diagram) Analyzer
+ * APEX Friction Circle (G-G Diagram) Analyzer (Browser ES Module)
  * Implements ANALYSIS.md §9 — Friction Circle Analysis.
  *
  * Based on "Going Faster!" Ch.5:
@@ -11,7 +11,7 @@
  * combined G vector exceeds 70% of the session maximum — indicating limit driving).
  */
 
-import { mpsToMph } from '../shared/telemetry-types.js';
+const mpsToMph = (mps) => (mps || 0) * 2.23693629;
 
 /** Phase identifiers for friction circle scatter points */
 export const FRICTION_PHASE = {
@@ -138,7 +138,7 @@ export class FrictionCircleAnalyzer {
         longGAbs: Number(Math.abs(longG).toFixed(3)),
         phase,
         color: FRICTION_PHASE_COLORS[phase],
-        speedMph: Math.round(s.speedMph ?? (s.motion?.speedMs ? mpsToMph(s.motion.speedMs) : 0)),
+        speedMph: Math.round(s.speedMph ?? (s.motion?.speedMs ? (s.motion.speedMs * 2.23694) : 0)),
         timestamp: s.timestamp || 0
       };
 
