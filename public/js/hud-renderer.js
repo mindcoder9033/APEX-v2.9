@@ -135,12 +135,10 @@ export class HudRenderer {
   update(sample, unitPreference = 'kmh') {
     if (!sample) return;
 
-    const isMetric = unitPreference === 'kmh';
-
-    // 1. Speed & Gear
-    const speed = isMetric ? sample.motion.speedKmh : sample.motion.speedMph;
+    // 1. Speed & Gear (Strictly Metric KM/H)
+    const speed = sample.motion.speedKmh != null ? sample.motion.speedKmh : (sample.motion.speedMps ? sample.motion.speedMps * 3.6 : (sample.motion.speedMph ? sample.motion.speedMph * 1.60934 : 0));
     if (this.speedVal) this.speedVal.textContent = Math.round(speed);
-    if (this.speedUnit) this.speedUnit.textContent = isMetric ? 'KM/H' : 'MPH';
+    if (this.speedUnit) this.speedUnit.textContent = 'KM/H';
 
     if (this.gearVal) {
       const g = sample.inputs.gear;
@@ -199,15 +197,11 @@ export class HudRenderer {
 
     this.drawGgBackground(latG, longG);
 
-    // 5. Tires (Metric Celsius / Imperial Fahrenheit)
+    // 5. Tires (Strictly Metric Celsius °C)
     if (sample.tires && (sample.tires.tempC || sample.tires.tempF)) {
       const getFormattedTemp = (tempCVal, tempFVal) => {
-        if (isMetric) {
-          const valC = tempCVal != null ? tempCVal : (tempFVal != null ? (tempFVal - 32) * (5 / 9) : 0);
-          return `${Math.round(valC)}°C`;
-        }
-        const valF = tempFVal != null ? tempFVal : (tempCVal != null ? (tempCVal * 9 / 5) + 32 : 0);
-        return `${Math.round(valF)}°F`;
+        const valC = tempCVal != null ? tempCVal : (tempFVal != null ? (tempFVal - 32) * (5 / 9) : 0);
+        return `${Math.round(valC)}°C`;
       };
 
       if (this.tireFL) this.tireFL.textContent = getFormattedTemp(sample.tires.tempC?.frontLeft, sample.tires.tempF?.frontLeft);

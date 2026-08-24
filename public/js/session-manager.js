@@ -98,7 +98,7 @@ export class SessionManager {
         if (parsed.wsUrl && parsed.wsUrl.includes(':8080') && typeof window !== 'undefined' && window.location.port !== '8080') {
           parsed.wsUrl = defaultWsUrl;
         }
-        return { ...defaults, ...parsed };
+        return { ...defaults, ...parsed, speedUnit: 'kmh' };
       }
       return defaults;
     } catch {
@@ -107,7 +107,7 @@ export class SessionManager {
   }
 
   saveSettings(newSettings) {
-    this.settings = { ...this.settings, ...newSettings };
+    this.settings = { ...this.settings, ...newSettings, speedUnit: 'kmh' };
     try {
       localStorage.setItem('apex_settings', JSON.stringify(this.settings));
     } catch (err) {
@@ -265,6 +265,8 @@ export class SessionManager {
       }
 
       this.runAnalysisReport();
+    } else {
+      alert('No telemetry samples were recorded during this stint. Please verify Forza Motorsport data-out is active and sending packets.');
     }
 
     return this.recordedSamples;

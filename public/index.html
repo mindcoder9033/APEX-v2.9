@@ -107,7 +107,7 @@
           <div class="speed-metric">
             <div id="speed-val" class="speed-value">0</div>
             <div id="speed-unit" class="speed-unit">KM/H</div>
-            <button id="btn-toggle-unit" class="btn btn-secondary chamfer-all-corners" style="padding: 2px 8px; font-size: 9px; margin-top: 6px;">TOGGLE UNIT</button>
+            <div class="speed-unit-badge chamfer-all-corners" style="padding: 2px 8px; font-size: 9px; margin-top: 6px; color: var(--color-text-secondary); background: rgba(255,255,255,0.05); font-family: var(--font-mono); text-align: center;">METRIC</div>
           </div>
 
           <div class="gear-display chamfer-all-corners">
@@ -824,10 +824,9 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="setting-speed-unit">Speed & Distance Units</label>
+        <label class="form-label" for="setting-speed-unit">Measurement System</label>
         <select id="setting-speed-unit" class="form-input chamfer-all-corners">
-          <option value="kmh" selected>Kilometers Per Hour (KM/H)</option>
-          <option value="mph">Miles Per Hour (MPH)</option>
+          <option value="kmh" selected>Metric (KM/H, Meters, °C, bar)</option>
         </select>
       </div>
 

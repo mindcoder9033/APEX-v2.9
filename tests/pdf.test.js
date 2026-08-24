@@ -170,3 +170,17 @@ test('ApexPdfBuilder: Compiles 7-page Light-Theme report with Section 8 Coaching
 
   assert.equal(loadedDoc.getPageCount(), 7, 'PDF should have exactly 7 pages');
 });
+
+test('ApexPdfBuilder: Enforces strict Metric conversion helpers', () => {
+  const builder = new ApexPdfBuilder();
+  
+  // Speed conversion (mph to km/h)
+  assert.ok(Math.abs(builder.toKmh(100) - 160.934) < 0.01);
+  
+  // Distance conversion (feet to meters)
+  assert.ok(Math.abs(builder.toMeters(100) - 30.48) < 0.01);
+  
+  // Temperature conversion (°F to °C)
+  assert.ok(Math.abs(builder.toCelsius(212) - 100) < 0.01);
+  assert.ok(Math.abs(builder.toCelsius(32) - 0) < 0.01);
+});

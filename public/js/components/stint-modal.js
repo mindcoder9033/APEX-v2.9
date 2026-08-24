@@ -108,13 +108,28 @@ export class StintMetadataModal {
   }
 
   /**
+   * Prompts the user with the modal and returns a promise resolving to metadata
+   * @param {Object} [context]
+   * @param {string} [context.driverName] - Driver name from settings
+   * @param {string} [context.sessionName] - Optional session name prefill
+   * @param {string} [context.defaultCar] - Optional default car
+   * @param {number} [context.totalLaps] - Total laps completed
+   * @param {number} [context.totalSamples] - Total samples recorded
+   * @returns {Promise<Object>}
+   */
+  prompt(context = {}) {
+    return this.open(context);
+  }
+
+  /**
    * Opens the modal and returns a promise resolving to metadata
-   * @param {Object} context
-   * @param {string} context.driverName - Driver name from settings
+   * @param {Object} [context]
+   * @param {string} [context.driverName] - Driver name from settings
+   * @param {string} [context.sessionName] - Optional session name prefill
    * @param {string} [context.defaultCar] - Optional default car
    * @returns {Promise<Object>}
    */
-  open({ driverName = 'APEX Driver', defaultCar = null } = {}) {
+  open({ driverName = 'APEX Driver', sessionName = '', defaultCar = null } = {}) {
     return new Promise((resolve) => {
       this.resolvePromise = resolve;
 
@@ -122,9 +137,9 @@ export class StintMetadataModal {
         this.driverInheritedVal.textContent = driverName;
       }
 
-      // Reset inputs
+      // Pre-fill or reset inputs
       if (this.inputSessionName) {
-        this.inputSessionName.value = '';
+        this.inputSessionName.value = sessionName || '';
         this.inputSessionName.classList.remove('input-error');
       }
       this.clearErrors();
@@ -147,6 +162,9 @@ export class StintMetadataModal {
         setTimeout(() => {
           if (this.inputSessionName) {
             this.inputSessionName.focus();
+            if (this.inputSessionName.value) {
+              this.inputSessionName.select();
+            }
           }
         }, 100);
       }

@@ -210,7 +210,7 @@ class ApexApp {
       wsUrl: this.inputWsUrl.value.trim() || 'ws://127.0.0.1:8080',
       driverName: this.inputDriverName.value.trim() || 'APEX Driver',
       sessionName: this.inputSessionName.value.trim() || 'Track Day Session',
-      speedUnit: this.selectSpeedUnit.value
+      speedUnit: 'kmh'
     };
 
     this.session.saveSettings(updated);

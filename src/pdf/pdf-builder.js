@@ -38,15 +38,15 @@ export class ApexPdfBuilder {
 
   // --- Metric Conversion Helpers ---
   toKmh(mph) {
-    return mph || 0; // Return raw mph for Imperial spec
+    return (mph || 0) * 1.60934;
   }
 
   toMeters(feet) {
-    return feet || 0; // Return raw feet for Imperial spec
+    return (feet || 0) * 0.3048;
   }
 
   toCelsius(f) {
-    return f || 0; // Return raw Fahrenheit for Imperial spec
+    return ((f || 0) - 32) * (5 / 9);
   }
 
   // --- Text Wrapping & Safe Drawing Engine ---
@@ -526,7 +526,7 @@ export class ApexPdfBuilder {
       borderWidth: 1
     });
 
-    const topSpeedMph = Math.round(report.bestLap?.maxSpeedMph || 172.3);
+    const topSpeedKmh = Math.round(report.bestLap?.maxSpeedKmh || (report.bestLap?.maxSpeedMph ? report.bestLap.maxSpeedMph * 1.60934 : 277.3));
     const consistency = Math.round(summary.components?.consistency || 72);
     const bestLapTimeStr = metadata.bestLapTimeStr || this.formatTime(report.bestLap?.lapTime);
     const avgLapTimeStr = this.formatTime(summary.bestLapTime ? summary.bestLapTime * 1.015 : 0);
@@ -538,7 +538,7 @@ export class ApexPdfBuilder {
     page.drawText(`${consistency}%`, { x: this.margin + 105, y: y - 34, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
 
     page.drawText('Top Speed:', { x: this.margin + 12, y: y - 50, size: 8, font: fonts.bold, color: this.colors.textSecondary });
-    page.drawText(`${topSpeedMph.toFixed(1)}`, { x: this.margin + 105, y: y - 50, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
+    page.drawText(`${topSpeedKmh.toFixed(1)} KM/H`, { x: this.margin + 105, y: y - 50, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
 
     page.drawText('Best Lap:', { x: this.margin + boxW + 24, y: y - 18, size: 8, font: fonts.bold, color: this.colors.textSecondary });
     page.drawText(bestLapTimeStr, { x: this.margin + boxW + 115, y: y - 18, size: 8.5, font: fonts.monoBold, color: this.colors.textPrimary });
@@ -637,7 +637,7 @@ export class ApexPdfBuilder {
 
     const topRecommendation = report.recommendations?.[0] || {
       title: 'Turn 9 Exit Speed Optimization',
-      description: 'Turn 9 exit speed is 3.4 mph slower than theoretical maximum. This corner leads onto the longest straight. You are losing approx 0.6s per lap here.',
+      description: 'Turn 9 exit speed is 5.5 km/h slower than theoretical maximum. This corner leads onto the longest straight. You are losing approx 0.6s per lap here.',
       action: 'Focus on progressive throttle application as steering unwinds. Feed power on smoothly rather than stabbing it.',
       quote: '"The biggest gain in lap time comes from corner exit speed." — Going Faster!, Ch.1'
     };
@@ -1233,30 +1233,30 @@ export class ApexPdfBuilder {
     const cLoss = report.deltaComparison?.cornerLosses?.find(cl => cl.cornerNumber === cNum) || {};
     const baseC = report.laps?.find(l => l.lapNumber === report.bestLap?.lapNumber)?.corners?.find(co => co.cornerNumber === cNum) || corner;
 
-    const baseEntryMph = baseC.speed?.entryMph || Math.round(baseC.speed?.entryKmh / 1.60934) || 0;
-    const baseApexMph = baseC.speed?.apexMph || Math.round(baseC.speed?.apexKmh / 1.60934) || 0;
-    const baseExitMph = baseC.speed?.exitMph || Math.round(baseC.speed?.exitKmh / 1.60934) || 0;
+    const baseEntryKmh = Math.round(baseC.speed?.entryKmh || (baseC.speed?.entryMph ? baseC.speed.entryMph * 1.60934 : 0)) || 120;
+    const baseApexKmh = Math.round(baseC.speed?.apexKmh || (baseC.speed?.apexMph ? baseC.speed.apexMph * 1.60934 : 0)) || 100;
+    const baseExitKmh = Math.round(baseC.speed?.exitKmh || (baseC.speed?.exitMph ? baseC.speed.exitMph * 1.60934 : 0)) || 115;
 
-    const targEntryMph = cLoss.speeds?.targEntryMph || Math.round(cLoss.speeds?.targEntryKmh / 1.60934) || baseEntryMph - 3;
-    const targApexMph = cLoss.speeds?.targApexMph || Math.round(cLoss.speeds?.targApexKmh / 1.60934) || baseApexMph - 2;
-    const targExitMph = cLoss.speeds?.targExitMph || Math.round(cLoss.speeds?.targExitKmh / 1.60934) || baseExitMph - 3;
+    const targEntryKmh = Math.round(cLoss.speeds?.targEntryKmh || (cLoss.speeds?.targEntryMph ? cLoss.speeds.targEntryMph * 1.60934 : baseEntryKmh - 5));
+    const targApexKmh = Math.round(cLoss.speeds?.targApexKmh || (cLoss.speeds?.targApexMph ? cLoss.speeds.targApexMph * 1.60934 : baseApexKmh - 3));
+    const targExitKmh = Math.round(cLoss.speeds?.targExitKmh || (cLoss.speeds?.targExitMph ? cLoss.speeds.targExitMph * 1.60934 : baseExitKmh - 5));
 
     const baseOverlap = Math.round(baseC.dynamics?.trailBrakingOverlapPercent || 35);
     const targOverlap = Math.round(corner.dynamics?.trailBrakingOverlapPercent || baseOverlap - 15);
 
-    const baseBrakeFt = Math.round(baseC.inputs?.brakePoint || 150);
-    const targBrakeFt = Math.round(corner.inputs?.brakePoint || baseBrakeFt + 30);
+    const baseBrakeM = Math.round(baseC.inputs?.brakePointMeters || (baseC.inputs?.brakePoint ? baseC.inputs.brakePoint * 0.3048 : 45));
+    const targBrakeM = Math.round(corner.inputs?.brakePointMeters || (corner.inputs?.brakePoint ? corner.inputs.brakePoint * 0.3048 : baseBrakeM + 10));
 
-    const baseTapFt = Math.round(baseC.dynamics?.tapDeltaFeet || -5);
-    const targTapFt = Math.round(corner.dynamics?.tapDeltaFeet || 22);
+    const baseTapM = Math.round(baseC.dynamics?.tapDeltaMeters ?? (baseC.dynamics?.tapDeltaFeet ? baseC.dynamics.tapDeltaFeet * 0.3048 : -2));
+    const targTapM = Math.round(corner.dynamics?.tapDeltaMeters ?? (corner.dynamics?.tapDeltaFeet ? corner.dynamics.tapDeltaFeet * 0.3048 : 7));
 
     const metricRows = [
-      { name: 'Entry Speed (mph)', targ: `${targEntryMph.toFixed(1)}`, base: `${baseEntryMph.toFixed(1)}`, delta: `${(targEntryMph - baseEntryMph).toFixed(1)} mph`, bad: targEntryMph < baseEntryMph },
-      { name: 'Apex Speed (mph)', targ: `${targApexMph.toFixed(1)}`, base: `${baseApexMph.toFixed(1)}`, delta: `${(targApexMph - baseApexMph).toFixed(1)} mph`, bad: targApexMph < baseApexMph },
-      { name: 'Exit Speed (mph)', targ: `${targExitMph.toFixed(1)}`, base: `${baseExitMph.toFixed(1)}`, delta: `${(targExitMph - baseExitMph).toFixed(1)} mph`, bad: targExitMph < baseExitMph },
-      { name: 'Brake Point (ft from turn)', targ: `${targBrakeFt} ft`, base: `${baseBrakeFt} ft`, delta: `${baseBrakeFt - targBrakeFt} ft`, bad: targBrakeFt > baseBrakeFt },
+      { name: 'Entry Speed (km/h)', targ: `${targEntryKmh}`, base: `${baseEntryKmh}`, delta: `${(targEntryKmh - baseEntryKmh).toFixed(1)} km/h`, bad: targEntryKmh < baseEntryKmh },
+      { name: 'Apex Speed (km/h)', targ: `${targApexKmh}`, base: `${baseApexKmh}`, delta: `${(targApexKmh - baseApexKmh).toFixed(1)} km/h`, bad: targApexKmh < baseApexKmh },
+      { name: 'Exit Speed (km/h)', targ: `${targExitKmh}`, base: `${baseExitKmh}`, delta: `${(targExitKmh - baseExitKmh).toFixed(1)} km/h`, bad: targExitKmh < baseExitKmh },
+      { name: 'Brake Point (m from turn)', targ: `${targBrakeM} m`, base: `${baseBrakeM} m`, delta: `${baseBrakeM - targBrakeM} m`, bad: targBrakeM > baseBrakeM },
       { name: 'Trail-Brake Overlap (%)', targ: `${targOverlap}%`, base: `${baseOverlap}%`, delta: `${targOverlap - baseOverlap}%`, bad: targOverlap < baseOverlap - 5 },
-      { name: 'Throttle Application (ft)', targ: `${targTapFt >= 0 ? '+' : ''}${targTapFt} ft`, base: `${baseTapFt >= 0 ? '+' : ''}${baseTapFt} ft`, delta: `${targTapFt - baseTapFt >= 0 ? '+' : ''}${targTapFt - baseTapFt} ft`, bad: targTapFt > baseTapFt }
+      { name: 'Throttle Application (m)', targ: `${targTapM >= 0 ? '+' : ''}${targTapM} m`, base: `${baseTapM >= 0 ? '+' : ''}${baseTapM} m`, delta: `${targTapM - baseTapM >= 0 ? '+' : ''}${targTapM - baseTapM} m`, bad: targTapM > baseTapM }
     ];
 
     metricRows.forEach((row, idx) => {
@@ -1302,19 +1302,19 @@ export class ApexPdfBuilder {
 
     if (cNum === 9 || cType === 'Type I') {
       rightText = 'You\'re not over-slowing. Your minimum speed is near the limit.';
-      wrongText = `Turn 9 exit speed is ${(baseExitMph - targExitMph).toFixed(1)} mph slower than your best lap. Your throttle application point is ${targTapFt} feet after the apex.`;
+      wrongText = `Turn 9 exit speed is ${(baseExitKmh - targExitKmh).toFixed(1)} km/h slower than your best lap. Your throttle application point is ${targTapM}m after the apex.`;
       whyText = 'Drivers, in their never-ending attempt at maximizing exit speed, get greedy about putting the throttle down, unload the fronts and generate understeer. This unloads the front tires (weight transfers to the rear), causing understeer.';
       fixText = 'Focus on "squeezing" the throttle. Apply the throttle AS you unwind the steering wheel. Think of the throttle pedal as a dimmer switch, not an on/off switch.';
       drillText = 'Laps 3-4: Focus only on "squeezing" the throttle - count to 2. Laps 5-6: Focus only on earlier throttle application.';
-      metricText = 'Exit speed should increase by 2 mph.';
+      metricText = 'Exit speed should increase by 3 km/h.';
       quoteStr = '"The biggest gain in lap time comes from corner exit speed." — Chapter 1';
     } else {
       rightText = 'Your line is consistent. You hit the same apex lap after lap.';
-      wrongText = `You're braking ${Math.abs(targBrakeFt - baseBrakeFt)} feet too early. Your trail-brake overlap is only ${targOverlap}%.`;
+      wrongText = `You're braking ${Math.abs(targBrakeM - baseBrakeM)} meters too early. Your trail-brake overlap is only ${targOverlap}%.`;
       whyText = 'The most common mistake that drivers make when they turn their attention to getting the last bit of lap time available at corner entries is to drive closer to the corner before braking - going deeper. You\'re likely focused on "braking later" but you haven\'t found the threshold braking level first.';
       fixText = 'Find threshold braking. Move the brake point closer. Trail the brakes in - keep 15-20% brake pressure past the turn-in point.';
-      drillText = '"The Procedure": Run 3 laps braking HARDER at the same point. Run 3 laps moving the brake point 10ft closer each lap.';
-      metricText = 'Braking distance should decrease by 15ft.';
+      drillText = '"The Procedure": Run 3 laps braking HARDER at the same point. Run 3 laps moving the brake point 3 meters closer each lap.';
+      metricText = 'Braking distance should decrease by 5 meters.';
       quoteStr = '"If you\'re braking at the 300 mark with no problem. Do you move the next spot to the 200? No way. You\'ve got to take small steps to find out where that limit is." — Danny Sullivan, Chapter 1';
     }
 
@@ -1369,14 +1369,14 @@ export class ApexPdfBuilder {
         score: Math.round(comp.exitSpeedScore),
         grade: comp.exitSpeedScore >= 90 ? 'A' : (comp.exitSpeedScore >= 80 ? 'B' : 'C+'),
         right: 'Upshifts are executed crisp in the torque powerband. Exit speed consistency is stable.',
-        wrong: 'You apply throttle 18 feet too late on average and snap the pedal too abruptly.'
+        wrong: 'You apply throttle 5.5 meters too late on average and snap the pedal too abruptly.'
       },
       {
         name: 'SKILL 3: BRAKING & ENTERING (Deceleration Focus)',
         score: Math.round(comp.brakingScore),
         grade: comp.brakingScore >= 90 ? 'A' : (comp.brakingScore >= 80 ? 'B' : 'B-'),
         right: 'Deceleration pressure is progressive. Brakes hold stable in straight line.',
-        wrong: 'Braking onset starts 30 feet too early. Trail-braking overlap is only 18% (poor).'
+        wrong: 'Braking onset starts 9 meters too early. Trail-braking overlap is only 18% (poor).'
       }
     ];
 
@@ -1439,10 +1439,10 @@ export class ApexPdfBuilder {
     });
 
     const cRows = [
-      { name: 'Apex Speed (mph)', avg: '54.2', sd: '1.2', rat: '* * * * - Excellent', color: this.colors.success },
-      { name: 'Apex Position (ft from)', avg: '2.4', sd: '1.8', rat: '* * * - - Good', color: this.colors.success },
-      { name: 'Brake Point (ft)', avg: '182', sd: '14.5', rat: '* * - - - Needs Work', color: this.colors.warning },
-      { name: 'Exit Speed (mph)', avg: '76.8', sd: '2.1', rat: '* * - - - Needs Work', color: this.colors.warning },
+      { name: 'Apex Speed (km/h)', avg: '87.2', sd: '1.9', rat: '* * * * - Excellent', color: this.colors.success },
+      { name: 'Apex Position (m from curb)', avg: '0.7', sd: '0.5', rat: '* * * - - Good', color: this.colors.success },
+      { name: 'Brake Point (m)', avg: '55.5', sd: '4.4', rat: '* * - - - Needs Work', color: this.colors.warning },
+      { name: 'Exit Speed (km/h)', avg: '123.6', sd: '3.4', rat: '* * - - - Needs Work', color: this.colors.warning },
       { name: 'Lap Time (s)', avg: '135.8', sd: '1.4', rat: '* * * - - Good', color: this.colors.success }
     ];
 
@@ -1476,7 +1476,7 @@ export class ApexPdfBuilder {
       color: this.colors.textPrimary
     });
 
-    const referenceText = 'Your brake point varies by 14.5 feet. Fix this by finding fixed reference points for your braking: Use a cone, a sign, a paint mark - ANYTHING that doesn\'t move. Brake at that exact point every single lap. Vary the pressure, not the point.';
+    const referenceText = 'Your brake point varies by 4.4 meters. Fix this by finding fixed reference points for your braking: Use a cone, a sign, a paint mark - ANYTHING that doesn\'t move. Brake at that exact point every single lap. Vary the pressure, not the point.';
     this.drawWrappedText(page, referenceText, {
       x: this.margin + 12,
       y: y - 24,
@@ -1495,9 +1495,9 @@ export class ApexPdfBuilder {
 
     // 1. Four Practice Sessions
     const drills = [
-      { title: 'SESSION 1: THROTTLE CONTROL (Exit Speed Focus)', dur: '20 mins (10-12 laps)', focus: 'Turn 9 exit speed only', task: 'Laps 3-4: Focus on throttle squeeze (dimmer). Laps 5-6: Move throttle application earlier. Metric: Exit speed +2 mph.' },
-      { title: 'SESSION 2: BRAKING (The Procedure)', dur: '20 mins (10-12 laps)', focus: 'Threshold & Trail-braking', task: 'Laps 3-4: Brake harder to find threshold. Laps 5-6: Move brake point 10 feet closer. Metric: Braking distance -15ft.' },
-      { title: 'SESSION 3: LINE CONSISTENCY', dur: '15 mins (8-10 laps)', focus: 'Apex clipping', task: 'Laps 3-4: Focus strictly on visual apex marks. Laps 5-6: Focus on track-out curb. Metric: Apex variation < 1ft.' },
+      { title: 'SESSION 1: THROTTLE CONTROL (Exit Speed Focus)', dur: '20 mins (10-12 laps)', focus: 'Turn 9 exit speed only', task: 'Laps 3-4: Focus on throttle squeeze (dimmer). Laps 5-6: Move throttle application earlier. Metric: Exit speed +3 km/h.' },
+      { title: 'SESSION 2: BRAKING (The Procedure)', dur: '20 mins (10-12 laps)', focus: 'Threshold & Trail-braking', task: 'Laps 3-4: Brake harder to find threshold. Laps 5-6: Move brake point 3 meters closer. Metric: Braking distance -5m.' },
+      { title: 'SESSION 3: LINE CONSISTENCY', dur: '15 mins (8-10 laps)', focus: 'Apex clipping', task: 'Laps 3-4: Focus strictly on visual apex marks. Laps 5-6: Focus on track-out curb. Metric: Apex variation < 0.3m.' },
       { title: 'SESSION 4: FULL STINT (Practice Race)', dur: '30 mins (15-18 laps)', focus: 'Race pace simulation', task: 'Laps 3-8: Push to limit. Laps 9-14: Maintain pace consistency. Metric: Standard deviation < 0.8 seconds.' }
     ];
 
@@ -1549,7 +1549,7 @@ export class ApexPdfBuilder {
 
     const progRows = [
       { name: 'Best Lap Time', stint: metadata.bestLapTimeStr || this.formatTime(report.bestLap?.lapTime), target: '2:12.500', status: '1.24s away', color: this.colors.warning },
-      { name: 'Turn 9 Exit Speed', stint: '86.1 mph', target: '89.0 mph', status: '-2.9 mph', color: this.colors.warning },
+      { name: 'Turn 9 Exit Speed', stint: '138.6 km/h', target: '143.2 km/h', status: '-4.6 km/h', color: this.colors.warning },
       { name: 'Trail-Braking Overlap', stint: '45%', target: '50%', status: '-5%', color: this.colors.warning },
       { name: 'Consistency (StdDev)', stint: '1.4s', target: '0.8s', status: 'Needs work', color: this.colors.warning },
       { name: 'Max Lateral G', stint: '1.24', target: '1.30', status: '-0.06', color: this.colors.warning }

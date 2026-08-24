@@ -178,23 +178,27 @@ export class RulesEngine {
       });
     }
 
-    // R-010: Sub-Threshold Braking
-    if (d.peakDecelG > 0 && d.peakDecelG < 0.95 && (inp.peakBrakePressure || 0) > 0.25 && ((spd.entryMph || 0) - (spd.apexMph || 0)) > 12.0) {
+    // R-010: Sub-Threshold Braking (peak deceleration < 0.95G during heavy braking zone)
+    const speedBleedKmh = (spd.entryKmh && spd.apexKmh) ? (spd.entryKmh - spd.apexKmh) : (((spd.entryMph || 0) - (spd.apexMph || 0)) * 1.60934);
+    if (d.peakDecelG > 0 && d.peakDecelG < 0.95 && (inp.peakBrakePressure || 0) > 0.25 && speedBleedKmh > 19.3) {
       findings.push({
         ...RULES_SPEC['R-010'],
         cornerNumber: corner.cornerNumber,
         metric: `Peak Decel: ${d.peakDecelG.toFixed(2)}G (Sub-Threshold)`,
-        details: `Peak straight-line deceleration reached only ${d.peakDecelG.toFixed(2)}G despite heavy speed bleed (${((spd.entryMph || 0) - (spd.apexMph || 0)).toFixed(1)} mph). Step brake marker deeper.`
+        details: `Peak straight-line deceleration reached only ${d.peakDecelG.toFixed(2)}G despite heavy speed bleed (${speedBleedKmh.toFixed(1)} km/h). Step brake marker deeper.`
       });
     }
 
-    // R-012: Parking the Car in Mid-Corner
-    if (((spd.entryMph || 0) - (spd.apexMph || 0)) > 10.0 && (inp.entryBrakePressure || 0) > 0.5) {
+    // R-012: Parking Mid-Corner (Entry to Apex Delta > 16 km/h / 10 mph)
+    const entryKmhVal = spd.entryKmh ?? ((spd.entryMph || 0) * 1.60934);
+    const apexKmhVal = spd.apexKmh ?? ((spd.apexMph || 0) * 1.60934);
+    const deltaEntryApexKmh = entryKmhVal - apexKmhVal;
+    if (deltaEntryApexKmh > 16.0 && (inp.entryBrakePressure || 0) > 0.5) {
       findings.push({
         ...RULES_SPEC['R-012'],
         cornerNumber: corner.cornerNumber,
-        metric: `Speed Drop: ${((spd.entryMph || 0) - (spd.apexMph || 0)).toFixed(1)} mph`,
-        details: `Speed dropped from ${(spd.entryMph || 0).toFixed(1)} mph at entry to ${(spd.apexMph || 0).toFixed(1)} mph at apex.`
+        metric: `Speed Drop: ${deltaEntryApexKmh.toFixed(1)} km/h`,
+        details: `Speed dropped from ${entryKmhVal.toFixed(1)} km/h at entry to ${apexKmhVal.toFixed(1)} km/h at apex.`
       });
     }
 

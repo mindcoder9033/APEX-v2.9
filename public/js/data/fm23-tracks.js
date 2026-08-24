@@ -1,6 +1,7 @@
 /**
  * FM23 Tracks & Layouts Dataset
  * Extracted from Docs/FM23 Tracks.md
+ * All layout lengths standardized strictly in Metric units (km).
  */
 
 export const FM23_TRACKS = [
@@ -8,16 +9,16 @@ export const FM23_TRACKS = [
     name: 'Brands Hatch',
     type: 'Real',
     layouts: [
-      { name: 'Grand Prix Circuit', length: '3.916 km (2.433 mi)' },
-      { name: 'Indy Circuit', length: '1.944 km (1.208 mi)' }
+      { name: 'Grand Prix Circuit', length: '3.916 km' },
+      { name: 'Indy Circuit', length: '1.944 km' }
     ]
   },
   {
     name: 'Circuit de Barcelona-Catalunya',
     type: 'Real',
     layouts: [
-      { name: 'Grand Prix Course', length: '4.655 km (2.892 mi)' },
-      { name: 'National Circuit', length: '3.058 km (1.900 mi)' },
+      { name: 'Grand Prix Course', length: '4.655 km' },
+      { name: 'National Circuit', length: '3.058 km' },
       { name: 'National Circuit Alt', length: '~3.0 km' }
     ]
   },
@@ -25,22 +26,22 @@ export const FM23_TRACKS = [
     name: 'Circuit de Spa-Francorchamps',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '7.004 km (4.352 mi)' }
+      { name: 'Full Circuit', length: '7.004 km' }
     ]
   },
   {
     name: 'Daytona International Speedway',
     type: 'Real',
     layouts: [
-      { name: 'Sports Car Circuit', length: '5.729 km (3.56 mi)' },
-      { name: 'Tri-Oval Circuit', length: '4.023 km (2.50 mi)' }
+      { name: 'Sports Car Circuit', length: '5.729 km' },
+      { name: 'Tri-Oval Circuit', length: '4.023 km' }
     ]
   },
   {
     name: 'Hockenheimring',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '4.574 km (2.842 mi)' },
+      { name: 'Full Circuit', length: '4.574 km' },
       { name: 'National Circuit', length: '~3.5 km' },
       { name: 'Short Circuit', length: '~2.6 km' }
     ]
@@ -50,29 +51,29 @@ export const FM23_TRACKS = [
     type: 'Real',
     layouts: [
       { name: 'Road Circuit', length: '~3.5 km' },
-      { name: 'Speedway Circuit', length: '2.414 km (1.50 mi)' }
+      { name: 'Speedway Circuit', length: '2.414 km' }
     ]
   },
   {
     name: 'Indianapolis Motor Speedway',
     type: 'Real',
     layouts: [
-      { name: 'The Brickyard Speedway', length: '4.023 km (2.50 mi)' },
-      { name: 'Grand Prix Circuit', length: '4.192 km (2.605 mi)' }
+      { name: 'The Brickyard Speedway', length: '4.023 km' },
+      { name: 'Grand Prix Circuit', length: '4.192 km' }
     ]
   },
   {
     name: 'Kyalami Grand Prix Circuit',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '4.522 km (2.814 mi)' }
+      { name: 'Full Circuit', length: '4.522 km' }
     ]
   },
   {
     name: 'Le Mans – Circuit International de la Sarthe',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '13.626 km (8.467 mi)' },
+      { name: 'Full Circuit', length: '13.626 km' },
       { name: 'Old Mulsanne Circuit', length: '~13.6 km' }
     ]
   },
@@ -80,7 +81,7 @@ export const FM23_TRACKS = [
     name: 'Lime Rock Park',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '2.414 km (1.50 mi)' },
+      { name: 'Full Circuit', length: '2.414 km' },
       { name: 'South Chicane', length: '~2.3 km' },
       { name: 'Full Circuit Alt', length: '~2.4 km' }
     ]
@@ -89,33 +90,33 @@ export const FM23_TRACKS = [
     name: 'Michelin Raceway Road Atlanta',
     type: 'Real',
     layouts: [
-      { name: 'Grand Prix Course', length: '4.104 km (2.550 mi)' },
-      { name: 'Short Course', length: '2.830 km (1.758 mi)' }
+      { name: 'Grand Prix Course', length: '4.104 km' },
+      { name: 'Short Course', length: '2.830 km' }
     ]
   },
   {
     name: 'Mid-Ohio Sports Car Course',
     type: 'Real',
     layouts: [
-      { name: 'Sports Car Circuit', length: '3.862 km (2.40 mi)' },
-      { name: 'Short Circuit', length: '3.635 km (2.258 mi)' }
+      { name: 'Sports Car Circuit', length: '3.862 km' },
+      { name: 'Short Circuit', length: '3.635 km' }
     ]
   },
   {
     name: 'Mugello Circuit',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '5.245 km (3.259 mi)' },
-      { name: 'Club Circuit', length: '~2.28 km (1.416 mi)' }
+      { name: 'Full Circuit', length: '5.245 km' },
+      { name: 'Club Circuit', length: '2.279 km' }
     ]
   },
   {
     name: 'Nürburgring',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit (Combined GP + Nordschleife)', length: '~25.9 km (16.1 mi)' },
-      { name: 'Nordschleife', length: '20.832 km (12.943 mi)' },
-      { name: 'GP Circuit', length: '5.148 km (3.199 mi)' },
+      { name: 'Full Circuit (Combined GP + Nordschleife)', length: '25.910 km' },
+      { name: 'Nordschleife', length: '20.832 km' },
+      { name: 'GP Circuit', length: '5.148 km' },
       { name: 'Sprint Circuit', length: '~3.5 km' }
     ]
   },
@@ -123,7 +124,7 @@ export const FM23_TRACKS = [
     name: 'Road America',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '6.515 km (4.048 mi)' },
+      { name: 'Full Circuit', length: '6.515 km' },
       { name: 'East Route', length: '~3.2 km' }
     ]
   },
@@ -131,7 +132,7 @@ export const FM23_TRACKS = [
     name: 'Sebring International Raceway',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '6.019 km (3.740 mi)' },
+      { name: 'Full Circuit', length: '6.019 km' },
       { name: 'Short Circuit', length: '~3.5 km' }
     ]
   },
@@ -139,7 +140,7 @@ export const FM23_TRACKS = [
     name: 'Silverstone Circuit',
     type: 'Real',
     layouts: [
-      { name: 'Grand Prix Circuit', length: '5.891 km (3.660 mi)' },
+      { name: 'Grand Prix Circuit', length: '5.891 km' },
       { name: 'International Circuit', length: '~2.98 km' },
       { name: 'National Circuit', length: '~2.64 km' }
     ]
@@ -148,34 +149,34 @@ export const FM23_TRACKS = [
     name: 'Suzuka Circuit',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '5.807 km (3.608 mi)' },
-      { name: 'East Circuit', length: '2.243 km (1.394 mi)' }
+      { name: 'Full Circuit', length: '5.807 km' },
+      { name: 'East Circuit', length: '2.243 km' }
     ]
   },
   {
     name: 'Virginia International Raceway (VIR)',
     type: 'Real',
     layouts: [
-      { name: 'Full Course', length: '5.262 km (3.270 mi)' },
+      { name: 'Full Course', length: '5.262 km' },
       { name: 'Grand East', length: '~4.1 km' },
       { name: 'Grand West', length: '~4.1 km' },
-      { name: 'North Course', length: '3.621 km (2.250 mi)' },
-      { name: 'South Course', length: '2.655 km (1.650 mi)' }
+      { name: 'North Course', length: '3.621 km' },
+      { name: 'South Course', length: '2.655 km' }
     ]
   },
   {
     name: 'Watkins Glen International',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '5.435 km (3.377 mi)' },
-      { name: 'Short Circuit', length: '3.943 km (2.450 mi)' }
+      { name: 'Full Circuit', length: '5.435 km' },
+      { name: 'Short Circuit', length: '3.943 km' }
     ]
   },
   {
     name: 'WeatherTech Raceway Laguna Seca',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '3.602 km (2.238 mi)' },
+      { name: 'Full Circuit', length: '3.602 km' },
       { name: 'Short Circuit', length: '~3.0 km' }
     ]
   },
@@ -183,7 +184,7 @@ export const FM23_TRACKS = [
     name: 'Yas Marina Circuit',
     type: 'Real',
     layouts: [
-      { name: 'Full Circuit', length: '5.281 km (3.281 mi)' },
+      { name: 'Full Circuit', length: '5.281 km' },
       { name: 'North Circuit', length: '~3.0 km' },
       { name: 'South Circuit', length: '~3.0 km' },
       { name: 'North Corkscrew', length: '~2.5 km' }

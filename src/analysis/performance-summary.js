@@ -1,4 +1,4 @@
-﻿/**
+/**
  * APEX Performance Summary Engine & Recommendation Engine
  * Implements ANALYSIS.md §10.1 (Overall Performance Score) and §10.2 (Priority Recommendations).
  *
@@ -193,11 +193,14 @@ export class RecommendationEngine {
       const es = corner.exitSpeed;
       if (!es || es.potentialGainMph <= 2) continue;
 
+      const exitKmh = corner.speed?.exitKmh != null ? corner.speed.exitKmh : ((corner.speed?.exitMph || 0) * 1.60934);
+      const potGainKmh = es.potentialGainKmh != null ? es.potentialGainKmh : ((es.potentialGainMph || 0) * 1.60934);
+
       recs.push({
         category: 'Exit Speed',
         corner: corner.cornerNumber,
         title: `Increase exit speed at Turn ${corner.cornerNumber}`,
-        description: `Exit speed ${(corner.speed?.exitMph || 0).toFixed(1)} mph — ${es.exitEfficiencyPercent}% of theoretical maximum. Potential: +${es.potentialGainMph.toFixed(1)} mph.`,
+        description: `Exit speed ${exitKmh.toFixed(1)} km/h — ${es.exitEfficiencyPercent}% of theoretical maximum. Potential: +${potGainKmh.toFixed(1)} km/h.`,
         action: 'Apply throttle earlier as you unwind the steering wheel. Squeeze the power on progressively rather than stabbing it.',
         priority: es.isTypeI ? 1 : 2,
         impact: es.potentialGainSeconds || 0.3,
@@ -266,11 +269,12 @@ export class RecommendationEngine {
       }
 
       if (corner.dynamics?.isLateApex) {
+        const apexKmh = corner.speed?.apexKmh != null ? corner.speed.apexKmh : ((corner.speed?.apexMph || 0) * 1.60934);
         recs.push({
           category: 'Line',
           corner: corner.cornerNumber,
           title: `Correct late apex at Turn ${corner.cornerNumber}`,
-          description: `Premature steering unwind with unused track at exit. Speed sacrificed (apex ${(corner.speed?.apexMph || 0).toFixed(1)} mph).`,
+          description: `Premature steering unwind with unused track at exit. Speed sacrificed (apex ${apexKmh.toFixed(1)} km/h).`,
           action: 'Turn in slightly earlier. Move the apex point forward to carry a higher minimum rolling speed.',
           priority: 2,
           impact: 0.15,
