@@ -210,7 +210,21 @@ export class HudRenderer {
       if (this.tireRR) this.tireRR.textContent = getFormattedTemp(sample.tires.tempC?.rearRight, sample.tires.tempF?.rearRight);
     }
 
-    // 6. Car Profile
+    // 6. Wheel Slip & Traction (if widget active)
+    const slipFL = document.getElementById('wheel-slip-fl');
+    const slipFR = document.getElementById('wheel-slip-fr');
+    const slipRL = document.getElementById('wheel-slip-rl');
+    const slipRR = document.getElementById('wheel-slip-rr');
+    if (slipFL && sample.tires) {
+      const getSlipVal = (val) => `${(Math.abs(val || 0) * 100).toFixed(1)}%`;
+      const slips = sample.tires.slipRatio || sample.tires.wheelSlip || {};
+      slipFL.textContent = getSlipVal(slips.frontLeft);
+      if (slipFR) slipFR.textContent = getSlipVal(slips.frontRight);
+      if (slipRL) slipRL.textContent = getSlipVal(slips.rearLeft);
+      if (slipRR) slipRR.textContent = getSlipVal(slips.rearRight);
+    }
+
+    // 7. Car Profile
     if (this.carClassBadge && sample.vehicle.carClass) {
       this.carClassBadge.textContent = sample.vehicle.carClass;
     }

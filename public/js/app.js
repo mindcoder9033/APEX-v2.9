@@ -5,11 +5,13 @@
 import { ApexWsClient } from './ws-client.js';
 import { HudRenderer } from './hud-renderer.js';
 import { SessionManager } from './session-manager.js';
+import { GridLayoutManager } from './components/grid-layout-manager.js';
 
 class ApexApp {
   constructor() {
     this.hud = new HudRenderer();
     this.session = new SessionManager();
+    this.layoutManager = new GridLayoutManager();
 
     // Settings Modal elements
     this.modalBackdrop = document.getElementById('settings-modal');
