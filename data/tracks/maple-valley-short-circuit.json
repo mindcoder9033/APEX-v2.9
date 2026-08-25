@@ -35,11 +35,11 @@
   "calibrationMetadata": {
     "lapsUsed": 3,
     "avgSpeedKph": 120,
-    "calibratedAt": "2026-08-25T12:17:42.915Z",
+    "calibratedAt": "2026-08-25T12:32:14.422Z",
     "carModel": "Calibration Vehicle",
     "consistencyScore": 95
   },
   "driverNotes": "",
-  "createdDate": "2026-08-25T12:17:42.915Z",
-  "updatedDate": "2026-08-25T12:17:42.915Z"
+  "createdDate": "2026-08-25T12:32:14.422Z",
+  "updatedDate": "2026-08-25T12:32:14.422Z"
 }
