@@ -151,4 +151,23 @@ describe('TrackCalibrator', () => {
     assert.equal(result.trackProfile.name, 'Silverstone National');
     assert.ok(result.trackProfile.turns.length >= 3);
   });
+
+  it('synthesizes a track profile directly from recorded stint telemetry samples (calibrateFromStint)', () => {
+    const lap1 = generateSyntheticLap(1, 3000, 140, 1.0);
+    const lap2 = generateSyntheticLap(2, 3000, 140, 1.01);
+    const flatSamples = [...lap1, ...lap2];
+
+    const result = calibrator.calibrateFromStint(flatSamples, {
+      name: 'Suzuka Circuit',
+      layout: 'Grand Prix Circuit'
+    });
+
+    assert.equal(result.success, true);
+    assert.ok(result.trackProfile);
+    assert.equal(result.trackProfile.name, 'Suzuka Circuit');
+    assert.equal(result.trackProfile.status, 'Calibrated');
+    assert.ok(result.trackProfile.turns.length >= 3);
+    assert.ok(result.trackProfile.path2D.length > 20);
+    assert.ok(result.trackProfile.lengthMeters >= 2900 && result.trackProfile.lengthMeters <= 3100);
+  });
 });

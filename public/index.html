@@ -255,12 +255,15 @@
     <section id="analysis-report-section" class="pit-card chamfer-tl-br" style="display: none; margin-top: var(--space-md);" aria-label="Post-Stint Racecraft Report">
       <div class="pit-card-header">
         <h2 class="pit-card-title">Stint Analysis & Racecraft Coaching</h2>
-        <div style="display: flex; align-items: center; gap: var(--space-md);">
+        <div style="display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap;">
           <span id="analysis-laps-summary" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">0 Laps Analyzed</span>
-          <button id="btn-export-csv" class="btn btn-secondary chamfer-br" style="padding: 6px 16px; font-size: 11px;">
+          <button id="btn-export-csv" class="btn btn-secondary chamfer-br" style="padding: 6px 14px; font-size: 11px;">
             <span>📊</span> EXPORT RAW CSV
           </button>
-          <button id="btn-download-pdf" class="btn btn-primary chamfer-br" style="padding: 6px 16px; font-size: 11px;">
+          <button id="btn-save-stint-track" class="btn btn-secondary chamfer-br" style="padding: 6px 14px; font-size: 11px; border-color: var(--color-success); color: var(--color-success);">
+            <span>🗺️</span> SAVE AS TRACK PROFILE
+          </button>
+          <button id="btn-download-pdf" class="btn btn-primary chamfer-br" style="padding: 6px 14px; font-size: 11px;">
             <span>📄</span> DOWNLOAD PDF REPORT
           </button>
         </div>
@@ -1019,11 +1022,17 @@
             <button id="btn-track-set-active" class="btn btn-secondary btn-sm chamfer-br btn-set-active">
               <span>🎯</span> SET ACTIVE
             </button>
+            <button id="btn-track-calibrate-latest" class="btn btn-secondary btn-sm chamfer-br" style="border-color: var(--color-warning); color: var(--color-warning);" title="Synthesize geometry from latest recorded session telemetry">
+              <span>⚡</span> SYNTHESIZE FROM SESSION
+            </button>
             <button id="btn-track-export-pdf" class="btn btn-primary btn-sm chamfer-br btn-export-pdf">
               <span>📄</span> EXPORT BRIEFING PDF
             </button>
             <button id="btn-track-download-json" class="btn btn-secondary btn-sm chamfer-br">
               <span>💾</span> JSON
+            </button>
+            <button id="btn-track-export-csv" class="btn btn-secondary btn-sm chamfer-br" title="Export track or stint CSV">
+              <span>📊</span> CSV
             </button>
             <button id="btn-track-delete" class="btn btn-secondary btn-sm chamfer-br btn-delete-track" title="Delete track profile">
               <span>🗑️</span>

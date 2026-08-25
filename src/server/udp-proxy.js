@@ -138,6 +138,7 @@ export class UdpProxyServer {
     this._recentPacketCounter = 0;
 
     this.trackRepo = new TrackRepository();
+    this.trackRepo.seedDefaultsIfEmpty();
     this.trackPdfBuilder = new TrackBriefingBuilder();
   }
 

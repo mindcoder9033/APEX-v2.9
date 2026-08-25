@@ -339,104 +339,125 @@ export class ClientTrackBriefingPdf {
 
     // Table Rows
     let rowY = tableY - headerH;
-    turns.slice(0, maxTableTurns).forEach((turn, idx) => {
-      rowY -= rowH;
-      const isEven = idx % 2 === 0;
 
+    if (turns.length === 0) {
+      rowY -= rowH * 2;
       page.drawRectangle({
         x: margin,
         y: rowY,
         width: contentWidth,
-        height: rowH,
-        color: isEven ? colors.white : colors.panel,
+        height: rowH * 2,
+        color: colors.panel,
         borderColor: colors.border,
         borderWidth: 0.5
       });
-
-      let cx = margin + 6;
-
-      page.drawText(`T${turn.turnNumber}`, {
-        x: cx,
-        y: rowY + 6,
-        size: 8,
-        font: fonts.bold,
-        color: colors.f1Red
-      });
-      cx += cols[0].w;
-
-      const name = turn.name || `Turn ${turn.turnNumber}`;
-      page.drawText(name.slice(0, 18), {
-        x: cx,
-        y: rowY + 6,
-        size: 7.5,
+      page.drawText('Awaiting Telemetry Calibration to map corner apexes, reference speeds, and braking zones.', {
+        x: margin + 20,
+        y: rowY + rowH - 4,
+        size: 8.5,
         font: fonts.regular,
-        color: colors.textPrimary
+        color: colors.textMuted
       });
-      cx += cols[1].w;
+    } else {
+      turns.slice(0, maxTableTurns).forEach((turn, idx) => {
+        rowY -= rowH;
+        const isEven = idx % 2 === 0;
 
-      page.drawText(turn.type || 'Corner', {
-        x: cx,
-        y: rowY + 6,
-        size: 7.5,
-        font: fonts.regular,
-        color: colors.textSecondary
-      });
-      cx += cols[2].w;
+        page.drawRectangle({
+          x: margin,
+          y: rowY,
+          width: contentWidth,
+          height: rowH,
+          color: isEven ? colors.white : colors.panel,
+          borderColor: colors.border,
+          borderWidth: 0.5
+        });
 
-      const dirColor = turn.direction === 'Right' ? colors.sector2 : colors.amber;
-      page.drawText(turn.direction === 'Right' ? 'R' : 'L', {
-        x: cx + 6,
-        y: rowY + 6,
-        size: 8,
-        font: fonts.bold,
-        color: dirColor
-      });
-      cx += cols[3].w;
+        let cx = margin + 6;
 
-      page.drawText(`${turn.apexDist}m`, {
-        x: cx,
-        y: rowY + 6,
-        size: 7.5,
-        font: fonts.mono,
-        color: colors.textSecondary
-      });
-      cx += cols[4].w;
+        page.drawText(`T${turn.turnNumber}`, {
+          x: cx,
+          y: rowY + 6,
+          size: 8,
+          font: fonts.bold,
+          color: colors.f1Red
+        });
+        cx += cols[0].w;
 
-      page.drawText(`${turn.refSpeed} km/h`, {
-        x: cx,
-        y: rowY + 6,
-        size: 7.5,
-        font: fonts.bold,
-        color: colors.textPrimary
-      });
-      cx += cols[5].w;
+        const name = turn.name || `Turn ${turn.turnNumber}`;
+        page.drawText(name.slice(0, 18), {
+          x: cx,
+          y: rowY + 6,
+          size: 7.5,
+          font: fonts.regular,
+          color: colors.textPrimary
+        });
+        cx += cols[1].w;
 
-      page.drawText(`${turn.refGear}`, {
-        x: cx + 10,
-        y: rowY + 6,
-        size: 8,
-        font: fonts.mono,
-        color: colors.sector3
-      });
-      cx += cols[6].w;
+        page.drawText(turn.type || 'Corner', {
+          x: cx,
+          y: rowY + 6,
+          size: 7.5,
+          font: fonts.regular,
+          color: colors.textSecondary
+        });
+        cx += cols[2].w;
 
-      page.drawText(`${turn.apexLatG || 1.2}G`, {
-        x: cx,
-        y: rowY + 6,
-        size: 7.5,
-        font: fonts.regular,
-        color: colors.textSecondary
-      });
-      cx += cols[7].w;
+        const dirColor = turn.direction === 'Right' ? colors.sector2 : colors.amber;
+        page.drawText(turn.direction === 'Right' ? 'R' : 'L', {
+          x: cx + 6,
+          y: rowY + 6,
+          size: 8,
+          font: fonts.bold,
+          color: dirColor
+        });
+        cx += cols[3].w;
 
-      page.drawText(`${turn.brakingDist || 50}m`, {
-        x: cx,
-        y: rowY + 6,
-        size: 7.5,
-        font: fonts.mono,
-        color: colors.f1Red
+        page.drawText(`${turn.apexDist}m`, {
+          x: cx,
+          y: rowY + 6,
+          size: 7.5,
+          font: fonts.mono,
+          color: colors.textSecondary
+        });
+        cx += cols[4].w;
+
+        page.drawText(`${turn.refSpeed} km/h`, {
+          x: cx,
+          y: rowY + 6,
+          size: 7.5,
+          font: fonts.bold,
+          color: colors.textPrimary
+        });
+        cx += cols[5].w;
+
+        page.drawText(`${turn.refGear}`, {
+          x: cx + 10,
+          y: rowY + 6,
+          size: 8,
+          font: fonts.mono,
+          color: colors.sector3
+        });
+        cx += cols[6].w;
+
+        page.drawText(`${turn.apexLatG || 1.2}G`, {
+          x: cx,
+          y: rowY + 6,
+          size: 7.5,
+          font: fonts.regular,
+          color: colors.textSecondary
+        });
+        cx += cols[7].w;
+
+        page.drawText(`${turn.brakingDist || 50}m`, {
+          x: cx,
+          y: rowY + 6,
+          size: 7.5,
+          font: fonts.mono,
+          color: colors.f1Red
+        });
       });
-    });
+    }
 
     // Driver Strategy Panel
     const notesY = margin + 30;

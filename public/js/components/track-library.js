@@ -34,8 +34,10 @@ export class TrackLibraryComponent {
 
     // Hero Action Buttons
     this.btnSetActive = document.getElementById('btn-track-set-active');
+    this.btnCalibrateLatest = document.getElementById('btn-track-calibrate-latest');
     this.btnExportPdf = document.getElementById('btn-track-export-pdf');
     this.btnDownloadJson = document.getElementById('btn-track-download-json');
+    this.btnExportCsv = document.getElementById('btn-track-export-csv');
     this.btnDeleteTrack = document.getElementById('btn-track-delete');
 
     // Turn Editor Elements
@@ -70,12 +72,20 @@ export class TrackLibraryComponent {
       this.btnSetActive.addEventListener('click', () => this.setActiveTrack());
     }
 
+    if (this.btnCalibrateLatest) {
+      this.btnCalibrateLatest.addEventListener('click', () => this.calibrateSelectedTrackFromTelemetry());
+    }
+
     if (this.btnExportPdf) {
       this.btnExportPdf.addEventListener('click', () => this.exportBriefingPdf());
     }
 
     if (this.btnDownloadJson) {
       this.btnDownloadJson.addEventListener('click', () => this.downloadJson());
+    }
+
+    if (this.btnExportCsv) {
+      this.btnExportCsv.addEventListener('click', () => this.exportTrackCsv());
     }
 
     if (this.btnDeleteTrack) {
@@ -605,6 +615,163 @@ export class TrackLibraryComponent {
     }
     this.renderTrackCards();
     alert(`🎯 "${this.selectedTrack.name}" set as active circuit profile for live session telemetry & canonical snapping.`);
+  }
+
+  /**
+   * Synthesizes circuit geometry, turns, and elevation from latest recorded stint telemetry
+   */
+  async calibrateSelectedTrackFromTelemetry() {
+    if (!this.selectedTrack) {
+      alert('Please select a track profile first.');
+      return;
+    }
+
+    const recordedSamples = this.sessionManager?.recordedSamples || [];
+    if (recordedSamples.length < 20) {
+      alert(`⚠️ No recorded session telemetry available in current session.\n\nPlease record a stint on the Pit Wall or start a Track Learning Stint to calibrate "${this.selectedTrack.name}".`);
+      return;
+    }
+
+    const latestSample = recordedSamples[recordedSamples.length - 1];
+    const carModel = latestSample?.vehicle?.carName || latestSample?.vehicle?.carClass || 'APEX Vehicle';
+
+    const calibrator = this.sessionManager?.trackCalibrator;
+    if (!calibrator) {
+      alert('Calibration engine unavailable.');
+      return;
+    }
+
+    const result = calibrator.calibrateFromStint(recordedSamples, {
+      id: this.selectedTrack.id,
+      name: this.selectedTrack.name,
+      layout: this.selectedTrack.layout,
+      trackOrdinal: this.selectedTrack.trackOrdinal,
+      carModel,
+      driverNotes: this.selectedTrack.driverNotes || ''
+    });
+
+    if (!result.success || !result.trackProfile) {
+      alert(`⚠️ Calibration error: ${result.error || 'Failed to synthesize telemetry'}`);
+      return;
+    }
+
+    const updated = result.trackProfile;
+    updated.status = 'Calibrated';
+    updated.updatedDate = new Date().toISOString();
+
+    try {
+      const res = await fetch('/api/tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        this.selectedTrack = data.track || updated;
+      } else {
+        this.selectedTrack = updated;
+      }
+    } catch (err) {
+      this.selectedTrack = updated;
+    }
+
+    const idx = this.tracks.findIndex(t => t.id === this.selectedTrack.id);
+    if (idx >= 0) {
+      this.tracks[idx] = this.selectedTrack;
+    } else {
+      this.tracks.push(this.selectedTrack);
+    }
+
+    this.renderTrackCards();
+    this.renderSelectedTrack();
+    if (this.sessionManager) {
+      this.sessionManager.setActiveTrackProfile(this.selectedTrack);
+    }
+    alert(`⚡ "${this.selectedTrack.name}" calibrated from latest telemetry!\n• ${this.selectedTrack.turns.length} Turns mapped\n• ${this.selectedTrack.lengthMeters.toLocaleString()}m Circuit length`);
+  }
+
+  /**
+   * Exports raw telemetry or geometric turn CSV for the selected track
+   */
+  exportTrackCsv() {
+    if (!this.selectedTrack) return;
+
+    // 1. If recorded samples exist for this track stint, export full telemetry CSV
+    if (this.sessionManager?.recordedSamples?.length > 0) {
+      const safeName = (this.selectedTrack.name || 'track').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `APEX_Track_${safeName}_Telemetry_${dateStr}.csv`;
+      
+      const rows = [
+        ['TimestampMs', 'LapDistanceM', 'SpeedKmh', 'LateralG', 'LongitudinalG', 'ThrottlePct', 'BrakePct', 'Gear', 'PosX', 'PosY', 'PosZ'].join(',')
+      ];
+
+      this.sessionManager.recordedSamples.forEach(s => {
+        const spd = s.motion?.speedMps ? s.motion.speedMps * 3.6 : (s.speedKmh || (s.speedMps || 0) * 3.6);
+        const latG = s.motion?.acceleration?.lateralG ?? s.accelY ?? s.lateralG ?? 0;
+        const longG = s.motion?.acceleration?.longitudinalG ?? s.accelX ?? s.longitudinalG ?? 0;
+        const throttle = (s.inputs?.throttle ?? s.throttle ?? 0) * 100;
+        const brake = (s.inputs?.brake ?? s.brake ?? 0) * 100;
+        const gear = s.engine?.gear ?? s.gear ?? 0;
+        const x = s.motion?.position?.x ?? s.positionX ?? 0;
+        const y = s.motion?.position?.y ?? s.positionY ?? 0;
+        const z = s.motion?.position?.z ?? s.positionZ ?? 0;
+        const dist = s.lapDistance ?? s.distance ?? 0;
+
+        rows.push([
+          s.timestamp || 0,
+          dist.toFixed(1),
+          spd.toFixed(1),
+          latG.toFixed(2),
+          longG.toFixed(2),
+          throttle.toFixed(0),
+          brake.toFixed(0),
+          gear,
+          x.toFixed(1),
+          y.toFixed(1),
+          z.toFixed(1)
+        ].join(','));
+      });
+
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      return;
+    }
+
+    // 2. Otherwise export canonical turn-by-turn geometry table CSV
+    const turns = this.selectedTrack.turns || [];
+    const header = 'TurnNumber,TurnName,Type,Direction,ApexDistM,EntryDistM,ExitDistM,RefSpeedKmh,RefGear,ApexLatG,BrakingDistM\n';
+    const csvRows = turns.map(t => [
+      t.turnNumber,
+      `"${t.name || 'Turn ' + t.turnNumber}"`,
+      t.type || 'Corner',
+      t.direction || 'Right',
+      t.apexDist || 0,
+      t.entryDist || 0,
+      t.exitDist || 0,
+      t.refSpeed || 100,
+      t.refGear || 3,
+      t.apexLatG || 1.2,
+      t.brakingDist || 50
+    ].join(',')).join('\n');
+
+    const blob = new Blob([header + csvRows], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${this.selectedTrack.id}_Turns.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   /**

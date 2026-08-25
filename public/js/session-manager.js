@@ -232,6 +232,13 @@ export class SessionManager {
         return;
       }
 
+      const saveStintTrackBtn = e.target.closest('#btn-save-stint-track');
+      if (saveStintTrackBtn) {
+        e.preventDefault();
+        this.saveStintAsTrackProfile();
+        return;
+      }
+
       const saveCalTrackBtn = e.target.closest('#btn-cal-save-track');
       if (saveCalTrackBtn) {
         e.preventDefault();
@@ -471,6 +478,82 @@ export class SessionManager {
       this.setActiveTrackProfile(this.pendingCalibratedTrack);
       this.closePostCalModal();
       alert(`💾 Track "${this.pendingCalibratedTrack.name}" calibrated and saved to local Track Library!`);
+    }
+  }
+
+  /**
+   * Generates and saves a Track Profile from recorded stint telemetry
+   */
+  async saveStintAsTrackProfile() {
+    if (!this.recordedSamples || this.recordedSamples.length < 20) {
+      alert('Please complete a recording stint with at least 1-2 laps first to synthesize a track profile.');
+      return;
+    }
+
+    const latestSample = this.recordedSamples[this.recordedSamples.length - 1];
+    const carModel = latestSample?.vehicle?.carName || latestSample?.vehicle?.carClass || 'APEX Vehicle';
+    const target = this.activeTrackProfile;
+    const defaultName = target?.name || this.settings.sessionName || 'Recorded Circuit';
+    const defaultLayout = target?.layout || 'Full Course';
+
+    const trackName = prompt('Enter Circuit Name for Track Profile:', defaultName);
+    if (!trackName) return;
+
+    const layout = prompt('Enter Track Layout / Configuration:', defaultLayout) || 'Full Course';
+
+    const result = this.trackCalibrator.calibrateFromStint(this.recordedSamples, {
+      id: target?.id,
+      name: trackName.trim(),
+      layout: layout.trim(),
+      trackOrdinal: target?.trackOrdinal ?? null,
+      carModel,
+      driverName: this.settings.driverName || 'APEX Driver'
+    });
+
+    if (!result.success || !result.trackProfile) {
+      alert(`⚠️ Unable to synthesize track profile: ${result.error || 'Unknown error'}`);
+      return;
+    }
+
+    const trackProfile = result.trackProfile;
+    trackProfile.status = 'Calibrated';
+    trackProfile.updatedDate = new Date().toISOString();
+
+    try {
+      const res = await fetch('/api/tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trackProfile)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const savedTrack = data.track || trackProfile;
+        this.setActiveTrackProfile(savedTrack);
+        if (window.apexApp?.trackLibrary) {
+          await window.apexApp.trackLibrary.loadTracks();
+          await window.apexApp.trackLibrary.selectTrack(savedTrack.id);
+        }
+        alert(`💾 Track "${savedTrack.name}" successfully synthesized and saved to Track Library!\n• ${savedTrack.turns.length} Turns mapped\n• ${savedTrack.lengthMeters.toLocaleString()}m Circuit length`);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+    } catch (err) {
+      console.warn('[STINT TRACK SAVE] Backend save fallback to local:', err);
+      if (window.apexApp?.trackLibrary) {
+        const lib = window.apexApp.trackLibrary;
+        const existingIdx = lib.tracks.findIndex(t => t.id === trackProfile.id);
+        if (existingIdx >= 0) {
+          lib.tracks[existingIdx] = trackProfile;
+        } else {
+          lib.tracks.push(trackProfile);
+        }
+        lib.renderTrackCards();
+        lib.selectTrack(trackProfile.id);
+      }
+      this.setActiveTrackProfile(trackProfile);
+      alert(`💾 Track "${trackProfile.name}" synthesized and saved locally in Track Library!`);
     }
   }
 

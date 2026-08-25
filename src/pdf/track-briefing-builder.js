@@ -332,9 +332,29 @@ export class TrackBriefingBuilder {
 
     // Table Rows
     let rowY = tableY - headerH;
-    turns.slice(0, maxTableTurns).forEach((turn, idx) => {
-      rowY -= rowH;
-      const isEven = idx % 2 === 0;
+
+    if (turns.length === 0) {
+      rowY -= rowH * 2;
+      page.drawRectangle({
+        x: margin,
+        y: rowY,
+        width: contentWidth,
+        height: rowH * 2,
+        color: colors.panel,
+        borderColor: colors.border,
+        borderWidth: 0.5
+      });
+      page.drawText('Awaiting Telemetry Calibration to map corner apexes, reference speeds, and braking zones.', {
+        x: margin + 20,
+        y: rowY + rowH - 4,
+        size: 8.5,
+        font: fonts.regular,
+        color: colors.textMuted
+      });
+    } else {
+      turns.slice(0, maxTableTurns).forEach((turn, idx) => {
+        rowY -= rowH;
+        const isEven = idx % 2 === 0;
 
       page.drawRectangle({
         x: margin,
@@ -439,6 +459,7 @@ export class TrackBriefingBuilder {
         color: colors.f1Red
       });
     });
+    }
 
     // Bottom Box: Pre-Stint Driver Strategy & Setup Notes
     const notesY = margin + 30;

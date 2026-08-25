@@ -306,14 +306,11 @@ export class TrackRepository {
   }
 
   /**
-   * Seeds realistic default circuits if /data/tracks/ is empty
+   * Seeds realistic default circuits if /data/tracks/ is missing standard circuits
    */
   seedDefaultsIfEmpty() {
     this.ensureDirectory();
     const existing = fs.readdirSync(this.dataDir).filter(f => f.endsWith('.json'));
-    if (existing.length > 0) {
-      return;
-    }
 
     const seeds = [
       this.createSilverstoneGpSeed(),
@@ -322,15 +319,21 @@ export class TrackRepository {
       this.createSpaFrancorchampsSeed()
     ];
 
+    let seededCount = 0;
     for (const seed of seeds) {
-      try {
-        const filePath = path.join(this.dataDir, `${seed.id}.json`);
-        fs.writeFileSync(filePath, JSON.stringify(seed, null, 2), 'utf8');
-      } catch (err) {
-        console.warn('[TRACK REPO] Failed to seed default circuit:', err.message);
+      const filePath = path.join(this.dataDir, `${seed.id}.json`);
+      if (!fs.existsSync(filePath)) {
+        try {
+          fs.writeFileSync(filePath, JSON.stringify(seed, null, 2), 'utf8');
+          seededCount++;
+        } catch (err) {
+          console.warn('[TRACK REPO] Failed to seed default circuit:', err.message);
+        }
       }
     }
-    console.log(`[TRACK REPO] Seeded ${seeds.length} default circuit profiles in ${this.dataDir}`);
+    if (seededCount > 0) {
+      console.log(`[TRACK REPO] Seeded ${seededCount} default circuit profiles in ${this.dataDir}`);
+    }
   }
 
   /**
