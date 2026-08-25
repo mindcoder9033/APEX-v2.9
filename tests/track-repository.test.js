@@ -1,5 +1,5 @@
 /**
- * Tests for TrackRepository CRUD, Schema Validation, and Seeding
+ * Tests for TrackRepository CRUD, Schema Validation, and Persistence
  */
 
 import { describe, it, before, after } from 'node:test';
@@ -29,38 +29,42 @@ describe('TrackRepository', () => {
     }
   });
 
-  it('automatically seeds default circuits when directory is empty', () => {
+  it('starts with a clean empty directory without mock data', () => {
     const tracks = repo.getAllTracks();
-    assert.ok(tracks.length >= 4, 'Should seed at least 4 default tracks');
-    const ids = tracks.map(t => t.id);
-    assert.ok(ids.includes('silverstone-gp'));
-    assert.ok(ids.includes('watkins-glen-full'));
-    assert.ok(ids.includes('maple-valley'));
-    assert.ok(ids.includes('spa-francorchamps'));
+    assert.equal(tracks.length, 0, 'Should start with empty track library');
   });
 
-  it('fetches track by ID with complete schema', () => {
-    const silverstone = repo.getTrackById('silverstone-gp');
-    assert.ok(silverstone, 'Silverstone should exist');
-    assert.equal(silverstone.name, 'Silverstone Circuit');
-    assert.equal(silverstone.direction, 'Clockwise');
-    assert.equal(silverstone.lengthMeters, 5891);
-    assert.ok(Array.isArray(silverstone.turns) && silverstone.turns.length === 15);
-    assert.ok(silverstone.sectors.s1End > 0);
-    assert.ok(silverstone.characteristics.totalTurns === 15);
+  it('saves an uncalibrated track profile (lengthMeters: 0) awaiting telemetry', () => {
+    const uncal = repo.saveTrack({
+      name: 'Brands Hatch',
+      layout: 'Grand Prix Circuit',
+      lengthMeters: 0,
+      direction: 'Clockwise',
+      turns: []
+    });
+
+    assert.ok(uncal.id, 'Should generate slug ID');
+    assert.equal(uncal.name, 'Brands Hatch');
+    assert.equal(uncal.layout, 'Grand Prix Circuit');
+    assert.equal(uncal.lengthMeters, 0);
+    assert.equal(uncal.status, 'Uncalibrated');
+
+    const fetched = repo.getTrackById(uncal.id);
+    assert.ok(fetched, 'Fetched uncalibrated track should exist');
+    assert.equal(fetched.lengthMeters, 0);
   });
 
-  it('validates required fields on save and throws on invalid data', () => {
-    assert.throws(() => {
-      repo.saveTrack({ name: 'Incomplete' });
-    }, /Invalid track data/);
-
+  it('validates required fields on save and throws on missing name', () => {
     assert.throws(() => {
       repo.saveTrack({ lengthMeters: 3000 });
-    }, /Invalid track data/);
+    }, /Track name is required/);
+
+    assert.throws(() => {
+      repo.saveTrack(null);
+    }, /Track data must be an object/);
   });
 
-  it('saves and updates a custom track profile successfully', () => {
+  it('saves and updates a calibrated track profile with full geometry', () => {
     const custom = {
       name: 'Laguna Seca',
       layout: 'Full Road Course',
@@ -68,45 +72,47 @@ describe('TrackRepository', () => {
       direction: 'Counter-Clockwise',
       turns: [
         { turnNumber: 1, name: 'Andretti Hairpin', type: 'Hairpin', direction: 'Left', entryDist: 400, apexDist: 480, exitDist: 550, refSpeed: 75, refGear: 2, apexLatG: 1.3, brakingDist: 85 },
-        { turnNumber: 2, name: 'Turn 2', type: '90° Corner', direction: 'Right', entryDist: 800, apexDist: 870, exitDist: 940, refSpeed: 110, refGear: 3, apexLatG: 1.45, brakingDist: 40 },
-        { turnNumber: 8, name: 'The Corkscrew', type: 'Chicane', direction: 'Left', entryDist: 2100, apexDist: 2180, exitDist: 2260, refSpeed: 90, refGear: 2, apexLatG: 1.6, brakingDist: 60 }
-      ]
+        { turnNumber: 2, name: 'Turn 2', type: '90° Corner', direction: 'Right', entryDist: 800, apexDist: 870, exitDist: 940, refSpeed: 110, refGear: 3, apexLatG: 1.5, brakingDist: 60 },
+        { turnNumber: 8, name: 'The Corkscrew', type: 'Chicane', direction: 'Left', entryDist: 2100, apexDist: 2180, exitDist: 2260, refSpeed: 80, refGear: 2, apexLatG: 1.6, brakingDist: 70 }
+      ],
+      path2D: [
+        { x: 100, z: 200, dist: 0 },
+        { x: 300, z: 400, dist: 1800 },
+        { x: 100, z: 200, dist: 3602 }
+      ],
+      driverNotes: 'Brake in a straight line before crest at Turn 8.'
     };
 
     const saved = repo.saveTrack(custom);
     assert.equal(saved.id, 'laguna-seca-full-road-course');
-    assert.equal(saved.lengthMeters, 3602);
     assert.equal(saved.turns.length, 3);
+    assert.equal(saved.status, 'Calibrated');
+    assert.equal(saved.lengthMeters, 3602);
+    assert.ok(saved.sectors.s1End > 0);
 
-    // Update turn custom name
-    const updated = repo.updateTrack(saved.id, {
-      driverNotes: 'Attack Corkscrew curb aggressively.'
-    });
-    assert.equal(updated.driverNotes, 'Attack Corkscrew curb aggressively.');
-
-    const reloaded = repo.getTrackById(saved.id);
-    assert.equal(reloaded.driverNotes, 'Attack Corkscrew curb aggressively.');
+    // Update turn name
+    saved.turns[0].name = 'Andretti Curve';
+    const updated = repo.updateTrack(saved.id, { turns: saved.turns });
+    assert.equal(updated.turns[0].name, 'Andretti Curve');
   });
 
   it('imports and exports JSON profile properly', () => {
-    const exported = repo.getTrackById('silverstone-gp');
-    const jsonStr = JSON.stringify(exported);
-    
-    // Import under modified ID
-    const imported = repo.importTrack({
-      ...JSON.parse(jsonStr),
-      id: 'silverstone-gp-imported',
-      name: 'Silverstone GP Imported'
-    });
+    const rawTrack = {
+      name: 'Spa-Francorchamps',
+      layout: 'Grand Prix Circuit',
+      lengthMeters: 7004,
+      direction: 'Clockwise',
+      turns: [
+        { turnNumber: 1, name: 'La Source', type: 'Hairpin', refSpeed: 70, refGear: 2 }
+      ]
+    };
 
-    assert.equal(imported.id, 'silverstone-gp-imported');
-    const check = repo.getTrackById('silverstone-gp-imported');
-    assert.ok(check);
-    assert.equal(check.name, 'Silverstone GP Imported');
+    const imported = repo.importTrack(rawTrack);
+    assert.ok(imported.id);
+    assert.equal(imported.name, 'Spa-Francorchamps');
 
-    // Delete
-    const deleted = repo.deleteTrack('silverstone-gp-imported');
-    assert.equal(deleted, true);
-    assert.equal(repo.getTrackById('silverstone-gp-imported'), null);
+    const exported = repo.exportTrack(imported.id);
+    assert.equal(exported.name, 'Spa-Francorchamps');
+    assert.equal(exported.lengthMeters, 7004);
   });
 });

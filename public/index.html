@@ -1162,6 +1162,70 @@
     </div>
   </div>
 
+  <!-- Create New Track Modal (FM23 Tracks & Layouts) -->
+  <div id="create-track-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card chamfer-tl-br" style="max-width: 560px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--color-f1-red); font-size: 18px;">🗺️</span>
+          <h2 class="modal-title">ADD NEW TRACK PROFILE</h2>
+        </div>
+        <button id="btn-close-create-track-modal" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 0; display: flex; flex-direction: column; gap: 14px;">
+        <p style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.4;">
+          Select a circuit from Forza Motorsport (2023) or enter a custom track. Track length, sectors, and corner geometries will be calculated automatically from live telemetry or multi-lap calibration.
+        </p>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Track Location <span style="color: var(--color-f1-red);">*</span></label>
+          <select id="new-track-location-select" class="form-input chamfer-all-corners" style="width: 100%; cursor: pointer;">
+            <!-- Dynamically populated 29 FM23 tracks + Custom option -->
+          </select>
+        </div>
+
+        <div id="new-track-custom-name-container" class="form-group" style="margin-bottom: 0; display: none;">
+          <label class="form-label">Custom Track Name <span style="color: var(--color-f1-red);">*</span></label>
+          <input type="text" id="new-track-custom-name-input" class="form-input chamfer-all-corners" placeholder="e.g. Monaco Grand Prix" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Circuit Layout / Configuration <span style="color: var(--color-f1-red);">*</span></label>
+          <select id="new-track-layout-select" class="form-input chamfer-all-corners" style="width: 100%; cursor: pointer;">
+            <!-- Dynamically populated based on selected location -->
+          </select>
+        </div>
+
+        <div id="new-track-custom-layout-container" class="form-group" style="margin-bottom: 0; display: none;">
+          <label class="form-label">Custom Layout Name <span style="color: var(--color-f1-red);">*</span></label>
+          <input type="text" id="new-track-custom-layout-input" class="form-input chamfer-all-corners" placeholder="e.g. Club Course Reverse" />
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <label class="form-label">Driving Direction</label>
+          <select id="new-track-direction-select" class="form-input chamfer-all-corners" style="width: 100%; cursor: pointer;">
+            <option value="Clockwise">Clockwise (CW)</option>
+            <option value="Counter-Clockwise">Counter-Clockwise (CCW)</option>
+          </select>
+        </div>
+
+        <div class="notice-box chamfer-all-corners" style="background: rgba(225, 6, 0, 0.06); border: 1px solid rgba(225, 6, 0, 0.25); padding: 10px 12px; font-size: 11px; color: var(--color-text-secondary); line-height: 1.4;">
+          <strong style="color: var(--color-f1-red);">Telemetry Calculation:</strong> Track length, turns count, and 2D vector geometry are measured automatically when driving or running a Calibration Stint.
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button id="btn-cancel-create-track" class="btn btn-secondary chamfer-br" style="font-size: 12px;">
+          CANCEL
+        </button>
+        <button id="btn-submit-create-track" class="btn btn-primary chamfer-br" style="font-size: 12px;">
+          CREATE &amp; ACTIVATE TRACK
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Stint Metadata Modal (Track, Layout, Car, Session) -->
   <div id="stint-metadata-modal" class="modal-backdrop">
     <div class="modal-card chamfer-tl-br" style="max-width: 540px;">

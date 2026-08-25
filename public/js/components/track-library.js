@@ -5,6 +5,7 @@
  */
 
 import { ClientTrackBriefingPdf } from '../track-briefing-pdf.js';
+import { FM23_TRACKS } from '../data/fm23-tracks-data.js';
 
 export class TrackLibraryComponent {
   constructor(options = {}) {
@@ -13,7 +14,7 @@ export class TrackLibraryComponent {
     this.selectedTrack = null;
     this.pdfGenerator = new ClientTrackBriefingPdf();
 
-    // DOM Elements
+    // DOM Elements Cache
     this.viewContainer = document.getElementById('view-track-library');
     this.trackCardsList = document.getElementById('track-cards-list');
     this.searchInput = document.getElementById('track-search-input');
@@ -42,7 +43,21 @@ export class TrackLibraryComponent {
     this.driverNotesInput = document.getElementById('track-driver-notes-input');
     this.btnSaveTurnEdits = document.getElementById('btn-save-turn-edits');
 
+    // Create Track Modal Elements
+    this.modalCreateTrack = document.getElementById('create-track-modal');
+    this.selectLocation = document.getElementById('new-track-location-select');
+    this.customNameContainer = document.getElementById('new-track-custom-name-container');
+    this.inputCustomName = document.getElementById('new-track-custom-name-input');
+    this.selectLayout = document.getElementById('new-track-layout-select');
+    this.customLayoutContainer = document.getElementById('new-track-custom-layout-container');
+    this.inputCustomLayout = document.getElementById('new-track-custom-layout-input');
+    this.selectDirection = document.getElementById('new-track-direction-select');
+    this.btnCloseCreateModal = document.getElementById('btn-close-create-track-modal');
+    this.btnCancelCreate = document.getElementById('btn-cancel-create-track');
+    this.btnSubmitCreate = document.getElementById('btn-submit-create-track');
+
     this.bindEvents();
+    this.populateLocationDropdown();
     this.loadTracks();
   }
 
@@ -75,184 +90,171 @@ export class TrackLibraryComponent {
       this.inputImportJson.addEventListener('change', (e) => this.handleImportJson(e));
     }
 
+    // Modal Triggers
     if (this.btnCreateTrack) {
-      this.btnCreateTrack.addEventListener('click', () => {
-        const name = prompt('Enter New Track Name:');
-        if (name) {
-          const layout = prompt('Enter Layout (e.g. Full Circuit):', 'Full Circuit') || 'Full Circuit';
-          const lengthStr = prompt('Enter Approximate Length (meters):', '4000');
-          const lengthMeters = parseInt(lengthStr, 10) || 4000;
-          this.createNewTrack(name, layout, lengthMeters);
-        }
+      this.btnCreateTrack.addEventListener('click', () => this.openCreateTrackModal());
+    }
+
+    if (this.btnCloseCreateModal) {
+      this.btnCloseCreateModal.addEventListener('click', () => this.closeCreateTrackModal());
+    }
+
+    if (this.btnCancelCreate) {
+      this.btnCancelCreate.addEventListener('click', () => this.closeCreateTrackModal());
+    }
+
+    if (this.modalCreateTrack) {
+      this.modalCreateTrack.addEventListener('click', (e) => {
+        if (e.target === this.modalCreateTrack) this.closeCreateTrackModal();
       });
+    }
+
+    if (this.selectLocation) {
+      this.selectLocation.addEventListener('change', () => this.handleLocationChange());
+    }
+
+    if (this.selectLayout) {
+      this.selectLayout.addEventListener('change', () => this.handleLayoutChange());
+    }
+
+    if (this.btnSubmitCreate) {
+      this.btnSubmitCreate.addEventListener('click', () => this.handleCreateTrackSubmit());
     }
   }
 
   /**
-   * Generates default client fallback seeds if server API is warming up
+   * Populates the 29 FM23 locations in the New Track modal
    */
-  getDefaultFallbackTracks() {
-    const buildPath = (len, offset = 0) => {
-      const pts = [];
-      const count = 100;
-      for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI * 2 + offset;
-        const r = 320 + Math.sin(angle * 3) * 60 + Math.cos(angle * 5) * 40;
-        pts.push({
-          x: Math.round(500 + Math.cos(angle) * r * 1.1),
-          z: Math.round(450 + Math.sin(angle) * r * 0.85),
-          dist: Math.round((i / count) * len)
-        });
-      }
-      return pts;
-    };
+  populateLocationDropdown() {
+    if (!this.selectLocation) return;
+    this.selectLocation.innerHTML = '';
 
-    return [
-      {
-        id: 'silverstone-gp',
-        name: 'Silverstone Circuit',
-        layout: 'Grand Prix Circuit',
-        lengthMeters: 5891,
-        direction: 'Clockwise',
-        sectors: { s1End: 1960, s2End: 3920, s3End: 5891 },
-        elevation: { minElevation: 140, maxElevation: 153, elevationDelta: 12.6, profile: [] },
-        characteristics: {
-          slowCorners: 3, mediumCorners: 4, fastCorners: 8,
-          longestStraight: 770,
-          dangerZones: [{ turnNumber: 3, name: 'Village', reason: 'Heavy threshold braking zone' }],
-          rhythmOverview: 'High-downforce flowing circuit with iconic fast complexes Copse and Maggotts-Becketts.'
-        },
-        turns: [
-          { turnNumber: 1, name: 'Abbey', type: 'Fast Sweeper', direction: 'Right', entryDist: 340, apexDist: 420, exitDist: 490, refSpeed: 235, refGear: 6, apexLatG: 2.1, brakingDist: 20 },
-          { turnNumber: 2, name: 'Farm Curve', type: 'Fast Sweeper', direction: 'Left', entryDist: 530, apexDist: 600, exitDist: 680, refSpeed: 245, refGear: 6, apexLatG: 1.8, brakingDist: 0 },
-          { turnNumber: 3, name: 'Village', type: 'Hairpin', direction: 'Right', entryDist: 850, apexDist: 930, exitDist: 990, refSpeed: 82, refGear: 2, apexLatG: 1.3, brakingDist: 95 },
-          { turnNumber: 4, name: 'The Loop', type: 'Hairpin', direction: 'Left', entryDist: 1040, apexDist: 1110, exitDist: 1180, refSpeed: 75, refGear: 2, apexLatG: 1.25, brakingDist: 50 },
-          { turnNumber: 5, name: 'Aintree', type: 'Medium Corner', direction: 'Left', entryDist: 1220, apexDist: 1290, exitDist: 1360, refSpeed: 155, refGear: 4, apexLatG: 1.5, brakingDist: 30 },
-          { turnNumber: 6, name: 'Brooklands', type: '90° Corner', direction: 'Left', entryDist: 2280, apexDist: 2360, exitDist: 2430, refSpeed: 120, refGear: 3, apexLatG: 1.6, brakingDist: 80 },
-          { turnNumber: 7, name: 'Luffield', type: 'Medium Corner', direction: 'Right', entryDist: 2460, apexDist: 2560, exitDist: 2650, refSpeed: 95, refGear: 2, apexLatG: 1.45, brakingDist: 40 },
-          { turnNumber: 8, name: 'Woodcote', type: 'Fast Sweeper', direction: 'Right', entryDist: 2680, apexDist: 2750, exitDist: 2830, refSpeed: 215, refGear: 5, apexLatG: 1.7, brakingDist: 0 },
-          { turnNumber: 9, name: 'Copse', type: 'Fast Sweeper', direction: 'Right', entryDist: 3260, apexDist: 3340, exitDist: 3410, refSpeed: 240, refGear: 6, apexLatG: 2.2, brakingDist: 25 },
-          { turnNumber: 10, name: 'Maggotts', type: 'Fast Sweeper', direction: 'Left', entryDist: 3750, apexDist: 3820, exitDist: 3880, refSpeed: 260, refGear: 7, apexLatG: 2.4, brakingDist: 0 },
-          { turnNumber: 11, name: 'Becketts', type: 'Chicane', direction: 'Right', entryDist: 3910, apexDist: 3980, exitDist: 4050, refSpeed: 210, refGear: 5, apexLatG: 2.1, brakingDist: 45 },
-          { turnNumber: 12, name: 'Chapel', type: 'Fast Sweeper', direction: 'Left', entryDist: 4080, apexDist: 4150, exitDist: 4220, refSpeed: 220, refGear: 6, apexLatG: 1.9, brakingDist: 0 },
-          { turnNumber: 13, name: 'Stowe', type: '90° Corner', direction: 'Right', entryDist: 4980, apexDist: 5070, exitDist: 5150, refSpeed: 175, refGear: 4, apexLatG: 1.8, brakingDist: 75 },
-          { turnNumber: 14, name: 'Vale', type: 'Chicane', direction: 'Left', entryDist: 5460, apexDist: 5530, exitDist: 5590, refSpeed: 90, refGear: 2, apexLatG: 1.4, brakingDist: 85 },
-          { turnNumber: 15, name: 'Club', type: 'Medium Corner', direction: 'Right', entryDist: 5620, apexDist: 5710, exitDist: 5800, refSpeed: 140, refGear: 3, apexLatG: 1.6, brakingDist: 30 }
-        ],
-        path2D: buildPath(5891, 0),
-        driverNotes: 'Commit to full throttle through Abbey & Farm Curve. Prioritize exit speed out of The Loop onto Wellington Straight.'
-      },
-      {
-        id: 'watkins-glen-full',
-        name: 'Watkins Glen International',
-        layout: 'Grand Prix Course (with Boot)',
-        lengthMeters: 5472,
-        direction: 'Clockwise',
-        sectors: { s1End: 1824, s2End: 3648, s3End: 5472 },
-        elevation: { minElevation: 300, maxElevation: 334, elevationDelta: 34.0, profile: [] },
-        characteristics: {
-          slowCorners: 2, mediumCorners: 5, fastCorners: 4,
-          longestStraight: 820,
-          dangerZones: [{ turnNumber: 1, name: 'The Ninety', reason: 'Downhill braking with camber falloff' }],
-          rhythmOverview: 'Fast, historic high-speed road course with the high-commitment Esses and undulating Boot section.'
-        },
-        turns: [
-          { turnNumber: 1, name: 'The Ninety', type: '90° Corner', direction: 'Right', entryDist: 420, apexDist: 510, exitDist: 580, refSpeed: 125, refGear: 3, apexLatG: 1.6, brakingDist: 85 },
-          { turnNumber: 2, name: 'Esses Turn 2', type: 'Fast Sweeper', direction: 'Right', entryDist: 920, apexDist: 1010, exitDist: 1100, refSpeed: 215, refGear: 5, apexLatG: 1.9, brakingDist: 0 },
-          { turnNumber: 3, name: 'Esses Turn 3', type: 'Fast Sweeper', direction: 'Left', entryDist: 1140, apexDist: 1220, exitDist: 1300, refSpeed: 230, refGear: 6, apexLatG: 1.8, brakingDist: 0 },
-          { turnNumber: 4, name: 'Esses Turn 4', type: 'Fast Sweeper', direction: 'Right', entryDist: 1340, apexDist: 1420, exitDist: 1500, refSpeed: 240, refGear: 6, apexLatG: 1.7, brakingDist: 0 },
-          { turnNumber: 5, name: 'Inner Loop Bus Stop', type: 'Chicane', direction: 'Right', entryDist: 2340, apexDist: 2420, exitDist: 2500, refSpeed: 140, refGear: 3, apexLatG: 1.8, brakingDist: 95 },
-          { turnNumber: 6, name: 'The Carousel', type: 'Fast Sweeper', direction: 'Right', entryDist: 2650, apexDist: 2780, exitDist: 2900, refSpeed: 165, refGear: 4, apexLatG: 1.9, brakingDist: 25 },
-          { turnNumber: 7, name: 'The Chute', type: 'Medium Corner', direction: 'Left', entryDist: 3340, apexDist: 3420, exitDist: 3500, refSpeed: 135, refGear: 3, apexLatG: 1.5, brakingDist: 55 },
-          { turnNumber: 8, name: 'The Boot Heel', type: 'Hairpin', direction: 'Left', entryDist: 3780, apexDist: 3870, exitDist: 3950, refSpeed: 85, refGear: 2, apexLatG: 1.35, brakingDist: 75 },
-          { turnNumber: 9, name: 'The Laces', type: 'Medium Corner', direction: 'Right', entryDist: 4120, apexDist: 4200, exitDist: 4280, refSpeed: 115, refGear: 3, apexLatG: 1.45, brakingDist: 40 },
-          { turnNumber: 10, name: 'The Toe', type: 'Medium Corner', direction: 'Left', entryDist: 4560, apexDist: 4640, exitDist: 4720, refSpeed: 145, refGear: 4, apexLatG: 1.6, brakingDist: 35 },
-          { turnNumber: 11, name: 'Turn 11', type: '90° Corner', direction: 'Right', entryDist: 5180, apexDist: 5260, exitDist: 5340, refSpeed: 150, refGear: 4, apexLatG: 1.7, brakingDist: 60 }
-        ],
-        path2D: buildPath(5472, 1.2),
-        driverNotes: 'Maximize entry curb usage through Bus Stop. Trail brake deep into The Heel to rotate the chassis.'
-      },
-      {
-        id: 'maple-valley',
-        name: 'Maple Valley Raceway',
-        layout: 'Full Circuit',
-        lengthMeters: 4810,
-        direction: 'Clockwise',
-        sectors: { s1End: 1600, s2End: 3200, s3End: 4810 },
-        elevation: { minElevation: 220, maxElevation: 258, elevationDelta: 38.0, profile: [] },
-        characteristics: {
-          slowCorners: 1, mediumCorners: 4, fastCorners: 4,
-          longestStraight: 680,
-          dangerZones: [{ turnNumber: 3, name: 'Downhill Sweeper', reason: 'Unweighting over crest at 200+ km/h' }],
-          rhythmOverview: 'Spectacular undulating circuit with drastic elevation changes and high-speed cambered sweepers.'
-        },
-        turns: [
-          { turnNumber: 1, name: 'Turn 1', type: 'Fast Sweeper', direction: 'Left', entryDist: 380, apexDist: 460, exitDist: 540, refSpeed: 195, refGear: 5, apexLatG: 1.8, brakingDist: 30 },
-          { turnNumber: 2, name: 'Hillside', type: 'Medium Corner', direction: 'Right', entryDist: 780, apexDist: 860, exitDist: 940, refSpeed: 140, refGear: 3, apexLatG: 1.5, brakingDist: 45 },
-          { turnNumber: 3, name: 'Downhill Sweeper', type: 'Fast Sweeper', direction: 'Right', entryDist: 1420, apexDist: 1540, exitDist: 1650, refSpeed: 210, refGear: 5, apexLatG: 2.0, brakingDist: 15 },
-          { turnNumber: 4, name: 'Crest Bend', type: 'Medium Corner', direction: 'Left', entryDist: 2180, apexDist: 2260, exitDist: 2340, refSpeed: 150, refGear: 4, apexLatG: 1.6, brakingDist: 35 },
-          { turnNumber: 5, name: 'The Valley Hairpin', type: 'Hairpin', direction: 'Right', entryDist: 2780, apexDist: 2860, exitDist: 2940, refSpeed: 88, refGear: 2, apexLatG: 1.3, brakingDist: 80 },
-          { turnNumber: 6, name: 'Underpass Left', type: 'Medium Corner', direction: 'Left', entryDist: 3420, apexDist: 3500, exitDist: 3580, refSpeed: 130, refGear: 3, apexLatG: 1.5, brakingDist: 40 },
-          { turnNumber: 7, name: 'Overpass Right', type: 'Fast Sweeper', direction: 'Right', entryDist: 3820, apexDist: 3910, exitDist: 4000, refSpeed: 185, refGear: 5, apexLatG: 1.75, brakingDist: 20 },
-          { turnNumber: 8, name: 'Final Complex', type: 'Chicane', direction: 'Left', entryDist: 4320, apexDist: 4400, exitDist: 4480, refSpeed: 120, refGear: 3, apexLatG: 1.6, brakingDist: 65 }
-        ],
-        path2D: buildPath(4810, 2.4),
-        driverNotes: 'Smooth inputs over the crest on Turn 3. Early throttle application exiting The Valley Hairpin.'
-      },
-      {
-        id: 'spa-francorchamps',
-        name: 'Circuit de Spa-Francorchamps',
-        layout: 'Grand Prix Circuit',
-        lengthMeters: 7004,
-        direction: 'Clockwise',
-        sectors: { s1End: 2335, s2End: 4670, s3End: 7004 },
-        elevation: { minElevation: 370, maxElevation: 472, elevationDelta: 102.0, profile: [] },
-        characteristics: {
-          slowCorners: 3, mediumCorners: 6, fastCorners: 10,
-          longestStraight: 2015,
-          dangerZones: [{ turnNumber: 2, name: 'Eau Rouge - Raidillon', reason: 'Blind compression at 300 km/h with 4G vertical load' }],
-          rhythmOverview: 'Legendary Ardennes circuit featuring dramatic 102m elevation rise through Eau Rouge and high-speed Blanchimont.'
-        },
-        turns: [
-          { turnNumber: 1, name: 'La Source', type: 'Hairpin', direction: 'Right', entryDist: 280, apexDist: 360, exitDist: 430, refSpeed: 70, refGear: 2, apexLatG: 1.3, brakingDist: 90 },
-          { turnNumber: 2, name: 'Eau Rouge', type: 'Fast Sweeper', direction: 'Left', entryDist: 920, apexDist: 1000, exitDist: 1070, refSpeed: 290, refGear: 8, apexLatG: 2.6, brakingDist: 0 },
-          { turnNumber: 3, name: 'Raidillon', type: 'Fast Sweeper', direction: 'Right', entryDist: 1100, apexDist: 1180, exitDist: 1260, refSpeed: 285, refGear: 8, apexLatG: 2.4, brakingDist: 0 },
-          { turnNumber: 4, name: 'Les Combes', type: 'Chicane', direction: 'Right', entryDist: 3100, apexDist: 3180, exitDist: 3260, refSpeed: 145, refGear: 4, apexLatG: 1.7, brakingDist: 85 },
-          { turnNumber: 5, name: 'Malmedy', type: 'Medium Corner', direction: 'Right', entryDist: 3340, apexDist: 3410, exitDist: 3480, refSpeed: 170, refGear: 4, apexLatG: 1.6, brakingDist: 20 },
-          { turnNumber: 6, name: 'Rivage / Bruxelles', type: 'Hairpin', direction: 'Right', entryDist: 3760, apexDist: 3860, exitDist: 3950, refSpeed: 105, refGear: 3, apexLatG: 1.45, brakingDist: 60 },
-          { turnNumber: 7, name: 'Speaker\'s Corner', type: 'Medium Corner', direction: 'Left', entryDist: 4120, apexDist: 4200, exitDist: 4280, refSpeed: 155, refGear: 4, apexLatG: 1.55, brakingDist: 30 },
-          { turnNumber: 8, name: 'Pouhon', type: 'Fast Sweeper', direction: 'Left', entryDist: 4620, apexDist: 4720, exitDist: 4820, refSpeed: 240, refGear: 6, apexLatG: 2.5, brakingDist: 25 },
-          { turnNumber: 9, name: 'Fagnes', type: 'Chicane', direction: 'Right', entryDist: 5320, apexDist: 5400, exitDist: 5480, refSpeed: 160, refGear: 4, apexLatG: 1.7, brakingDist: 50 },
-          { turnNumber: 10, name: 'Campus / Stavelot', type: 'Medium Corner', direction: 'Right', entryDist: 5740, apexDist: 5820, exitDist: 5900, refSpeed: 180, refGear: 5, apexLatG: 1.65, brakingDist: 25 },
-          { turnNumber: 11, name: 'Courbe Paul Frère', type: 'Fast Sweeper', direction: 'Right', entryDist: 6020, apexDist: 6100, exitDist: 6180, refSpeed: 235, refGear: 6, apexLatG: 1.9, brakingDist: 0 },
-          { turnNumber: 12, name: 'Blanchimont', type: 'Fast Sweeper', direction: 'Left', entryDist: 6480, apexDist: 6580, exitDist: 6680, refSpeed: 295, refGear: 8, apexLatG: 2.2, brakingDist: 0 },
-          { turnNumber: 13, name: 'Bus Stop Chicane', type: 'Chicane', direction: 'Right', entryDist: 6780, apexDist: 6860, exitDist: 6940, refSpeed: 75, refGear: 2, apexLatG: 1.35, brakingDist: 110 }
-        ],
-        path2D: buildPath(7004, 3.8),
-        driverNotes: 'Flat out through Eau Rouge with steady steering angle. Late apex at Pouhon to carry apex momentum.'
+    const realGroup = document.createElement('optgroup');
+    realGroup.label = 'Real-World Circuits';
+
+    const fictionalGroup = document.createElement('optgroup');
+    fictionalGroup.label = 'Fictional Circuits';
+
+    FM23_TRACKS.forEach(track => {
+      const opt = document.createElement('option');
+      opt.value = track.name;
+      opt.textContent = track.name;
+      if (track.category === 'Real Tracks') {
+        realGroup.appendChild(opt);
+      } else {
+        fictionalGroup.appendChild(opt);
       }
-    ];
+    });
+
+    const customOpt = document.createElement('option');
+    customOpt.value = '__custom__';
+    customOpt.textContent = '➕ Custom Track...';
+
+    this.selectLocation.appendChild(realGroup);
+    this.selectLocation.appendChild(fictionalGroup);
+    this.selectLocation.appendChild(customOpt);
+
+    this.handleLocationChange();
   }
 
   /**
-   * Fetches all saved tracks from API with client fallback
+   * Updates Layout dropdown dynamically based on selected Location
+   */
+  handleLocationChange() {
+    const selected = this.selectLocation?.value;
+    if (!this.selectLayout) return;
+
+    if (selected === '__custom__') {
+      if (this.customNameContainer) this.customNameContainer.style.display = 'block';
+      this.selectLayout.innerHTML = '<option value="__custom__">➕ Custom Layout...</option>';
+      this.handleLayoutChange();
+      return;
+    }
+
+    if (this.customNameContainer) this.customNameContainer.style.display = 'none';
+
+    const trackObj = FM23_TRACKS.find(t => t.name === selected);
+    this.selectLayout.innerHTML = '';
+
+    if (trackObj && trackObj.layouts) {
+      trackObj.layouts.forEach(layout => {
+        const opt = document.createElement('option');
+        opt.value = layout;
+        opt.textContent = layout;
+        this.selectLayout.appendChild(opt);
+      });
+    }
+
+    const customLayoutOpt = document.createElement('option');
+    customLayoutOpt.value = '__custom__';
+    customLayoutOpt.textContent = '➕ Custom Layout...';
+    this.selectLayout.appendChild(customLayoutOpt);
+
+    this.handleLayoutChange();
+  }
+
+  /**
+   * Handles toggling custom layout text input
+   */
+  handleLayoutChange() {
+    const selected = this.selectLayout?.value;
+    if (this.customLayoutContainer) {
+      this.customLayoutContainer.style.display = selected === '__custom__' ? 'block' : 'none';
+    }
+  }
+
+  openCreateTrackModal() {
+    if (this.modalCreateTrack) {
+      this.modalCreateTrack.style.display = 'flex';
+      if (this.selectLocation && this.selectLocation.options.length > 0) {
+        this.selectLocation.selectedIndex = 0;
+        this.handleLocationChange();
+      }
+    }
+  }
+
+  closeCreateTrackModal() {
+    if (this.modalCreateTrack) {
+      this.modalCreateTrack.style.display = 'none';
+    }
+  }
+
+  /**
+   * Handles submitting new track from FM23 modal
+   */
+  async handleCreateTrackSubmit() {
+    let trackName = this.selectLocation?.value || 'New Circuit';
+    if (trackName === '__custom__') {
+      trackName = this.inputCustomName?.value.trim() || 'Custom Circuit';
+    }
+
+    let layout = this.selectLayout?.value || 'Full Course';
+    if (layout === '__custom__') {
+      layout = this.inputCustomLayout?.value.trim() || 'Full Course';
+    }
+
+    const direction = this.selectDirection?.value || 'Clockwise';
+
+    // Length is 0 - calculated dynamically from telemetry data / calibration
+    await this.createNewTrack(trackName, layout, 0, direction);
+    this.closeCreateTrackModal();
+  }
+
+  /**
+   * Fetches all saved tracks from API
    */
   async loadTracks() {
     try {
       const res = await fetch('/api/tracks');
       if (res.ok) {
         const data = await res.json();
-        if (data.tracks && data.tracks.length > 0) {
-          this.tracks = data.tracks;
-        } else {
-          this.tracks = this.getDefaultFallbackTracks();
-        }
+        this.tracks = data.tracks || [];
       } else {
-        this.tracks = this.getDefaultFallbackTracks();
+        this.tracks = [];
       }
     } catch (err) {
-      console.warn('[TRACK LIBRARY] API offline or fallback active:', err.message);
-      this.tracks = this.getDefaultFallbackTracks();
+      console.warn('[TRACK LIBRARY] API offline or empty:', err.message);
+      this.tracks = [];
     }
 
     this.renderTrackCards();
@@ -261,6 +263,9 @@ export class TrackLibraryComponent {
       const activeId = this.sessionManager?.activeTrackProfile?.id;
       const initial = (activeId && this.tracks.find(t => t.id === activeId)) || this.tracks[0];
       this.selectTrack(initial.id);
+    } else {
+      this.selectedTrack = null;
+      this.renderEmptyState();
     }
   }
 
@@ -272,7 +277,12 @@ export class TrackLibraryComponent {
     this.trackCardsList.innerHTML = '';
 
     if (tracksToRender.length === 0) {
-      this.trackCardsList.innerHTML = '<div style="color: var(--color-text-muted); font-size: 11px; padding: 12px; font-family: var(--font-mono);">No track profiles found.</div>';
+      this.trackCardsList.innerHTML = `
+        <div style="color: var(--color-text-muted); font-size: 11px; padding: 18px 12px; text-align: center; line-height: 1.5; font-family: var(--font-headline);">
+          No track profiles yet.<br>
+          <span style="color: var(--color-f1-red); font-weight: 700; cursor: pointer;" onclick="document.getElementById('btn-create-track-profile').click();">+ ADD A TRACK</span> or run a Calibration Stint.
+        </div>
+      `;
       return;
     }
 
@@ -282,6 +292,7 @@ export class TrackLibraryComponent {
       const card = document.createElement('div');
       const isSelected = this.selectedTrack && this.selectedTrack.id === track.id;
       const isActive = activeTrackId === track.id;
+      const lengthLabel = track.lengthMeters > 0 ? `${track.lengthMeters.toLocaleString()}m` : 'Uncalibrated';
 
       card.className = `track-card chamfer-all-corners ${isSelected ? 'selected' : ''}`;
       card.innerHTML = `
@@ -291,7 +302,7 @@ export class TrackLibraryComponent {
         </div>
         <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 6px;">${track.layout || 'Full Course'}</div>
         <div style="display: flex; gap: 10px; font-size: 10px; color: var(--color-text-muted); font-family: var(--font-mono);">
-          <span>📏 ${(track.lengthMeters || 0).toLocaleString()}m</span>
+          <span>📏 ${lengthLabel}</span>
           <span>🔄 ${track.turnCount || (track.turns?.length || 0)} Turns</span>
         </div>
       `;
@@ -343,11 +354,47 @@ export class TrackLibraryComponent {
   }
 
   /**
+   * Renders empty state when no tracks exist
+   */
+  renderEmptyState() {
+    if (this.heroName) this.heroName.textContent = 'NO ACTIVE CIRCUIT';
+    if (this.heroLayout) this.heroLayout.textContent = 'Select or create a track to begin';
+    if (this.heroDirection) this.heroDirection.textContent = '--';
+    if (this.heroLength) this.heroLength.textContent = '-- m';
+    if (this.heroTurns) this.heroTurns.textContent = '-- Turns';
+    if (this.heroElevation) this.heroElevation.textContent = '-- m';
+    if (this.heroStraight) this.heroStraight.textContent = '-- m';
+    if (this.heroRhythm) this.heroRhythm.textContent = 'Create a track profile from the official Forza Motorsport catalog or execute a 3-lap calibration stint to synthesize geometric telemetry.';
+
+    if (this.interactiveMapContainer) {
+      this.interactiveMapContainer.innerHTML = `
+        <div style="color: var(--color-text-muted); font-size: 12px; text-align: center; padding: 40px 20px; font-family: var(--font-headline); display: flex; flex-direction: column; align-items: center; gap: 12px;">
+          <span style="font-size: 28px;">🗺️</span>
+          <span>No circuit profile selected.</span>
+          <button class="btn btn-primary btn-sm chamfer-br" onclick="document.getElementById('btn-create-track-profile').click();">
+            + CREATE NEW TRACK
+          </button>
+        </div>
+      `;
+    }
+
+    if (this.turnTableBody) {
+      this.turnTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 18px;">No turns mapped yet.</td></tr>`;
+    }
+    if (this.driverNotesInput) {
+      this.driverNotesInput.value = '';
+    }
+  }
+
+  /**
    * Updates hero section and interactive visualizer with selected track data
    */
   renderSelectedTrack() {
     const track = this.selectedTrack;
-    if (!track) return;
+    if (!track) {
+      this.renderEmptyState();
+      return;
+    }
 
     if (this.heroName) this.heroName.textContent = track.name || 'Unknown Circuit';
     if (this.heroLayout) this.heroLayout.textContent = track.layout || 'Full Course';
@@ -358,18 +405,20 @@ export class TrackLibraryComponent {
       this.heroDirection.style.color = dir.includes('COUNTER') ? 'var(--color-warning)' : '#0099FF';
     }
 
-    if (this.heroLength) this.heroLength.textContent = `${(track.lengthMeters || 0).toLocaleString()} m`;
+    if (this.heroLength) {
+      this.heroLength.textContent = track.lengthMeters > 0 ? `${track.lengthMeters.toLocaleString()} m` : 'Awaiting Telemetry';
+    }
     if (this.heroTurns) this.heroTurns.textContent = `${track.turns?.length || 0} Turns`;
     if (this.heroElevation) {
       const delta = track.elevation?.elevationDelta || 0;
-      this.heroElevation.textContent = `+${delta.toFixed(1)} m`;
+      this.heroElevation.textContent = delta > 0 ? `+${delta.toFixed(1)} m` : '-- m';
     }
     if (this.heroStraight) {
-      const straight = track.characteristics?.longestStraight || Math.round((track.lengthMeters || 4000) * 0.2);
-      this.heroStraight.textContent = `${straight} m`;
+      const straight = track.characteristics?.longestStraight || (track.lengthMeters > 0 ? Math.round(track.lengthMeters * 0.2) : 0);
+      this.heroStraight.textContent = straight > 0 ? `${straight} m` : '-- m';
     }
     if (this.heroRhythm) {
-      this.heroRhythm.textContent = track.characteristics?.rhythmOverview || 'High-downforce technical road course with high commitment corners.';
+      this.heroRhythm.textContent = track.characteristics?.rhythmOverview || (track.lengthMeters > 0 ? 'High-downforce road course.' : 'Track length, timing sectors, and turn apexes will be calculated automatically from live telemetry or a 3-lap calibration stint.');
     }
 
     // Render Turn Table Rows
@@ -391,8 +440,8 @@ export class TrackLibraryComponent {
     if (!this.turnTableBody) return;
     this.turnTableBody.innerHTML = '';
 
-    if (turns.length === 0) {
-      this.turnTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 16px;">No turns mapped yet.</td></tr>`;
+    if (!turns || turns.length === 0) {
+      this.turnTableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--color-text-muted); padding: 18px; font-family: var(--font-mono); font-size: 11px;">Awaiting telemetry to detect and map corner apexes.</td></tr>`;
       return;
     }
 
@@ -423,14 +472,25 @@ export class TrackLibraryComponent {
   }
 
   /**
-   * Renders interactive SVG map with turn badges and hover interactions
+   * Renders interactive SVG map with turn badges or uncalibrated banner
    */
   renderInteractiveMap(track) {
     if (!this.interactiveMapContainer) return;
     const path2D = track.path2D || [];
 
     if (path2D.length < 3) {
-      this.interactiveMapContainer.innerHTML = '<div style="color: var(--color-text-muted); font-size: 12px; text-align: center; padding-top: 150px; font-family: var(--font-mono);">Awaiting multi-lap calibration coordinates for vector circuit visualizer...</div>';
+      this.interactiveMapContainer.innerHTML = `
+        <div style="color: var(--color-text-muted); font-size: 12px; text-align: center; padding: 40px 20px; font-family: var(--font-headline); display: flex; flex-direction: column; align-items: center; gap: 10px;">
+          <span style="font-size: 26px;">📡</span>
+          <span>Awaiting Telemetry to Map Vector Circuit Geometry</span>
+          <span style="font-size: 11px; color: var(--color-text-secondary); max-width: 420px; line-height: 1.4;">
+            Run a 3-lap steady-speed Calibration Stint on Pit Wall to synthesize the official apex markers, timing sectors, and elevation profile.
+          </span>
+          <button class="btn btn-primary btn-sm chamfer-br" style="margin-top: 6px;" onclick="window.apexApp?.switchView('pitwall'); window.apexApp?.session?.startCalibrationStint();">
+            🎯 START CALIBRATION STINT
+          </button>
+        </div>
+      `;
       return;
     }
 
@@ -603,7 +663,6 @@ export class TrackLibraryComponent {
         this.renderSelectedTrack();
         alert('💾 Track geometry and strategy notes updated successfully!');
       } else {
-        // Local state update if server is in offline mode
         this.selectedTrack.turns = updatedTurns;
         this.selectedTrack.driverNotes = driverNotes;
         this.renderSelectedTrack();
@@ -635,18 +694,20 @@ export class TrackLibraryComponent {
         this.tracks = this.tracks.filter(t => t.id !== this.selectedTrack.id);
         this.renderTrackCards();
         if (this.tracks.length > 0) this.selectTrack(this.tracks[0].id);
+        else this.renderEmptyState();
       }
     } catch (err) {
       this.tracks = this.tracks.filter(t => t.id !== this.selectedTrack.id);
       this.renderTrackCards();
       if (this.tracks.length > 0) this.selectTrack(this.tracks[0].id);
+      else this.renderEmptyState();
     }
   }
 
   /**
-   * Creates a new manual track profile
+   * Creates a new track profile with 0m initial length (computed via telemetry)
    */
-  async createNewTrack(name, layout, lengthMeters) {
+  async createNewTrack(name, layout, lengthMeters = 0, direction = 'Clockwise') {
     try {
       const res = await fetch('/api/tracks', {
         method: 'POST',
@@ -655,10 +716,10 @@ export class TrackLibraryComponent {
           name,
           layout,
           lengthMeters,
-          direction: 'Clockwise',
-          turns: [
-            { turnNumber: 1, name: 'Turn 1', type: '90° Corner', direction: 'Right', entryDist: 350, apexDist: 420, exitDist: 490, refSpeed: 110, refGear: 3, apexLatG: 1.4, brakingDist: 60 }
-          ]
+          direction,
+          status: 'Uncalibrated',
+          turns: [],
+          path2D: []
         })
       });
 
@@ -666,9 +727,27 @@ export class TrackLibraryComponent {
         const data = await res.json();
         await this.loadTracks();
         this.selectTrack(data.track.id);
+        this.setActiveTrack();
+      } else {
+        // Local fallback
+        const id = `${name} ${layout}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        const newTrack = {
+          id,
+          name,
+          layout,
+          lengthMeters,
+          direction,
+          status: 'Uncalibrated',
+          turns: [],
+          path2D: []
+        };
+        this.tracks.push(newTrack);
+        this.renderTrackCards();
+        this.selectTrack(newTrack.id);
+        this.setActiveTrack();
       }
     } catch (err) {
-      alert('Failed creating track: ' + err.message);
+      console.warn('Track creation fallback:', err);
     }
   }
 

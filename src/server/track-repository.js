@@ -16,7 +16,6 @@ export class TrackRepository {
   constructor(dataDir = DATA_DIR) {
     this.dataDir = dataDir;
     this.ensureDirectory();
-    this.seedDefaultsIfEmpty();
   }
 
   /**
@@ -55,8 +54,8 @@ export class TrackRepository {
     if (!track.name || typeof track.name !== 'string') {
       errors.push('Track name is required');
     }
-    if (!track.lengthMeters || typeof track.lengthMeters !== 'number' || track.lengthMeters <= 0) {
-      errors.push('Track length in meters must be a positive number');
+    if (track.lengthMeters !== undefined && (typeof track.lengthMeters !== 'number' || track.lengthMeters < 0)) {
+      errors.push('Track length in meters must be a non-negative number');
     }
     if (track.direction && !['Clockwise', 'Counter-Clockwise'].includes(track.direction)) {
       errors.push('Direction must be either "Clockwise" or "Counter-Clockwise"');
@@ -147,21 +146,25 @@ export class TrackRepository {
     const id = trackData.id || this.generateSlug(trackData.name, trackData.layout);
     const now = new Date().toISOString();
 
+    const lengthMeters = trackData.lengthMeters ? Math.round(trackData.lengthMeters) : 0;
+    const isCalibrated = lengthMeters > 0;
+
     const fullTrack = {
       id,
       name: trackData.name,
       layout: trackData.layout || 'Full Circuit',
       trackOrdinal: trackData.trackOrdinal ?? null,
-      lengthMeters: Math.round(trackData.lengthMeters),
+      lengthMeters,
+      status: trackData.status || (isCalibrated ? 'Calibrated' : 'Uncalibrated'),
       direction: trackData.direction || 'Clockwise',
-      sectors: trackData.sectors || {
-        s1End: Math.round(trackData.lengthMeters / 3),
-        s2End: Math.round((trackData.lengthMeters / 3) * 2),
-        s3End: Math.round(trackData.lengthMeters),
-        s1Length: Math.round(trackData.lengthMeters / 3),
-        s2Length: Math.round(trackData.lengthMeters / 3),
-        s3Length: Math.round(trackData.lengthMeters - ((trackData.lengthMeters / 3) * 2))
-      },
+      sectors: trackData.sectors || (isCalibrated ? {
+        s1End: Math.round(lengthMeters / 3),
+        s2End: Math.round((lengthMeters / 3) * 2),
+        s3End: Math.round(lengthMeters),
+        s1Length: Math.round(lengthMeters / 3),
+        s2Length: Math.round(lengthMeters / 3),
+        s3Length: Math.round(lengthMeters - ((lengthMeters / 3) * 2))
+      } : { s1End: 0, s2End: 0, s3End: 0, s1Length: 0, s2Length: 0, s3Length: 0 }),
       turns: (trackData.turns || []).map((t, idx) => ({
         turnNumber: t.turnNumber || idx + 1,
         name: t.name || `Turn ${t.turnNumber || idx + 1}`,
@@ -291,6 +294,15 @@ export class TrackRepository {
   importTrack(jsonInput) {
     const data = typeof jsonInput === 'string' ? JSON.parse(jsonInput) : jsonInput;
     return this.saveTrack(data);
+  }
+
+  /**
+   * Exports a track profile by id
+   * @param {string} id
+   * @returns {Object|null}
+   */
+  exportTrack(id) {
+    return this.getTrackById(id);
   }
 
   /**
