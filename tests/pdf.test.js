@@ -152,7 +152,7 @@ test('ApexPdfBuilder: Compiles 6-page report including Section 6 (Shifting & Pow
   assert.equal(headerStr, '%PDF-');
 });
 
-test('ApexPdfBuilder: Compiles 7-page Light-Theme report with Section 8 Coaching Recommendations', async () => {
+test('ApexPdfBuilder: Compiles full APEX v3.0 report with CPR, 4-Block, Chassis, Surface & 14-Point Scorecard', async () => {
   const { PDFDocument } = await import('pdf-lib');
   const mockReport = {
     validLapsCount: 2,
@@ -161,14 +161,50 @@ test('ApexPdfBuilder: Compiles 7-page Light-Theme report with Section 8 Coaching
     laps: [{ lapNumber: 1, lapTime: 68.4, isValid: true, corners: [{ cornerNumber: 1, type: 'Right', speed: { entryMph: 120, apexMph: 45, exitMph: 90 }, dynamics: { tapDeltaFeet: 12 } }] }],
     findings: [
       { id: 'R-001', ruleId: 'R-001', name: 'Late Throttle Unwind', severity: 'High', cornerNumber: 1, quote: 'Exit speed is king.', actionPlan: 'Unwind progressively while feeding in throttle smoothly on corner exit.', metric: 'TAP Delta: +12.0ft' }
-    ]
+    ],
+    carControl: {
+      carControlScore: 92,
+      balancePercentages: { neutralPct: 84, understeerPct: 10, oversteerPct: 6 },
+      maxYawAngleDeg: 5.2,
+      ttoEventsCount: 0,
+      tankslapperEventsCount: 0,
+      skidEvents: []
+    },
+    brakingEntry: {
+      brakingEntryScore: 88,
+      totalOverslowTimeLossSec: 0.12,
+      totalDownshiftDips: 0,
+      totalSlamEvents: 0,
+      cornerEntries: []
+    },
+    chassisAdvisory: {
+      chassisHealthScore: 95,
+      bottomingStrikes: { total: 0, frontLeft: 0, frontRight: 0, rearLeft: 0, rearRight: 0 },
+      maxBodyAngles: { maxRollDeg: 1.8, maxPitchDeg: 1.2 },
+      dynamicRakeIndex: 0.015,
+      setupAdjustments: []
+    },
+    surfaceIntelligence: {
+      isWetSession: false,
+      maxPuddleDepthMm: 0.0,
+      asymmetricDragEvents: 0,
+      hydroplaningRiskEvents: 0,
+      cornerSurfaces: []
+    },
+    racecraft: {
+      overallRacecraftScore: 94,
+      overallGrade: 'A',
+      scorecard: [],
+      powertrain: { revMatchQuality: 96, avgUpshiftDurationMs: 150, revLimiterStrikes: 0, draftTowAdvantageKmh: 5.2 }
+    }
   };
 
   const builder = new ApexPdfBuilder();
-  const pdfBytes = await builder.build(mockReport, { sessionName: '7-Page Debrief Stint' });
+  const pdfBytes = await builder.build(mockReport, { sessionName: 'APEX v3.0 Debrief Stint' });
   const loadedDoc = await PDFDocument.load(pdfBytes);
 
-  assert.equal(loadedDoc.getPageCount(), 8, 'PDF should have exactly 8 pages');
+  // 11 base pages + 1 lap analysis page + 1 flagged corner page = 13 pages
+  assert.equal(loadedDoc.getPageCount(), 13, 'PDF should have exactly 13 pages containing all APEX v3.0 sections');
 });
 
 test('ApexPdfBuilder: Enforces strict Metric conversion helpers', () => {

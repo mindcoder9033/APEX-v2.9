@@ -24,33 +24,33 @@ Implement the missing APEX v3.0 "Going Faster!" racecraft and vehicle dynamics s
 
 ## Tasks
 
-- [ ] **Task 1: Vector CPR Skid Dynamics PDF Section**
-  - Add `drawCarControlSection()` to `public/js/pdf-generator.js`.
+- [x] **Task 1: Vector CPR Skid Dynamics PDF Section**
+  - Add `drawCarControlPage()` to `public/js/pdf-generator.js` and `src/pdf/pdf-builder.js`.
   - Draw CPR state transitions (Correction, Pause, Recovery), tankslapper flags, and slip angle differential ($\Delta\alpha$).
   - → *Verify*: PDF includes vector-rendered CPR skid state wave graphs and TTO metrics.
 
-- [ ] **Task 2: 4-Block Corner Entry & Overslowing PDF Section**
-  - Add `drawBrakingEntrySection()` to `public/js/pdf-generator.js`.
+- [x] **Task 2: 4-Block Corner Entry & Overslowing PDF Section**
+  - Add `drawBrakingEntryPage()` to `public/js/pdf-generator.js` and `src/pdf/pdf-builder.js`.
   - Render 4 sequential entry blocks per corner, overslowing straightaway delta table, and downshift brake dip warnings.
   - → *Verify*: PDF contains 4-block phase bars, brake dip percentages, and $V_{min}$ time loss calculations.
 
-- [ ] **Task 3: Suspension Load Transfer & Setup Advisory PDF Section**
-  - Add `drawChassisAdvisorySection()` to `public/js/pdf-generator.js`.
+- [x] **Task 3: Suspension Load Transfer & Setup Advisory PDF Section**
+  - Add `drawChassisAdvisoryPage()` to `public/js/pdf-generator.js` and `src/pdf/pdf-builder.js`.
   - Render 4-corner suspension travel meters/heatmap, bottoming alerts, aero rake shifts, and prescriptive setup adjustments table.
   - → *Verify*: PDF includes mechanical setup recommendations and suspension travel charts.
 
-- [ ] **Task 4: Wet-Weather & Track Surface Intelligence PDF Section**
-  - Add `drawSurfaceIntelligenceSection()` to `public/js/pdf-generator.js`.
+- [x] **Task 4: Wet-Weather & Track Surface Intelligence PDF Section**
+  - Add `drawSurfaceIntelligencePage()` to `public/js/pdf-generator.js` and `src/pdf/pdf-builder.js`.
   - Render puddle depth, hydroplaning risk gauges, wet line vs dry line ("Rim Shot" vs "Squaring-Off") comparison, and banking G multipliers.
   - → *Verify*: PDF renders surface telemetry cards and weather racecraft guidance.
 
-- [ ] **Task 5: Full-Page 14-Point Skip Barber Scorecard PDF Section**
-  - Add `drawSkipBarberScorecardPage()` to `public/js/pdf-generator.js`.
+- [x] **Task 5: Full-Page 14-Point Skip Barber Scorecard PDF Section**
+  - Add `drawSkipBarberScorecardPage()` to `public/js/pdf-generator.js` and `src/pdf/pdf-builder.js`.
   - Render the 14-criteria evaluation matrix with grades (A+ to F), radar metrics, rev-matching scores, shift latency, draft estimation, and Chapter 10 quotes.
   - → *Verify*: PDF contains full-page Skip Barber critique scorecard with authentic coaching quotes.
 
-- [ ] **Task 6: Web UI Interactive Widgets Integration**
-  - Update `public/index.html` and `public/js/session-manager.js` to add cards and rendering hooks for:
+- [x] **Task 6: Web UI Interactive Widgets Integration**
+  - Updated and verified `public/index.html` and `public/js/session-manager.js` with:
     - CPR Skid & Yaw Rate Timeline widget
     - 4-Block Braking Card with overslowing delta
     - Chassis Health & Setup Advisory card
@@ -58,9 +58,9 @@ Implement the missing APEX v3.0 "Going Faster!" racecraft and vehicle dynamics s
     - 14-Point Post-Session Scorecard grid
   - → *Verify*: Web UI dashboard displays all 5 interactive modules with live telemetry values.
 
-- [ ] **Task 7: Automated Tests & PDF Verification**
-  - Update `tests/pdf.test.js` to assert presence of all new pages and sections.
-  - Run full test suite with `npm test`.
+- [x] **Task 7: Automated Tests & PDF Verification**
+  - Updated `tests/pdf.test.js` to assert presence of all new pages and sections.
+  - Executed full test suite with `npm test` (71/71 tests passing).
   - → *Verify*: All unit and PDF generation tests pass with 100% success.
 
 ---
