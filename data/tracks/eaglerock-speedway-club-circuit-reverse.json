@@ -1,12 +1,12 @@
 {
-  "id": "maple-valley-short-circuit",
-  "name": "Maple Valley",
-  "layout": "Short Circuit",
+  "id": "eaglerock-speedway-club-circuit-reverse",
+  "name": "Eaglerock Speedway",
+  "layout": "Club Circuit Reverse",
   "category": "Fictional Tracks",
   "trackOrdinal": null,
   "lengthMeters": 2500,
   "status": "Uncalibrated",
-  "direction": "Clockwise",
+  "direction": "Counter-Clockwise",
   "sectors": {
     "s1End": 833,
     "s2End": 1667,

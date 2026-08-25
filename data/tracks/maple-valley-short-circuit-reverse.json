@@ -1,12 +1,12 @@
 {
-  "id": "maple-valley-short-circuit",
+  "id": "maple-valley-short-circuit-reverse",
   "name": "Maple Valley",
-  "layout": "Short Circuit",
+  "layout": "Short Circuit Reverse",
   "category": "Fictional Tracks",
   "trackOrdinal": null,
   "lengthMeters": 2500,
   "status": "Uncalibrated",
-  "direction": "Clockwise",
+  "direction": "Counter-Clockwise",
   "sectors": {
     "s1End": 833,
     "s2End": 1667,

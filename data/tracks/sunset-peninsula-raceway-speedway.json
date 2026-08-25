@@ -1,12 +1,12 @@
 {
-  "id": "maple-valley-short-circuit",
-  "name": "Maple Valley",
-  "layout": "Short Circuit",
+  "id": "sunset-peninsula-raceway-speedway",
+  "name": "Sunset Peninsula Raceway",
+  "layout": "Speedway",
   "category": "Fictional Tracks",
   "trackOrdinal": null,
   "lengthMeters": 2500,
   "status": "Uncalibrated",
-  "direction": "Clockwise",
+  "direction": "Counter-Clockwise",
   "sectors": {
     "s1End": 833,
     "s2End": 1667,

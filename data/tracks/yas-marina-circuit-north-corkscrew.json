@@ -1,12 +1,12 @@
 {
-  "id": "maple-valley-short-circuit",
-  "name": "Maple Valley",
-  "layout": "Short Circuit",
-  "category": "Fictional Tracks",
+  "id": "yas-marina-circuit-north-corkscrew",
+  "name": "Yas Marina Circuit",
+  "layout": "North Corkscrew",
+  "category": "Real Tracks",
   "trackOrdinal": null,
   "lengthMeters": 2500,
   "status": "Uncalibrated",
-  "direction": "Clockwise",
+  "direction": "Counter-Clockwise",
   "sectors": {
     "s1End": 833,
     "s2End": 1667,

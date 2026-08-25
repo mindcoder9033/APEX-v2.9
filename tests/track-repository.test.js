@@ -115,4 +115,55 @@ describe('TrackRepository', () => {
     assert.equal(exported.name, 'Spa-Francorchamps');
     assert.equal(exported.lengthMeters, 7004);
   });
+
+  it('seeds all 72 FM23 track layouts when seedDefaultsIfEmpty() is invoked', () => {
+    const seedRepoDir = path.resolve(__dirname, '../data/test-tracks-seed');
+    if (fs.existsSync(seedRepoDir)) {
+      fs.rmSync(seedRepoDir, { recursive: true, force: true });
+    }
+    const seedRepo = new TrackRepository(seedRepoDir);
+    seedRepo.seedDefaultsIfEmpty();
+
+    const allSeeded = seedRepo.getAllTracks();
+    assert.equal(allSeeded.length, 72, 'Should seed exactly 72 track layouts from Docs/FM23 Tracks.md');
+
+    // Verify key tracks
+    const brandsHatchGp = seedRepo.getTrackById('brands-hatch-grand-prix-circuit');
+    assert.ok(brandsHatchGp, 'Brands Hatch GP should exist');
+    assert.equal(brandsHatchGp.lengthMeters, 3916);
+    assert.equal(brandsHatchGp.status, 'Uncalibrated');
+    assert.equal(brandsHatchGp.sectors.s3End, 3916);
+
+    const suzukaFull = seedRepo.getTrackById('suzuka-circuit-full-circuit');
+    assert.ok(suzukaFull, 'Suzuka Full Circuit should exist');
+    assert.equal(suzukaFull.lengthMeters, 5807);
+
+    const leMans = seedRepo.getTrackById('le-mans-circuit-international-de-la-sarthe-full-circuit');
+    assert.ok(leMans, 'Le Mans Full Circuit should exist');
+    assert.equal(leMans.lengthMeters, 13626);
+
+    // Clean up
+    if (fs.existsSync(seedRepoDir)) {
+      fs.rmSync(seedRepoDir, { recursive: true, force: true });
+    }
+  });
+
+  it('validates all live track JSON files in data/tracks directory', () => {
+    const liveDataDir = path.resolve(__dirname, '../data/tracks');
+    const liveRepo = new TrackRepository(liveDataDir);
+    const tracks = liveRepo.getAllTracks();
+
+    assert.equal(tracks.length, 72, 'Live data/tracks/ should contain all 72 populated layouts');
+
+    for (const summary of tracks) {
+      const full = liveRepo.getTrackById(summary.id);
+      assert.ok(full, `Track ${summary.id} must load successfully`);
+      assert.ok(full.name, `Track ${summary.id} must have a name`);
+      assert.ok(full.layout, `Track ${summary.id} must have a layout`);
+      assert.ok(full.lengthMeters > 0, `Track ${summary.id} must have positive length in meters`);
+      assert.equal(full.status, 'Uncalibrated');
+      assert.ok(['Clockwise', 'Counter-Clockwise'].includes(full.direction), `Track ${summary.id} must have valid direction`);
+      assert.ok(full.sectors && full.sectors.s1End > 0 && full.sectors.s2End > 0 && full.sectors.s3End === full.lengthMeters, `Track ${summary.id} must have valid 3-sector splits`);
+    }
+  });
 });

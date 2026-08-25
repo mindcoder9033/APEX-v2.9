@@ -310,29 +310,110 @@ export class TrackRepository {
    */
   seedDefaultsIfEmpty() {
     this.ensureDirectory();
-    const existing = fs.readdirSync(this.dataDir).filter(f => f.endsWith('.json'));
-
-    const seeds = [
-      this.createSilverstoneGpSeed(),
-      this.createWatkinsGlenSeed(),
-      this.createMapleValleySeed(),
-      this.createSpaFrancorchampsSeed()
-    ];
-
+    const DOC_PATH = path.resolve(__dirname, '../../Docs/FM23 Tracks.md');
     let seededCount = 0;
-    for (const seed of seeds) {
-      const filePath = path.join(this.dataDir, `${seed.id}.json`);
-      if (!fs.existsSync(filePath)) {
-        try {
-          fs.writeFileSync(filePath, JSON.stringify(seed, null, 2), 'utf8');
-          seededCount++;
-        } catch (err) {
-          console.warn('[TRACK REPO] Failed to seed default circuit:', err.message);
+
+    if (fs.existsSync(DOC_PATH)) {
+      try {
+        const docContent = fs.readFileSync(DOC_PATH, 'utf8');
+        const lines = docContent.split('\n');
+        let currentLocation = null;
+        let currentCategory = 'Real Tracks';
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (line.startsWith('## Real Tracks')) {
+            currentCategory = 'Real Tracks';
+            continue;
+          }
+          if (line.startsWith('## Fictional Tracks')) {
+            currentCategory = 'Fictional Tracks';
+            continue;
+          }
+          if (line.startsWith('### ')) {
+            currentLocation = line.replace('### ', '').trim();
+            continue;
+          }
+
+          if (line.startsWith('*') && line.includes('**') && currentLocation) {
+            const match = line.match(/\*\s+\*\*([^*]+)\*\*:\s*([^[(]+)/);
+            if (match) {
+              const layoutName = match[1].trim();
+              const rawLength = match[2].trim();
+              const kmMatch = rawLength.match(/([\d.]+)\s*km/i);
+              let lengthMeters = 0;
+              if (kmMatch) {
+                lengthMeters = Math.round(parseFloat(kmMatch[1]) * 1000);
+              }
+
+              let direction = 'Clockwise';
+              const locLower = currentLocation.toLowerCase();
+              const layoutLower = layoutName.toLowerCase();
+              if (layoutLower.includes('reverse')) {
+                direction = 'Counter-Clockwise';
+              } else if (layoutLower.includes('oval') || layoutLower.includes('speedway')) {
+                direction = 'Counter-Clockwise';
+              } else if (locLower.includes('laguna seca') || locLower.includes('yas marina') || locLower.includes('kyalami')) {
+                direction = 'Counter-Clockwise';
+              } else if (locLower.includes('daytona') || locLower.includes('homestead') || locLower.includes('sunset peninsula')) {
+                direction = 'Counter-Clockwise';
+              } else if (locLower.includes('indianapolis') && layoutLower.includes('brickyard')) {
+                direction = 'Counter-Clockwise';
+              }
+
+              const id = this.generateSlug(currentLocation, layoutName);
+              const filePath = path.join(this.dataDir, `${id}.json`);
+
+              if (!fs.existsSync(filePath)) {
+                const s1End = Math.round(lengthMeters / 3);
+                const s2End = Math.round((lengthMeters / 3) * 2);
+                const s3End = lengthMeters;
+                const s1Length = s1End;
+                const s2Length = s2End - s1End;
+                const s3Length = s3End - s2End;
+
+                const profile = {
+                  id,
+                  name: currentLocation,
+                  layout: layoutName,
+                  category: currentCategory,
+                  trackOrdinal: null,
+                  lengthMeters,
+                  status: 'Uncalibrated',
+                  direction,
+                  sectors: { s1End, s2End, s3End, s1Length, s2Length, s3Length },
+                  turns: [],
+                  path2D: [],
+                  elevation: { minElevation: 0, maxElevation: 0, elevationDelta: 0, profile: [] },
+                  characteristics: {
+                    totalTurns: 0,
+                    slowCorners: 0,
+                    mediumCorners: 0,
+                    fastCorners: 0,
+                    longestStraight: 0,
+                    rhythmOverview: 'Awaiting telemetry calibration stint to extract apex geometry and rhythm profile.',
+                    dangerZones: [],
+                    overtakingZones: []
+                  },
+                  calibrationMetadata: { lapsUsed: 0, avgSpeedKph: 0, calibratedAt: null, carModel: null, consistencyScore: null },
+                  driverNotes: '',
+                  createdDate: '2026-08-25T12:00:00.000Z',
+                  updatedDate: '2026-08-25T12:00:00.000Z'
+                };
+
+                fs.writeFileSync(filePath, JSON.stringify(profile, null, 2), 'utf8');
+                seededCount++;
+              }
+            }
+          }
         }
+      } catch (err) {
+        console.warn('[TRACK REPO] Failed to parse FM23 track catalog for seeding:', err.message);
       }
     }
+
     if (seededCount > 0) {
-      console.log(`[TRACK REPO] Seeded ${seededCount} default circuit profiles in ${this.dataDir}`);
+      console.log(`[TRACK REPO] Seeded ${seededCount} FM23 circuit profiles in ${this.dataDir}`);
     }
   }
 
