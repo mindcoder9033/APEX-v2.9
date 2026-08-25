@@ -1,0 +1,45 @@
+{
+  "id": "brands-hatch-indy-circuit",
+  "name": "Brands Hatch",
+  "layout": "Indy Circuit",
+  "trackOrdinal": null,
+  "lengthMeters": 0,
+  "status": "Uncalibrated",
+  "direction": "Clockwise",
+  "sectors": {
+    "s1End": 0,
+    "s2End": 0,
+    "s3End": 0,
+    "s1Length": 0,
+    "s2Length": 0,
+    "s3Length": 0
+  },
+  "turns": [],
+  "path2D": [],
+  "elevation": {
+    "minElevation": 0,
+    "maxElevation": 0,
+    "elevationDelta": 0,
+    "profile": []
+  },
+  "characteristics": {
+    "totalTurns": 0,
+    "slowCorners": 0,
+    "mediumCorners": 0,
+    "fastCorners": 0,
+    "longestStraight": 880,
+    "rhythmOverview": "Technical & Stop-and-Go circuit demanding precise apex commitment.",
+    "dangerZones": [],
+    "overtakingZones": []
+  },
+  "calibrationMetadata": {
+    "lapsUsed": 3,
+    "avgSpeedKph": 120,
+    "calibratedAt": "2026-08-25T07:23:11.350Z",
+    "carModel": "Calibration Vehicle",
+    "consistencyScore": 95
+  },
+  "driverNotes": "",
+  "createdDate": "2026-08-25T07:23:11.350Z",
+  "updatedDate": "2026-08-25T07:23:11.350Z"
+}
