@@ -221,7 +221,7 @@ export class TrackMapGenerator {
     if (rawPoints.length < 2) {
       return `<svg viewBox="0 0 ${width} ${height}" class="track-map-svg" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="#0A0A0A" rx="8"/>
-        <text x="${width / 2}" y="${height / 2}" fill="#666" font-family="monospace" font-size="12" text-anchor="middle">
+        <text x="${width / 2}" y="${height / 2}" fill="#666" font-family="'JetBrains Mono', monospace" font-size="12" text-anchor="middle">
           Awaiting telemetry track coordinates...
         </text>
       </svg>`;
@@ -249,7 +249,7 @@ export class TrackMapGenerator {
         <g class="turn-overlay-marker" data-turn="${turn.cornerNumber}" data-status="${turn.status}" transform="translate(0, 0)">
           ${pulseRing}
           <circle cx="${turn.x.toFixed(1)}" cy="${turn.y.toFixed(1)}" r="8" fill="#141414" stroke="${turn.badgeColor}" stroke-width="2" />
-          <text x="${turn.x.toFixed(1)}" y="${(turn.y + 3).toFixed(1)}" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="bold" text-anchor="middle">T${turn.cornerNumber}</text>
+          <text x="${turn.x.toFixed(1)}" y="${(turn.y + 3).toFixed(1)}" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="bold" text-anchor="middle">T${turn.cornerNumber}</text>
         </g>
       `;
     }).join('\n');

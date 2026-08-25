@@ -35,36 +35,15 @@
   --color-error: #FF3333;
   --color-error-glow: rgba(255, 51, 51, 0.3);
 
-  /* --- Typography Design Tokens --- */
-  /* 1. Rajdhani: Display, Headings, Branding & Buttons */
-  --font-display: 'Rajdhani', -apple-system, sans-serif;
-  --font-headline: 'Rajdhani', -apple-system, sans-serif;
-  --font-header: 'Rajdhani', -apple-system, sans-serif;
-
-  /* 2. Inter: UI, Body Text, Labels, Descriptions & Settings */
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Typography */
+  --font-display: 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-
-  /* 3. JetBrains Mono: Telemetry, Numerical Data & Tables */
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  --font-telemetry: 'JetBrains Mono', monospace;
-  --font-data: 'JetBrains Mono', monospace;
 
-  /* --- Typography Point Sizes & Scale --- */
-  /* Display / Headings (Rajdhani) */
-  --pt-logo: 30pt;                /* Logo / Branding: 28-32pt (Bold) */
-  --pt-section-header: 20pt;      /* Section Headers: 18-22pt (SemiBold) */
-  --pt-subheader: 15pt;           /* Sub-headers: 14-16pt (Medium) */
-
-  /* UI / Body Text (Inter) */
-  --pt-body: 13.5pt;              /* Body Text: 13-14pt (Regular) */
-  --pt-label: 11.5pt;             /* Labels/Metadata: 11-12pt (Medium) */
-  --pt-desc-sm: 10pt;             /* Small Descriptions: 10pt (Regular) */
-
-  /* Telemetry & Numerical Data (JetBrains Mono) */
-  --pt-hero-metric: 22pt;         /* Hero Metrics (Lap Time, Speed): 20-24pt (Bold) */
-  --pt-data-table: 12.5pt;        /* Data Tables: 12-13pt (Regular) */
-  --pt-data-sm: 10.5pt;           /* Small Data Points: 10-11pt (Regular) */
+  /* Typography Role Aliases */
+  --font-headline: var(--font-display);
+  --font-header: var(--font-display);
+  --font-heading: var(--font-display);
 
   /* Spacing */
   --space-xs: 4px;
@@ -94,9 +73,8 @@
 html, body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -104,20 +82,10 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Headings System - Rajdhani */
-h1, h2, .h1, .h2 {
+h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
-  font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 500;
-  letter-spacing: 0.04em;
 }
 
 /* --- Precision 45° Angle Chamfer Cuts --- */
@@ -184,13 +152,12 @@ h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
 .brand-logo {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--pt-logo, 30pt);
-  letter-spacing: 0.1em;
+  font-size: 26px;
+  letter-spacing: 0.12em;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
-  line-height: 1;
 }
 
 .brand-logo span.accent {
@@ -198,11 +165,12 @@ h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
 }
 
 .brand-tagline {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-secondary);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   padding-left: var(--space-md);
   border-left: 1px solid var(--color-border);
 }
@@ -222,7 +190,7 @@ h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
   background: #0D0D0D;
   border: 1px solid var(--color-border);
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -267,7 +235,7 @@ h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
   gap: 8px;
   padding: 10px 20px;
   font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
+  font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -590,16 +558,15 @@ body.layout-edit-active .widget-resize-handle {
 
 .drawer-title {
   font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   color: var(--color-text-primary);
 }
 
 .drawer-subtitle {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-family: var(--font-mono);
+  font-size: 10px;
   color: var(--color-text-secondary);
   display: block;
   margin-top: 4px;
@@ -666,7 +633,7 @@ body.layout-edit-active .widget-resize-handle {
 
 .catalog-badge {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 9px;
   text-transform: uppercase;
   padding: 2px 6px;
   background: rgba(255, 255, 255, 0.05);
@@ -675,7 +642,7 @@ body.layout-edit-active .widget-resize-handle {
 
 .catalog-status {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 9px;
   font-weight: 700;
 }
 
@@ -688,24 +655,22 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .catalog-item-title {
-  font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 600;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
   color: #FFFFFF;
   margin: 2px 0;
-  letter-spacing: 0.04em;
 }
 
 .catalog-item-desc {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-size: 11px;
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
 .catalog-item-meta {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-family: var(--font-mono);
+  font-size: 9px;
   color: var(--color-text-muted);
   margin-top: 4px;
 }
@@ -787,28 +752,20 @@ body.layout-edit-active .widget-resize-handle {
 
 .pit-card-title {
   font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
-  gap: 8px;
-}
-
-h3.pit-card-title,
-.pit-card-subtitle,
-.widget-subtitle {
-  font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 500;
+  gap: 6px;
 }
 
 .pit-card-title::before {
   content: '';
   width: 4px;
-  height: 14px;
+  height: 12px;
   background: var(--color-f1-red);
   display: inline-block;
 }
@@ -934,9 +891,8 @@ h3.pit-card-title,
 }
 
 .gear-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--color-text-secondary);
   letter-spacing: 0.1em;
 }
@@ -965,9 +921,8 @@ h3.pit-card-title,
 }
 
 .rpm-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 11px;
   color: var(--color-text-secondary);
   letter-spacing: 0.1em;
 }
@@ -988,9 +943,9 @@ h3.pit-card-title,
 }
 
 .pedal-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
@@ -1029,9 +984,8 @@ h3.pit-card-title,
 
 .pedal-percent {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 12px;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Steering Angle Bar */
@@ -1086,7 +1040,7 @@ h3.pit-card-title,
 
 .timer-hero-value {
   font-family: var(--font-mono);
-  font-size: var(--pt-hero-metric, 22pt);
+  font-size: 32px;
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: 0.05em;
@@ -1094,9 +1048,8 @@ h3.pit-card-title,
 }
 
 .timer-hero-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 10px;
   text-transform: uppercase;
   color: var(--color-text-secondary);
   letter-spacing: 0.1em;
@@ -1118,9 +1071,7 @@ h3.pit-card-title,
 }
 
 .stat-cell-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-size: 10px;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1128,11 +1079,10 @@ h3.pit-card-title,
 
 .stat-cell-value {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 16px;
   font-weight: 700;
   color: var(--color-text-primary);
   margin-top: 2px;
-  font-variant-numeric: tabular-nums;
 }
 
 .stat-cell-value.accent {
@@ -1158,8 +1108,7 @@ h3.pit-card-title,
   justify-content: space-around;
   width: 100%;
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
-  font-variant-numeric: tabular-nums;
+  font-size: 11px;
 }
 
 .tires-matrix-grid {
@@ -1181,18 +1130,16 @@ h3.pit-card-title,
 .tire-header {
   display: flex;
   justify-content: space-between;
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--color-text-secondary);
 }
 
 .tire-temp {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-text-primary);
-  font-variant-numeric: tabular-nums;
 }
 
 /* --- Glowing Separators --- */
@@ -1250,10 +1197,10 @@ h3.pit-card-title,
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--color-text-primary);
 }
 
@@ -1264,21 +1211,18 @@ h3.pit-card-title,
 }
 
 .form-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-secondary);
-  letter-spacing: 0.06em;
 }
 
 .form-input {
   background: var(--color-surface-input);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
-  font-weight: 400;
+  font-family: var(--font-sans);
+  font-size: 13px;
   padding: 10px 14px;
   outline: none;
   transition: border-color var(--trans-fast);
@@ -1330,15 +1274,14 @@ h3.pit-card-title,
 
 .coaching-rule-title {
   font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--color-text-primary);
-  letter-spacing: 0.04em;
 }
 
 .coaching-corner-badge {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 10px;
   background: #202020;
   padding: 2px 8px;
   border: 1px solid var(--color-border);
@@ -1347,9 +1290,8 @@ h3.pit-card-title,
 }
 
 .coaching-quote {
-  font-family: var(--font-body);
   font-style: italic;
-  font-size: var(--pt-desc-sm, 10pt);
+  font-size: 11px;
   color: var(--color-text-secondary);
   border-left: 2px solid var(--color-border-bright);
   padding-left: 8px;
@@ -1357,10 +1299,9 @@ h3.pit-card-title,
 }
 
 .coaching-action {
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
+  font-size: 12px;
   color: #E0E0E0;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 /* Corner Telemetry Table */
@@ -1368,47 +1309,30 @@ h3.pit-card-title,
   overflow-x: auto;
 }
 
-.corner-table,
-.telemetry-table,
-.data-table,
-table {
+.corner-table {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
-  font-size: var(--pt-data-table, 12.5pt);
+  font-size: 11px;
   text-align: left;
-  font-variant-numeric: tabular-nums;
 }
 
-.corner-table th,
-.telemetry-table th,
-.data-table th,
-table th {
+.corner-table th {
   background: #111111;
   color: var(--color-text-secondary);
   padding: 8px 12px;
   border-bottom: 1px solid var(--color-border);
   text-transform: uppercase;
   font-weight: 600;
-  font-family: var(--font-mono);
-  font-size: var(--pt-data-table, 12.5pt);
 }
 
-.corner-table td,
-.telemetry-table td,
-.data-table td,
-table td {
+.corner-table td {
   padding: 8px 12px;
   border-bottom: 1px solid #1C1C1C;
   color: var(--color-text-primary);
-  font-family: var(--font-mono);
-  font-size: var(--pt-data-table, 12.5pt);
-  font-weight: 400;
 }
 
-.corner-table tr:hover td,
-.telemetry-table tr:hover td,
-.data-table tr:hover td {
+.corner-table tr:hover td {
   background: #181818;
 }
 
@@ -1796,8 +1720,8 @@ table td {
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-primary);
@@ -1822,9 +1746,9 @@ table td {
 }
 
 .form-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1835,9 +1759,8 @@ table td {
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   padding: 10px 14px;
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
-  font-weight: 400;
+  font-family: var(--font-mono);
+  font-size: 13px;
   outline: none;
   transition: border-color var(--trans-fast), box-shadow var(--trans-fast);
 }
@@ -2090,7 +2013,7 @@ table td {
   padding: 10px 18px;
   border-radius: 4px;
   text-shadow: 0 0 12px currentColor;
-  letter-spacing: 0.05em;
+  letter-spacing: -1px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2130,16 +2053,16 @@ table td {
 
 .score-hero-title {
   font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   color: var(--color-text-primary);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.5px;
 }
 
 .score-hero-subtitle {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-family: var(--font-sans);
+  font-size: 12px;
   color: var(--color-text-secondary);
 }
 
@@ -2152,16 +2075,14 @@ table td {
 
 .score-number-value {
   font-size: 38px;
-  font-weight: 700;
+  font-weight: 900;
   color: var(--color-text-primary);
   line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
 
 .score-number-max {
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 14px;
   color: var(--color-text-muted);
-  font-variant-numeric: tabular-nums;
 }
 
 .score-breakdown-grid {
@@ -2186,9 +2107,8 @@ table td {
 }
 
 .comp-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--color-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2196,10 +2116,9 @@ table td {
 
 .comp-value {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 12px;
   font-weight: 700;
   color: var(--color-text-primary);
-  font-variant-numeric: tabular-nums;
 }
 
 .comp-progress-bg {
@@ -2218,8 +2137,7 @@ table td {
 }
 
 .comp-subtext {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-size: 9.5px;
   color: var(--color-text-muted);
 }
 
@@ -2274,8 +2192,8 @@ table td {
 
 .priority-rank-badge {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
-  font-weight: 700;
+  font-size: 9.5px;
+  font-weight: 800;
   padding: 2px 6px;
   border-radius: 2px;
   text-transform: uppercase;
@@ -2300,17 +2218,15 @@ table td {
 }
 
 .priority-rec-title {
-  font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--color-text-primary);
-  letter-spacing: 0.04em;
 }
 
 .priority-gain-badge {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 800;
   color: var(--color-gold, #FFD700);
   background: rgba(229, 169, 16, 0.1);
   padding: 2px 8px;
@@ -2319,8 +2235,7 @@ table td {
 }
 
 .priority-rec-quote {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-size: 11px;
   font-style: italic;
   color: var(--color-text-muted);
   border-left: 2px solid #333;
@@ -2329,8 +2244,7 @@ table td {
 }
 
 .priority-rec-action {
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
+  font-size: 11px;
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
@@ -2400,9 +2314,9 @@ table td {
   background: transparent;
   border: 1px solid transparent;
   color: var(--color-text-secondary);
-  font-family: var(--font-display);
+  font-family: var(--font-headline);
   font-weight: 700;
-  font-size: var(--pt-subheader, 15pt);
+  font-size: 11px;
   letter-spacing: 0.05em;
   padding: 6px 14px;
   cursor: pointer;
@@ -2411,7 +2325,6 @@ table td {
   gap: 6px;
   transition: all 0.15s ease;
   border-radius: 3px;
-  text-transform: uppercase;
 }
 
 .nav-tab:hover {
@@ -2435,7 +2348,7 @@ table td {
   border: 1px solid var(--color-border) !important;
   color: var(--color-text-primary) !important;
   font-family: var(--font-mono) !important;
-  font-size: var(--pt-data-sm, 10.5pt) !important;
+  font-size: 11px !important;
   padding: 7px 10px !important;
   border-radius: 2px !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
@@ -2480,12 +2393,11 @@ table td {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--font-display);
+  font-family: var(--font-headline);
   font-weight: 700;
-  font-size: var(--pt-subheader, 15pt);
+  font-size: 12px;
   color: var(--color-warning);
   letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .cal-pulse-dot {
@@ -2508,9 +2420,8 @@ table td {
   align-items: center;
   gap: 12px;
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
+  font-size: 11px;
   color: var(--color-text-secondary);
-  font-variant-numeric: tabular-nums;
 }
 
 /* --- Track Library 3-Column Layout --- */
@@ -2599,10 +2510,7 @@ table td {
   width: 100%;
   text-align: center;
   cursor: pointer;
-  font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 700;
-  text-transform: uppercase;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2635,21 +2543,21 @@ table td {
 }
 
 #track-hero-name {
-  font-family: var(--font-display);
-  font-size: var(--pt-section-header, 20pt);
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 900;
   color: var(--color-text-primary);
   text-transform: uppercase;
   margin: 0;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  font-family: var(--font-headline);
 }
 
 .direction-badge {
   background: rgba(0, 153, 255, 0.12);
   color: #0099FF;
   border: 1px solid rgba(0, 153, 255, 0.35);
-  font-size: var(--pt-data-sm, 10.5pt);
-  font-weight: 700;
+  font-size: 9.5px;
+  font-weight: 800;
   padding: 2px 7px;
   border-radius: 2px;
   font-family: var(--font-mono);
@@ -2657,9 +2565,9 @@ table td {
 }
 
 .track-hero-layout-text {
-  font-family: var(--font-body);
-  font-size: var(--pt-desc-sm, 10pt);
+  font-size: 12px;
   color: var(--color-text-secondary);
+  font-family: var(--font-headline);
 }
 
 .track-hero-actions {
@@ -2718,9 +2626,8 @@ table td {
 }
 
 .stat-cell-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-size: 9.5px;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--color-text-muted);
   letter-spacing: 0.05em;
@@ -2728,10 +2635,9 @@ table td {
 
 .stat-cell-value {
   font-family: var(--font-mono);
-  font-size: var(--pt-data-sm, 10.5pt);
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--color-text-primary);
-  font-variant-numeric: tabular-nums;
 }
 
 .stat-cell-value.accent {
@@ -2786,16 +2692,15 @@ table td {
 
 .characteristics-title {
   font-family: var(--font-display);
-  font-size: var(--pt-subheader, 15pt);
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .characteristics-body {
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
+  font-size: 12px;
   color: var(--color-text-primary);
   line-height: 1.5;
   margin: 0;
@@ -2837,28 +2742,21 @@ table td {
 .turn-edit-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: var(--font-mono);
-  font-size: var(--pt-data-table, 12.5pt);
-  font-variant-numeric: tabular-nums;
 }
 
 .turn-edit-table th {
-  font-family: var(--font-mono);
-  font-size: var(--pt-data-table, 12.5pt);
-  font-weight: 600;
+  font-size: 9.5px;
+  font-weight: 800;
   color: var(--color-text-muted);
   letter-spacing: 0.06em;
   background: #141414;
   padding: 7px 8px;
   border-bottom: 1px solid var(--color-border);
-  text-transform: uppercase;
 }
 
 .turn-edit-table td {
-  padding: 6px 8px;
-  font-family: var(--font-mono);
-  font-size: var(--pt-data-table, 12.5pt);
-  font-weight: 400;
+  padding: 4px 6px;
+  font-size: 11px;
 }
 
 .driver-notes-section {
@@ -2868,9 +2766,9 @@ table td {
 }
 
 .driver-notes-label {
-  font-family: var(--font-body);
-  font-size: var(--pt-label, 11.5pt);
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2880,8 +2778,6 @@ table td {
   width: 100%;
   resize: vertical;
   line-height: 1.4;
-  font-family: var(--font-body);
-  font-size: var(--pt-body, 13.5pt);
 }
 
 
