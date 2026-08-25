@@ -150,24 +150,41 @@ export class SessionManager {
     }
   }
 
+  refreshDomElements() {
+    this.btnRecord = document.getElementById('btn-record');
+    this.btnExportCsv = document.getElementById('btn-export-csv');
+    this.btnDownloadPdf = document.getElementById('btn-download-pdf');
+    this.timerVal = document.getElementById('stint-timer-val');
+    this.lapCounterVal = document.getElementById('lap-counter-val');
+    this.bestLapVal = document.getElementById('best-lap-val');
+    this.lastLapVal = document.getElementById('last-lap-val');
+    this.samplesCountVal = document.getElementById('samples-count-val');
+  }
+
   bindEvents() {
-    if (this.btnRecord) {
-      this.btnRecord.addEventListener('click', () => {
+    // Delegated click handler on document to guarantee clicks work across any layout re-renders
+    document.addEventListener('click', (e) => {
+      const recordBtn = e.target.closest('#btn-record');
+      if (recordBtn) {
+        e.preventDefault();
         this.toggleRecording();
-      });
-    }
+        return;
+      }
 
-    if (this.btnExportCsv) {
-      this.btnExportCsv.addEventListener('click', () => {
+      const exportBtn = e.target.closest('#btn-export-csv');
+      if (exportBtn) {
+        e.preventDefault();
         this.exportRawCsv();
-      });
-    }
+        return;
+      }
 
-    if (this.btnDownloadPdf) {
-      this.btnDownloadPdf.addEventListener('click', async () => {
-        await this.downloadPdfReport();
-      });
-    }
+      const pdfBtn = e.target.closest('#btn-download-pdf');
+      if (pdfBtn) {
+        e.preventDefault();
+        this.downloadPdfReport();
+        return;
+      }
+    });
   }
 
   exportRawCsv() {
@@ -194,9 +211,10 @@ export class SessionManager {
     }
 
     try {
-      if (this.btnDownloadPdf) {
-        this.btnDownloadPdf.textContent = '⏳ GENERATING PDF...';
-        this.btnDownloadPdf.disabled = true;
+      const btnPdf = document.getElementById('btn-download-pdf') || this.btnDownloadPdf;
+      if (btnPdf) {
+        btnPdf.textContent = '⏳ GENERATING PDF...';
+        btnPdf.disabled = true;
       }
 
       const latestSample = this.recordedSamples?.[this.recordedSamples.length - 1];
@@ -228,9 +246,10 @@ export class SessionManager {
       console.error('[PDF] Error generating PDF report:', err);
       alert('Failed to generate PDF: ' + err.message);
     } finally {
-      if (this.btnDownloadPdf) {
-        this.btnDownloadPdf.innerHTML = '<span>📄</span> DOWNLOAD PDF REPORT';
-        this.btnDownloadPdf.disabled = false;
+      const btnPdf = document.getElementById('btn-download-pdf') || this.btnDownloadPdf;
+      if (btnPdf) {
+        btnPdf.innerHTML = '<span>📄</span> DOWNLOAD PDF REPORT';
+        btnPdf.disabled = false;
       }
     }
   }
@@ -252,10 +271,11 @@ export class SessionManager {
     this.lastLapTime = null;
     this.currentLap = 1;
 
-    if (this.btnRecord) {
-      this.btnRecord.classList.remove('btn-primary');
-      this.btnRecord.classList.add('btn-danger', 'recording-pulse');
-      this.btnRecord.innerHTML = '<span class="status-indicator live"></span> STOP RECORDING';
+    const btn = document.getElementById('btn-record') || this.btnRecord;
+    if (btn) {
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-danger', 'recording-pulse');
+      btn.innerHTML = '<span class="status-indicator live"></span> STOP RECORDING';
     }
 
     if (this.analysisSection) {
@@ -275,10 +295,11 @@ export class SessionManager {
       this.timerInterval = null;
     }
 
-    if (this.btnRecord) {
-      this.btnRecord.classList.remove('btn-danger', 'recording-pulse');
-      this.btnRecord.classList.add('btn-primary');
-      this.btnRecord.innerHTML = '<span>⏺</span> START STINT RECORDING';
+    const btn = document.getElementById('btn-record') || this.btnRecord;
+    if (btn) {
+      btn.classList.remove('btn-danger', 'recording-pulse');
+      btn.classList.add('btn-primary');
+      btn.innerHTML = '<span>⏺</span> START RECORDING';
     }
 
     if (this.recordedSamples.length > 0) {
@@ -821,8 +842,9 @@ export class SessionManager {
 
     if (this.isRecording) {
       this.recordedSamples.push(sample);
-      if (this.samplesCountVal) {
-        this.samplesCountVal.textContent = this.recordedSamples.length.toLocaleString();
+      const countEl = document.getElementById('samples-count-val') || this.samplesCountVal;
+      if (countEl) {
+        countEl.textContent = this.recordedSamples.length.toLocaleString();
       }
     }
 
@@ -831,22 +853,25 @@ export class SessionManager {
       if (lap === 0) lap = 1;
       if (lap !== this.currentLap) {
         this.currentLap = lap;
-        if (this.lapCounterVal) {
-          this.lapCounterVal.textContent = `L${String(lap).padStart(2, '0')}`;
+        const lapEl = document.getElementById('lap-counter-val') || this.lapCounterVal;
+        if (lapEl) {
+          lapEl.textContent = `L${String(lap).padStart(2, '0')}`;
         }
       }
 
       if (sample.timing.bestLapTime > 0 && sample.timing.bestLapTime !== this.bestLapTime) {
         this.bestLapTime = sample.timing.bestLapTime;
-        if (this.bestLapVal) {
-          this.bestLapVal.textContent = this.formatLapTime(this.bestLapTime);
+        const bestLapEl = document.getElementById('best-lap-val') || this.bestLapVal;
+        if (bestLapEl) {
+          bestLapEl.textContent = this.formatLapTime(this.bestLapTime);
         }
       }
 
       if (sample.timing.lastLapTime > 0 && sample.timing.lastLapTime !== this.lastLapTime) {
         this.lastLapTime = sample.timing.lastLapTime;
-        if (this.lastLapVal) {
-          this.lastLapVal.textContent = this.formatLapTime(this.lastLapTime);
+        const lastLapEl = document.getElementById('last-lap-val') || this.lastLapVal;
+        if (lastLapEl) {
+          lastLapEl.textContent = this.formatLapTime(this.lastLapTime);
         }
       }
     }
@@ -860,13 +885,14 @@ export class SessionManager {
   }
 
   updateTimerDisplay() {
-    if (!this.timerVal) return;
+    const timerEl = document.getElementById('stint-timer-val') || this.timerVal;
+    if (!timerEl) return;
     const totalMs = this.stintDurationMs;
     const minutes = Math.floor(totalMs / 60000);
     const seconds = Math.floor((totalMs % 60000) / 1000);
     const tenths = Math.floor((totalMs % 1000) / 100);
 
-    this.timerVal.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+    timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
   }
 
   renderPerformanceSummary(summary) {

@@ -586,15 +586,15 @@ export class GridLayoutManager {
     // Rebind session manager buttons and timers
     if (window.apexApp && window.apexApp.session) {
       const session = window.apexApp.session;
-      session.btnRecord = document.getElementById('btn-record');
-      session.stintTimerVal = document.getElementById('stint-timer-val');
-      session.lapCounterVal = document.getElementById('lap-counter-val');
-      session.bestLapVal = document.getElementById('best-lap-val');
-      session.lastLapVal = document.getElementById('last-lap-val');
-      session.samplesCountVal = document.getElementById('samples-count-val');
-
-      if (session.btnRecord) {
-        session.btnRecord.onclick = () => session.toggleRecording();
+      if (typeof session.refreshDomElements === 'function') {
+        session.refreshDomElements();
+      } else {
+        session.btnRecord = document.getElementById('btn-record');
+        session.timerVal = document.getElementById('stint-timer-val');
+        session.lapCounterVal = document.getElementById('lap-counter-val');
+        session.bestLapVal = document.getElementById('best-lap-val');
+        session.lastLapVal = document.getElementById('last-lap-val');
+        session.samplesCountVal = document.getElementById('samples-count-val');
       }
     }
   }

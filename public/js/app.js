@@ -9,9 +9,14 @@ import { GridLayoutManager } from './components/grid-layout-manager.js';
 
 class ApexApp {
   constructor() {
+    window.apexApp = this;
+
     this.hud = new HudRenderer();
     this.session = new SessionManager();
     this.layoutManager = new GridLayoutManager();
+
+    // Rebind HUD and Session now that all components exist
+    this.layoutManager.rebindTelemetryElements();
 
     // Settings Modal elements
     this.modalBackdrop = document.getElementById('settings-modal');
