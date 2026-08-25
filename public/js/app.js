@@ -6,6 +6,7 @@ import { ApexWsClient } from './ws-client.js';
 import { HudRenderer } from './hud-renderer.js';
 import { SessionManager } from './session-manager.js';
 import { GridLayoutManager } from './components/grid-layout-manager.js';
+import { TrackLibraryComponent } from './components/track-library.js';
 
 class ApexApp {
   constructor() {
@@ -14,6 +15,13 @@ class ApexApp {
     this.hud = new HudRenderer();
     this.session = new SessionManager();
     this.layoutManager = new GridLayoutManager();
+    this.trackLibrary = new TrackLibraryComponent({ sessionManager: this.session });
+
+    // Navigation Tabs
+    this.tabPitwall = document.getElementById('tab-nav-pitwall');
+    this.tabTracks = document.getElementById('tab-nav-tracks');
+    this.viewPitwall = document.getElementById('view-pitwall');
+    this.viewTracks = document.getElementById('view-track-library');
 
     // Rebind HUD and Session now that all components exist
     this.layoutManager.rebindTelemetryElements();
@@ -67,6 +75,15 @@ class ApexApp {
   }
 
   bindEvents() {
+    // Top Navigation Tabs
+    if (this.tabPitwall) {
+      this.tabPitwall.addEventListener('click', () => this.switchView('pitwall'));
+    }
+
+    if (this.tabTracks) {
+      this.tabTracks.addEventListener('click', () => this.switchView('tracks'));
+    }
+
     // Settings modal
     if (this.btnOpenSettings) {
       this.btnOpenSettings.addEventListener('click', () => {
@@ -124,7 +141,7 @@ class ApexApp {
 
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') {
         e.preventDefault();
         this.session.toggleRecording();
@@ -134,6 +151,12 @@ class ApexApp {
       } else if (e.key === 'u' || e.key === 'U') {
         e.preventDefault();
         this.openUdpGuide();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        this.switchView('tracks');
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        this.switchView('pitwall');
       } else if (e.key === 'Escape') {
         this.closeSettings();
         this.closeUdpGuide();
@@ -148,6 +171,25 @@ class ApexApp {
         this.session.saveSettings({ speedUnit: newUnit });
         if (this.selectSpeedUnit) this.selectSpeedUnit.value = newUnit;
       });
+    }
+  }
+
+  /**
+   * Switches view between Pit Wall and Track Library
+   * @param {'pitwall'|'tracks'} viewName 
+   */
+  switchView(viewName) {
+    if (viewName === 'tracks') {
+      if (this.tabTracks) this.tabTracks.classList.add('active');
+      if (this.tabPitwall) this.tabPitwall.classList.remove('active');
+      if (this.viewTracks) this.viewTracks.style.display = 'grid';
+      if (this.viewPitwall) this.viewPitwall.style.display = 'none';
+      if (this.trackLibrary) this.trackLibrary.loadTracks();
+    } else {
+      if (this.tabPitwall) this.tabPitwall.classList.add('active');
+      if (this.tabTracks) this.tabTracks.classList.remove('active');
+      if (this.viewPitwall) this.viewPitwall.style.display = 'block';
+      if (this.viewTracks) this.viewTracks.style.display = 'none';
     }
   }
 

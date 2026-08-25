@@ -1,0 +1,957 @@
+{
+  "id": "spa-francorchamps",
+  "name": "Circuit de Spa-Francorchamps",
+  "layout": "Grand Prix Circuit",
+  "trackOrdinal": 104,
+  "lengthMeters": 7004,
+  "direction": "Clockwise",
+  "sectors": {
+    "s1End": 2250,
+    "s2End": 5200,
+    "s3End": 7004,
+    "s1Length": 2250,
+    "s2Length": 2950,
+    "s3Length": 1804
+  },
+  "turns": [
+    {
+      "turnNumber": 1,
+      "name": "La Source",
+      "type": "Hairpin",
+      "direction": "Right",
+      "entryDist": 260,
+      "apexDist": 340,
+      "exitDist": 410,
+      "refSpeed": 68,
+      "refGear": 1,
+      "apexLatG": 1.2,
+      "brakingDist": 95
+    },
+    {
+      "turnNumber": 2,
+      "name": "Eau Rouge",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 1050,
+      "apexDist": 1120,
+      "exitDist": 1180,
+      "refSpeed": 275,
+      "refGear": 7,
+      "apexLatG": 2.6,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 3,
+      "name": "Raidillon",
+      "type": "Fast Sweeper",
+      "direction": "Right",
+      "entryDist": 1190,
+      "apexDist": 1270,
+      "exitDist": 1350,
+      "refSpeed": 270,
+      "refGear": 7,
+      "apexLatG": 2.5,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 4,
+      "name": "Les Combes",
+      "type": "Chicane",
+      "direction": "Right",
+      "entryDist": 2850,
+      "apexDist": 2940,
+      "exitDist": 3020,
+      "refSpeed": 135,
+      "refGear": 3,
+      "apexLatG": 1.7,
+      "brakingDist": 100
+    },
+    {
+      "turnNumber": 5,
+      "name": "Malmedy",
+      "type": "Medium Corner",
+      "direction": "Left",
+      "entryDist": 3060,
+      "apexDist": 3140,
+      "exitDist": 3220,
+      "refSpeed": 150,
+      "refGear": 4,
+      "apexLatG": 1.6,
+      "brakingDist": 20
+    },
+    {
+      "turnNumber": 6,
+      "name": "Bruxelles (Rivage)",
+      "type": "Hairpin",
+      "direction": "Right",
+      "entryDist": 3480,
+      "apexDist": 3580,
+      "exitDist": 3670,
+      "refSpeed": 95,
+      "refGear": 2,
+      "apexLatG": 1.4,
+      "brakingDist": 65
+    },
+    {
+      "turnNumber": 7,
+      "name": "No Name (Speaker Corner)",
+      "type": "Medium Corner",
+      "direction": "Left",
+      "entryDist": 3880,
+      "apexDist": 3960,
+      "exitDist": 4040,
+      "refSpeed": 140,
+      "refGear": 3,
+      "apexLatG": 1.55,
+      "brakingDist": 40
+    },
+    {
+      "turnNumber": 8,
+      "name": "Pouhon",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 4420,
+      "apexDist": 4540,
+      "exitDist": 4660,
+      "refSpeed": 230,
+      "refGear": 6,
+      "apexLatG": 2.3,
+      "brakingDist": 30
+    },
+    {
+      "turnNumber": 9,
+      "name": "Les Fagnes (Pif-Paf)",
+      "type": "Chicane",
+      "direction": "Right",
+      "entryDist": 5120,
+      "apexDist": 5210,
+      "exitDist": 5290,
+      "refSpeed": 145,
+      "refGear": 3,
+      "apexLatG": 1.75,
+      "brakingDist": 60
+    },
+    {
+      "turnNumber": 10,
+      "name": "Campus (Stavelot 1)",
+      "type": "90° Corner",
+      "direction": "Right",
+      "entryDist": 5460,
+      "apexDist": 5540,
+      "exitDist": 5620,
+      "refSpeed": 160,
+      "refGear": 4,
+      "apexLatG": 1.6,
+      "brakingDist": 35
+    },
+    {
+      "turnNumber": 11,
+      "name": "Paul Frere (Stavelot 2)",
+      "type": "Fast Sweeper",
+      "direction": "Right",
+      "entryDist": 5720,
+      "apexDist": 5810,
+      "exitDist": 5900,
+      "refSpeed": 210,
+      "refGear": 5,
+      "apexLatG": 1.8,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 12,
+      "name": "Blanchimont 1",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 6350,
+      "apexDist": 6440,
+      "exitDist": 6520,
+      "refSpeed": 285,
+      "refGear": 7,
+      "apexLatG": 2.1,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 13,
+      "name": "Blanchimont 2",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 6560,
+      "apexDist": 6640,
+      "exitDist": 6720,
+      "refSpeed": 290,
+      "refGear": 8,
+      "apexLatG": 1.9,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 14,
+      "name": "Bus Stop Chicane",
+      "type": "Chicane",
+      "direction": "Right",
+      "entryDist": 6780,
+      "apexDist": 6860,
+      "exitDist": 6940,
+      "refSpeed": 72,
+      "refGear": 1,
+      "apexLatG": 1.3,
+      "brakingDist": 110
+    }
+  ],
+  "path2D": [
+    {
+      "x": 980,
+      "z": 450,
+      "dist": 0
+    },
+    {
+      "x": 992,
+      "z": 465,
+      "dist": 50
+    },
+    {
+      "x": 1004,
+      "z": 480,
+      "dist": 100
+    },
+    {
+      "x": 1013,
+      "z": 496,
+      "dist": 150
+    },
+    {
+      "x": 1021,
+      "z": 513,
+      "dist": 200
+    },
+    {
+      "x": 1026,
+      "z": 530,
+      "dist": 250
+    },
+    {
+      "x": 1030,
+      "z": 547,
+      "dist": 300
+    },
+    {
+      "x": 1030,
+      "z": 565,
+      "dist": 350
+    },
+    {
+      "x": 1029,
+      "z": 582,
+      "dist": 400
+    },
+    {
+      "x": 1024,
+      "z": 599,
+      "dist": 450
+    },
+    {
+      "x": 1017,
+      "z": 616,
+      "dist": 500
+    },
+    {
+      "x": 1007,
+      "z": 632,
+      "dist": 550
+    },
+    {
+      "x": 994,
+      "z": 647,
+      "dist": 600
+    },
+    {
+      "x": 979,
+      "z": 661,
+      "dist": 650
+    },
+    {
+      "x": 962,
+      "z": 674,
+      "dist": 700
+    },
+    {
+      "x": 943,
+      "z": 685,
+      "dist": 750
+    },
+    {
+      "x": 922,
+      "z": 696,
+      "dist": 800
+    },
+    {
+      "x": 899,
+      "z": 704,
+      "dist": 850
+    },
+    {
+      "x": 875,
+      "z": 712,
+      "dist": 901
+    },
+    {
+      "x": 851,
+      "z": 718,
+      "dist": 951
+    },
+    {
+      "x": 825,
+      "z": 722,
+      "dist": 1001
+    },
+    {
+      "x": 800,
+      "z": 725,
+      "dist": 1051
+    },
+    {
+      "x": 774,
+      "z": 727,
+      "dist": 1101
+    },
+    {
+      "x": 748,
+      "z": 727,
+      "dist": 1151
+    },
+    {
+      "x": 723,
+      "z": 727,
+      "dist": 1201
+    },
+    {
+      "x": 699,
+      "z": 725,
+      "dist": 1251
+    },
+    {
+      "x": 675,
+      "z": 724,
+      "dist": 1301
+    },
+    {
+      "x": 653,
+      "z": 721,
+      "dist": 1351
+    },
+    {
+      "x": 631,
+      "z": 719,
+      "dist": 1401
+    },
+    {
+      "x": 610,
+      "z": 716,
+      "dist": 1451
+    },
+    {
+      "x": 590,
+      "z": 713,
+      "dist": 1501
+    },
+    {
+      "x": 571,
+      "z": 711,
+      "dist": 1551
+    },
+    {
+      "x": 553,
+      "z": 709,
+      "dist": 1601
+    },
+    {
+      "x": 535,
+      "z": 707,
+      "dist": 1651
+    },
+    {
+      "x": 517,
+      "z": 706,
+      "dist": 1701
+    },
+    {
+      "x": 500,
+      "z": 706,
+      "dist": 1751
+    },
+    {
+      "x": 483,
+      "z": 706,
+      "dist": 1801
+    },
+    {
+      "x": 465,
+      "z": 707,
+      "dist": 1851
+    },
+    {
+      "x": 447,
+      "z": 709,
+      "dist": 1901
+    },
+    {
+      "x": 429,
+      "z": 711,
+      "dist": 1951
+    },
+    {
+      "x": 410,
+      "z": 713,
+      "dist": 2001
+    },
+    {
+      "x": 390,
+      "z": 716,
+      "dist": 2051
+    },
+    {
+      "x": 369,
+      "z": 719,
+      "dist": 2101
+    },
+    {
+      "x": 347,
+      "z": 721,
+      "dist": 2151
+    },
+    {
+      "x": 325,
+      "z": 724,
+      "dist": 2201
+    },
+    {
+      "x": 301,
+      "z": 725,
+      "dist": 2251
+    },
+    {
+      "x": 277,
+      "z": 727,
+      "dist": 2301
+    },
+    {
+      "x": 252,
+      "z": 727,
+      "dist": 2351
+    },
+    {
+      "x": 226,
+      "z": 727,
+      "dist": 2401
+    },
+    {
+      "x": 200,
+      "z": 725,
+      "dist": 2451
+    },
+    {
+      "x": 175,
+      "z": 722,
+      "dist": 2501
+    },
+    {
+      "x": 149,
+      "z": 718,
+      "dist": 2551
+    },
+    {
+      "x": 125,
+      "z": 712,
+      "dist": 2601
+    },
+    {
+      "x": 101,
+      "z": 704,
+      "dist": 2652
+    },
+    {
+      "x": 78,
+      "z": 696,
+      "dist": 2702
+    },
+    {
+      "x": 57,
+      "z": 685,
+      "dist": 2752
+    },
+    {
+      "x": 38,
+      "z": 674,
+      "dist": 2802
+    },
+    {
+      "x": 21,
+      "z": 661,
+      "dist": 2852
+    },
+    {
+      "x": 6,
+      "z": 647,
+      "dist": 2902
+    },
+    {
+      "x": -7,
+      "z": 632,
+      "dist": 2952
+    },
+    {
+      "x": -17,
+      "z": 616,
+      "dist": 3002
+    },
+    {
+      "x": -24,
+      "z": 599,
+      "dist": 3052
+    },
+    {
+      "x": -29,
+      "z": 582,
+      "dist": 3102
+    },
+    {
+      "x": -30,
+      "z": 565,
+      "dist": 3152
+    },
+    {
+      "x": -30,
+      "z": 547,
+      "dist": 3202
+    },
+    {
+      "x": -26,
+      "z": 530,
+      "dist": 3252
+    },
+    {
+      "x": -21,
+      "z": 513,
+      "dist": 3302
+    },
+    {
+      "x": -13,
+      "z": 496,
+      "dist": 3352
+    },
+    {
+      "x": -4,
+      "z": 480,
+      "dist": 3402
+    },
+    {
+      "x": 8,
+      "z": 465,
+      "dist": 3452
+    },
+    {
+      "x": 20,
+      "z": 450,
+      "dist": 3502
+    },
+    {
+      "x": 33,
+      "z": 436,
+      "dist": 3552
+    },
+    {
+      "x": 47,
+      "z": 423,
+      "dist": 3602
+    },
+    {
+      "x": 62,
+      "z": 410,
+      "dist": 3652
+    },
+    {
+      "x": 76,
+      "z": 399,
+      "dist": 3702
+    },
+    {
+      "x": 90,
+      "z": 388,
+      "dist": 3752
+    },
+    {
+      "x": 104,
+      "z": 377,
+      "dist": 3802
+    },
+    {
+      "x": 117,
+      "z": 367,
+      "dist": 3852
+    },
+    {
+      "x": 130,
+      "z": 357,
+      "dist": 3902
+    },
+    {
+      "x": 141,
+      "z": 348,
+      "dist": 3952
+    },
+    {
+      "x": 152,
+      "z": 338,
+      "dist": 4002
+    },
+    {
+      "x": 162,
+      "z": 329,
+      "dist": 4052
+    },
+    {
+      "x": 170,
+      "z": 319,
+      "dist": 4102
+    },
+    {
+      "x": 178,
+      "z": 308,
+      "dist": 4152
+    },
+    {
+      "x": 186,
+      "z": 298,
+      "dist": 4202
+    },
+    {
+      "x": 192,
+      "z": 286,
+      "dist": 4252
+    },
+    {
+      "x": 199,
+      "z": 275,
+      "dist": 4302
+    },
+    {
+      "x": 205,
+      "z": 262,
+      "dist": 4352
+    },
+    {
+      "x": 212,
+      "z": 249,
+      "dist": 4403
+    },
+    {
+      "x": 219,
+      "z": 236,
+      "dist": 4453
+    },
+    {
+      "x": 227,
+      "z": 222,
+      "dist": 4503
+    },
+    {
+      "x": 235,
+      "z": 207,
+      "dist": 4553
+    },
+    {
+      "x": 245,
+      "z": 192,
+      "dist": 4603
+    },
+    {
+      "x": 256,
+      "z": 178,
+      "dist": 4653
+    },
+    {
+      "x": 268,
+      "z": 163,
+      "dist": 4703
+    },
+    {
+      "x": 282,
+      "z": 149,
+      "dist": 4753
+    },
+    {
+      "x": 298,
+      "z": 135,
+      "dist": 4803
+    },
+    {
+      "x": 315,
+      "z": 122,
+      "dist": 4853
+    },
+    {
+      "x": 334,
+      "z": 110,
+      "dist": 4903
+    },
+    {
+      "x": 355,
+      "z": 99,
+      "dist": 4953
+    },
+    {
+      "x": 376,
+      "z": 89,
+      "dist": 5003
+    },
+    {
+      "x": 400,
+      "z": 81,
+      "dist": 5053
+    },
+    {
+      "x": 424,
+      "z": 75,
+      "dist": 5103
+    },
+    {
+      "x": 449,
+      "z": 70,
+      "dist": 5153
+    },
+    {
+      "x": 474,
+      "z": 67,
+      "dist": 5203
+    },
+    {
+      "x": 500,
+      "z": 66,
+      "dist": 5253
+    },
+    {
+      "x": 526,
+      "z": 67,
+      "dist": 5303
+    },
+    {
+      "x": 551,
+      "z": 70,
+      "dist": 5353
+    },
+    {
+      "x": 576,
+      "z": 75,
+      "dist": 5403
+    },
+    {
+      "x": 600,
+      "z": 81,
+      "dist": 5453
+    },
+    {
+      "x": 624,
+      "z": 89,
+      "dist": 5503
+    },
+    {
+      "x": 645,
+      "z": 99,
+      "dist": 5553
+    },
+    {
+      "x": 666,
+      "z": 110,
+      "dist": 5603
+    },
+    {
+      "x": 685,
+      "z": 122,
+      "dist": 5653
+    },
+    {
+      "x": 702,
+      "z": 135,
+      "dist": 5703
+    },
+    {
+      "x": 718,
+      "z": 149,
+      "dist": 5753
+    },
+    {
+      "x": 732,
+      "z": 163,
+      "dist": 5803
+    },
+    {
+      "x": 744,
+      "z": 178,
+      "dist": 5853
+    },
+    {
+      "x": 755,
+      "z": 192,
+      "dist": 5903
+    },
+    {
+      "x": 765,
+      "z": 207,
+      "dist": 5953
+    },
+    {
+      "x": 773,
+      "z": 222,
+      "dist": 6003
+    },
+    {
+      "x": 781,
+      "z": 236,
+      "dist": 6053
+    },
+    {
+      "x": 788,
+      "z": 249,
+      "dist": 6103
+    },
+    {
+      "x": 795,
+      "z": 262,
+      "dist": 6154
+    },
+    {
+      "x": 801,
+      "z": 275,
+      "dist": 6204
+    },
+    {
+      "x": 808,
+      "z": 286,
+      "dist": 6254
+    },
+    {
+      "x": 814,
+      "z": 298,
+      "dist": 6304
+    },
+    {
+      "x": 822,
+      "z": 308,
+      "dist": 6354
+    },
+    {
+      "x": 830,
+      "z": 319,
+      "dist": 6404
+    },
+    {
+      "x": 838,
+      "z": 329,
+      "dist": 6454
+    },
+    {
+      "x": 848,
+      "z": 338,
+      "dist": 6504
+    },
+    {
+      "x": 859,
+      "z": 348,
+      "dist": 6554
+    },
+    {
+      "x": 870,
+      "z": 357,
+      "dist": 6604
+    },
+    {
+      "x": 883,
+      "z": 367,
+      "dist": 6654
+    },
+    {
+      "x": 896,
+      "z": 377,
+      "dist": 6704
+    },
+    {
+      "x": 910,
+      "z": 388,
+      "dist": 6754
+    },
+    {
+      "x": 924,
+      "z": 399,
+      "dist": 6804
+    },
+    {
+      "x": 938,
+      "z": 410,
+      "dist": 6854
+    },
+    {
+      "x": 953,
+      "z": 423,
+      "dist": 6904
+    },
+    {
+      "x": 967,
+      "z": 436,
+      "dist": 6954
+    }
+  ],
+  "elevation": {
+    "minElevation": 372,
+    "maxElevation": 474,
+    "elevationDelta": 102,
+    "profile": [
+      {
+        "dist": 0,
+        "elevation": 400
+      },
+      {
+        "dist": 1250,
+        "elevation": 474
+      },
+      {
+        "dist": 4500,
+        "elevation": 372
+      },
+      {
+        "dist": 6500,
+        "elevation": 395
+      },
+      {
+        "dist": 7004,
+        "elevation": 400
+      }
+    ]
+  },
+  "characteristics": {
+    "totalTurns": 14,
+    "slowCorners": 3,
+    "mediumCorners": 4,
+    "fastCorners": 7,
+    "longestStraight": 1950,
+    "rhythmOverview": "The cathedral of speed through the Ardennes forest with massive vertical Gs in Eau Rouge and demanding technical sectors.",
+    "dangerZones": [
+      "High compression and blind crest at Eau Rouge / Raidillon",
+      "Heavy braking into Bus Stop Chicane from nearly 300 km/h",
+      "High commitment double-left at Pouhon"
+    ],
+    "overtakingZones": [
+      "Kemmel Straight slipstream into Les Combes (T4)",
+      "Heavy braking dive into Bus Stop (T14)",
+      "La Source hairpin on lap starts (T1)"
+    ]
+  },
+  "calibrationMetadata": {
+    "lapsUsed": 3,
+    "avgSpeedKph": 215.8,
+    "calibratedAt": "2026-08-23T11:45:00.000Z",
+    "carModel": "Prototype Hypercar",
+    "consistencyScore": 98.9
+  },
+  "driverNotes": "Keep the car balanced through Eau Rouge without abrupt steering inputs. Maximize Kemmel Straight exit.",
+  "createdDate": "2026-08-23T11:45:00.000Z",
+  "updatedDate": "2026-08-23T11:45:00.000Z"
+}

@@ -8,6 +8,8 @@ import { AnalysisEngine } from './analysis/index.js';
 import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
 import { StintMetadataModal } from './components/stint-modal.js';
+import { TrackCalibrator } from './analysis/track-calibrator.js';
+import { ClientTrackBriefingPdf } from './track-briefing-pdf.js';
 
 export class SessionManager {
   constructor() {
@@ -21,9 +23,19 @@ export class SessionManager {
     this.lastLapTime = null;
     this.recordedSamples = [];
 
+    // Track Library & Calibration State
+    this.activeTrackProfile = null;
+    this.isCalibrating = false;
+    this.calibrationLaps = [];
+    this.currentCalLapSamples = [];
+    this.calibrationLapIndex = 1;
+    this.pendingCalibratedTrack = null;
+
     this.analysisEngine = new AnalysisEngine();
     this.pdfGenerator = new ClientPdfGenerator();
     this.stintModal = new StintMetadataModal();
+    this.trackCalibrator = new TrackCalibrator();
+    this.trackBriefingPdf = new ClientTrackBriefingPdf();
     this.currentStintMetadata = null;
     this.latestAnalysisReport = null;
 
@@ -184,7 +196,242 @@ export class SessionManager {
         this.downloadPdfReport();
         return;
       }
+
+      const startCalBtn = e.target.closest('#btn-start-calibration');
+      if (startCalBtn) {
+        e.preventDefault();
+        this.startCalibrationStint();
+        return;
+      }
+
+      const clearTrackBtn = e.target.closest('#btn-clear-active-track');
+      if (clearTrackBtn) {
+        e.preventDefault();
+        this.clearActiveTrackProfile();
+        return;
+      }
+
+      const cancelCalBtn = e.target.closest('#btn-cancel-calibration');
+      if (cancelCalBtn) {
+        e.preventDefault();
+        this.cancelCalibrationStint();
+        return;
+      }
+
+      const closeCalBtn = e.target.closest('#btn-close-cal-modal') || e.target.closest('#btn-cal-discard');
+      if (closeCalBtn) {
+        e.preventDefault();
+        this.closePostCalModal();
+        return;
+      }
+
+      const exportCalPdfBtn = e.target.closest('#btn-cal-export-pdf');
+      if (exportCalPdfBtn) {
+        e.preventDefault();
+        this.exportPendingCalPdf();
+        return;
+      }
+
+      const saveCalTrackBtn = e.target.closest('#btn-cal-save-track');
+      if (saveCalTrackBtn) {
+        e.preventDefault();
+        this.savePendingCalTrack();
+        return;
+      }
     });
+  }
+
+  /**
+   * Sets active track profile for canonical turn snapping
+   */
+  setActiveTrackProfile(trackProfile) {
+    this.activeTrackProfile = trackProfile;
+    const chip = document.getElementById('active-track-chip');
+    const nameEl = document.getElementById('active-track-name');
+    if (chip && nameEl && trackProfile) {
+      nameEl.textContent = trackProfile.name;
+      chip.style.display = 'flex';
+    }
+  }
+
+  /**
+   * Clears active track profile
+   */
+  clearActiveTrackProfile() {
+    this.activeTrackProfile = null;
+    const chip = document.getElementById('active-track-chip');
+    if (chip) chip.style.display = 'none';
+  }
+
+  /**
+   * Starts a Track Learning Calibration stint
+   */
+  startCalibrationStint() {
+    if (this.isRecording) {
+      this.stopRecording();
+    }
+
+    this.isCalibrating = true;
+    this.calibrationLaps = [];
+    this.currentCalLapSamples = [];
+    this.calibrationLapIndex = 1;
+    this.pendingCalibratedTrack = null;
+
+    const banner = document.getElementById('calibration-hud-banner');
+    const phaseEl = document.getElementById('cal-hud-phase');
+    const consEl = document.getElementById('cal-hud-consistency');
+    if (banner) banner.style.display = 'flex';
+    if (phaseEl) phaseEl.textContent = '📡 TRACK CALIBRATION: LAP 1/3 (WARM-UP / OUT-LAP)';
+    if (consEl) consEl.textContent = 'Maintain steady average pace';
+
+    this.startRecording();
+  }
+
+  /**
+   * Cancels calibration stint
+   */
+  cancelCalibrationStint() {
+    this.isCalibrating = false;
+    this.calibrationLaps = [];
+    this.currentCalLapSamples = [];
+    const banner = document.getElementById('calibration-hud-banner');
+    if (banner) banner.style.display = 'none';
+    if (this.isRecording) {
+      this.stopRecording();
+    }
+  }
+
+  /**
+   * Handles completion of a calibration lap
+   */
+  handleCalibrationLapDone(lapSamples) {
+    if (!this.isCalibrating || !lapSamples || lapSamples.length < 15) return;
+
+    this.calibrationLaps.push([...lapSamples]);
+    const phaseEl = document.getElementById('cal-hud-phase');
+    const consEl = document.getElementById('cal-hud-consistency');
+
+    if (this.calibrationLaps.length === 1) {
+      if (phaseEl) phaseEl.textContent = '📡 TRACK CALIBRATION: LAP 2/3 (CALIBRATION LAP 1)';
+      if (consEl) consEl.textContent = 'Lap 1 Logged. Keep steady pace.';
+    } else if (this.calibrationLaps.length === 2) {
+      if (phaseEl) phaseEl.textContent = '📡 TRACK CALIBRATION: LAP 3/3 (CALIBRATION LAP 2)';
+      if (consEl) consEl.textContent = 'Lap 2 Logged. Final consensus lap.';
+    } else if (this.calibrationLaps.length >= 3) {
+      this.finishCalibration();
+    }
+  }
+
+  /**
+   * Finalizes calibration, runs consensus calibration engine, and opens summary modal
+   */
+  finishCalibration() {
+    this.isCalibrating = false;
+    const banner = document.getElementById('calibration-hud-banner');
+    if (banner) banner.style.display = 'none';
+
+    if (this.isRecording) {
+      this.isRecording = false;
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+        this.timerInterval = null;
+      }
+      const btn = document.getElementById('btn-record') || this.btnRecord;
+      if (btn) {
+        btn.classList.remove('btn-danger', 'recording-pulse');
+        btn.classList.add('btn-primary');
+        btn.innerHTML = '<span>⏺</span> START RECORDING';
+      }
+    }
+
+    const latestSample = this.recordedSamples?.[this.recordedSamples.length - 1];
+    const carModel = latestSample?.vehicle?.carName || latestSample?.vehicle?.carClass || 'Calibration Vehicle';
+
+    const result = this.trackCalibrator.calibrate(this.calibrationLaps, {
+      name: this.settings.sessionName || 'Calibrated Circuit',
+      layout: 'Full Course',
+      carModel,
+      driverName: this.settings.driverName || 'APEX Driver'
+    });
+
+    if (!result.success) {
+      alert(`⚠️ Calibration notice: ${result.error}`);
+      return;
+    }
+
+    this.pendingCalibratedTrack = result.trackProfile;
+    this.openPostCalModal(result.trackProfile, result.validation);
+  }
+
+  openPostCalModal(track, validation) {
+    const modal = document.getElementById('post-calibration-modal');
+    if (!modal) return;
+
+    const nameInput = document.getElementById('cal-modal-track-name');
+    const layoutInput = document.getElementById('cal-modal-track-layout');
+    const lengthEl = document.getElementById('cal-modal-length');
+    const turnsEl = document.getElementById('cal-modal-turns');
+    const speedEl = document.getElementById('cal-modal-speed');
+    const consEl = document.getElementById('cal-modal-consistency');
+
+    if (nameInput) nameInput.value = track.name || 'Calibrated Circuit';
+    if (layoutInput) layoutInput.value = track.layout || 'Full Course';
+    if (lengthEl) lengthEl.textContent = `${(track.lengthMeters || 0).toLocaleString()} m`;
+    if (turnsEl) turnsEl.textContent = `${track.turns?.length || 0} Turns`;
+    if (speedEl) speedEl.textContent = `${track.calibrationMetadata?.avgSpeedKph || 100} km/h`;
+    if (consEl) consEl.textContent = `${validation?.consistencyScore || 98}%`;
+
+    modal.style.display = 'flex';
+  }
+
+  closePostCalModal() {
+    const modal = document.getElementById('post-calibration-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async exportPendingCalPdf() {
+    if (!this.pendingCalibratedTrack) return;
+    const nameInput = document.getElementById('cal-modal-track-name');
+    const layoutInput = document.getElementById('cal-modal-track-layout');
+    if (nameInput) this.pendingCalibratedTrack.name = nameInput.value;
+    if (layoutInput) this.pendingCalibratedTrack.layout = layoutInput.value;
+
+    try {
+      await this.trackBriefingPdf.generate(this.pendingCalibratedTrack, true);
+    } catch (err) {
+      console.warn('Client PDF export failed:', err);
+    }
+  }
+
+  async savePendingCalTrack() {
+    if (!this.pendingCalibratedTrack) return;
+    const nameInput = document.getElementById('cal-modal-track-name');
+    const layoutInput = document.getElementById('cal-modal-track-layout');
+    if (nameInput) this.pendingCalibratedTrack.name = nameInput.value;
+    if (layoutInput) this.pendingCalibratedTrack.layout = layoutInput.value;
+
+    try {
+      const res = await fetch('/api/tracks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(this.pendingCalibratedTrack)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        this.setActiveTrackProfile(data.track);
+        this.closePostCalModal();
+        if (window.apexApp?.trackLibrary) {
+          await window.apexApp.trackLibrary.loadTracks();
+        }
+        alert(`💾 Track "${data.track.name}" saved to Track Library and set as active circuit!`);
+      } else {
+        const err = await res.json();
+        alert('Save failed: ' + err.error);
+      }
+    } catch (err) {
+      alert('Error saving track: ' + err.message);
+    }
   }
 
   exportRawCsv() {
@@ -330,7 +577,9 @@ export class SessionManager {
 
   runAnalysisReport() {
     try {
-      const report = this.analysisEngine.analyzeStint(this.recordedSamples);
+      const report = this.analysisEngine.analyzeStint(this.recordedSamples, {
+        trackProfile: this.activeTrackProfile
+      });
       this.latestAnalysisReport = report;
       this.renderAnalysisReport(report);
     } catch (err) {
@@ -448,9 +697,12 @@ export class SessionManager {
           const apexSpd = isMetric ? (c.speed?.apexKmh ?? (c.speed?.apexMph ? c.speed.apexMph * 1.60934 : 0)) : (c.speed?.apexMph ?? 0);
           const exitSpd = isMetric ? (c.speed?.exitKmh ?? (c.speed?.exitMph ? c.speed.exitMph * 1.60934 : 0)) : (c.speed?.exitMph ?? 0);
           const spdUnit = isMetric ? 'km/h' : 'mph';
+          const turnNameHtml = (c.name && c.name !== `Turn ${c.cornerNumber}`)
+            ? `<span style="font-size: 10px; color: var(--color-text-secondary); display: block; font-weight: normal;">${c.name}</span>`
+            : '';
 
           tr.innerHTML = `
-            <td><strong>T${c.cornerNumber}</strong> ${apexBadge}</td>
+            <td><strong>T${c.cornerNumber}</strong> ${apexBadge}${turnNameHtml}</td>
             <td>${c.type}</td>
             <td>${entrySpd.toFixed(1)} ${spdUnit}</td>
             <td><strong>${apexSpd.toFixed(1)} ${spdUnit}</strong></td>
@@ -848,10 +1100,18 @@ export class SessionManager {
       }
     }
 
+    if (this.isCalibrating) {
+      this.currentCalLapSamples.push(sample);
+    }
+
     if (sample.timing) {
       let lap = sample.timing.lapNumber !== undefined ? sample.timing.lapNumber : 1;
       if (lap === 0) lap = 1;
       if (lap !== this.currentLap) {
+        if (this.isCalibrating && this.currentCalLapSamples.length > 10) {
+          this.handleCalibrationLapDone(this.currentCalLapSamples);
+          this.currentCalLapSamples = [];
+        }
         this.currentLap = lap;
         const lapEl = document.getElementById('lap-counter-val') || this.lapCounterVal;
         if (lapEl) {

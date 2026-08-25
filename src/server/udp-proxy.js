@@ -13,6 +13,8 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { execSync } from 'node:child_process';
 import { CONFIG } from './config.js';
 import { TelemetryParser } from '../shared/telemetry-parser.js';
+import { TrackRepository } from './track-repository.js';
+import { TrackBriefingBuilder } from '../pdf/track-briefing-builder.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -134,6 +136,9 @@ export class UdpProxyServer {
     this._packetCountInterval = null;
     this._heartbeatInterval = null;
     this._recentPacketCounter = 0;
+
+    this.trackRepo = new TrackRepository();
+    this.trackPdfBuilder = new TrackBriefingBuilder();
   }
 
   /**
@@ -165,11 +170,17 @@ export class UdpProxyServer {
   }
 
   /**
-   * Static HTTP File Server for Web UI
+   * Static HTTP File Server & Track Library REST API for Web UI
    */
   startHttpServer() {
     return new Promise((resolve, reject) => {
-      this.httpServer = http.createServer((req, res) => {
+      this.httpServer = http.createServer(async (req, res) => {
+        // Intercept Track Library REST API endpoints
+        if (req.url && req.url.startsWith('/api/tracks')) {
+          await this.handleTracksApi(req, res);
+          return;
+        }
+
         let reqPath = req.url.split('?')[0];
         if (!reqPath || reqPath === '/') {
           reqPath = '/index.html';
@@ -385,6 +396,161 @@ export class UdpProxyServer {
         ws.ping();
       }
     }, CONFIG.ws.heartbeatIntervalMs);
+  }
+
+  /**
+   * Helper to parse JSON body from incoming HTTP request
+   */
+  readRequestBodyJson(req) {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        try {
+          const parsed = body ? JSON.parse(body) : {};
+          resolve(parsed);
+        } catch (err) {
+          reject(new Error('Invalid JSON payload: ' + err.message));
+        }
+      });
+      req.on('error', err => reject(err));
+    });
+  }
+
+  /**
+   * Handles REST API requests for Track Profiles and Pre-Stint PDF exports
+   */
+  async handleTracksApi(req, res) {
+    const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+    const pathname = urlObj.pathname;
+    const method = req.method.toUpperCase();
+
+    // CORS & JSON Default Headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    try {
+      // 1. GET /api/tracks — List all tracks
+      if (method === 'GET' && pathname === '/api/tracks') {
+        const tracks = this.trackRepo.getAllTracks();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, tracks }));
+        return;
+      }
+
+      // 2. POST /api/tracks/import — Import a track JSON
+      if (method === 'POST' && pathname === '/api/tracks/import') {
+        const body = await this.readRequestBodyJson(req);
+        const imported = this.trackRepo.importTrack(body);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, track: imported }));
+        return;
+      }
+
+      // 3. POST /api/tracks — Save / create a track
+      if (method === 'POST' && pathname === '/api/tracks') {
+        const body = await this.readRequestBodyJson(req);
+        const saved = this.trackRepo.saveTrack(body);
+        res.writeHead(201, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ success: true, track: saved }));
+        return;
+      }
+
+      // Match /api/tracks/:id, /api/tracks/:id/pdf, /api/tracks/:id/export
+      const trackIdMatch = pathname.match(/^\/api\/tracks\/([^/]+)(?:\/(pdf|export))?$/);
+      if (trackIdMatch) {
+        const trackId = decodeURIComponent(trackIdMatch[1]);
+        const subAction = trackIdMatch[2];
+
+        // 4. GET /api/tracks/:id/pdf — Stream Pre-Stint Track Briefing PDF
+        if (method === 'GET' && subAction === 'pdf') {
+          const track = this.trackRepo.getTrackById(trackId);
+          if (!track) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: `Track "${trackId}" not found` }));
+            return;
+          }
+
+          const pdfBytes = await this.trackPdfBuilder.build(track);
+          res.writeHead(200, {
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': `inline; filename="APEX-Track-Briefing-${track.id}.pdf"`,
+            'Content-Length': pdfBytes.length
+          });
+          res.end(Buffer.from(pdfBytes));
+          return;
+        }
+
+        // 5. GET /api/tracks/:id/export — Download JSON file
+        if (method === 'GET' && subAction === 'export') {
+          const track = this.trackRepo.getTrackById(trackId);
+          if (!track) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: `Track "${trackId}" not found` }));
+            return;
+          }
+
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Content-Disposition': `attachment; filename="${track.id}.json"`
+          });
+          res.end(JSON.stringify(track, null, 2));
+          return;
+        }
+
+        // 6. GET /api/tracks/:id — Get full track profile
+        if (method === 'GET') {
+          const track = this.trackRepo.getTrackById(trackId);
+          if (!track) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: `Track "${trackId}" not found` }));
+            return;
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, track }));
+          return;
+        }
+
+        // 7. PUT /api/tracks/:id — Update track
+        if (method === 'PUT') {
+          const body = await this.readRequestBodyJson(req);
+          const updated = this.trackRepo.updateTrack(trackId, body);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, track: updated }));
+          return;
+        }
+
+        // 8. DELETE /api/tracks/:id — Delete track
+        if (method === 'DELETE') {
+          const deleted = this.trackRepo.deleteTrack(trackId);
+          if (!deleted) {
+            res.writeHead(404, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: false, error: `Track "${trackId}" not found` }));
+            return;
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, message: `Track ${trackId} deleted` }));
+          return;
+        }
+      }
+
+      // Route Not Found
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: `API route not found: ${pathname}` }));
+    } catch (err) {
+      console.error('[API ERROR] Failed handling tracks API:', err);
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: err.message }));
+    }
   }
 
   /**

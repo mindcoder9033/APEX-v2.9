@@ -70,7 +70,9 @@ export class AnalysisEngine {
     }
 
     const analyzedLaps = laps.map((lap) => {
-      const apexes = this.detector.detectApexes(lap.samples);
+      const apexes = options.trackProfile
+        ? this.detector.detectWithTrackProfile(lap.samples, options.trackProfile)
+        : this.detector.detectApexes(lap.samples);
       const corners = this.extractor.extractAll(lap.samples, apexes);
       const findings = this.rules.evaluateLap(corners);
 
@@ -197,7 +199,8 @@ export class AnalysisEngine {
       brakingEntry,
       chassisAdvisory,
       surfaceIntelligence,
-      racecraft
+      racecraft,
+      trackProfile: options.trackProfile || null
     };
   }
 }

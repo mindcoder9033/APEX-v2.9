@@ -1,0 +1,768 @@
+{
+  "id": "watkins-glen-full",
+  "name": "Watkins Glen International",
+  "layout": "Full Course with Boot",
+  "trackOrdinal": 102,
+  "lengthMeters": 5552,
+  "direction": "Clockwise",
+  "sectors": {
+    "s1End": 1750,
+    "s2End": 3800,
+    "s3End": 5552,
+    "s1Length": 1750,
+    "s2Length": 2050,
+    "s3Length": 1752
+  },
+  "turns": [
+    {
+      "turnNumber": 1,
+      "name": "The Ninety",
+      "type": "90° Corner",
+      "direction": "Right",
+      "entryDist": 380,
+      "apexDist": 460,
+      "exitDist": 540,
+      "refSpeed": 115,
+      "refGear": 3,
+      "apexLatG": 1.55,
+      "brakingDist": 85
+    },
+    {
+      "turnNumber": 2,
+      "name": "The Esses (Entry)",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 820,
+      "apexDist": 900,
+      "exitDist": 980,
+      "refSpeed": 210,
+      "refGear": 5,
+      "apexLatG": 1.8,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 3,
+      "name": "The Esses (Mid)",
+      "type": "Fast Sweeper",
+      "direction": "Right",
+      "entryDist": 1010,
+      "apexDist": 1090,
+      "exitDist": 1170,
+      "refSpeed": 225,
+      "refGear": 6,
+      "apexLatG": 1.9,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 4,
+      "name": "The Esses (Exit)",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 1200,
+      "apexDist": 1280,
+      "exitDist": 1360,
+      "refSpeed": 240,
+      "refGear": 6,
+      "apexLatG": 1.7,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 5,
+      "name": "Inner Loop (Bus Stop)",
+      "type": "Chicane",
+      "direction": "Right",
+      "entryDist": 2150,
+      "apexDist": 2240,
+      "exitDist": 2330,
+      "refSpeed": 130,
+      "refGear": 3,
+      "apexLatG": 1.75,
+      "brakingDist": 90
+    },
+    {
+      "turnNumber": 6,
+      "name": "The Carousel (Outer Loop)",
+      "type": "Fast Sweeper",
+      "direction": "Right",
+      "entryDist": 2450,
+      "apexDist": 2600,
+      "exitDist": 2750,
+      "refSpeed": 165,
+      "refGear": 4,
+      "apexLatG": 1.85,
+      "brakingDist": 35
+    },
+    {
+      "turnNumber": 7,
+      "name": "The Chute",
+      "type": "Medium Corner",
+      "direction": "Left",
+      "entryDist": 3100,
+      "apexDist": 3180,
+      "exitDist": 3260,
+      "refSpeed": 135,
+      "refGear": 3,
+      "apexLatG": 1.6,
+      "brakingDist": 55
+    },
+    {
+      "turnNumber": 8,
+      "name": "The Toe (The Boot)",
+      "type": "Hairpin",
+      "direction": "Right",
+      "entryDist": 3550,
+      "apexDist": 3640,
+      "exitDist": 3720,
+      "refSpeed": 85,
+      "refGear": 2,
+      "apexLatG": 1.4,
+      "brakingDist": 75
+    },
+    {
+      "turnNumber": 9,
+      "name": "The Heel",
+      "type": "90° Corner",
+      "direction": "Left",
+      "entryDist": 4050,
+      "apexDist": 4130,
+      "exitDist": 4210,
+      "refSpeed": 125,
+      "refGear": 3,
+      "apexLatG": 1.55,
+      "brakingDist": 50
+    },
+    {
+      "turnNumber": 10,
+      "name": "Turn 10",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 4620,
+      "apexDist": 4700,
+      "exitDist": 4780,
+      "refSpeed": 195,
+      "refGear": 5,
+      "apexLatG": 1.7,
+      "brakingDist": 20
+    },
+    {
+      "turnNumber": 11,
+      "name": "Turn 11",
+      "type": "90° Corner",
+      "direction": "Right",
+      "entryDist": 5120,
+      "apexDist": 5200,
+      "exitDist": 5280,
+      "refSpeed": 145,
+      "refGear": 4,
+      "apexLatG": 1.65,
+      "brakingDist": 45
+    }
+  ],
+  "path2D": [
+    {
+      "x": 940,
+      "z": 450,
+      "dist": 0
+    },
+    {
+      "x": 947,
+      "z": 473,
+      "dist": 50
+    },
+    {
+      "x": 950,
+      "z": 497,
+      "dist": 101
+    },
+    {
+      "x": 951,
+      "z": 520,
+      "dist": 151
+    },
+    {
+      "x": 948,
+      "z": 544,
+      "dist": 202
+    },
+    {
+      "x": 941,
+      "z": 566,
+      "dist": 252
+    },
+    {
+      "x": 930,
+      "z": 588,
+      "dist": 303
+    },
+    {
+      "x": 915,
+      "z": 608,
+      "dist": 353
+    },
+    {
+      "x": 897,
+      "z": 626,
+      "dist": 404
+    },
+    {
+      "x": 876,
+      "z": 641,
+      "dist": 454
+    },
+    {
+      "x": 853,
+      "z": 654,
+      "dist": 505
+    },
+    {
+      "x": 828,
+      "z": 664,
+      "dist": 555
+    },
+    {
+      "x": 802,
+      "z": 672,
+      "dist": 606
+    },
+    {
+      "x": 775,
+      "z": 677,
+      "dist": 656
+    },
+    {
+      "x": 748,
+      "z": 680,
+      "dist": 707
+    },
+    {
+      "x": 722,
+      "z": 680,
+      "dist": 757
+    },
+    {
+      "x": 697,
+      "z": 680,
+      "dist": 808
+    },
+    {
+      "x": 673,
+      "z": 678,
+      "dist": 858
+    },
+    {
+      "x": 652,
+      "z": 676,
+      "dist": 909
+    },
+    {
+      "x": 632,
+      "z": 675,
+      "dist": 959
+    },
+    {
+      "x": 613,
+      "z": 673,
+      "dist": 1009
+    },
+    {
+      "x": 597,
+      "z": 673,
+      "dist": 1060
+    },
+    {
+      "x": 581,
+      "z": 674,
+      "dist": 1110
+    },
+    {
+      "x": 566,
+      "z": 677,
+      "dist": 1161
+    },
+    {
+      "x": 552,
+      "z": 680,
+      "dist": 1211
+    },
+    {
+      "x": 538,
+      "z": 685,
+      "dist": 1262
+    },
+    {
+      "x": 523,
+      "z": 692,
+      "dist": 1312
+    },
+    {
+      "x": 508,
+      "z": 698,
+      "dist": 1363
+    },
+    {
+      "x": 492,
+      "z": 706,
+      "dist": 1413
+    },
+    {
+      "x": 475,
+      "z": 713,
+      "dist": 1464
+    },
+    {
+      "x": 457,
+      "z": 719,
+      "dist": 1514
+    },
+    {
+      "x": 438,
+      "z": 725,
+      "dist": 1565
+    },
+    {
+      "x": 419,
+      "z": 729,
+      "dist": 1615
+    },
+    {
+      "x": 398,
+      "z": 731,
+      "dist": 1666
+    },
+    {
+      "x": 378,
+      "z": 732,
+      "dist": 1716
+    },
+    {
+      "x": 358,
+      "z": 730,
+      "dist": 1767
+    },
+    {
+      "x": 338,
+      "z": 727,
+      "dist": 1817
+    },
+    {
+      "x": 318,
+      "z": 721,
+      "dist": 1867
+    },
+    {
+      "x": 300,
+      "z": 713,
+      "dist": 1918
+    },
+    {
+      "x": 282,
+      "z": 704,
+      "dist": 1968
+    },
+    {
+      "x": 265,
+      "z": 694,
+      "dist": 2019
+    },
+    {
+      "x": 249,
+      "z": 682,
+      "dist": 2069
+    },
+    {
+      "x": 234,
+      "z": 670,
+      "dist": 2120
+    },
+    {
+      "x": 220,
+      "z": 656,
+      "dist": 2170
+    },
+    {
+      "x": 205,
+      "z": 643,
+      "dist": 2221
+    },
+    {
+      "x": 191,
+      "z": 628,
+      "dist": 2271
+    },
+    {
+      "x": 178,
+      "z": 614,
+      "dist": 2322
+    },
+    {
+      "x": 163,
+      "z": 599,
+      "dist": 2372
+    },
+    {
+      "x": 149,
+      "z": 583,
+      "dist": 2423
+    },
+    {
+      "x": 135,
+      "z": 567,
+      "dist": 2473
+    },
+    {
+      "x": 121,
+      "z": 550,
+      "dist": 2524
+    },
+    {
+      "x": 106,
+      "z": 532,
+      "dist": 2574
+    },
+    {
+      "x": 93,
+      "z": 513,
+      "dist": 2625
+    },
+    {
+      "x": 80,
+      "z": 493,
+      "dist": 2675
+    },
+    {
+      "x": 69,
+      "z": 472,
+      "dist": 2726
+    },
+    {
+      "x": 60,
+      "z": 450,
+      "dist": 2776
+    },
+    {
+      "x": 53,
+      "z": 427,
+      "dist": 2826
+    },
+    {
+      "x": 50,
+      "z": 403,
+      "dist": 2877
+    },
+    {
+      "x": 49,
+      "z": 380,
+      "dist": 2927
+    },
+    {
+      "x": 52,
+      "z": 356,
+      "dist": 2978
+    },
+    {
+      "x": 59,
+      "z": 334,
+      "dist": 3028
+    },
+    {
+      "x": 70,
+      "z": 312,
+      "dist": 3079
+    },
+    {
+      "x": 85,
+      "z": 292,
+      "dist": 3129
+    },
+    {
+      "x": 103,
+      "z": 274,
+      "dist": 3180
+    },
+    {
+      "x": 124,
+      "z": 259,
+      "dist": 3230
+    },
+    {
+      "x": 147,
+      "z": 246,
+      "dist": 3281
+    },
+    {
+      "x": 172,
+      "z": 236,
+      "dist": 3331
+    },
+    {
+      "x": 198,
+      "z": 228,
+      "dist": 3382
+    },
+    {
+      "x": 225,
+      "z": 223,
+      "dist": 3432
+    },
+    {
+      "x": 252,
+      "z": 220,
+      "dist": 3483
+    },
+    {
+      "x": 278,
+      "z": 220,
+      "dist": 3533
+    },
+    {
+      "x": 303,
+      "z": 220,
+      "dist": 3584
+    },
+    {
+      "x": 327,
+      "z": 222,
+      "dist": 3634
+    },
+    {
+      "x": 348,
+      "z": 224,
+      "dist": 3685
+    },
+    {
+      "x": 368,
+      "z": 225,
+      "dist": 3735
+    },
+    {
+      "x": 387,
+      "z": 227,
+      "dist": 3785
+    },
+    {
+      "x": 403,
+      "z": 227,
+      "dist": 3836
+    },
+    {
+      "x": 419,
+      "z": 226,
+      "dist": 3886
+    },
+    {
+      "x": 434,
+      "z": 223,
+      "dist": 3937
+    },
+    {
+      "x": 448,
+      "z": 220,
+      "dist": 3987
+    },
+    {
+      "x": 462,
+      "z": 215,
+      "dist": 4038
+    },
+    {
+      "x": 477,
+      "z": 208,
+      "dist": 4088
+    },
+    {
+      "x": 492,
+      "z": 202,
+      "dist": 4139
+    },
+    {
+      "x": 508,
+      "z": 194,
+      "dist": 4189
+    },
+    {
+      "x": 525,
+      "z": 187,
+      "dist": 4240
+    },
+    {
+      "x": 543,
+      "z": 181,
+      "dist": 4290
+    },
+    {
+      "x": 562,
+      "z": 175,
+      "dist": 4341
+    },
+    {
+      "x": 581,
+      "z": 171,
+      "dist": 4391
+    },
+    {
+      "x": 602,
+      "z": 169,
+      "dist": 4442
+    },
+    {
+      "x": 622,
+      "z": 168,
+      "dist": 4492
+    },
+    {
+      "x": 642,
+      "z": 170,
+      "dist": 4543
+    },
+    {
+      "x": 662,
+      "z": 173,
+      "dist": 4593
+    },
+    {
+      "x": 682,
+      "z": 179,
+      "dist": 4643
+    },
+    {
+      "x": 700,
+      "z": 187,
+      "dist": 4694
+    },
+    {
+      "x": 718,
+      "z": 196,
+      "dist": 4744
+    },
+    {
+      "x": 735,
+      "z": 206,
+      "dist": 4795
+    },
+    {
+      "x": 751,
+      "z": 218,
+      "dist": 4845
+    },
+    {
+      "x": 766,
+      "z": 230,
+      "dist": 4896
+    },
+    {
+      "x": 780,
+      "z": 244,
+      "dist": 4946
+    },
+    {
+      "x": 795,
+      "z": 257,
+      "dist": 4997
+    },
+    {
+      "x": 809,
+      "z": 272,
+      "dist": 5047
+    },
+    {
+      "x": 822,
+      "z": 286,
+      "dist": 5098
+    },
+    {
+      "x": 837,
+      "z": 301,
+      "dist": 5148
+    },
+    {
+      "x": 851,
+      "z": 317,
+      "dist": 5199
+    },
+    {
+      "x": 865,
+      "z": 333,
+      "dist": 5249
+    },
+    {
+      "x": 879,
+      "z": 350,
+      "dist": 5300
+    },
+    {
+      "x": 894,
+      "z": 368,
+      "dist": 5350
+    },
+    {
+      "x": 907,
+      "z": 387,
+      "dist": 5401
+    },
+    {
+      "x": 920,
+      "z": 407,
+      "dist": 5451
+    },
+    {
+      "x": 931,
+      "z": 428,
+      "dist": 5502
+    }
+  ],
+  "elevation": {
+    "minElevation": 275,
+    "maxElevation": 312.4,
+    "elevationDelta": 37.4,
+    "profile": [
+      {
+        "dist": 0,
+        "elevation": 285
+      },
+      {
+        "dist": 1300,
+        "elevation": 312.4
+      },
+      {
+        "dist": 3600,
+        "elevation": 275
+      },
+      {
+        "dist": 5000,
+        "elevation": 282
+      },
+      {
+        "dist": 5552,
+        "elevation": 285
+      }
+    ]
+  },
+  "characteristics": {
+    "totalTurns": 11,
+    "slowCorners": 1,
+    "mediumCorners": 4,
+    "fastCorners": 6,
+    "longestStraight": 650,
+    "rhythmOverview": "High-speed classic North American road course featuring dramatic elevation changes and the punishing Bus Stop chicane.",
+    "dangerZones": [
+      "High curb aggression through Bus Stop (T5)",
+      "Compressive braking into The Toe (T8)",
+      "Wall proximity at exit of The Ninety (T1)"
+    ],
+    "overtakingZones": [
+      "Down the back straight into the Inner Loop (T5)",
+      "Heavy braking zone into The Ninety (T1)",
+      "Downhill dive into The Toe (T8)"
+    ]
+  },
+  "calibrationMetadata": {
+    "lapsUsed": 3,
+    "avgSpeedKph": 195.2,
+    "calibratedAt": "2026-08-21T10:15:00.000Z",
+    "carModel": "GT3 Cup Car",
+    "consistencyScore": 97.2
+  },
+  "driverNotes": "Aggressive curb usage at Bus Stop is mandatory for lap time. Watch front-left tire loading in the Carousel.",
+  "createdDate": "2026-08-21T10:15:00.000Z",
+  "updatedDate": "2026-08-21T10:15:00.000Z"
+}

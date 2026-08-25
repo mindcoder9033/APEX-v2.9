@@ -2277,5 +2277,210 @@ body.layout-edit-active .widget-resize-handle {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8);
 }
 
+/* ==========================================================================
+   TRACK LIBRARY & CALIBRATION STINT SYSTEM (Sprint 16)
+   ========================================================================== */
+
+/* --- Top Navigation Header Tabs --- */
+.header-nav-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 4px;
+  border: 1px solid var(--color-border);
+}
+
+.nav-tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-tab-btn:hover {
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.nav-tab-btn.active {
+  background: var(--color-surface-active, #1E1E1E);
+  color: #FFFFFF;
+  border-color: var(--color-f1-red);
+  box-shadow: 0 0 10px rgba(225, 6, 0, 0.25);
+}
+
+/* --- Active Track Chip (Session Control) --- */
+.active-track-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 204, 102, 0.08);
+  border: 1px solid rgba(0, 204, 102, 0.35);
+  padding: 5px 10px;
+  border-radius: 2px;
+}
+
+/* --- Floating Calibration HUD Banner --- */
+.calibration-hud-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(90deg, #1A1200 0%, #291B00 100%);
+  border: 1px solid var(--color-warning);
+  padding: 10px 16px;
+  margin-bottom: var(--space-md);
+  box-shadow: 0 0 20px rgba(229, 169, 16, 0.2);
+}
+
+.cal-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--color-warning);
+  letter-spacing: 0.05em;
+}
+
+.cal-pulse-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--color-warning);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--color-warning);
+  animation: cal-pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes cal-pulse {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.6; }
+}
+
+.cal-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+/* --- Track Library 3-Column Layout --- */
+.track-library-view {
+  display: grid;
+  grid-template-columns: 290px 1fr 340px;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 1280px) {
+  .track-library-view {
+    grid-template-columns: 260px 1fr;
+  }
+  .track-library-right {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 900px) {
+  .track-library-view {
+    grid-template-columns: 1fr;
+  }
+}
+
+.track-library-sidebar,
+.track-library-center,
+.track-library-right {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 16px;
+}
+
+/* --- Track Sidebar Cards --- */
+.track-card {
+  background: #141414;
+  border: 1px solid var(--color-border);
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-card:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #1A1A1A;
+}
+
+.track-card.selected {
+  border-color: var(--color-f1-red) !important;
+  background: rgba(225, 6, 0, 0.08) !important;
+  box-shadow: 0 0 12px rgba(225, 6, 0, 0.15);
+}
+
+/* --- Hero Vital Statistics Cell --- */
+.stat-cell {
+  background: #121212;
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-cell-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.stat-cell-value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+}
+
+.stat-cell-value.accent {
+  color: var(--color-f1-red);
+}
+
+/* --- SVG Interactive Turn Marker Hover Effects --- */
+.svg-turn-marker {
+  transition: transform 0.15s ease;
+}
+
+.svg-turn-marker:hover circle {
+  fill: #E10600 !important;
+  stroke: #FFFFFF !important;
+  stroke-width: 2px !important;
+  filter: drop-shadow(0 0 6px rgba(225, 6, 0, 0.8));
+}
+
+.svg-turn-marker:hover text {
+  fill: #FFFFFF !important;
+  font-weight: 900 !important;
+}
+
+/* --- Turn Edit Table Inputs --- */
+.turn-edit-table th {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.05em;
+}
+
+.turn-edit-table td {
+  padding: 4px 6px;
+}
+
+
 
 

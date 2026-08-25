@@ -1,0 +1,677 @@
+{
+  "id": "maple-valley",
+  "name": "Maple Valley Raceway",
+  "layout": "Full Circuit",
+  "trackOrdinal": 103,
+  "lengthMeters": 4810,
+  "direction": "Clockwise",
+  "sectors": {
+    "s1End": 1500,
+    "s2End": 3200,
+    "s3End": 4810,
+    "s1Length": 1500,
+    "s2Length": 1700,
+    "s3Length": 1610
+  },
+  "turns": [
+    {
+      "turnNumber": 1,
+      "name": "Turn 1 (Crest Sweeper)",
+      "type": "Fast Sweeper",
+      "direction": "Right",
+      "entryDist": 320,
+      "apexDist": 410,
+      "exitDist": 490,
+      "refSpeed": 190,
+      "refGear": 5,
+      "apexLatG": 1.7,
+      "brakingDist": 20
+    },
+    {
+      "turnNumber": 2,
+      "name": "Turn 2 (Downhill Left)",
+      "type": "Medium Corner",
+      "direction": "Left",
+      "entryDist": 650,
+      "apexDist": 740,
+      "exitDist": 820,
+      "refSpeed": 130,
+      "refGear": 3,
+      "apexLatG": 1.5,
+      "brakingDist": 50
+    },
+    {
+      "turnNumber": 3,
+      "name": "Turn 3 (Bridge Entry)",
+      "type": "Medium Corner",
+      "direction": "Right",
+      "entryDist": 1100,
+      "apexDist": 1190,
+      "exitDist": 1270,
+      "refSpeed": 145,
+      "refGear": 4,
+      "apexLatG": 1.6,
+      "brakingDist": 35
+    },
+    {
+      "turnNumber": 4,
+      "name": "Turn 4 (Over Bridge)",
+      "type": "Fast Sweeper",
+      "direction": "Right",
+      "entryDist": 1550,
+      "apexDist": 1640,
+      "exitDist": 1720,
+      "refSpeed": 215,
+      "refGear": 5,
+      "apexLatG": 1.8,
+      "brakingDist": 0
+    },
+    {
+      "turnNumber": 5,
+      "name": "Turn 5 (Blind Left)",
+      "type": "90° Corner",
+      "direction": "Left",
+      "entryDist": 2200,
+      "apexDist": 2290,
+      "exitDist": 2370,
+      "refSpeed": 110,
+      "refGear": 3,
+      "apexLatG": 1.45,
+      "brakingDist": 70
+    },
+    {
+      "turnNumber": 6,
+      "name": "Turn 6 (Hairpin)",
+      "type": "Hairpin",
+      "direction": "Right",
+      "entryDist": 2750,
+      "apexDist": 2840,
+      "exitDist": 2920,
+      "refSpeed": 70,
+      "refGear": 2,
+      "apexLatG": 1.3,
+      "brakingDist": 85
+    },
+    {
+      "turnNumber": 7,
+      "name": "Turn 7 (Chicane In)",
+      "type": "Chicane",
+      "direction": "Left",
+      "entryDist": 3450,
+      "apexDist": 3530,
+      "exitDist": 3600,
+      "refSpeed": 125,
+      "refGear": 3,
+      "apexLatG": 1.65,
+      "brakingDist": 45
+    },
+    {
+      "turnNumber": 8,
+      "name": "Turn 8 (Final Carousel)",
+      "type": "Fast Sweeper",
+      "direction": "Left",
+      "entryDist": 4100,
+      "apexDist": 4280,
+      "exitDist": 4450,
+      "refSpeed": 175,
+      "refGear": 4,
+      "apexLatG": 1.8,
+      "brakingDist": 30
+    }
+  ],
+  "path2D": [
+    {
+      "x": 840,
+      "z": 450,
+      "dist": 0
+    },
+    {
+      "x": 848,
+      "z": 468,
+      "dist": 48
+    },
+    {
+      "x": 855,
+      "z": 486,
+      "dist": 96
+    },
+    {
+      "x": 859,
+      "z": 505,
+      "dist": 144
+    },
+    {
+      "x": 862,
+      "z": 524,
+      "dist": 192
+    },
+    {
+      "x": 862,
+      "z": 544,
+      "dist": 241
+    },
+    {
+      "x": 861,
+      "z": 564,
+      "dist": 289
+    },
+    {
+      "x": 856,
+      "z": 584,
+      "dist": 337
+    },
+    {
+      "x": 850,
+      "z": 604,
+      "dist": 385
+    },
+    {
+      "x": 841,
+      "z": 623,
+      "dist": 433
+    },
+    {
+      "x": 829,
+      "z": 641,
+      "dist": 481
+    },
+    {
+      "x": 815,
+      "z": 658,
+      "dist": 529
+    },
+    {
+      "x": 799,
+      "z": 674,
+      "dist": 577
+    },
+    {
+      "x": 781,
+      "z": 689,
+      "dist": 625
+    },
+    {
+      "x": 761,
+      "z": 702,
+      "dist": 673
+    },
+    {
+      "x": 739,
+      "z": 713,
+      "dist": 722
+    },
+    {
+      "x": 716,
+      "z": 722,
+      "dist": 770
+    },
+    {
+      "x": 692,
+      "z": 730,
+      "dist": 818
+    },
+    {
+      "x": 668,
+      "z": 735,
+      "dist": 866
+    },
+    {
+      "x": 643,
+      "z": 739,
+      "dist": 914
+    },
+    {
+      "x": 618,
+      "z": 740,
+      "dist": 962
+    },
+    {
+      "x": 593,
+      "z": 740,
+      "dist": 1010
+    },
+    {
+      "x": 569,
+      "z": 737,
+      "dist": 1058
+    },
+    {
+      "x": 545,
+      "z": 734,
+      "dist": 1106
+    },
+    {
+      "x": 522,
+      "z": 728,
+      "dist": 1154
+    },
+    {
+      "x": 500,
+      "z": 722,
+      "dist": 1203
+    },
+    {
+      "x": 479,
+      "z": 714,
+      "dist": 1251
+    },
+    {
+      "x": 460,
+      "z": 706,
+      "dist": 1299
+    },
+    {
+      "x": 441,
+      "z": 697,
+      "dist": 1347
+    },
+    {
+      "x": 424,
+      "z": 687,
+      "dist": 1395
+    },
+    {
+      "x": 408,
+      "z": 677,
+      "dist": 1443
+    },
+    {
+      "x": 392,
+      "z": 667,
+      "dist": 1491
+    },
+    {
+      "x": 378,
+      "z": 657,
+      "dist": 1539
+    },
+    {
+      "x": 365,
+      "z": 647,
+      "dist": 1587
+    },
+    {
+      "x": 352,
+      "z": 637,
+      "dist": 1635
+    },
+    {
+      "x": 339,
+      "z": 627,
+      "dist": 1684
+    },
+    {
+      "x": 327,
+      "z": 617,
+      "dist": 1732
+    },
+    {
+      "x": 315,
+      "z": 608,
+      "dist": 1780
+    },
+    {
+      "x": 303,
+      "z": 598,
+      "dist": 1828
+    },
+    {
+      "x": 291,
+      "z": 588,
+      "dist": 1876
+    },
+    {
+      "x": 279,
+      "z": 579,
+      "dist": 1924
+    },
+    {
+      "x": 266,
+      "z": 569,
+      "dist": 1972
+    },
+    {
+      "x": 254,
+      "z": 558,
+      "dist": 2020
+    },
+    {
+      "x": 241,
+      "z": 547,
+      "dist": 2068
+    },
+    {
+      "x": 228,
+      "z": 536,
+      "dist": 2116
+    },
+    {
+      "x": 216,
+      "z": 524,
+      "dist": 2165
+    },
+    {
+      "x": 203,
+      "z": 511,
+      "dist": 2213
+    },
+    {
+      "x": 191,
+      "z": 497,
+      "dist": 2261
+    },
+    {
+      "x": 180,
+      "z": 482,
+      "dist": 2309
+    },
+    {
+      "x": 169,
+      "z": 467,
+      "dist": 2357
+    },
+    {
+      "x": 160,
+      "z": 450,
+      "dist": 2405
+    },
+    {
+      "x": 152,
+      "z": 432,
+      "dist": 2453
+    },
+    {
+      "x": 145,
+      "z": 414,
+      "dist": 2501
+    },
+    {
+      "x": 141,
+      "z": 395,
+      "dist": 2549
+    },
+    {
+      "x": 138,
+      "z": 376,
+      "dist": 2597
+    },
+    {
+      "x": 138,
+      "z": 356,
+      "dist": 2646
+    },
+    {
+      "x": 139,
+      "z": 336,
+      "dist": 2694
+    },
+    {
+      "x": 144,
+      "z": 316,
+      "dist": 2742
+    },
+    {
+      "x": 150,
+      "z": 296,
+      "dist": 2790
+    },
+    {
+      "x": 159,
+      "z": 277,
+      "dist": 2838
+    },
+    {
+      "x": 171,
+      "z": 259,
+      "dist": 2886
+    },
+    {
+      "x": 185,
+      "z": 242,
+      "dist": 2934
+    },
+    {
+      "x": 201,
+      "z": 226,
+      "dist": 2982
+    },
+    {
+      "x": 219,
+      "z": 211,
+      "dist": 3030
+    },
+    {
+      "x": 239,
+      "z": 198,
+      "dist": 3078
+    },
+    {
+      "x": 261,
+      "z": 187,
+      "dist": 3127
+    },
+    {
+      "x": 284,
+      "z": 178,
+      "dist": 3175
+    },
+    {
+      "x": 308,
+      "z": 170,
+      "dist": 3223
+    },
+    {
+      "x": 332,
+      "z": 165,
+      "dist": 3271
+    },
+    {
+      "x": 357,
+      "z": 161,
+      "dist": 3319
+    },
+    {
+      "x": 382,
+      "z": 160,
+      "dist": 3367
+    },
+    {
+      "x": 407,
+      "z": 160,
+      "dist": 3415
+    },
+    {
+      "x": 431,
+      "z": 163,
+      "dist": 3463
+    },
+    {
+      "x": 455,
+      "z": 166,
+      "dist": 3511
+    },
+    {
+      "x": 478,
+      "z": 172,
+      "dist": 3559
+    },
+    {
+      "x": 500,
+      "z": 178,
+      "dist": 3608
+    },
+    {
+      "x": 521,
+      "z": 186,
+      "dist": 3656
+    },
+    {
+      "x": 540,
+      "z": 194,
+      "dist": 3704
+    },
+    {
+      "x": 559,
+      "z": 203,
+      "dist": 3752
+    },
+    {
+      "x": 576,
+      "z": 213,
+      "dist": 3800
+    },
+    {
+      "x": 592,
+      "z": 223,
+      "dist": 3848
+    },
+    {
+      "x": 608,
+      "z": 233,
+      "dist": 3896
+    },
+    {
+      "x": 622,
+      "z": 243,
+      "dist": 3944
+    },
+    {
+      "x": 635,
+      "z": 253,
+      "dist": 3992
+    },
+    {
+      "x": 648,
+      "z": 263,
+      "dist": 4040
+    },
+    {
+      "x": 661,
+      "z": 273,
+      "dist": 4089
+    },
+    {
+      "x": 673,
+      "z": 283,
+      "dist": 4137
+    },
+    {
+      "x": 685,
+      "z": 292,
+      "dist": 4185
+    },
+    {
+      "x": 697,
+      "z": 302,
+      "dist": 4233
+    },
+    {
+      "x": 709,
+      "z": 312,
+      "dist": 4281
+    },
+    {
+      "x": 721,
+      "z": 321,
+      "dist": 4329
+    },
+    {
+      "x": 734,
+      "z": 331,
+      "dist": 4377
+    },
+    {
+      "x": 746,
+      "z": 342,
+      "dist": 4425
+    },
+    {
+      "x": 759,
+      "z": 353,
+      "dist": 4473
+    },
+    {
+      "x": 772,
+      "z": 364,
+      "dist": 4521
+    },
+    {
+      "x": 784,
+      "z": 376,
+      "dist": 4570
+    },
+    {
+      "x": 797,
+      "z": 389,
+      "dist": 4618
+    },
+    {
+      "x": 809,
+      "z": 403,
+      "dist": 4666
+    },
+    {
+      "x": 820,
+      "z": 418,
+      "dist": 4714
+    },
+    {
+      "x": 831,
+      "z": 433,
+      "dist": 4762
+    }
+  ],
+  "elevation": {
+    "minElevation": 110,
+    "maxElevation": 162.5,
+    "elevationDelta": 52.5,
+    "profile": [
+      {
+        "dist": 0,
+        "elevation": 140
+      },
+      {
+        "dist": 800,
+        "elevation": 110
+      },
+      {
+        "dist": 2200,
+        "elevation": 162.5
+      },
+      {
+        "dist": 3500,
+        "elevation": 135
+      },
+      {
+        "dist": 4810,
+        "elevation": 140
+      }
+    ]
+  },
+  "characteristics": {
+    "totalTurns": 8,
+    "slowCorners": 1,
+    "mediumCorners": 3,
+    "fastCorners": 4,
+    "longestStraight": 600,
+    "rhythmOverview": "Iconic roller-coaster circuit with huge elevation swings, high-speed bridge sweepers, and deceptive off-camber crests.",
+    "dangerZones": [
+      "Unweighting over Turn 1 crest into downhill braking",
+      "Heavy compression at Turn 6 Hairpin entry"
+    ],
+    "overtakingZones": [
+      "Uphill braking zone into Turn 6 Hairpin",
+      "Draft down the final front straight"
+    ]
+  },
+  "calibrationMetadata": {
+    "lapsUsed": 3,
+    "avgSpeedKph": 172.5,
+    "calibratedAt": "2026-08-22T16:00:00.000Z",
+    "carModel": "Spec Racer",
+    "consistencyScore": 96
+  },
+  "driverNotes": "Stabilize vehicle platform over the crest at Turn 1 before touching the brakes.",
+  "createdDate": "2026-08-22T16:00:00.000Z",
+  "updatedDate": "2026-08-22T16:00:00.000Z"
+}

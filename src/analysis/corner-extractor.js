@@ -250,7 +250,11 @@ export class CornerExtractor {
 
     return {
       cornerNumber: apexInfo.cornerNumber,
+      name: apexInfo.name || `Turn ${apexInfo.cornerNumber}`,
       type: apexInfo.type,
+      canonical: !!apexInfo.canonical,
+      refSpeed: apexInfo.refSpeed || null,
+      refGear: apexInfo.refGear || null,
       indexes: {
         brake: brakeIndex,
         turnIn: turnInIndex,
