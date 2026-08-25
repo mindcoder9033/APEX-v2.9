@@ -151,39 +151,60 @@ export class TrackCalibrator {
       };
     });
 
-    const durations = lapStats.map(s => s.durationSec).filter(d => d > 0);
-    if (durations.length < 2) {
+    const evaluateSubset = (laps, stats) => {
+      const durations = stats.map(s => s.durationSec).filter(d => d > 0);
+      if (durations.length < 2) {
+        return {
+          isValid: true,
+          validLaps: laps,
+          consistencyScore: 95.0,
+          variancePct: 0,
+          lapStats: stats
+        };
+      }
+
+      const minDur = Math.min(...durations);
+      const maxDur = Math.max(...durations);
+      const variancePct = minDur > 0 ? ((maxDur - minDur) / minDur) * 100 : 0;
+      const consistencyScore = Math.max(70, Math.min(100, Number((100 - variancePct * 2).toFixed(1))));
+
+      if (variancePct > this.maxPaceVariancePct * 3) {
+        return {
+          isValid: false,
+          reason: `Lap pace variance (${variancePct.toFixed(1)}%) exceeds calibration threshold (${this.maxPaceVariancePct}%). Please drive steady, consistent calibration laps.`,
+          variancePct,
+          consistencyScore,
+          lapStats: stats
+        };
+      }
+
       return {
         isValid: true,
-        validLaps: lapSamplesArray,
-        consistencyScore: 95.0,
-        lapStats
-      };
-    }
-
-    const minDur = Math.min(...durations);
-    const maxDur = Math.max(...durations);
-    const variancePct = minDur > 0 ? ((maxDur - minDur) / minDur) * 100 : 0;
-
-    const consistencyScore = Math.max(70, Math.min(100, Number((100 - variancePct * 2).toFixed(1))));
-
-    if (variancePct > this.maxPaceVariancePct * 3) {
-      return {
-        isValid: false,
-        reason: `Lap pace variance (${variancePct.toFixed(1)}%) exceeds calibration threshold (${this.maxPaceVariancePct}%). Please drive steady, consistent calibration laps.`,
+        validLaps: laps,
         variancePct,
         consistencyScore,
-        lapStats
+        lapStats: stats
       };
+    };
+
+    // 1. Evaluate all laps together
+    const allResult = evaluateSubset(lapSamplesArray, lapStats);
+    if (allResult.isValid) {
+      return allResult;
     }
 
-    return {
-      isValid: true,
-      validLaps: lapSamplesArray,
-      variancePct,
-      consistencyScore,
-      lapStats
-    };
+    // 2. If 3 or more laps and full set has high variance (e.g. Lap 1 was a pit out-lap),
+    // evaluate the subsequent flying calibration laps
+    if (lapSamplesArray.length >= 3) {
+      const flyingLaps = lapSamplesArray.slice(1);
+      const flyingStats = lapStats.slice(1);
+      const flyingResult = evaluateSubset(flyingLaps, flyingStats);
+      if (flyingResult.isValid) {
+        return flyingResult;
+      }
+    }
+
+    return allResult;
   }
 
   /**

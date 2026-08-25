@@ -136,4 +136,19 @@ describe('TrackCalibrator', () => {
     assert.equal(result.success, false);
     assert.ok(result.error.includes('variance'));
   });
+
+  it('successfully calibrates when Lap 1 is a slow warm-up out-lap followed by consistent flying laps', () => {
+    const lap1OutLap = generateSyntheticLap(1, 3000, 100, 1.40); // 40% slower out-lap
+    const lap2Flying = generateSyntheticLap(2, 3000, 140, 1.0);
+    const lap3Flying = generateSyntheticLap(3, 3000, 140, 1.01);
+
+    const result = calibrator.calibrate([lap1OutLap, lap2Flying, lap3Flying], {
+      name: 'Silverstone National',
+      layout: 'National'
+    });
+
+    assert.equal(result.success, true);
+    assert.equal(result.trackProfile.name, 'Silverstone National');
+    assert.ok(result.trackProfile.turns.length >= 3);
+  });
 });

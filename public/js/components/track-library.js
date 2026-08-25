@@ -492,7 +492,7 @@ export class TrackLibraryComponent {
           <span style="font-size: 11px; color: var(--color-text-secondary); max-width: 420px; line-height: 1.4;">
             Run a 3-lap steady-speed Calibration Stint on Pit Wall to synthesize the official apex markers, timing sectors, and elevation profile.
           </span>
-          <button class="btn btn-primary btn-sm chamfer-br" style="margin-top: 6px;" onclick="window.apexApp?.switchView('pitwall'); window.apexApp?.session?.startCalibrationStint();">
+          <button class="btn btn-primary btn-sm chamfer-br" style="margin-top: 6px;" onclick="window.apexApp?.switchView('pitwall'); window.apexApp?.session?.startCalibrationStint(window.apexApp?.trackLibrary?.selectedTrack);">
             🎯 START CALIBRATION STINT
           </button>
         </div>

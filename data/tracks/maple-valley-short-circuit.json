@@ -1,7 +1,7 @@
 {
-  "id": "brands-hatch-indy-circuit",
-  "name": "Brands Hatch",
-  "layout": "Indy Circuit",
+  "id": "maple-valley-short-circuit",
+  "name": "Maple Valley",
+  "layout": "Short Circuit",
   "trackOrdinal": null,
   "lengthMeters": 0,
   "status": "Uncalibrated",
@@ -35,11 +35,11 @@
   "calibrationMetadata": {
     "lapsUsed": 3,
     "avgSpeedKph": 120,
-    "calibratedAt": "2026-08-25T07:23:11.350Z",
+    "calibratedAt": "2026-08-25T12:17:42.915Z",
     "carModel": "Calibration Vehicle",
     "consistencyScore": 95
   },
   "driverNotes": "",
-  "createdDate": "2026-08-25T07:23:11.350Z",
-  "updatedDate": "2026-08-25T07:23:11.350Z"
+  "createdDate": "2026-08-25T12:17:42.915Z",
+  "updatedDate": "2026-08-25T12:17:42.915Z"
 }

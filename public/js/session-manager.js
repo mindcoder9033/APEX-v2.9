@@ -265,13 +265,15 @@ export class SessionManager {
 
   /**
    * Starts a Track Learning Calibration stint
+   * @param {Object|null} targetTrack - Optional existing track profile to calibrate
    */
-  startCalibrationStint() {
+  startCalibrationStint(targetTrack = null) {
     if (this.isRecording) {
       this.stopRecording();
     }
 
     this.isCalibrating = true;
+    this.targetCalibrationTrack = targetTrack || this.activeTrackProfile || null;
     this.calibrationLaps = [];
     this.currentCalLapSamples = [];
     this.calibrationLapIndex = 1;
@@ -281,7 +283,10 @@ export class SessionManager {
     const phaseEl = document.getElementById('cal-hud-phase');
     const consEl = document.getElementById('cal-hud-consistency');
     if (banner) banner.style.display = 'flex';
-    if (phaseEl) phaseEl.textContent = '📡 TRACK CALIBRATION: LAP 1/3 (WARM-UP / OUT-LAP)';
+    if (phaseEl) {
+      const targetLabel = this.targetCalibrationTrack?.name ? ` [${this.targetCalibrationTrack.name.toUpperCase()}]` : '';
+      phaseEl.textContent = `📡 TRACK CALIBRATION: LAP 1/3 (WARM-UP / OUT-LAP)${targetLabel}`;
+    }
     if (consEl) consEl.textContent = 'Maintain steady average pace';
 
     this.startRecording();
@@ -292,6 +297,7 @@ export class SessionManager {
    */
   cancelCalibrationStint() {
     this.isCalibrating = false;
+    this.targetCalibrationTrack = null;
     this.calibrationLaps = [];
     this.currentCalLapSamples = [];
     const banner = document.getElementById('calibration-hud-banner');
@@ -347,9 +353,14 @@ export class SessionManager {
     const latestSample = this.recordedSamples?.[this.recordedSamples.length - 1];
     const carModel = latestSample?.vehicle?.carName || latestSample?.vehicle?.carClass || 'Calibration Vehicle';
 
+    const target = this.targetCalibrationTrack || this.activeTrackProfile;
+    const trackName = target?.name || this.settings.sessionName || 'Calibrated Circuit';
+    const layout = target?.layout || 'Full Course';
+
     const result = this.trackCalibrator.calibrate(this.calibrationLaps, {
-      name: this.settings.sessionName || 'Calibrated Circuit',
-      layout: 'Full Course',
+      name: trackName,
+      layout,
+      trackOrdinal: target?.trackOrdinal ?? null,
       carModel,
       driverName: this.settings.driverName || 'APEX Driver'
     });
@@ -357,6 +368,10 @@ export class SessionManager {
     if (!result.success) {
       alert(`⚠️ Calibration notice: ${result.error}`);
       return;
+    }
+
+    if (target?.id) {
+      result.trackProfile.id = target.id;
     }
 
     this.pendingCalibratedTrack = result.trackProfile;
@@ -393,8 +408,8 @@ export class SessionManager {
     if (!this.pendingCalibratedTrack) return;
     const nameInput = document.getElementById('cal-modal-track-name');
     const layoutInput = document.getElementById('cal-modal-track-layout');
-    if (nameInput) this.pendingCalibratedTrack.name = nameInput.value;
-    if (layoutInput) this.pendingCalibratedTrack.layout = layoutInput.value;
+    if (nameInput && nameInput.value.trim()) this.pendingCalibratedTrack.name = nameInput.value.trim();
+    if (layoutInput && layoutInput.value.trim()) this.pendingCalibratedTrack.layout = layoutInput.value.trim();
 
     try {
       await this.trackBriefingPdf.generate(this.pendingCalibratedTrack, true);
@@ -407,8 +422,17 @@ export class SessionManager {
     if (!this.pendingCalibratedTrack) return;
     const nameInput = document.getElementById('cal-modal-track-name');
     const layoutInput = document.getElementById('cal-modal-track-layout');
-    if (nameInput) this.pendingCalibratedTrack.name = nameInput.value;
-    if (layoutInput) this.pendingCalibratedTrack.layout = layoutInput.value;
+    if (nameInput && nameInput.value.trim()) this.pendingCalibratedTrack.name = nameInput.value.trim();
+    if (layoutInput && layoutInput.value.trim()) this.pendingCalibratedTrack.layout = layoutInput.value.trim();
+
+    if (!this.targetCalibrationTrack?.id) {
+      this.pendingCalibratedTrack.id = this.trackCalibrator.slugify(
+        `${this.pendingCalibratedTrack.name} ${this.pendingCalibratedTrack.layout}`
+      );
+    }
+
+    this.pendingCalibratedTrack.status = 'Calibrated';
+    this.pendingCalibratedTrack.updatedDate = new Date().toISOString();
 
     try {
       const res = await fetch('/api/tracks', {
@@ -419,18 +443,34 @@ export class SessionManager {
 
       if (res.ok) {
         const data = await res.json();
-        this.setActiveTrackProfile(data.track);
+        const savedTrack = data.track || this.pendingCalibratedTrack;
+        this.setActiveTrackProfile(savedTrack);
         this.closePostCalModal();
         if (window.apexApp?.trackLibrary) {
           await window.apexApp.trackLibrary.loadTracks();
+          await window.apexApp.trackLibrary.selectTrack(savedTrack.id);
         }
-        alert(`💾 Track "${data.track.name}" saved to Track Library and set as active circuit!`);
+        alert(`💾 Track "${savedTrack.name}" saved to Track Library and set as active circuit!`);
       } else {
-        const err = await res.json();
-        alert('Save failed: ' + err.error);
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `HTTP ${res.status}`);
       }
     } catch (err) {
-      alert('Error saving track: ' + err.message);
+      console.warn('[CALIBRATION SAVE] API save fallback to local state:', err);
+      if (window.apexApp?.trackLibrary) {
+        const lib = window.apexApp.trackLibrary;
+        const existingIdx = lib.tracks.findIndex(t => t.id === this.pendingCalibratedTrack.id);
+        if (existingIdx >= 0) {
+          lib.tracks[existingIdx] = this.pendingCalibratedTrack;
+        } else {
+          lib.tracks.push(this.pendingCalibratedTrack);
+        }
+        lib.renderTrackCards();
+        lib.selectTrack(this.pendingCalibratedTrack.id);
+      }
+      this.setActiveTrackProfile(this.pendingCalibratedTrack);
+      this.closePostCalModal();
+      alert(`💾 Track "${this.pendingCalibratedTrack.name}" calibrated and saved to local Track Library!`);
     }
   }
 
