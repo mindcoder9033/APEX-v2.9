@@ -143,7 +143,9 @@ export class CornerDetector {
     const preIdx = Math.max(0, idx - 25);
     const postIdx = Math.min(samples.length - 1, idx + 25);
 
-    const yawDeltaRad = (samples[postIdx].motion.orientation.yaw || 0) - (samples[preIdx].motion.orientation.yaw || 0);
+    const postYaw = samples[postIdx]?.motion?.orientation?.yaw ?? samples[postIdx]?.yaw ?? 0;
+    const preYaw = samples[preIdx]?.motion?.orientation?.yaw ?? samples[preIdx]?.yaw ?? 0;
+    const yawDeltaRad = postYaw - preYaw;
     const yawDeltaDeg = Math.abs(yawDeltaRad * RAD_TO_DEG);
 
     if (yawDeltaDeg > 60 || Math.abs(apex.latG) > 1.3) {

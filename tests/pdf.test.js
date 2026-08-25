@@ -220,3 +220,21 @@ test('ApexPdfBuilder: Enforces strict Metric conversion helpers', () => {
   assert.ok(Math.abs(builder.toCelsius(212) - 100) < 0.01);
   assert.ok(Math.abs(builder.toCelsius(32) - 0) < 0.01);
 });
+
+test('ApexPdfBuilder: Includes all recorded laps including Lap 1 in validLaps analysis', () => {
+  const builder = new ApexPdfBuilder();
+  const mockReport = {
+    laps: [
+      { lapNumber: 1, lapTime: 85.2, isValid: false, corners: [] },
+      { lapNumber: 2, lapTime: 72.1, isValid: true, corners: [] },
+      { lapNumber: 3, lapTime: 71.9, isValid: true, corners: [] }
+    ]
+  };
+
+  const validLaps = builder.getValidLaps(mockReport);
+  assert.equal(validLaps.length, 3, 'All 3 laps should be included in validLaps');
+  assert.equal(validLaps[0].lapNumber, 1, 'Lap 1 must be present');
+  assert.equal(validLaps[1].lapNumber, 2, 'Lap 2 must be present');
+  assert.equal(validLaps[2].lapNumber, 3, 'Lap 3 must be present');
+});
+

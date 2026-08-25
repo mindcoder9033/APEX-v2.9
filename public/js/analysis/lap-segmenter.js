@@ -3,8 +3,8 @@
  */
 export class LapSegmenter {
   constructor(options = {}) {
-    this.minLapSamples = options.minLapSamples || 180;
-    this.minLapDurationSec = options.minLapDurationSec || 15.0;
+    this.minLapSamples = options.minLapSamples !== undefined ? options.minLapSamples : 10;
+    this.minLapDurationSec = options.minLapDurationSec !== undefined ? options.minLapDurationSec : 1.0;
   }
 
   segmentStint(samples) {
@@ -35,17 +35,20 @@ export class LapSegmenter {
         lapTime = endSample.timing.lastLapTime;
       } else if (endSample.timing && endSample.timing.currentLapTime > 0) {
         lapTime = endSample.timing.currentLapTime;
-      } else {
+      } else if (endSample.timestampMs && startSample.timestampMs && endSample.timestampMs > startSample.timestampMs) {
         lapTime = (endSample.timestampMs - startSample.timestampMs) / 1000.0;
+      } else {
+        lapTime = rawSamples.length / 60.0;
       }
 
-      const isValid = lapTime >= this.minLapDurationSec && rawSamples.length >= this.minLapSamples;
+      const isValid = lapTime > 0 && rawSamples.length >= this.minLapSamples;
       let maxSpeedMps = 0;
       let minSpeedMps = Infinity;
       let totalSpeedMps = 0;
 
       for (let i = 0; i < rawSamples.length; i++) {
-        const spd = rawSamples[i].motion.speedMps || 0;
+        const s = rawSamples[i];
+        const spd = s.motion?.speedMps ?? s.speedMps ?? (s.speedMph ? s.speedMph / 2.236936 : 0);
         if (spd > maxSpeedMps) maxSpeedMps = spd;
         if (spd < minSpeedMps) minSpeedMps = spd;
         totalSpeedMps += spd;

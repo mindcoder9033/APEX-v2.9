@@ -13,8 +13,8 @@ export class LapSegmenter {
    * @param {number} [options.minLapDurationSec=15.0] Minimum lap time in seconds to count as a complete lap
    */
   constructor(options = {}) {
-    this.minLapSamples = options.minLapSamples || 180;
-    this.minLapDurationSec = options.minLapDurationSec || 15.0;
+    this.minLapSamples = options.minLapSamples !== undefined ? options.minLapSamples : 10;
+    this.minLapDurationSec = options.minLapDurationSec !== undefined ? options.minLapDurationSec : 1.0;
   }
 
   /**
@@ -48,7 +48,7 @@ export class LapSegmenter {
     // Analyze each lap group
     for (const [groupLapNumber, indexedSamples] of lapGroups.entries()) {
       if (indexedSamples.length < this.minLapSamples) {
-        continue; // Discard too-short segments (e.g. aborted starts)
+        continue; // Discard empty/sub-threshold segments
       }
 
       const rawSamples = indexedSamples.map(item => item.sample);
@@ -61,12 +61,14 @@ export class LapSegmenter {
         lapTime = endSample.timing.lastLapTime;
       } else if (endSample.timing && endSample.timing.currentLapTime > 0) {
         lapTime = endSample.timing.currentLapTime;
-      } else {
+      } else if (endSample.timestampMs && startSample.timestampMs && endSample.timestampMs > startSample.timestampMs) {
         lapTime = (endSample.timestampMs - startSample.timestampMs) / 1000.0;
+      } else {
+        lapTime = rawSamples.length / 60.0;
       }
 
-      // Check if this looks like a valid flying lap
-      const isValid = lapTime >= this.minLapDurationSec && rawSamples.length >= this.minLapSamples;
+      // Check if this looks like a valid lap
+      const isValid = lapTime > 0 && rawSamples.length >= this.minLapSamples;
 
       // Compute speed stats
       let maxSpeedMps = 0;
@@ -76,16 +78,22 @@ export class LapSegmenter {
 
       for (let i = 0; i < rawSamples.length; i++) {
         const s = rawSamples[i];
-        const spd = s.motion.speedMps || 0;
+        const spd = s.motion?.speedMps ?? s.speedMps ?? (s.speedMph ? s.speedMph / 2.236936 : 0);
         if (spd > maxSpeedMps) maxSpeedMps = spd;
         if (spd < minSpeedMps) minSpeedMps = spd;
         totalSpeedMps += spd;
 
         if (i > 0) {
           const prev = rawSamples[i - 1];
-          const dx = (s.motion.position.x || 0) - (prev.motion.position.x || 0);
-          const dy = (s.motion.position.y || 0) - (prev.motion.position.y || 0);
-          const dz = (s.motion.position.z || 0) - (prev.motion.position.z || 0);
+          const posX = s.motion?.position?.x ?? s.x ?? 0;
+          const posY = s.motion?.position?.y ?? s.y ?? 0;
+          const posZ = s.motion?.position?.z ?? s.z ?? 0;
+          const prevX = prev.motion?.position?.x ?? prev.x ?? 0;
+          const prevY = prev.motion?.position?.y ?? prev.y ?? 0;
+          const prevZ = prev.motion?.position?.z ?? prev.z ?? 0;
+          const dx = posX - prevX;
+          const dy = posY - prevY;
+          const dz = posZ - prevZ;
           totalDistance += Math.sqrt(dx * dx + dy * dy + dz * dz);
         }
       }

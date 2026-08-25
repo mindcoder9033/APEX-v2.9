@@ -979,8 +979,7 @@ export class ApexPdfBuilder {
 
   getValidLaps(report) {
     if (report.laps && report.laps.length > 0) {
-      const valid = report.laps.filter(l => l.isValid !== false && (l.lapTime > 0 || (l.corners && l.corners.length > 0)));
-      if (valid.length > 0) return valid;
+      return report.laps;
     }
     if (report.bestLap) return [report.bestLap];
     return [];
@@ -2222,7 +2221,7 @@ export class ApexPdfBuilder {
     const plotW = width - marginL - marginR;
     const plotH = height - marginT - marginB;
 
-    const validLaps = laps.filter(l => l.isValid && l.lapTime > 0);
+    const validLaps = laps && laps.length > 0 ? laps : [];
     if (validLaps.length === 0) {
       page.drawText('No lap data recorded.', { x: plotX0 + 10, y: plotY0 + plotH / 2, size: 9, font: fonts.italic, color: this.colors.textMuted });
       return;
