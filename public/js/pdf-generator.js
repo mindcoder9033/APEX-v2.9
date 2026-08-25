@@ -6,8 +6,10 @@
  */
 
 const rgb = (r, g, b) => {
-  if (!window.PDFLib) throw new Error('PDFLib is not loaded.');
-  return window.PDFLib.rgb(r, g, b);
+  if (typeof window !== 'undefined' && window.PDFLib && typeof window.PDFLib.rgb === 'function') {
+    return window.PDFLib.rgb(r, g, b);
+  }
+  return { r, g, b, type: 'RGB' };
 };
 import { TrackMapGenerator, STATE_COLORS } from './analysis/track-map.js';
 
@@ -17,7 +19,10 @@ export class ClientPdfGenerator {
     this.height = 841.89; // A4 Height in points
     this.margin = 36;     // 0.5 inch margins
     this.trackMapGenerator = new TrackMapGenerator();
+    this.initColors();
+  }
 
+  initColors() {
     // Clean Motorsport Light Theme Palette
     this.colors = {
       bg: rgb(1, 1, 1),                      // Pure White #FFFFFF
@@ -104,12 +109,19 @@ export class ClientPdfGenerator {
   }
 
   /**
-   * Builds the complete multi-section PDF document
+   * Generates the complete multi-section PDF document
    * @param {Object} report AnalysisEngine report output
    * @param {Object} metadata Session metadata (sessionName, driverName, carClass, trackName, date)
    * @returns {Promise<Uint8Array>}
    */
-  async build(report, metadata = {}) {
+  async generate(report, metadata = {}) {
+    const PDFLib = typeof window !== 'undefined' ? window.PDFLib : null;
+    if (!PDFLib) {
+      throw new Error('PDFLib is not loaded in the browser window.');
+    }
+    const { PDFDocument, StandardFonts } = PDFLib;
+    this.initColors();
+
     const doc = await PDFDocument.create();
     
     // Embed fonts
@@ -219,6 +231,10 @@ export class ClientPdfGenerator {
     this.drawFooter(pageSummary, pageIndex++, totalPages, fonts);
 
     return await doc.save();
+  }
+
+  async build(report, metadata = {}) {
+    return this.generate(report, metadata);
   }
 
   drawPageBackground(page) {
@@ -2456,4 +2472,17 @@ export class ClientPdfGenerator {
     const s = (sec % 60).toFixed(3);
     return `${m}:${s.padStart(6, '0')}`;
   }
+
+  download(pdfBytes, filename = 'APEX_Telemetry_Report.pdf') {
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 }
+
