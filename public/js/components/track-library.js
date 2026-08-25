@@ -205,7 +205,10 @@ export class TrackLibraryComponent {
 
   openCreateTrackModal() {
     if (this.modalCreateTrack) {
+      this.modalCreateTrack.classList.add('active');
       this.modalCreateTrack.style.display = 'flex';
+      this.modalCreateTrack.style.opacity = '1';
+      this.modalCreateTrack.style.pointerEvents = 'auto';
       if (this.selectLocation && this.selectLocation.options.length > 0) {
         this.selectLocation.selectedIndex = 0;
         this.handleLocationChange();
@@ -215,7 +218,10 @@ export class TrackLibraryComponent {
 
   closeCreateTrackModal() {
     if (this.modalCreateTrack) {
+      this.modalCreateTrack.classList.remove('active');
       this.modalCreateTrack.style.display = 'none';
+      this.modalCreateTrack.style.opacity = '';
+      this.modalCreateTrack.style.pointerEvents = '';
     }
   }
 
