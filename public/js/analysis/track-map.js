@@ -249,7 +249,7 @@ export class TrackMapGenerator {
         <g class="turn-overlay-marker" data-turn="${turn.cornerNumber}" data-status="${turn.status}" transform="translate(0, 0)">
           ${pulseRing}
           <circle cx="${turn.x.toFixed(1)}" cy="${turn.y.toFixed(1)}" r="8" fill="#141414" stroke="${turn.badgeColor}" stroke-width="2" />
-          <text x="${turn.x.toFixed(1)}" y="${(turn.y + 3).toFixed(1)}" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="8" font-weight="bold" text-anchor="middle">T${turn.cornerNumber}</text>
+          <text x="${turn.x.toFixed(1)}" y="${(turn.y + 3).toFixed(1)}" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="bold" text-anchor="middle">T${turn.cornerNumber}</text>
         </g>
       `;
     }).join('\n');
@@ -262,7 +262,7 @@ export class TrackMapGenerator {
         <rect x="${startFinish.normX.toFixed(1)}" y="${(startFinish.normY - 3.5).toFixed(1)}" width="3" height="3.5" fill="#000000"/>
         <rect x="${(startFinish.normX - 3).toFixed(1)}" y="${startFinish.normY.toFixed(1)}" width="3" height="3.5" fill="#000000"/>
         <rect x="${startFinish.normX.toFixed(1)}" y="${(startFinish.normY + 3.5).toFixed(1)}" width="3" height="3.5" fill="#000000"/>
-        <text x="${(startFinish.normX + 12).toFixed(1)}" y="${(startFinish.normY + 4).toFixed(1)}" fill="#AAAAAA" font-family="Inter, sans-serif" font-size="9" font-weight="600">S/F</text>
+        <text x="${(startFinish.normX + 12).toFixed(1)}" y="${(startFinish.normY + 4).toFixed(1)}" fill="#AAAAAA" font-family="'Rajdhani', sans-serif" font-size="10" font-weight="700">S/F</text>
       </g>
     ` : '';
 

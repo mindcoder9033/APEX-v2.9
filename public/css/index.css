@@ -35,9 +35,36 @@
   --color-error: #FF3333;
   --color-error-glow: rgba(255, 51, 51, 0.3);
 
-  /* Typography */
+  /* --- Typography Design Tokens --- */
+  /* 1. Rajdhani: Display, Headings, Branding & Buttons */
+  --font-display: 'Rajdhani', -apple-system, sans-serif;
+  --font-headline: 'Rajdhani', -apple-system, sans-serif;
+  --font-header: 'Rajdhani', -apple-system, sans-serif;
+
+  /* 2. Inter: UI, Body Text, Labels, Descriptions & Settings */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* 3. JetBrains Mono: Telemetry, Numerical Data & Tables */
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-telemetry: 'JetBrains Mono', monospace;
+  --font-data: 'JetBrains Mono', monospace;
+
+  /* --- Typography Point Sizes & Scale --- */
+  /* Display / Headings (Rajdhani) */
+  --pt-logo: 30pt;                /* Logo / Branding: 28-32pt (Bold) */
+  --pt-section-header: 20pt;      /* Section Headers: 18-22pt (SemiBold) */
+  --pt-subheader: 15pt;           /* Sub-headers: 14-16pt (Medium) */
+
+  /* UI / Body Text (Inter) */
+  --pt-body: 13.5pt;              /* Body Text: 13-14pt (Regular) */
+  --pt-label: 11.5pt;             /* Labels/Metadata: 11-12pt (Medium) */
+  --pt-desc-sm: 10pt;             /* Small Descriptions: 10pt (Regular) */
+
+  /* Telemetry & Numerical Data (JetBrains Mono) */
+  --pt-hero-metric: 22pt;         /* Hero Metrics (Lap Time, Speed): 20-24pt (Bold) */
+  --pt-data-table: 12.5pt;        /* Data Tables: 12-13pt (Regular) */
+  --pt-data-sm: 10.5pt;           /* Small Data Points: 10-11pt (Regular) */
 
   /* Spacing */
   --space-xs: 4px;
@@ -67,13 +94,30 @@
 html, body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);
-  font-family: var(--font-sans);
-  font-size: 14px;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
+  font-weight: 400;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Headings System - Rajdhani */
+h1, h2, .h1, .h2 {
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+h3, h4, h5, h6, .h3, .h4, .h5, .h6 {
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
 /* --- Precision 45° Angle Chamfer Cuts --- */
@@ -138,14 +182,15 @@ html, body {
 }
 
 .brand-logo {
-  font-family: var(--font-sans);
-  font-weight: 900;
-  font-size: 24px;
-  letter-spacing: 0.15em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--pt-logo, 30pt);
+  letter-spacing: 0.1em;
   color: var(--color-text-primary);
   display: flex;
   align-items: center;
   gap: 6px;
+  line-height: 1;
 }
 
 .brand-logo span.accent {
@@ -153,11 +198,11 @@ html, body {
 }
 
 .brand-tagline {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   text-transform: uppercase;
   color: var(--color-text-secondary);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   padding-left: var(--space-md);
   border-left: 1px solid var(--color-border);
 }
@@ -177,7 +222,7 @@ html, body {
   background: #0D0D0D;
   border: 1px solid var(--color-border);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--pt-data-sm, 10.5pt);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -221,8 +266,8 @@ html, body {
   justify-content: center;
   gap: 8px;
   padding: 10px 20px;
-  font-family: var(--font-sans);
-  font-size: 12px;
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -544,16 +589,17 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .drawer-title {
-  font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 900;
-  letter-spacing: 0.1em;
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--color-text-primary);
 }
 
 .drawer-subtitle {
-  font-family: var(--font-mono);
-  font-size: 10px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-secondary);
   display: block;
   margin-top: 4px;
@@ -620,7 +666,7 @@ body.layout-edit-active .widget-resize-handle {
 
 .catalog-badge {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--pt-data-sm, 10.5pt);
   text-transform: uppercase;
   padding: 2px 6px;
   background: rgba(255, 255, 255, 0.05);
@@ -629,7 +675,7 @@ body.layout-edit-active .widget-resize-handle {
 
 .catalog-status {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: var(--pt-data-sm, 10.5pt);
   font-weight: 700;
 }
 
@@ -642,22 +688,24 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .catalog-item-title {
-  font-family: var(--font-sans);
-  font-size: 13px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 600;
   color: #FFFFFF;
   margin: 2px 0;
+  letter-spacing: 0.04em;
 }
 
 .catalog-item-desc {
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
 
 .catalog-item-meta {
-  font-family: var(--font-mono);
-  font-size: 9px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-muted);
   margin-top: 4px;
 }
@@ -738,20 +786,29 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .pit-card-title {
-  font-size: 11px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
   color: var(--color-text-secondary);
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+h3.pit-card-title,
+.pit-card-subtitle,
+.widget-subtitle {
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 500;
 }
 
 .pit-card-title::before {
   content: '';
   width: 4px;
-  height: 12px;
+  height: 14px;
   background: var(--color-f1-red);
   display: inline-block;
 }
@@ -877,8 +934,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .gear-label {
-  font-size: 10px;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-secondary);
   letter-spacing: 0.1em;
 }
@@ -907,8 +965,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .rpm-label {
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-secondary);
   letter-spacing: 0.1em;
 }
@@ -929,9 +988,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .pedal-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   text-transform: uppercase;
   color: var(--color-text-secondary);
 }
@@ -970,8 +1029,9 @@ body.layout-edit-active .widget-resize-handle {
 
 .pedal-percent {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--pt-data-sm, 10.5pt);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Steering Angle Bar */
@@ -1026,7 +1086,7 @@ body.layout-edit-active .widget-resize-handle {
 
 .timer-hero-value {
   font-family: var(--font-mono);
-  font-size: 32px;
+  font-size: var(--pt-hero-metric, 22pt);
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: 0.05em;
@@ -1034,7 +1094,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .timer-hero-label {
-  font-size: 10px;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   text-transform: uppercase;
   color: var(--color-text-secondary);
   letter-spacing: 0.1em;
@@ -1056,7 +1118,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .stat-cell-label {
-  font-size: 10px;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1064,10 +1128,11 @@ body.layout-edit-active .widget-resize-handle {
 
 .stat-cell-value {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: var(--pt-data-sm, 10.5pt);
   font-weight: 700;
   color: var(--color-text-primary);
   margin-top: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-cell-value.accent {
@@ -1093,7 +1158,8 @@ body.layout-edit-active .widget-resize-handle {
   justify-content: space-around;
   width: 100%;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--pt-data-sm, 10.5pt);
+  font-variant-numeric: tabular-nums;
 }
 
 .tires-matrix-grid {
@@ -1115,16 +1181,18 @@ body.layout-edit-active .widget-resize-handle {
 .tire-header {
   display: flex;
   justify-content: space-between;
-  font-size: 10px;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-secondary);
 }
 
 .tire-temp {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: var(--pt-data-sm, 10.5pt);
   font-weight: 700;
   color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Glowing Separators --- */
@@ -1181,10 +1249,11 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .modal-title {
-  font-size: 16px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--color-text-primary);
 }
 
@@ -1195,18 +1264,21 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .form-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   text-transform: uppercase;
   color: var(--color-text-secondary);
+  letter-spacing: 0.06em;
 }
 
 .form-input {
   background: var(--color-surface-input);
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
-  font-family: var(--font-sans);
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
+  font-weight: 400;
   padding: 10px 14px;
   outline: none;
   transition: border-color var(--trans-fast);
@@ -1257,14 +1329,16 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .coaching-rule-title {
-  font-size: 13px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 600;
   color: var(--color-text-primary);
+  letter-spacing: 0.04em;
 }
 
 .coaching-corner-badge {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--pt-data-sm, 10.5pt);
   background: #202020;
   padding: 2px 8px;
   border: 1px solid var(--color-border);
@@ -1273,8 +1347,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .coaching-quote {
+  font-family: var(--font-body);
   font-style: italic;
-  font-size: 11px;
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-secondary);
   border-left: 2px solid var(--color-border-bright);
   padding-left: 8px;
@@ -1282,9 +1357,10 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .coaching-action {
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
   color: #E0E0E0;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 /* Corner Telemetry Table */
@@ -1292,30 +1368,47 @@ body.layout-edit-active .widget-resize-handle {
   overflow-x: auto;
 }
 
-.corner-table {
+.corner-table,
+.telemetry-table,
+.data-table,
+table {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--pt-data-table, 12.5pt);
   text-align: left;
+  font-variant-numeric: tabular-nums;
 }
 
-.corner-table th {
+.corner-table th,
+.telemetry-table th,
+.data-table th,
+table th {
   background: #111111;
   color: var(--color-text-secondary);
   padding: 8px 12px;
   border-bottom: 1px solid var(--color-border);
   text-transform: uppercase;
   font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: var(--pt-data-table, 12.5pt);
 }
 
-.corner-table td {
+.corner-table td,
+.telemetry-table td,
+.data-table td,
+table td {
   padding: 8px 12px;
   border-bottom: 1px solid #1C1C1C;
   color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--pt-data-table, 12.5pt);
+  font-weight: 400;
 }
 
-.corner-table tr:hover td {
+.corner-table tr:hover td,
+.telemetry-table tr:hover td,
+.data-table tr:hover td {
   background: #181818;
 }
 
@@ -1702,9 +1795,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .modal-title {
-  font-family: var(--font-sans);
-  font-size: 15px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-text-primary);
@@ -1729,9 +1822,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .form-label {
-  font-family: var(--font-sans);
-  font-size: 11px;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1742,8 +1835,9 @@ body.layout-edit-active .widget-resize-handle {
   border: 1px solid var(--color-border);
   color: var(--color-text-primary);
   padding: 10px 14px;
-  font-family: var(--font-mono);
-  font-size: 13px;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
+  font-weight: 400;
   outline: none;
   transition: border-color var(--trans-fast), box-shadow var(--trans-fast);
 }
@@ -1989,14 +2083,14 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .score-grade-badge {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   font-size: 32px;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1;
   padding: 10px 18px;
   border-radius: 4px;
   text-shadow: 0 0 12px currentColor;
-  letter-spacing: -1px;
+  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2035,17 +2129,17 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .score-hero-title {
-  font-family: var(--font-sans);
-  font-size: 16px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 600;
   color: var(--color-text-primary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
 }
 
 .score-hero-subtitle {
-  font-family: var(--font-sans);
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-secondary);
 }
 
@@ -2058,14 +2152,16 @@ body.layout-edit-active .widget-resize-handle {
 
 .score-number-value {
   font-size: 38px;
-  font-weight: 900;
+  font-weight: 700;
   color: var(--color-text-primary);
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .score-number-max {
-  font-size: 14px;
+  font-size: var(--pt-data-sm, 10.5pt);
   color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .score-breakdown-grid {
@@ -2090,8 +2186,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .comp-label {
-  font-size: 11px;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -2099,9 +2196,10 @@ body.layout-edit-active .widget-resize-handle {
 
 .comp-value {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--pt-data-sm, 10.5pt);
   font-weight: 700;
   color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .comp-progress-bg {
@@ -2120,7 +2218,8 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .comp-subtext {
-  font-size: 9.5px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-muted);
 }
 
@@ -2175,8 +2274,8 @@ body.layout-edit-active .widget-resize-handle {
 
 .priority-rank-badge {
   font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 800;
+  font-size: var(--pt-data-sm, 10.5pt);
+  font-weight: 700;
   padding: 2px 6px;
   border-radius: 2px;
   text-transform: uppercase;
@@ -2201,15 +2300,17 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .priority-rec-title {
-  font-size: 12px;
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 600;
   color: var(--color-text-primary);
+  letter-spacing: 0.04em;
 }
 
 .priority-gain-badge {
   font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: var(--pt-data-sm, 10.5pt);
+  font-weight: 700;
   color: var(--color-gold, #FFD700);
   background: rgba(229, 169, 16, 0.1);
   padding: 2px 8px;
@@ -2218,7 +2319,8 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .priority-rec-quote {
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   font-style: italic;
   color: var(--color-text-muted);
   border-left: 2px solid #333;
@@ -2227,7 +2329,8 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .priority-rec-action {
-  font-size: 11px;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
   color: var(--color-text-secondary);
   line-height: 1.4;
 }
@@ -2297,9 +2400,9 @@ body.layout-edit-active .widget-resize-handle {
   background: transparent;
   border: 1px solid transparent;
   color: var(--color-text-secondary);
-  font-family: var(--font-headline);
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 11px;
+  font-size: var(--pt-subheader, 15pt);
   letter-spacing: 0.05em;
   padding: 6px 14px;
   cursor: pointer;
@@ -2308,6 +2411,7 @@ body.layout-edit-active .widget-resize-handle {
   gap: 6px;
   transition: all 0.15s ease;
   border-radius: 3px;
+  text-transform: uppercase;
 }
 
 .nav-tab:hover {
@@ -2331,7 +2435,7 @@ body.layout-edit-active .widget-resize-handle {
   border: 1px solid var(--color-border) !important;
   color: var(--color-text-primary) !important;
   font-family: var(--font-mono) !important;
-  font-size: 11px !important;
+  font-size: var(--pt-data-sm, 10.5pt) !important;
   padding: 7px 10px !important;
   border-radius: 2px !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
@@ -2376,11 +2480,12 @@ body.layout-edit-active .widget-resize-handle {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--font-headline);
+  font-family: var(--font-display);
   font-weight: 700;
-  font-size: 12px;
+  font-size: var(--pt-subheader, 15pt);
   color: var(--color-warning);
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .cal-pulse-dot {
@@ -2403,8 +2508,9 @@ body.layout-edit-active .widget-resize-handle {
   align-items: center;
   gap: 12px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--pt-data-sm, 10.5pt);
   color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Track Library 3-Column Layout --- */
@@ -2493,7 +2599,10 @@ body.layout-edit-active .widget-resize-handle {
   width: 100%;
   text-align: center;
   cursor: pointer;
-  font-size: 11px;
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 700;
+  text-transform: uppercase;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2526,21 +2635,21 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 #track-hero-name {
-  font-size: 20px;
-  font-weight: 900;
+  font-family: var(--font-display);
+  font-size: var(--pt-section-header, 20pt);
+  font-weight: 700;
   color: var(--color-text-primary);
   text-transform: uppercase;
   margin: 0;
-  letter-spacing: 0.04em;
-  font-family: var(--font-headline);
+  letter-spacing: 0.06em;
 }
 
 .direction-badge {
   background: rgba(0, 153, 255, 0.12);
   color: #0099FF;
   border: 1px solid rgba(0, 153, 255, 0.35);
-  font-size: 9.5px;
-  font-weight: 800;
+  font-size: var(--pt-data-sm, 10.5pt);
+  font-weight: 700;
   padding: 2px 7px;
   border-radius: 2px;
   font-family: var(--font-mono);
@@ -2548,9 +2657,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .track-hero-layout-text {
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--pt-desc-sm, 10pt);
   color: var(--color-text-secondary);
-  font-family: var(--font-headline);
 }
 
 .track-hero-actions {
@@ -2609,8 +2718,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .stat-cell-label {
-  font-size: 9.5px;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   text-transform: uppercase;
   color: var(--color-text-muted);
   letter-spacing: 0.05em;
@@ -2618,9 +2728,10 @@ body.layout-edit-active .widget-resize-handle {
 
 .stat-cell-value {
   font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 800;
+  font-size: var(--pt-data-sm, 10.5pt);
+  font-weight: 700;
   color: var(--color-text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-cell-value.accent {
@@ -2674,15 +2785,17 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .characteristics-title {
-  font-size: 10px;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: var(--pt-subheader, 15pt);
+  font-weight: 600;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .characteristics-body {
-  font-size: 12px;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
   color: var(--color-text-primary);
   line-height: 1.5;
   margin: 0;
@@ -2724,21 +2837,28 @@ body.layout-edit-active .widget-resize-handle {
 .turn-edit-table {
   width: 100%;
   border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--pt-data-table, 12.5pt);
+  font-variant-numeric: tabular-nums;
 }
 
 .turn-edit-table th {
-  font-size: 9.5px;
-  font-weight: 800;
+  font-family: var(--font-mono);
+  font-size: var(--pt-data-table, 12.5pt);
+  font-weight: 600;
   color: var(--color-text-muted);
   letter-spacing: 0.06em;
   background: #141414;
   padding: 7px 8px;
   border-bottom: 1px solid var(--color-border);
+  text-transform: uppercase;
 }
 
 .turn-edit-table td {
-  padding: 4px 6px;
-  font-size: 11px;
+  padding: 6px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--pt-data-table, 12.5pt);
+  font-weight: 400;
 }
 
 .driver-notes-section {
@@ -2748,8 +2868,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .driver-notes-label {
-  font-size: 10px;
-  font-weight: 800;
+  font-family: var(--font-body);
+  font-size: var(--pt-label, 11.5pt);
+  font-weight: 500;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -2759,6 +2880,8 @@ body.layout-edit-active .widget-resize-handle {
   width: 100%;
   resize: vertical;
   line-height: 1.4;
+  font-family: var(--font-body);
+  font-size: var(--pt-body, 13.5pt);
 }
 
 
