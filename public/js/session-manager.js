@@ -5,6 +5,8 @@
  */
 
 import { AnalysisEngine } from './analysis/index.js';
+import { TrackLibrarySynthesizer } from './analysis/track-library-synthesizer.js';
+import { trackLibraryStore } from './track-library-store.js';
 import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
 import { StintMetadataModal } from './components/stint-modal.js';
@@ -333,6 +335,26 @@ export class SessionManager {
       const report = this.analysisEngine.analyzeStint(this.recordedSamples);
       this.latestAnalysisReport = report;
       this.renderAnalysisReport(report);
+
+      // Covertly synthesize & store Track Library Profile
+      if (this.recordedSamples && this.recordedSamples.length > 0) {
+        try {
+          const synthesizer = new TrackLibrarySynthesizer();
+          const trackProfile = synthesizer.synthesize({
+            samples: this.recordedSamples,
+            laps: report.laps,
+            metadata: this.currentStintMetadata || {
+              driverName: this.settings.driverName,
+              sessionName: this.settings.sessionName
+            },
+            analysisReport: report
+          });
+          trackLibraryStore.saveTrack(trackProfile);
+          console.log(`[TRACK LIBRARY] Covertly synthesized and stored profile for: ${trackProfile.trackName} (${trackProfile.layoutName})`);
+        } catch (synthErr) {
+          console.warn('[TRACK LIBRARY] Track profile synthesis warning:', synthErr);
+        }
+      }
     } catch (err) {
       console.error('[SESSION] Analysis execution error:', err);
     }

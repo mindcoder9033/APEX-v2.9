@@ -15,6 +15,8 @@ import { ChassisAdvisoryEngine } from './chassis-advisory.js';
 import { SurfaceIntelligenceEngine } from './surface-intelligence.js';
 import { RacecraftEngine } from './racecraft-engine.js';
 
+import { TrackLibrarySynthesizer } from './track-library-synthesizer.js';
+
 export class AnalysisEngine {
   constructor(options = {}) {
     this.segmenter = new LapSegmenter(options.segmenter);
@@ -31,6 +33,7 @@ export class AnalysisEngine {
     this.chassisEngine = new ChassisAdvisoryEngine(options.chassis);
     this.surfaceEngine = new SurfaceIntelligenceEngine(options.surface);
     this.racecraftEngine = new RacecraftEngine(options.racecraft);
+    this.trackSynthesizer = new TrackLibrarySynthesizer(options.trackSynthesizer);
   }
 
   /**
@@ -232,6 +235,7 @@ export {
   ChassisAdvisoryEngine,
   SurfaceIntelligenceEngine,
   RacecraftEngine,
+  TrackLibrarySynthesizer,
   DRIVING_STATE,
   STATE_COLORS,
   TIRE_THERMAL_STATUS,

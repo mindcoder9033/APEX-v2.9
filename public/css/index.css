@@ -2319,6 +2319,333 @@ body.layout-edit-active .widget-resize-handle {
   color: #555555 !important;
 }
 
+/* ==========================================================================
+   Pre-Stint Track Library & Preparation Hub Styles
+   ========================================================================== */
+.view-track-library {
+  width: 100%;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.track-library-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: 14px 20px;
+  margin-bottom: var(--space-md);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.track-library-heading {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.track-library-subheading {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-top: 2px;
+}
+
+.track-library-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.track-sidebar-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 170px);
+  overflow: hidden;
+}
+
+.sidebar-title {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary);
+}
+
+.track-filter-pill {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-filter-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-primary);
+}
+
+.track-filter-pill.active {
+  background: var(--color-f1-red);
+  border-color: var(--color-f1-red);
+  color: #FFFFFF;
+}
+
+.track-library-list-container {
+  overflow-y: auto;
+  margin-top: 12px;
+  padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.track-library-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-library-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--color-border-bright);
+  transform: translateX(2px);
+}
+
+.track-library-card.selected {
+  background: rgba(0, 216, 244, 0.08);
+  border-color: var(--color-cyan);
+  box-shadow: 0 0 12px rgba(0, 216, 244, 0.2);
+}
+
+.track-card-title {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.track-card-layout {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.track-card-stats-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.track-stat-lbl {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.track-stat-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+.track-stat-val.accent {
+  color: #FFD700;
+}
+
+.badge-real {
+  background: rgba(0, 204, 102, 0.15);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.badge-fictional {
+  background: rgba(229, 169, 16, 0.15);
+  border: 1px solid var(--color-warning);
+  color: var(--color-warning);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.badge-accent {
+  background: rgba(0, 216, 244, 0.15);
+  border: 1px solid var(--color-cyan);
+  color: var(--color-cyan);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.track-main-stage {
+  min-width: 0;
+}
+
+.track-empty-state-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: 60px 40px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.track-hero-card {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: 16px 20px;
+  margin-bottom: var(--space-md);
+}
+
+.hero-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.detail-track-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.detail-track-layout-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.hero-stats-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.hero-stat-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  padding: 8px 14px;
+  min-width: 110px;
+}
+
+.hero-stat-label {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.hero-stat-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: 2px;
+  display: block;
+}
+
+.hero-stat-value.accent {
+  color: #FFD700;
+}
+
+.track-middle-grid {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: var(--space-md);
+}
+
+.hazards-feed-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hazard-brief-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-warning);
+  padding: 10px 12px;
+}
+
+.hazard-brief-card.severity-high {
+  border-left-color: var(--color-f1-red);
+}
+
+.setup-advisories-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.setup-stat-pill {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--color-border);
+  padding: 8px 10px;
+}
+
+.setup-lbl {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.setup-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-top: 2px;
+  display: block;
+}
+
+@media (max-width: 1100px) {
+  .track-library-grid {
+    grid-template-columns: 1fr;
+  }
+  .track-middle-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 
 

@@ -39,6 +39,10 @@
           <span id="rate-text" style="color: #666; font-size: 10px; margin-left: 4px;">0 pkt/s</span>
         </div>
 
+        <button id="btn-nav-track-library" class="btn btn-secondary chamfer-all-corners" title="Open Pre-Stint Track Library (T)">
+          <span>🗺️</span> TRACK LIBRARY
+        </button>
+
         <button id="btn-open-udp-guide" class="btn btn-secondary chamfer-all-corners" title="Forza UDP Setup Guide (U)">
           <span>📡</span> UDP GUIDE
         </button>
@@ -937,6 +941,191 @@
       </div>
     </section>
     </div> <!-- /#view-pitwall -->
+
+    <!-- PRE-STINT TRACK LIBRARY VIEW CONTAINER -->
+    <div id="view-track-library" class="view-container view-track-library" style="display: none;">
+      <!-- Track Library Top Bar -->
+      <div class="track-library-top-bar chamfer-br">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <button id="btn-nav-pitwall" class="btn btn-secondary chamfer-all-corners" title="Return to Live Pit Wall">
+            <span>⬅️</span> PIT WALL
+          </button>
+          <div class="track-library-title-group">
+            <h1 class="track-library-heading">PRE-STINT TRACK INTELLIGENCE & DOSSIER HUB</h1>
+            <span class="track-library-subheading">Covertly Synthesized Circuit Geometry, Telemetry Benchmarks & Skip Barber Racecraft Guides</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button id="btn-export-pre-stint-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
+            <span>📄</span> EXPORT PRE-STINT PREP PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Track Library Layout Grid -->
+      <div class="track-library-grid">
+        
+        <!-- LEFT SIDEBAR: Driven Tracks Directory -->
+        <aside class="track-sidebar-panel chamfer-tl-br">
+          <div class="sidebar-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="sidebar-title">DRIVEN CIRCUITS</span>
+              <span id="track-library-count-badge" class="badge badge-accent">EXPLORED</span>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-input-wrapper" style="margin-top: 10px;">
+              <input type="text" id="track-search-input" class="form-input chamfer-all-corners" placeholder="🔍 Search circuit or layout..." autocomplete="off" />
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="filter-pills-row" style="margin-top: 8px; display: flex; gap: 6px;">
+              <button class="track-filter-pill active" data-filter="all">ALL</button>
+              <button class="track-filter-pill" data-filter="Real">REAL</button>
+              <button class="track-filter-pill" data-filter="Fictional">FICTIONAL</button>
+            </div>
+          </div>
+
+          <!-- List of Driven Tracks -->
+          <div id="track-library-list" class="track-library-list-container">
+            <!-- Dynamically populated track cards -->
+          </div>
+        </aside>
+
+        <!-- MAIN STAGE: Selected Track Intel & Map -->
+        <main class="track-main-stage">
+          
+          <!-- Empty State (if no stints recorded yet) -->
+          <div id="track-library-empty-state" class="track-empty-state-panel chamfer-tl-br" style="display: none;">
+            <div class="empty-state-icon" style="font-size: 48px; margin-bottom: 12px;">🏎️</div>
+            <h2 class="empty-state-title" style="font-family: var(--font-display); font-size: 20px; color: var(--color-text-primary); letter-spacing: 1px;">AWAITING FIRST RECORDED STINT</h2>
+            <p class="empty-state-desc" style="color: var(--color-text-secondary); max-width: 500px; margin: 10px auto; font-size: 13px; line-height: 1.5;">
+              APEX builds your personal Track Library <strong>covertly</strong>. Start a recording on the Pit Wall, drive in Forza Motorsport, and confirm your stint. APEX will extract circuit geometry, corner braking points, target gears, and elevation hazards automatically.
+            </p>
+          </div>
+
+          <!-- Active Track Detail View -->
+          <div id="track-detail-stage" class="track-detail-container" style="display: none;">
+            
+            <!-- Track Header Card -->
+            <section class="track-hero-card chamfer-tl-br">
+              <div class="hero-top-row">
+                <div>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <h2 id="detail-track-name" class="detail-track-title">Circuit de Spa-Francorchamps</h2>
+                    <span id="detail-track-type-badge" class="badge badge-real">Real Circuit</span>
+                  </div>
+                  <div id="detail-track-layout" class="detail-track-layout-name">Full Circuit</div>
+                </div>
+
+                <div class="hero-stats-group">
+                  <div class="hero-stat-box chamfer-all-corners">
+                    <span class="hero-stat-label">BENCHMARK LAP</span>
+                    <span id="detail-track-best-lap" class="hero-stat-value accent">2:16.842</span>
+                  </div>
+                  <div class="hero-stat-box chamfer-all-corners">
+                    <span class="hero-stat-label">OFFICIAL LENGTH</span>
+                    <span id="detail-track-length" class="hero-stat-value">7.004 km</span>
+                  </div>
+                  <div class="hero-stat-box chamfer-all-corners">
+                    <span class="hero-stat-label">REFERENCE CAR</span>
+                    <span id="detail-track-car" class="hero-stat-value" style="font-size: 12px;">Porsche GT3 R</span>
+                  </div>
+                  <div class="hero-stat-box chamfer-all-corners">
+                    <span class="hero-stat-label">SESSION HISTORY</span>
+                    <span id="detail-track-stints-count" class="hero-stat-value" style="font-size: 11px;">1 Stint (12 Laps)</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Middle Section: 2D Vector Track Map & Hazards -->
+            <div class="track-middle-grid">
+              
+              <!-- Vector Track Map Stage -->
+              <section class="pit-card chamfer-tl-br" style="padding: 16px;">
+                <div class="pit-card-header" style="margin-bottom: 10px;">
+                  <h3 class="pit-card-title">2D Vector Track Map & Driving States</h3>
+                  <div style="display: flex; gap: 12px; font-size: 10px; font-family: var(--font-mono);">
+                    <span style="color: #00CC66;">● Full Throttle</span>
+                    <span style="color: #E10600;">● Braking</span>
+                    <span style="color: #0099FF;">● Coasting / Apex</span>
+                    <span style="color: #E5A910;">● Partial</span>
+                  </div>
+                </div>
+
+                <div id="detail-track-map-svg" class="track-map-svg-viewport chamfer-all-corners" style="height: 340px; background: #0a0a0c; border: 1px solid var(--color-border); overflow: hidden; position: relative;">
+                  <!-- Dynamically rendered SVG track map -->
+                </div>
+              </section>
+
+              <!-- Track Surface & Critical Hazards -->
+              <section class="pit-card chamfer-tl-br" style="padding: 16px;">
+                <div class="pit-card-header" style="margin-bottom: 10px;">
+                  <h3 class="pit-card-title" style="color: #FFD700;">⚠️ Critical Track Hazards & Elevation</h3>
+                </div>
+                <div id="detail-hazards-feed" class="hazards-feed-container">
+                  <!-- Dynamically populated hazard cards -->
+                </div>
+
+                <div class="separator-glow" style="margin: 14px 0;"></div>
+
+                <div class="pit-card-header" style="margin-bottom: 10px;">
+                  <h3 class="pit-card-title" style="color: var(--color-cyan);">🔧 Pre-Stint Setup Recommendations</h3>
+                </div>
+                <div class="setup-advisories-grid">
+                  <div class="setup-stat-pill chamfer-all-corners">
+                    <span class="setup-lbl">AERODYNAMICS</span>
+                    <span id="detail-setup-aero" class="setup-val">Medium Downforce</span>
+                  </div>
+                  <div class="setup-stat-pill chamfer-all-corners">
+                    <span class="setup-lbl">TIRE THERMAL RISK</span>
+                    <span id="detail-setup-tire" class="setup-val">Front-Left high scrub</span>
+                  </div>
+                  <div class="setup-stat-pill chamfer-all-corners">
+                    <span class="setup-lbl">BRAKE BIAS</span>
+                    <span id="detail-setup-brake" class="setup-val">54% Front / 46% Rear</span>
+                  </div>
+                </div>
+              </section>
+
+            </div>
+
+            <!-- Bottom Section: Turn-by-Turn Telemetry Cheat Sheet -->
+            <section class="pit-card chamfer-tl-br" style="padding: 16px; margin-top: 16px;">
+              <div class="pit-card-header" style="margin-bottom: 12px;">
+                <div class="pit-card-title-group">
+                  <h3 class="pit-card-title">Turn-by-Turn Driver Briefing & Telemetry Cheat Sheet</h3>
+                  <span class="pit-card-subtitle">Optimal Braking Points, Gear Selection, and Minimum Corner Speed Targets</span>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="corner-table">
+                  <thead>
+                    <tr>
+                      <th>TURN</th>
+                      <th>TYPE</th>
+                      <th>BRAKING POINT</th>
+                      <th>TARGET GEAR</th>
+                      <th>APEX MIN SPEED</th>
+                      <th>ENTRY SPEED</th>
+                      <th>SKIP BARBER COACHING & LINE FOCUS</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detail-turns-table-body">
+                    <!-- Dynamically populated turn rows -->
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+          </div>
+
+        </main>
+      </div>
+    </div> <!-- /#view-track-library -->
 
   </div> <!-- /.app-container -->
 

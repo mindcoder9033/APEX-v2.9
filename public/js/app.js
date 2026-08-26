@@ -6,6 +6,7 @@ import { ApexWsClient } from './ws-client.js';
 import { HudRenderer } from './hud-renderer.js';
 import { SessionManager } from './session-manager.js';
 import { GridLayoutManager } from './components/grid-layout-manager.js';
+import { TrackLibraryView } from './track-library-view.js';
 
 class ApexApp {
   constructor() {
@@ -14,6 +15,7 @@ class ApexApp {
     this.hud = new HudRenderer();
     this.session = new SessionManager();
     this.layoutManager = new GridLayoutManager();
+    this.trackLibrary = new TrackLibraryView();
 
     // Rebind HUD and Session now that all components exist
     this.layoutManager.rebindTelemetryElements();
@@ -122,12 +124,27 @@ class ApexApp {
       });
     }
 
+    // Empty state return to pitwall button
+    const btnEmptyReturn = document.getElementById('btn-empty-return-pitwall');
+    if (btnEmptyReturn) {
+      btnEmptyReturn.addEventListener('click', () => {
+        if (this.trackLibrary) this.trackLibrary.hideView();
+      });
+    }
+
     // Keyboard shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') {
         e.preventDefault();
         this.session.toggleRecording();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        if (this.trackLibrary) {
+          const isHidden = !this.trackLibrary.viewTrackLibrary || this.trackLibrary.viewTrackLibrary.style.display === 'none';
+          if (isHidden) this.trackLibrary.showView();
+          else this.trackLibrary.hideView();
+        }
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         this.openSettings();
