@@ -6,7 +6,7 @@
  */
 
 import { weatherProfileStore } from './weather-profile-store.js';
-import { WEATHER_CONDITIONS, WEATHER_CATEGORIES, WeatherSimulator } from '../analysis/weather-simulator.js';
+import { WEATHER_CONDITIONS, WEATHER_CATEGORIES, WeatherSimulator } from './analysis/weather-simulator.js';
 
 // Category accent colors
 const CATEGORY_COLORS = {
