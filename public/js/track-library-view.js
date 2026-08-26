@@ -401,25 +401,28 @@ export class TrackLibraryView {
       return;
     }
 
-    // Check if a weather condition is active — include in PDF if so
-    const activeWeatherProfile = this.weatherView.getActiveProfile();
+    // Load the full 18-condition profiles map for this track
+    const allWeatherProfiles = weatherProfileStore.getProfiles(this.selectedTrackId);
+    // Also check if a single condition is active (for filename only)
+    const activeConditionSlug = this.weatherView.getActiveConditionSlug();
 
     const btn = this.btnExportPdf;
     if (btn) {
-      btn.innerHTML = activeWeatherProfile
+      btn.innerHTML = allWeatherProfiles
         ? '<span>⏳</span> COMPILING WEATHER BRIEFING...'
         : '<span>⏳</span> COMPILING BRIEFING...';
       btn.disabled = true;
     }
 
     try {
-      const pdfBytes = await this.pdfBuilder.generate(track, activeWeatherProfile);
-      const safeName = (track.trackName || 'Circuit').replace(/[^a-zA-Z0-9_-]/g, '_');
+      // Pass full profiles map — PDF builder renders all 18 conditions
+      const pdfBytes = await this.pdfBuilder.generate(track, allWeatherProfiles || null);
+      const safeName   = (track.trackName  || 'Circuit').replace(/[^a-zA-Z0-9_-]/g, '_');
       const safeLayout = (track.layoutName || 'Layout').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const safeCondition = activeWeatherProfile
-        ? `_${activeWeatherProfile.conditionSlug.replace(/-/g, '_').toUpperCase()}`
-        : '';
-      this.pdfBuilder.download(pdfBytes, `APEX_PreStint_${safeName}_${safeLayout}${safeCondition}.pdf`);
+      const suffix = activeConditionSlug
+        ? `_${activeConditionSlug.replace(/-/g, '_').toUpperCase()}`
+        : allWeatherProfiles ? '_ALL_18_CONDITIONS' : '';
+      this.pdfBuilder.download(pdfBytes, `APEX_PreStint_${safeName}_${safeLayout}${suffix}.pdf`);
     } catch (err) {
       console.error('[TRACK LIBRARY] Error generating Pre-Stint PDF:', err);
       alert('Failed to generate Pre-Stint PDF: ' + err.message);
