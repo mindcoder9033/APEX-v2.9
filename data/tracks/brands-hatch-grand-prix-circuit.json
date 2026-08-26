@@ -3,16 +3,16 @@
   "name": "Brands Hatch",
   "layout": "Grand Prix Circuit",
   "trackOrdinal": null,
-  "lengthMeters": 36400,
+  "lengthMeters": 55206,
   "status": "Calibrated",
   "direction": "Counter-Clockwise",
   "sectors": {
-    "s1End": 12133,
-    "s2End": 24267,
-    "s3End": 36400,
-    "s1Length": 12133,
-    "s2Length": 12134,
-    "s3Length": 12133
+    "s1End": 18402,
+    "s2End": 36804,
+    "s3End": 55206,
+    "s1Length": 18402,
+    "s2Length": 18402,
+    "s3Length": 18402
   },
   "turns": [
     {
@@ -20,16 +20,16 @@
       "name": "Turn 1",
       "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 3720,
-      "apexDist": 3765,
-      "exitDist": 3813,
-      "refSpeed": 103,
+      "entryDist": 4815,
+      "apexDist": 4860,
+      "exitDist": 4908,
+      "refSpeed": 104,
       "refGear": 3,
-      "apexLatG": 0.09,
-      "brakingDist": 46,
+      "apexLatG": 0.93,
+      "brakingDist": 47,
       "coords": {
-        "x": -351.26275634765625,
-        "z": -361.9461364746094
+        "x": -368.1172790527344,
+        "z": -318.2939147949219
       }
     },
     {
@@ -37,135 +37,135 @@
       "name": "Turn 2",
       "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 4579,
-      "apexDist": 4620,
-      "exitDist": 4662,
-      "refSpeed": 59,
+      "entryDist": 7378,
+      "apexDist": 7418,
+      "exitDist": 7459,
+      "refSpeed": 46,
       "refGear": 3,
-      "apexLatG": 0.06,
-      "brakingDist": 27,
+      "apexLatG": 0.35,
+      "brakingDist": 21,
       "coords": {
-        "x": -371.995849609375,
-        "z": -348.1420593261719
+        "x": -385.85791015625,
+        "z": -258.6109924316406
       }
     },
     {
       "turnNumber": 3,
       "name": "Turn 3",
       "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 5590,
-      "apexDist": 5625,
-      "exitDist": 5660,
-      "refSpeed": 100,
+      "direction": "Right",
+      "entryDist": 7581,
+      "apexDist": 7620,
+      "exitDist": 7660,
+      "refSpeed": 41,
       "refGear": 3,
-      "apexLatG": 0.15,
-      "brakingDist": 15,
+      "apexLatG": 0.35,
+      "brakingDist": 18,
       "coords": {
-        "x": -377.4675598144531,
-        "z": -342.5000915527344
+        "x": -385.4654235839844,
+        "z": -256.20166015625
       }
     },
     {
       "turnNumber": 4,
       "name": "Turn 4",
       "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 5725,
-      "apexDist": 5760,
-      "exitDist": 5795,
-      "refSpeed": 100,
+      "direction": "Right",
+      "entryDist": 7685,
+      "apexDist": 7725,
+      "exitDist": 7766,
+      "refSpeed": 45,
       "refGear": 3,
-      "apexLatG": 0.01,
-      "brakingDist": 15,
+      "apexLatG": 0.39,
+      "brakingDist": 20,
       "coords": {
-        "x": -377.4675598144531,
-        "z": -342.5000915527344
+        "x": -371.67529296875,
+        "z": -232.89056396484375
       }
     },
     {
       "turnNumber": 5,
       "name": "Turn 5",
       "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 5770,
-      "apexDist": 5805,
-      "exitDist": 5840,
-      "refSpeed": 100,
+      "direction": "Right",
+      "entryDist": 7821,
+      "apexDist": 7860,
+      "exitDist": 7900,
+      "refSpeed": 41,
       "refGear": 3,
-      "apexLatG": 1.2,
-      "brakingDist": 15,
+      "apexLatG": 0.4,
+      "brakingDist": 18,
       "coords": {
-        "x": -377.4675598144531,
-        "z": -342.5000915527344
+        "x": -384.1790771484375,
+        "z": -251.44091796875
       }
     },
     {
       "turnNumber": 6,
       "name": "Turn 6",
-      "type": "90° Corner",
+      "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 7694,
-      "apexDist": 7740,
-      "exitDist": 7788,
-      "refSpeed": 107,
+      "entryDist": 8226,
+      "apexDist": 8265,
+      "exitDist": 8306,
+      "refSpeed": 44,
       "refGear": 3,
-      "apexLatG": 0.39,
-      "brakingDist": 48,
+      "apexLatG": 0.43,
+      "brakingDist": 20,
       "coords": {
-        "x": -264.208984375,
-        "z": -395.03253173828125
+        "x": -382.0893859863281,
+        "z": -246.70277404785156
       }
     },
     {
       "turnNumber": 7,
       "name": "Turn 7",
-      "type": "90° Corner",
+      "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 8820,
-      "apexDist": 8865,
-      "exitDist": 8913,
-      "refSpeed": 103,
+      "entryDist": 11508,
+      "apexDist": 11550,
+      "exitDist": 11594,
+      "refSpeed": 71,
       "refGear": 3,
-      "apexLatG": 0.56,
-      "brakingDist": 46,
+      "apexLatG": 0.64,
+      "brakingDist": 32,
       "coords": {
-        "x": -309.70611572265625,
-        "z": -377.5354919433594
+        "x": -352.3155822753906,
+        "z": -212.49110412597656
       }
     },
     {
       "turnNumber": 8,
       "name": "Turn 8",
-      "type": "90° Corner",
+      "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 9420,
-      "apexDist": 9465,
-      "exitDist": 9513,
-      "refSpeed": 102,
+      "entryDist": 12321,
+      "apexDist": 12360,
+      "exitDist": 12400,
+      "refSpeed": 42,
       "refGear": 3,
-      "apexLatG": 0.58,
-      "brakingDist": 46,
+      "apexLatG": 0.66,
+      "brakingDist": 19,
       "coords": {
-        "x": -325.5015563964844,
-        "z": -367.16632080078125
+        "x": -354.96905517578125,
+        "z": -203.1654815673828
       }
     },
     {
       "turnNumber": 9,
       "name": "Turn 9",
-      "type": "90° Corner",
+      "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 10590,
-      "apexDist": 10635,
-      "exitDist": 10682,
-      "refSpeed": 99,
+      "entryDist": 20658,
+      "apexDist": 20700,
+      "exitDist": 20744,
+      "refSpeed": 71,
       "refGear": 3,
-      "apexLatG": 0.76,
-      "brakingDist": 45,
+      "apexLatG": 0.74,
+      "brakingDist": 32,
       "coords": {
-        "x": -356.587646484375,
-        "z": -330.85223388671875
+        "x": -198.97775268554688,
+        "z": -82.76953125
       }
     },
     {
@@ -173,1172 +173,203 @@
       "name": "Turn 10",
       "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 10635,
-      "apexDist": 10680,
-      "exitDist": 10727,
-      "refSpeed": 99,
+      "entryDist": 21481,
+      "apexDist": 21525,
+      "exitDist": 21571,
+      "refSpeed": 88,
       "refGear": 3,
-      "apexLatG": 0.78,
-      "brakingDist": 45,
+      "apexLatG": 0.41,
+      "brakingDist": 40,
       "coords": {
-        "x": -356.9972229003906,
-        "z": -330.03472900390625
+        "x": -201.50621032714844,
+        "z": -102.96379852294922
       }
     },
     {
       "turnNumber": 11,
       "name": "Turn 11",
-      "type": "90° Corner",
+      "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 12299,
-      "apexDist": 12345,
-      "exitDist": 12394,
-      "refSpeed": 111,
+      "entryDist": 23059,
+      "apexDist": 23100,
+      "exitDist": 23143,
+      "refSpeed": 64,
       "refGear": 3,
-      "apexLatG": 0.76,
-      "brakingDist": 50,
+      "apexLatG": 1.26,
+      "brakingDist": 29,
       "coords": {
-        "x": -365.3818664550781,
-        "z": -268.59075927734375
+        "x": -202.47608947753906,
+        "z": -74.49386596679688
       }
     },
     {
       "turnNumber": 12,
       "name": "Turn 12",
       "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 13168,
-      "apexDist": 13215,
-      "exitDist": 13265,
-      "refSpeed": 117,
+      "direction": "Left",
+      "entryDist": 25693,
+      "apexDist": 25740,
+      "exitDist": 25790,
+      "refSpeed": 121,
       "refGear": 3,
-      "apexLatG": 0.49,
-      "brakingDist": 53,
+      "apexLatG": 0.61,
+      "brakingDist": 54,
       "coords": {
-        "x": -357.05560302734375,
-        "z": -234.85354614257812
+        "x": -260.45269775390625,
+        "z": -251.78976440429688
       }
     },
     {
       "turnNumber": 13,
       "name": "Turn 13",
-      "type": "90° Corner",
+      "type": "Medium Corner",
       "direction": "Right",
-      "entryDist": 14038,
-      "apexDist": 14085,
-      "exitDist": 14135,
-      "refSpeed": 120,
+      "entryDist": 35004,
+      "apexDist": 35055,
+      "exitDist": 35110,
+      "refSpeed": 159,
       "refGear": 3,
       "apexLatG": 0.29,
-      "brakingDist": 54,
+      "brakingDist": 72,
       "coords": {
-        "x": -338.8857421875,
-        "z": -195.60792541503906
+        "x": -43.29927062988281,
+        "z": -344.2623596191406
       }
     },
     {
       "turnNumber": 14,
       "name": "Turn 14",
-      "type": "Hairpin",
+      "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 18723,
-      "apexDist": 18765,
-      "exitDist": 18809,
-      "refSpeed": 70,
+      "entryDist": 40484,
+      "apexDist": 40530,
+      "exitDist": 40579,
+      "refSpeed": 113,
       "refGear": 3,
-      "apexLatG": 0.93,
-      "brakingDist": 32,
+      "apexLatG": 0.7,
+      "brakingDist": 51,
       "coords": {
-        "x": -240.2935791015625,
-        "z": -60.72149658203125
+        "x": -295.2220153808594,
+        "z": 239.75013732910156
       }
     },
     {
       "turnNumber": 15,
       "name": "Turn 15",
-      "type": "Hairpin",
+      "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 19728,
-      "apexDist": 19770,
-      "exitDist": 19813,
-      "refSpeed": 67,
+      "entryDist": 50130,
+      "apexDist": 50175,
+      "exitDist": 50223,
+      "refSpeed": 100,
       "refGear": 3,
-      "apexLatG": 1.18,
-      "brakingDist": 30,
+      "apexLatG": 0.57,
+      "brakingDist": 45,
       "coords": {
-        "x": -214.68238830566406,
-        "z": -61.801025390625
+        "x": -320.1527099609375,
+        "z": 290.4800720214844
       }
     },
     {
       "turnNumber": 16,
       "name": "Turn 16",
-      "type": "Hairpin",
+      "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 20208,
-      "apexDist": 20250,
-      "exitDist": 20293,
-      "refSpeed": 65,
+      "entryDist": 57374,
+      "apexDist": 57420,
+      "exitDist": 55206,
+      "refSpeed": 107,
       "refGear": 3,
-      "apexLatG": 1.16,
-      "brakingDist": 29,
+      "apexLatG": 0.74,
+      "brakingDist": 48,
       "coords": {
-        "x": -204.0791778564453,
-        "z": -69.45236206054688
+        "x": 128.01988220214844,
+        "z": 274.37469482421875
       }
     },
     {
       "turnNumber": 17,
       "name": "Turn 17",
-      "type": "Hairpin",
+      "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 20509,
-      "apexDist": 20550,
-      "exitDist": 20593,
-      "refSpeed": 64,
+      "entryDist": 66187,
+      "apexDist": 66233,
+      "exitDist": 55206,
+      "refSpeed": 113,
       "refGear": 3,
-      "apexLatG": 1.16,
-      "brakingDist": 29,
+      "apexLatG": 0.82,
+      "brakingDist": 51,
       "coords": {
-        "x": -200.77259826660156,
-        "z": -74.06571197509766
+        "x": 128.94239807128906,
+        "z": 297.2675476074219
       }
     },
     {
       "turnNumber": 18,
       "name": "Turn 18",
-      "type": "Hairpin",
+      "type": "90° Corner",
       "direction": "Right",
-      "entryDist": 21512,
-      "apexDist": 21555,
-      "exitDist": 21599,
-      "refSpeed": 75,
+      "entryDist": 68596,
+      "apexDist": 68640,
+      "exitDist": 55206,
+      "refSpeed": 86,
       "refGear": 3,
-      "apexLatG": 0.84,
-      "brakingDist": 34,
+      "apexLatG": 0.63,
+      "brakingDist": 39,
       "coords": {
-        "x": -198.02517700195312,
-        "z": -100.79965209960938
+        "x": 126.63043975830078,
+        "z": 277.4273986816406
       }
     },
     {
       "turnNumber": 19,
       "name": "Turn 19",
       "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 24418,
-      "apexDist": 24465,
-      "exitDist": 24515,
-      "refSpeed": 118,
+      "direction": "Right",
+      "entryDist": 85014,
+      "apexDist": 85060,
+      "exitDist": 55206,
+      "refSpeed": 111,
       "refGear": 3,
-      "apexLatG": 0.83,
-      "brakingDist": 53,
+      "apexLatG": 0.91,
+      "brakingDist": 50,
       "coords": {
-        "x": -249.72598266601562,
-        "z": -200.34732055664062
+        "x": 259.4922180175781,
+        "z": -288.2086181640625
       }
     },
     {
       "turnNumber": 20,
       "name": "Turn 20",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 24853,
-      "apexDist": 24900,
-      "exitDist": 24950,
-      "refSpeed": 117,
+      "type": "Medium Corner",
+      "direction": "Right",
+      "entryDist": 87116,
+      "apexDist": 87165,
+      "exitDist": 55206,
+      "refSpeed": 143,
       "refGear": 3,
-      "apexLatG": 0.88,
-      "brakingDist": 53,
+      "apexLatG": 0.78,
+      "brakingDist": 64,
       "coords": {
-        "x": -255.5780029296875,
-        "z": -215.51780700683594
+        "x": 87.34021759033203,
+        "z": -414.6214904785156
       }
     },
     {
       "turnNumber": 21,
       "name": "Turn 21",
       "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 25078,
-      "apexDist": 25125,
-      "exitDist": 25174,
-      "refSpeed": 115,
-      "refGear": 3,
-      "apexLatG": 0.88,
-      "brakingDist": 52,
-      "coords": {
-        "x": -258.88531494140625,
-        "z": -228.49945068359375
-      }
-    },
-    {
-      "turnNumber": 22,
-      "name": "Turn 22",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 25319,
-      "apexDist": 25365,
-      "exitDist": 25414,
-      "refSpeed": 114,
-      "refGear": 3,
-      "apexLatG": 0.81,
-      "brakingDist": 51,
-      "coords": {
-        "x": -260.2275085449219,
-        "z": -236.87977600097656
-      }
-    },
-    {
-      "turnNumber": 23,
-      "name": "Turn 23",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 26955,
-      "apexDist": 27000,
-      "exitDist": 27047,
-      "refSpeed": 96,
-      "refGear": 3,
-      "apexLatG": 1.31,
-      "brakingDist": 43,
-      "coords": {
-        "x": -248.73309326171875,
-        "z": -298.7341003417969
-      }
-    },
-    {
-      "turnNumber": 24,
-      "name": "Turn 24",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 27136,
-      "apexDist": 27180,
-      "exitDist": 27227,
-      "refSpeed": 93,
-      "refGear": 3,
-      "apexLatG": 1.22,
-      "brakingDist": 42,
-      "coords": {
-        "x": -242.56028747558594,
-        "z": -306.13140869140625
-      }
-    },
-    {
-      "turnNumber": 25,
-      "name": "Turn 25",
-      "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 28367,
-      "apexDist": 28410,
-      "exitDist": 28455,
-      "refSpeed": 81,
-      "refGear": 3,
-      "apexLatG": 0.91,
-      "brakingDist": 36,
-      "coords": {
-        "x": -208.54762268066406,
-        "z": -321.5127258300781
-      }
-    },
-    {
-      "turnNumber": 26,
-      "name": "Turn 26",
-      "type": "Hairpin",
       "direction": "Right",
-      "entryDist": 29132,
-      "apexDist": 29175,
-      "exitDist": 29221,
-      "refSpeed": 84,
-      "refGear": 3,
-      "apexLatG": 0.34,
-      "brakingDist": 38,
-      "coords": {
-        "x": -185.806884765625,
-        "z": -322.5763244628906
-      }
-    },
-    {
-      "turnNumber": 27,
-      "name": "Turn 27",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 33839,
-      "apexDist": 33885,
-      "exitDist": 33933,
-      "refSpeed": 106,
-      "refGear": 3,
-      "apexLatG": 0.26,
-      "brakingDist": 48,
-      "coords": {
-        "x": 19.248754501342773,
-        "z": -340.7979431152344
-      }
-    },
-    {
-      "turnNumber": 28,
-      "name": "Turn 28",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 34050,
-      "apexDist": 34095,
-      "exitDist": 34143,
-      "refSpeed": 102,
-      "refGear": 3,
-      "apexLatG": 0.3,
-      "brakingDist": 46,
-      "coords": {
-        "x": 25.468746185302734,
-        "z": -340.4593505859375
-      }
-    },
-    {
-      "turnNumber": 29,
-      "name": "Turn 29",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 34125,
-      "apexDist": 34170,
-      "exitDist": 34218,
-      "refSpeed": 101,
-      "refGear": 3,
-      "apexLatG": 0.31,
-      "brakingDist": 45,
-      "coords": {
-        "x": 27.80898094177246,
-        "z": -340.29522705078125
-      }
-    },
-    {
-      "turnNumber": 30,
-      "name": "Turn 30",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 34365,
-      "apexDist": 34410,
-      "exitDist": 34457,
-      "refSpeed": 99,
-      "refGear": 3,
-      "apexLatG": 0.66,
-      "brakingDist": 45,
-      "coords": {
-        "x": 42.072486877441406,
-        "z": -338.6802978515625
-      }
-    },
-    {
-      "turnNumber": 31,
-      "name": "Turn 31",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 34995,
-      "apexDist": 35040,
-      "exitDist": 35087,
-      "refSpeed": 97,
-      "refGear": 3,
-      "apexLatG": 0.81,
-      "brakingDist": 44,
-      "coords": {
-        "x": 59.94486999511719,
-        "z": -333.76483154296875
-      }
-    },
-    {
-      "turnNumber": 32,
-      "name": "Turn 32",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 35325,
-      "apexDist": 35370,
-      "exitDist": 35417,
-      "refSpeed": 98,
-      "refGear": 3,
-      "apexLatG": 0.76,
-      "brakingDist": 44,
-      "coords": {
-        "x": 72.9839096069336,
-        "z": -327.5899353027344
-      }
-    },
-    {
-      "turnNumber": 33,
-      "name": "Turn 33",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 35520,
-      "apexDist": 35565,
-      "exitDist": 35612,
-      "refSpeed": 97,
-      "refGear": 3,
-      "apexLatG": 0.83,
-      "brakingDist": 44,
-      "coords": {
-        "x": 80.23262023925781,
-        "z": -323.0428466796875
-      }
-    },
-    {
-      "turnNumber": 34,
-      "name": "Turn 34",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 35836,
-      "apexDist": 35880,
-      "exitDist": 35927,
-      "refSpeed": 94,
-      "refGear": 3,
-      "apexLatG": 1.07,
-      "brakingDist": 42,
-      "coords": {
-        "x": 90.81275939941406,
-        "z": -314.2760009765625
-      }
-    },
-    {
-      "turnNumber": 35,
-      "name": "Turn 35",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 36436,
-      "apexDist": 36480,
-      "exitDist": 36400,
-      "refSpeed": 90,
-      "refGear": 3,
-      "apexLatG": 1.11,
-      "brakingDist": 41,
-      "coords": {
-        "x": 101.05882263183594,
-        "z": -300.733642578125
-      }
-    },
-    {
-      "turnNumber": 36,
-      "name": "Turn 36",
-      "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 37562,
-      "apexDist": 37605,
-      "exitDist": 36400,
-      "refSpeed": 81,
-      "refGear": 3,
-      "apexLatG": 1.03,
-      "brakingDist": 36,
-      "coords": {
-        "x": 106.09095764160156,
-        "z": -264.7119445800781
-      }
-    },
-    {
-      "turnNumber": 37,
-      "name": "Turn 37",
-      "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 37757,
-      "apexDist": 37800,
-      "exitDist": 36400,
-      "refSpeed": 81,
-      "refGear": 3,
-      "apexLatG": 0.95,
-      "brakingDist": 36,
-      "coords": {
-        "x": 104.67188262939453,
-        "z": -260.05706787109375
-      }
-    },
-    {
-      "turnNumber": 38,
-      "name": "Turn 38",
-      "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 37832,
-      "apexDist": 37875,
-      "exitDist": 36400,
-      "refSpeed": 81,
-      "refGear": 3,
-      "apexLatG": 0.89,
-      "brakingDist": 36,
-      "coords": {
-        "x": 104.13069152832031,
-        "z": -258.59552001953125
-      }
-    },
-    {
-      "turnNumber": 39,
-      "name": "Turn 39",
-      "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 38507,
-      "apexDist": 38550,
-      "exitDist": 36400,
-      "refSpeed": 83,
-      "refGear": 3,
-      "apexLatG": 0.45,
-      "brakingDist": 37,
-      "coords": {
-        "x": 94.2455062866211,
-        "z": -240.2489471435547
-      }
-    },
-    {
-      "turnNumber": 40,
-      "name": "Turn 40",
-      "type": "Hairpin",
-      "direction": "Left",
-      "entryDist": 38627,
-      "apexDist": 38670,
-      "exitDist": 36400,
-      "refSpeed": 84,
-      "refGear": 3,
-      "apexLatG": 0.44,
-      "brakingDist": 38,
-      "coords": {
-        "x": 92.72449493408203,
-        "z": -238.04278564453125
-      }
-    },
-    {
-      "turnNumber": 41,
-      "name": "Turn 41",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 43031,
-      "apexDist": 43080,
-      "exitDist": 36400,
-      "refSpeed": 135,
-      "refGear": 3,
-      "apexLatG": 0.47,
-      "brakingDist": 61,
-      "coords": {
-        "x": -41.486141204833984,
-        "z": -110.67925262451172
-      }
-    },
-    {
-      "turnNumber": 42,
-      "name": "Turn 42",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 43391,
-      "apexDist": 43440,
-      "exitDist": 36400,
-      "refSpeed": 139,
-      "refGear": 3,
-      "apexLatG": 0.28,
-      "brakingDist": 63,
-      "coords": {
-        "x": -56.19316482543945,
-        "z": -94.00599670410156
-      }
-    },
-    {
-      "turnNumber": 43,
-      "name": "Turn 43",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 51344,
-      "apexDist": 51390,
-      "exitDist": 36400,
-      "refSpeed": 105,
-      "refGear": 3,
-      "apexLatG": 0.4,
-      "brakingDist": 47,
-      "coords": {
-        "x": -311.37371826171875,
-        "z": 266.771240234375
-      }
-    },
-    {
-      "turnNumber": 44,
-      "name": "Turn 44",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 52276,
-      "apexDist": 52320,
-      "exitDist": 36400,
-      "refSpeed": 93,
-      "refGear": 3,
-      "apexLatG": 0.65,
-      "brakingDist": 42,
-      "coords": {
-        "x": -323.07977294921875,
-        "z": 298.6519470214844
-      }
-    },
-    {
-      "turnNumber": 45,
-      "name": "Turn 45",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 52516,
-      "apexDist": 52560,
-      "exitDist": 36400,
-      "refSpeed": 92,
-      "refGear": 3,
-      "apexLatG": 0.76,
-      "brakingDist": 41,
-      "coords": {
-        "x": -324.95550537109375,
-        "z": 310.0027770996094
-      }
-    },
-    {
-      "turnNumber": 46,
-      "name": "Turn 46",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 53206,
-      "apexDist": 53250,
-      "exitDist": 36400,
-      "refSpeed": 90,
-      "refGear": 3,
-      "apexLatG": 0.52,
-      "brakingDist": 41,
-      "coords": {
-        "x": -324.0455322265625,
-        "z": 335.74090576171875
-      }
-    },
-    {
-      "turnNumber": 47,
-      "name": "Turn 47",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 53266,
-      "apexDist": 53310,
-      "exitDist": 36400,
-      "refSpeed": 90,
-      "refGear": 3,
-      "apexLatG": 0.51,
-      "brakingDist": 41,
-      "coords": {
-        "x": -323.8490905761719,
-        "z": 336.9660339355469
-      }
-    },
-    {
-      "turnNumber": 48,
-      "name": "Turn 48",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 54181,
-      "apexDist": 54225,
-      "exitDist": 36400,
-      "refSpeed": 93,
-      "refGear": 3,
-      "apexLatG": 0.57,
-      "brakingDist": 42,
-      "coords": {
-        "x": -315.18682861328125,
-        "z": 366.724853515625
-      }
-    },
-    {
-      "turnNumber": 49,
-      "name": "Turn 49",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 55934,
-      "apexDist": 55980,
-      "exitDist": 36400,
-      "refSpeed": 113,
-      "refGear": 3,
-      "apexLatG": 0.33,
-      "brakingDist": 51,
-      "coords": {
-        "x": -276.4700927734375,
-        "z": 419.61480712890625
-      }
-    },
-    {
-      "turnNumber": 50,
-      "name": "Turn 50",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 59685,
-      "apexDist": 59730,
-      "exitDist": 36400,
-      "refSpeed": 101,
-      "refGear": 3,
-      "apexLatG": 0.27,
-      "brakingDist": 45,
-      "coords": {
-        "x": -152.80018615722656,
-        "z": 527.14111328125
-      }
-    },
-    {
-      "turnNumber": 51,
-      "name": "Turn 51",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 60540,
-      "apexDist": 60585,
-      "exitDist": 36400,
-      "refSpeed": 95,
-      "refGear": 3,
-      "apexLatG": 0.97,
-      "brakingDist": 43,
-      "coords": {
-        "x": -122.69821166992188,
-        "z": 544.6491088867188
-      }
-    },
-    {
-      "turnNumber": 52,
-      "name": "Turn 52",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 61186,
-      "apexDist": 61230,
-      "exitDist": 36400,
-      "refSpeed": 92,
-      "refGear": 3,
-      "apexLatG": 0.77,
-      "brakingDist": 41,
-      "coords": {
-        "x": -100.31632232666016,
-        "z": 548.4287109375
-      }
-    },
-    {
-      "turnNumber": 53,
-      "name": "Turn 53",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 61336,
-      "apexDist": 61380,
-      "exitDist": 36400,
-      "refSpeed": 92,
-      "refGear": 3,
-      "apexLatG": 0.65,
-      "brakingDist": 41,
-      "coords": {
-        "x": -96.05256652832031,
-        "z": 548.4237670898438
-      }
-    },
-    {
-      "turnNumber": 54,
-      "name": "Turn 54",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 66177,
-      "apexDist": 66225,
-      "exitDist": 36400,
-      "refSpeed": 129,
-      "refGear": 3,
-      "apexLatG": 0.27,
-      "brakingDist": 58,
-      "coords": {
-        "x": 63.75361251831055,
-        "z": 451.2828063964844
-      }
-    },
-    {
-      "turnNumber": 55,
-      "name": "Turn 55",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 67661,
-      "apexDist": 67710,
-      "exitDist": 36400,
-      "refSpeed": 135,
-      "refGear": 3,
-      "apexLatG": 0.55,
-      "brakingDist": 61,
-      "coords": {
-        "x": 109.60972595214844,
-        "z": 381.7435302734375
-      }
-    },
-    {
-      "turnNumber": 56,
-      "name": "Turn 56",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 67961,
-      "apexDist": 68010,
-      "exitDist": 36400,
-      "refSpeed": 135,
+      "entryDist": 88077,
+      "apexDist": 88125,
+      "exitDist": 55206,
+      "refSpeed": 131,
       "refGear": 3,
       "apexLatG": 0.6,
-      "brakingDist": 61,
+      "brakingDist": 59,
       "coords": {
-        "x": 114.09687805175781,
-        "z": 370.65325927734375
-      }
-    },
-    {
-      "turnNumber": 57,
-      "name": "Turn 57",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 69133,
-      "apexDist": 69180,
-      "exitDist": 36400,
-      "refSpeed": 116,
-      "refGear": 3,
-      "apexLatG": 0.77,
-      "brakingDist": 52,
-      "coords": {
-        "x": 127.87642669677734,
-        "z": 318.7607727050781
-      }
-    },
-    {
-      "turnNumber": 58,
-      "name": "Turn 58",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 70081,
-      "apexDist": 70125,
-      "exitDist": 36400,
-      "refSpeed": 85,
-      "refGear": 3,
-      "apexLatG": 0.76,
-      "brakingDist": 38,
-      "coords": {
-        "x": 129.24586486816406,
-        "z": 279.3545227050781
-      }
-    },
-    {
-      "turnNumber": 59,
-      "name": "Turn 59",
-      "type": "Hairpin",
-      "direction": "Right",
-      "entryDist": 70232,
-      "apexDist": 70275,
-      "exitDist": 36400,
-      "refSpeed": 84,
-      "refGear": 3,
-      "apexLatG": 0.62,
-      "brakingDist": 38,
-      "coords": {
-        "x": 128.48753356933594,
-        "z": 274.74383544921875
-      }
-    },
-    {
-      "turnNumber": 60,
-      "name": "Turn 60",
-      "type": "Hairpin",
-      "direction": "Right",
-      "entryDist": 70727,
-      "apexDist": 70770,
-      "exitDist": 36400,
-      "refSpeed": 84,
-      "refGear": 3,
-      "apexLatG": 0.69,
-      "brakingDist": 38,
-      "coords": {
-        "x": 123.84494018554688,
-        "z": 258.75140380859375
-      }
-    },
-    {
-      "turnNumber": 61,
-      "name": "Turn 61",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 71686,
-      "apexDist": 71730,
-      "exitDist": 36400,
-      "refSpeed": 89,
-      "refGear": 3,
-      "apexLatG": 0.32,
-      "brakingDist": 40,
-      "coords": {
-        "x": 109.36243438720703,
-        "z": 233.7891387939453
-      }
-    },
-    {
-      "turnNumber": 62,
-      "name": "Turn 62",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 72031,
-      "apexDist": 72075,
-      "exitDist": 36400,
-      "refSpeed": 93,
-      "refGear": 3,
-      "apexLatG": 0.36,
-      "brakingDist": 42,
-      "coords": {
-        "x": 103.54054260253906,
-        "z": 225.96429443359375
-      }
-    },
-    {
-      "turnNumber": 63,
-      "name": "Turn 63",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 75390,
-      "apexDist": 75435,
-      "exitDist": 36400,
-      "refSpeed": 95,
-      "refGear": 3,
-      "apexLatG": 0.5,
-      "brakingDist": 43,
-      "coords": {
-        "x": 9.21989917755127,
-        "z": 128.68211364746094
-      }
-    },
-    {
-      "turnNumber": 64,
-      "name": "Turn 64",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 76111,
-      "apexDist": 76155,
-      "exitDist": 36400,
-      "refSpeed": 93,
-      "refGear": 3,
-      "apexLatG": 1.11,
-      "brakingDist": 42,
-      "coords": {
-        "x": -4.270003318786621,
-        "z": 105.9194564819336
-      }
-    },
-    {
-      "turnNumber": 65,
-      "name": "Turn 65",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 76471,
-      "apexDist": 76515,
-      "exitDist": 36400,
-      "refSpeed": 92,
-      "refGear": 3,
-      "apexLatG": 1.09,
-      "brakingDist": 41,
-      "coords": {
-        "x": -7.5085554122924805,
-        "z": 92.26390838623047
-      }
-    },
-    {
-      "turnNumber": 66,
-      "name": "Turn 66",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 76891,
-      "apexDist": 76935,
-      "exitDist": 36400,
-      "refSpeed": 93,
-      "refGear": 3,
-      "apexLatG": 1.08,
-      "brakingDist": 42,
-      "coords": {
-        "x": -7.770456790924072,
-        "z": 80.33838653564453
-      }
-    },
-    {
-      "turnNumber": 67,
-      "name": "Turn 67",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 77296,
-      "apexDist": 77340,
-      "exitDist": 36400,
-      "refSpeed": 94,
-      "refGear": 3,
-      "apexLatG": 0.95,
-      "brakingDist": 42,
-      "coords": {
-        "x": -4.481075286865234,
-        "z": 64.30574798583984
-      }
-    },
-    {
-      "turnNumber": 68,
-      "name": "Turn 68",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 77805,
-      "apexDist": 77850,
-      "exitDist": 36400,
-      "refSpeed": 97,
-      "refGear": 3,
-      "apexLatG": 0.87,
-      "brakingDist": 44,
-      "coords": {
-        "x": 1.9162007570266724,
-        "z": 50.298702239990234
-      }
-    },
-    {
-      "turnNumber": 69,
-      "name": "Turn 69",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 84720,
-      "apexDist": 84765,
-      "exitDist": 36400,
-      "refSpeed": 103,
-      "refGear": 3,
-      "apexLatG": 0.49,
-      "brakingDist": 46,
-      "coords": {
-        "x": 247.22271728515625,
-        "z": -227.14537048339844
-      }
-    },
-    {
-      "turnNumber": 70,
-      "name": "Turn 70",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 85680,
-      "apexDist": 85725,
-      "exitDist": 36400,
-      "refSpeed": 96,
-      "refGear": 3,
-      "apexLatG": 1.06,
-      "brakingDist": 43,
-      "coords": {
-        "x": 261.2976989746094,
-        "z": -257.7293701171875
-      }
-    },
-    {
-      "turnNumber": 71,
-      "name": "Turn 71",
-      "type": "90° Corner",
-      "direction": "Left",
-      "entryDist": 86581,
-      "apexDist": 86625,
-      "exitDist": 36400,
-      "refSpeed": 92,
-      "refGear": 3,
-      "apexLatG": 1.02,
-      "brakingDist": 41,
-      "coords": {
-        "x": 260.55181884765625,
-        "z": -288.1401672363281
-      }
-    },
-    {
-      "turnNumber": 72,
-      "name": "Turn 72",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 87855,
-      "apexDist": 87900,
-      "exitDist": 36400,
-      "refSpeed": 102,
-      "refGear": 3,
-      "apexLatG": 0.43,
-      "brakingDist": 46,
-      "coords": {
-        "x": 242.43890380859375,
-        "z": -331.9711608886719
-      }
-    },
-    {
-      "turnNumber": 73,
-      "name": "Turn 73",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 88439,
-      "apexDist": 88485,
-      "exitDist": 36400,
-      "refSpeed": 108,
-      "refGear": 3,
-      "apexLatG": 0.67,
-      "brakingDist": 49,
-      "coords": {
-        "x": 229.06385803222656,
-        "z": -351.72052001953125
-      }
-    },
-    {
-      "turnNumber": 74,
-      "name": "Turn 74",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 89069,
-      "apexDist": 89115,
-      "exitDist": 36400,
-      "refSpeed": 114,
-      "refGear": 3,
-      "apexLatG": 0.8,
-      "brakingDist": 51,
-      "coords": {
-        "x": 208.87709045410156,
-        "z": -371.4837951660156
-      }
-    },
-    {
-      "turnNumber": 75,
-      "name": "Turn 75",
-      "type": "90° Corner",
-      "direction": "Right",
-      "entryDist": 89878,
-      "apexDist": 89925,
-      "exitDist": 36400,
-      "refSpeed": 123,
-      "refGear": 3,
-      "apexLatG": 0.53,
-      "brakingDist": 55,
-      "coords": {
-        "x": 176.76243591308594,
-        "z": -390.4446716308594
-      }
-    },
-    {
-      "turnNumber": 76,
-      "name": "Turn 76",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 91361,
-      "apexDist": 91410,
-      "exitDist": 36400,
-      "refSpeed": 142,
-      "refGear": 3,
-      "apexLatG": 0.48,
-      "brakingDist": 64,
-      "coords": {
-        "x": 105.73787689208984,
-        "z": -412.47906494140625
-      }
-    },
-    {
-      "turnNumber": 77,
-      "name": "Turn 77",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 92170,
-      "apexDist": 92220,
-      "exitDist": 36400,
-      "refSpeed": 153,
-      "refGear": 3,
-      "apexLatG": 0.51,
-      "brakingDist": 69,
-      "coords": {
-        "x": 63.08302307128906,
-        "z": -417.8316345214844
-      }
-    },
-    {
-      "turnNumber": 78,
-      "name": "Turn 78",
-      "type": "Medium Corner",
-      "direction": "Right",
-      "entryDist": 92335,
-      "apexDist": 92385,
-      "exitDist": 36400,
-      "refSpeed": 154,
-      "refGear": 3,
-      "apexLatG": 0.46,
-      "brakingDist": 69,
-      "coords": {
-        "x": 52.42821502685547,
-        "z": -418.3414306640625
+        "x": 171.9568634033203,
+        "z": -393.1678771972656
       }
     }
   ],
@@ -1349,899 +380,899 @@
       "dist": 0
     },
     {
-      "x": -92.9,
+      "x": -92.8,
       "z": -410.8,
-      "dist": 243
+      "dist": 368
     },
     {
-      "x": -92.9,
-      "z": -410.8,
-      "dist": 485
-    },
-    {
-      "x": -92.9,
-      "z": -410.8,
-      "dist": 728
-    },
-    {
-      "x": -92.9,
+      "x": -93.2,
       "z": -410.7,
-      "dist": 971
+      "dist": 736
     },
     {
-      "x": -93.7,
-      "z": -410.7,
-      "dist": 1213
-    },
-    {
-      "x": -95,
+      "x": -94.9,
       "z": -410.6,
-      "dist": 1456
+      "dist": 1104
     },
     {
-      "x": -98.1,
+      "x": -99.5,
       "z": -410.5,
-      "dist": 1699
+      "dist": 1472
     },
     {
-      "x": -100.6,
-      "z": -410.6,
-      "dist": 1941
+      "x": -103.7,
+      "z": -410.7,
+      "dist": 1840
     },
     {
-      "x": -103.2,
-      "z": -410.9,
-      "dist": 2184
+      "x": -110.2,
+      "z": -410.8,
+      "dist": 2208
     },
     {
-      "x": -105.6,
-      "z": -411.1,
-      "dist": 2427
+      "x": -115.3,
+      "z": -410.7,
+      "dist": 2576
     },
     {
-      "x": -109.5,
-      "z": -411.3,
-      "dist": 2669
+      "x": -124.2,
+      "z": -410.3,
+      "dist": 2944
     },
     {
-      "x": -112.4,
-      "z": -411.5,
-      "dist": 2912
+      "x": -131.4,
+      "z": -409.8,
+      "dist": 3312
     },
     {
-      "x": -115.5,
-      "z": -411.7,
-      "dist": 3155
+      "x": -142.5,
+      "z": -409,
+      "dist": 3680
     },
     {
-      "x": -121.2,
-      "z": -411.9,
-      "dist": 3397
+      "x": -151.4,
+      "z": -408.2,
+      "dist": 4048
     },
     {
-      "x": -125.8,
-      "z": -412,
-      "dist": 3640
+      "x": -164.8,
+      "z": -407,
+      "dist": 4416
     },
     {
-      "x": -130.1,
-      "z": -412.1,
-      "dist": 3883
+      "x": -175,
+      "z": -406.1,
+      "dist": 4785
     },
     {
-      "x": -137.5,
-      "z": -412.1,
-      "dist": 4125
+      "x": -190.5,
+      "z": -404.6,
+      "dist": 5153
     },
     {
-      "x": -143,
-      "z": -411.9,
-      "dist": 4368
+      "x": -201.6,
+      "z": -403.5,
+      "dist": 5521
     },
     {
-      "x": -150.2,
-      "z": -411.4,
-      "dist": 4611
+      "x": -218.4,
+      "z": -401.8,
+      "dist": 5889
     },
     {
-      "x": -158.6,
-      "z": -410.6,
-      "dist": 4853
+      "x": -230.9,
+      "z": -400.4,
+      "dist": 6257
     },
     {
-      "x": -165,
-      "z": -409.9,
-      "dist": 5096
+      "x": -246.7,
+      "z": -398.5,
+      "dist": 6625
     },
     {
-      "x": -171.3,
-      "z": -409.3,
-      "dist": 5339
-    },
-    {
-      "x": -182,
-      "z": -408.1,
-      "dist": 5581
-    },
-    {
-      "x": -188.8,
-      "z": -407.2,
-      "dist": 5824
-    },
-    {
-      "x": -196.8,
-      "z": -406.2,
-      "dist": 6067
-    },
-    {
-      "x": -207.4,
-      "z": -404.8,
-      "dist": 6309
-    },
-    {
-      "x": -214.8,
-      "z": -403.7,
-      "dist": 6552
-    },
-    {
-      "x": -226.5,
-      "z": -401.9,
-      "dist": 6795
-    },
-    {
-      "x": -234.4,
-      "z": -400.6,
-      "dist": 7037
-    },
-    {
-      "x": -242.5,
-      "z": -399.3,
-      "dist": 7280
-    },
-    {
-      "x": -256.2,
+      "x": -258.1,
       "z": -396.8,
-      "dist": 7523
+      "dist": 6993
     },
     {
-      "x": -264.2,
-      "z": -395,
-      "dist": 7765
+      "x": -272.6,
+      "z": -393.2,
+      "dist": 7361
     },
     {
-      "x": -272.7,
-      "z": -392.8,
-      "dist": 8008
+      "x": -283.8,
+      "z": -389.6,
+      "dist": 7729
     },
     {
-      "x": -285.3,
-      "z": -388.7,
-      "dist": 8251
+      "x": -298.6,
+      "z": -383.7,
+      "dist": 8097
     },
     {
-      "x": -292.6,
-      "z": -385.9,
-      "dist": 8493
+      "x": -310.6,
+      "z": -377.7,
+      "dist": 8465
     },
     {
-      "x": -300.6,
-      "z": -382.3,
-      "dist": 8736
+      "x": -323.4,
+      "z": -369.4,
+      "dist": 8833
     },
     {
-      "x": -312.4,
-      "z": -376,
-      "dist": 8979
+      "x": -333.5,
+      "z": -360.8,
+      "dist": 9201
     },
     {
-      "x": -318.9,
-      "z": -371.9,
-      "dist": 9221
+      "x": -343.3,
+      "z": -350,
+      "dist": 9569
     },
     {
-      "x": -325.5,
-      "z": -367.2,
-      "dist": 9464
+      "x": -351.1,
+      "z": -338.9,
+      "dist": 9937
     },
     {
-      "x": -334.6,
-      "z": -359.6,
-      "dist": 9707
+      "x": -357.9,
+      "z": -326.8,
+      "dist": 10305
     },
     {
-      "x": -341,
-      "z": -353.4,
-      "dist": 9949
+      "x": -362.2,
+      "z": -316.4,
+      "dist": 10673
     },
     {
-      "x": -345.9,
-      "z": -347.7,
-      "dist": 10192
+      "x": -365.8,
+      "z": -301,
+      "dist": 11041
     },
     {
-      "x": -353,
-      "z": -337.4,
-      "dist": 10435
-    },
-    {
-      "x": -357,
-      "z": -330.1,
-      "dist": 10677
-    },
-    {
-      "x": -360.1,
-      "z": -322.9,
-      "dist": 10920
-    },
-    {
-      "x": -363.5,
-      "z": -312.3,
-      "dist": 11163
-    },
-    {
-      "x": -365.1,
-      "z": -304.9,
-      "dist": 11405
-    },
-    {
-      "x": -366.2,
-      "z": -296.7,
-      "dist": 11648
-    },
-    {
-      "x": -366.7,
+      "x": -366.8,
       "z": -283.1,
-      "dist": 11891
+      "dist": 11409
     },
     {
-      "x": -366.2,
-      "z": -275.1,
-      "dist": 12133
+      "x": -365.9,
+      "z": -271.2,
+      "dist": 11777
     },
     {
-      "x": -365.1,
-      "z": -267,
-      "dist": 12376
+      "x": -362.6,
+      "z": -253.5,
+      "dist": 12145
     },
     {
-      "x": -362.4,
-      "z": -253.7,
-      "dist": 12619
+      "x": -358.9,
+      "z": -240.6,
+      "dist": 12513
     },
     {
-      "x": -360.2,
-      "z": -245.4,
-      "dist": 12861
+      "x": -352.1,
+      "z": -222.5,
+      "dist": 12881
     },
     {
-      "x": -357.8,
-      "z": -237.1,
-      "dist": 13104
+      "x": -346.2,
+      "z": -209.7,
+      "dist": 13249
     },
     {
-      "x": -353,
-      "z": -223.8,
-      "dist": 13347
+      "x": -335.9,
+      "z": -191.2,
+      "dist": 13617
     },
     {
-      "x": -349.4,
-      "z": -215.7,
-      "dist": 13589
+      "x": -327.4,
+      "z": -177.3,
+      "dist": 13986
     },
     {
-      "x": -345.5,
-      "z": -207.6,
-      "dist": 13832
+      "x": -315.8,
+      "z": -158.6,
+      "dist": 14354
     },
     {
-      "x": -338.7,
-      "z": -195.3,
-      "dist": 14075
+      "x": -307.4,
+      "z": -145,
+      "dist": 14722
     },
     {
-      "x": -334.3,
-      "z": -187.8,
-      "dist": 14317
+      "x": -296.4,
+      "z": -127.4,
+      "dist": 15090
     },
     {
-      "x": -329.6,
-      "z": -180.2,
-      "dist": 14560
+      "x": -289.1,
+      "z": -116,
+      "dist": 15458
     },
     {
-      "x": -322.2,
-      "z": -168.2,
-      "dist": 14803
+      "x": -279.5,
+      "z": -101.5,
+      "dist": 15826
     },
     {
-      "x": -317.3,
-      "z": -160.5,
-      "dist": 15045
+      "x": -273.8,
+      "z": -93,
+      "dist": 16194
     },
     {
-      "x": -312.9,
-      "z": -153.5,
-      "dist": 15288
+      "x": -266.9,
+      "z": -83.3,
+      "dist": 16562
     },
     {
-      "x": -306,
-      "z": -142.3,
-      "dist": 15531
+      "x": -262.5,
+      "z": -78,
+      "dist": 16930
     },
     {
-      "x": -301.3,
-      "z": -134.6,
-      "dist": 15773
-    },
-    {
-      "x": -297.3,
-      "z": -127.9,
-      "dist": 16016
-    },
-    {
-      "x": -290.5,
-      "z": -117,
-      "dist": 16259
-    },
-    {
-      "x": -286.5,
-      "z": -110.7,
-      "dist": 16501
-    },
-    {
-      "x": -282.5,
-      "z": -104.5,
-      "dist": 16744
-    },
-    {
-      "x": -276.1,
-      "z": -94.7,
-      "dist": 16987
-    },
-    {
-      "x": -272.3,
-      "z": -89,
-      "dist": 17229
-    },
-    {
-      "x": -268.7,
-      "z": -83.8,
-      "dist": 17472
-    },
-    {
-      "x": -262.7,
-      "z": -76,
-      "dist": 17715
-    },
-    {
-      "x": -258.9,
-      "z": -71.9,
-      "dist": 17957
-    },
-    {
-      "x": -254.5,
-      "z": -68,
-      "dist": 18200
-    },
-    {
-      "x": -247.1,
-      "z": -63.4,
-      "dist": 18443
-    },
-    {
-      "x": -241.9,
-      "z": -61.2,
-      "dist": 18685
-    },
-    {
-      "x": -236.6,
-      "z": -59.8,
-      "dist": 18928
-    },
-    {
-      "x": -228.1,
-      "z": -59.1,
-      "dist": 19171
-    },
-    {
-      "x": -222.9,
-      "z": -59.5,
-      "dist": 19413
-    },
-    {
-      "x": -217.9,
-      "z": -60.6,
-      "dist": 19656
-    },
-    {
-      "x": -210.4,
-      "z": -64.1,
-      "dist": 19899
-    },
-    {
-      "x": -206,
-      "z": -67.4,
-      "dist": 20141
-    },
-    {
-      "x": -202.8,
+      "x": -255.5,
       "z": -71.1,
-      "dist": 20384
-    },
-    {
-      "x": -198.8,
-      "z": -78.1,
-      "dist": 20627
-    },
-    {
-      "x": -197.4,
-      "z": -82.8,
-      "dist": 20869
-    },
-    {
-      "x": -196.7,
-      "z": -88,
-      "dist": 21112
-    },
-    {
-      "x": -197.2,
-      "z": -97,
-      "dist": 21355
-    },
-    {
-      "x": -198.5,
-      "z": -102.4,
-      "dist": 21597
-    },
-    {
-      "x": -200.3,
-      "z": -107.9,
-      "dist": 21840
-    },
-    {
-      "x": -204.2,
-      "z": -117.1,
-      "dist": 22083
-    },
-    {
-      "x": -207,
-      "z": -123,
-      "dist": 22325
-    },
-    {
-      "x": -210.1,
-      "z": -129.6,
-      "dist": 22568
-    },
-    {
-      "x": -215.1,
-      "z": -140.2,
-      "dist": 22811
-    },
-    {
-      "x": -218.7,
-      "z": -147.4,
-      "dist": 23053
-    },
-    {
-      "x": -222.5,
-      "z": -154.4,
-      "dist": 23296
-    },
-    {
-      "x": -228.9,
-      "z": -165.4,
-      "dist": 23539
-    },
-    {
-      "x": -233.6,
-      "z": -172.7,
-      "dist": 23781
-    },
-    {
-      "x": -238.4,
-      "z": -180.1,
-      "dist": 24024
-    },
-    {
-      "x": -246.3,
-      "z": -193.4,
-      "dist": 24267
-    },
-    {
-      "x": -250.2,
-      "z": -201.3,
-      "dist": 24509
-    },
-    {
-      "x": -253.7,
-      "z": -210,
-      "dist": 24752
-    },
-    {
-      "x": -257.8,
-      "z": -223.4,
-      "dist": 24995
-    },
-    {
-      "x": -259.5,
-      "z": -231.9,
-      "dist": 25237
-    },
-    {
-      "x": -260.6,
-      "z": -240.4,
-      "dist": 25480
-    },
-    {
-      "x": -261.2,
-      "z": -253.4,
-      "dist": 25723
-    },
-    {
-      "x": -260.8,
-      "z": -262.6,
-      "dist": 25965
-    },
-    {
-      "x": -259.7,
-      "z": -270.7,
-      "dist": 26208
-    },
-    {
-      "x": -256.7,
-      "z": -282.9,
-      "dist": 26451
-    },
-    {
-      "x": -253.8,
-      "z": -289.9,
-      "dist": 26693
+      "dist": 17298
     },
     {
       "x": -250.3,
-      "z": -296.4,
-      "dist": 26936
+      "z": -67,
+      "dist": 17666
     },
     {
-      "x": -242.6,
-      "z": -306.1,
-      "dist": 27179
+      "x": -242.2,
+      "z": -62.1,
+      "dist": 18034
     },
     {
-      "x": -237.8,
-      "z": -310.4,
-      "dist": 27421
+      "x": -235.4,
+      "z": -59.6,
+      "dist": 18402
     },
     {
-      "x": -231.9,
-      "z": -314.4,
-      "dist": 27664
+      "x": -225.6,
+      "z": -58.1,
+      "dist": 18770
     },
     {
-      "x": -221.9,
-      "z": -318.8,
-      "dist": 27907
+      "x": -218.6,
+      "z": -58.8,
+      "dist": 19138
     },
     {
-      "x": -215.1,
-      "z": -320.6,
-      "dist": 28149
+      "x": -209.7,
+      "z": -62.6,
+      "dist": 19506
     },
     {
-      "x": -209,
-      "z": -321.5,
-      "dist": 28392
+      "x": -204.6,
+      "z": -67.1,
+      "dist": 19874
     },
     {
-      "x": -199.1,
-      "z": -321.7,
-      "dist": 28635
+      "x": -200.2,
+      "z": -75.2,
+      "dist": 20242
     },
     {
-      "x": -193,
-      "z": -321.9,
-      "dist": 28877
+      "x": -199,
+      "z": -81.7,
+      "dist": 20610
     },
     {
-      "x": -186.8,
-      "z": -322.5,
-      "dist": 29120
+      "x": -199.4,
+      "z": -91.6,
+      "dist": 20978
     },
     {
-      "x": -175.3,
-      "z": -324,
-      "dist": 29363
+      "x": -200.7,
+      "z": -99.7,
+      "dist": 21346
     },
     {
-      "x": -168.2,
-      "z": -325.1,
-      "dist": 29605
+      "x": -204,
+      "z": -111.6,
+      "dist": 21714
     },
     {
-      "x": -161.3,
-      "z": -326.2,
-      "dist": 29848
+      "x": -207.3,
+      "z": -121.1,
+      "dist": 22082
     },
     {
-      "x": -149.7,
-      "z": -327.9,
-      "dist": 30091
+      "x": -213,
+      "z": -134.8,
+      "dist": 22450
     },
     {
-      "x": -141.8,
-      "z": -329.2,
-      "dist": 30333
+      "x": -217.9,
+      "z": -145.1,
+      "dist": 22818
     },
     {
-      "x": -133.7,
-      "z": -330.7,
-      "dist": 30576
+      "x": -227.1,
+      "z": -161.4,
+      "dist": 23187
     },
     {
-      "x": -120.5,
-      "z": -333.2,
-      "dist": 30819
+      "x": -233.6,
+      "z": -171.5,
+      "dist": 23555
     },
     {
-      "x": -112.4,
-      "z": -334.5,
-      "dist": 31061
+      "x": -242.5,
+      "z": -186.3,
+      "dist": 23923
     },
     {
-      "x": -103.6,
-      "z": -335.8,
-      "dist": 31304
+      "x": -248,
+      "z": -196.9,
+      "dist": 24291
     },
     {
-      "x": -89.2,
-      "z": -337.5,
-      "dist": 31547
+      "x": -254.4,
+      "z": -212.8,
+      "dist": 24659
     },
     {
-      "x": -80.4,
-      "z": -338.3,
-      "dist": 31789
+      "x": -257.5,
+      "z": -224.1,
+      "dist": 25027
     },
     {
-      "x": -69.9,
-      "z": -339.1,
-      "dist": 32032
+      "x": -260.1,
+      "z": -241.1,
+      "dist": 25395
     },
     {
-      "x": -54.7,
+      "x": -260.4,
+      "z": -252.5,
+      "dist": 25763
+    },
+    {
+      "x": -258.9,
+      "z": -268.1,
+      "dist": 26131
+    },
+    {
+      "x": -256.3,
+      "z": -278.7,
+      "dist": 26499
+    },
+    {
+      "x": -251.2,
+      "z": -290.5,
+      "dist": 26867
+    },
+    {
+      "x": -246.1,
+      "z": -297.7,
+      "dist": 27235
+    },
+    {
+      "x": -237.3,
+      "z": -305.9,
+      "dist": 27603
+    },
+    {
+      "x": -230.1,
+      "z": -310.3,
+      "dist": 27971
+    },
+    {
+      "x": -219.3,
+      "z": -314.9,
+      "dist": 28339
+    },
+    {
+      "x": -210.4,
+      "z": -317.9,
+      "dist": 28707
+    },
+    {
+      "x": -197.1,
+      "z": -321.8,
+      "dist": 29075
+    },
+    {
+      "x": -186.2,
+      "z": -324.5,
+      "dist": 29443
+    },
+    {
+      "x": -169.5,
+      "z": -328.1,
+      "dist": 29811
+    },
+    {
+      "x": -156.9,
+      "z": -330.6,
+      "dist": 30179
+    },
+    {
+      "x": -137.3,
+      "z": -334.1,
+      "dist": 30547
+    },
+    {
+      "x": -122.5,
+      "z": -336.3,
+      "dist": 30915
+    },
+    {
+      "x": -102.3,
+      "z": -338.9,
+      "dist": 31283
+    },
+    {
+      "x": -87,
+      "z": -340.6,
+      "dist": 31651
+    },
+    {
+      "x": -67.1,
+      "z": -342.4,
+      "dist": 32019
+    },
+    {
+      "x": -52.6,
+      "z": -343.6,
+      "dist": 32388
+    },
+    {
+      "x": -33.1,
+      "z": -344.6,
+      "dist": 32756
+    },
+    {
+      "x": -19.6,
+      "z": -345.1,
+      "dist": 33124
+    },
+    {
+      "x": -2,
+      "z": -345.2,
+      "dist": 33492
+    },
+    {
+      "x": 11.1,
+      "z": -344.6,
+      "dist": 33860
+    },
+    {
+      "x": 26.7,
+      "z": -342.6,
+      "dist": 34228
+    },
+    {
+      "x": 37.9,
       "z": -340,
-      "dist": 32275
+      "dist": 34596
     },
     {
-      "x": -44.8,
-      "z": -340.4,
-      "dist": 32517
+      "x": 53.3,
+      "z": -335,
+      "dist": 34964
     },
     {
-      "x": -35.3,
-      "z": -340.7,
-      "dist": 32760
+      "x": 70.1,
+      "z": -327.5,
+      "dist": 35332
     },
     {
-      "x": -19.8,
-      "z": -341.1,
-      "dist": 33003
+      "x": 85.5,
+      "z": -317.7,
+      "dist": 35700
     },
     {
-      "x": -10.4,
-      "z": -341.2,
-      "dist": 33245
+      "x": 97.9,
+      "z": -305.4,
+      "dist": 36068
     },
     {
-      "x": -0.6,
-      "z": -341.2,
-      "dist": 33488
+      "x": 103.2,
+      "z": -296.9,
+      "dist": 36436
     },
     {
-      "x": 13.3,
-      "z": -341,
-      "dist": 33731
+      "x": 107.5,
+      "z": -284.5,
+      "dist": 36804
     },
     {
-      "x": 21.1,
-      "z": -340.7,
-      "dist": 33973
+      "x": 108.4,
+      "z": -275.6,
+      "dist": 37172
     },
     {
-      "x": 29.2,
-      "z": -340.2,
-      "dist": 34216
+      "x": 106.8,
+      "z": -263.4,
+      "dist": 37540
     },
     {
-      "x": 43.1,
-      "z": -338.5,
-      "dist": 34459
+      "x": 103.9,
+      "z": -254.8,
+      "dist": 37908
     },
     {
-      "x": 50.3,
-      "z": -336.9,
-      "dist": 34701
+      "x": 98,
+      "z": -243.2,
+      "dist": 38276
     },
     {
-      "x": 57.2,
-      "z": -334.8,
-      "dist": 34944
+      "x": 92.1,
+      "z": -235.1,
+      "dist": 38644
     },
     {
-      "x": 68.1,
-      "z": -330.2,
-      "dist": 35187
+      "x": 81.8,
+      "z": -224.3,
+      "dist": 39012
     },
     {
-      "x": 75.7,
-      "z": -326,
-      "dist": 35429
+      "x": 73.2,
+      "z": -216.1,
+      "dist": 39380
     },
     {
-      "x": 82.5,
-      "z": -321.4,
-      "dist": 35672
+      "x": 60.7,
+      "z": -203.9,
+      "dist": 39748
     },
     {
-      "x": 91.2,
-      "z": -313.9,
-      "dist": 35915
+      "x": 50.9,
+      "z": -194.4,
+      "dist": 40116
     },
     {
-      "x": 95.8,
-      "z": -308.6,
-      "dist": 36157
+      "x": 36.3,
+      "z": -181.3,
+      "dist": 40484
     },
     {
-      "x": 99.7,
-      "z": -303,
-      "dist": 36400
+      "x": 24.9,
+      "z": -171.5,
+      "dist": 40852
+    },
+    {
+      "x": 8.3,
+      "z": -157.1,
+      "dist": 41220
+    },
+    {
+      "x": -4.5,
+      "z": -145.5,
+      "dist": 41589
+    },
+    {
+      "x": -21.6,
+      "z": -129.4,
+      "dist": 41957
+    },
+    {
+      "x": -35,
+      "z": -116.3,
+      "dist": 42325
+    },
+    {
+      "x": -52.6,
+      "z": -97.8,
+      "dist": 42693
+    },
+    {
+      "x": -69.8,
+      "z": -78,
+      "dist": 43061
+    },
+    {
+      "x": -82.9,
+      "z": -61.6,
+      "dist": 43429
+    },
+    {
+      "x": -94.5,
+      "z": -46,
+      "dist": 43797
+    },
+    {
+      "x": -111.2,
+      "z": -22.2,
+      "dist": 44165
+    },
+    {
+      "x": -123.4,
+      "z": -4.7,
+      "dist": 44533
+    },
+    {
+      "x": -141.4,
+      "z": 20.9,
+      "dist": 44901
+    },
+    {
+      "x": -157.7,
+      "z": 43.9,
+      "dist": 45269
+    },
+    {
+      "x": -171.3,
+      "z": 63.1,
+      "dist": 45637
+    },
+    {
+      "x": -190.8,
+      "z": 90.5,
+      "dist": 46005
+    },
+    {
+      "x": -204.7,
+      "z": 110.2,
+      "dist": 46373
+    },
+    {
+      "x": -224.3,
+      "z": 137.9,
+      "dist": 46741
+    },
+    {
+      "x": -238,
+      "z": 157.4,
+      "dist": 47109
+    },
+    {
+      "x": -256.5,
+      "z": 183.7,
+      "dist": 47477
+    },
+    {
+      "x": -268.4,
+      "z": 200.4,
+      "dist": 47845
+    },
+    {
+      "x": -283.3,
+      "z": 221.7,
+      "dist": 48213
+    },
+    {
+      "x": -292.4,
+      "z": 235.3,
+      "dist": 48581
+    },
+    {
+      "x": -302.3,
+      "z": 251.2,
+      "dist": 48949
+    },
+    {
+      "x": -308.3,
+      "z": 261.9,
+      "dist": 49317
+    },
+    {
+      "x": -314.9,
+      "z": 275.6,
+      "dist": 49685
+    },
+    {
+      "x": -319,
+      "z": 286.6,
+      "dist": 50053
+    },
+    {
+      "x": -322.7,
+      "z": 301.6,
+      "dist": 50421
+    },
+    {
+      "x": -324.2,
+      "z": 312.4,
+      "dist": 50790
+    },
+    {
+      "x": -324.7,
+      "z": 327.3,
+      "dist": 51158
+    },
+    {
+      "x": -324,
+      "z": 337.9,
+      "dist": 51526
+    },
+    {
+      "x": -321.6,
+      "z": 351.1,
+      "dist": 51894
+    },
+    {
+      "x": -318.4,
+      "z": 361.8,
+      "dist": 52262
+    },
+    {
+      "x": -311.5,
+      "z": 377.3,
+      "dist": 52630
+    },
+    {
+      "x": -304.6,
+      "z": 388.5,
+      "dist": 52998
+    },
+    {
+      "x": -293.1,
+      "z": 403,
+      "dist": 53366
+    },
+    {
+      "x": -284.1,
+      "z": 412.6,
+      "dist": 53734
+    },
+    {
+      "x": -269.4,
+      "z": 426.8,
+      "dist": 54102
+    },
+    {
+      "x": -258.2,
+      "z": 437,
+      "dist": 54470
+    },
+    {
+      "x": -241.5,
+      "z": 451.5,
+      "dist": 54838
+    },
+    {
+      "x": -228.2,
+      "z": 462.6,
+      "dist": 55206
     }
   ],
   "elevation": {
     "minElevation": -24.4,
-    "maxElevation": -4.3,
-    "elevationDelta": 20.1,
+    "maxElevation": 6.7,
+    "elevationDelta": 31.1,
     "profile": [
       {
         "dist": 0,
         "elevation": -10.9
       },
       {
-        "dist": 1213,
-        "elevation": -10.8
+        "dist": 1840,
+        "elevation": -10.7
       },
       {
-        "dist": 2427,
-        "elevation": -10.6
+        "dist": 3680,
+        "elevation": -9.8
       },
       {
-        "dist": 3640,
-        "elevation": -10.1
-      },
-      {
-        "dist": 4853,
-        "elevation": -9
-      },
-      {
-        "dist": 6067,
-        "elevation": -7.8
-      },
-      {
-        "dist": 7280,
-        "elevation": -7.3
-      },
-      {
-        "dist": 8493,
+        "dist": 5521,
         "elevation": -8
       },
       {
-        "dist": 9707,
-        "elevation": -10.2
+        "dist": 7361,
+        "elevation": -7.5
       },
       {
-        "dist": 10920,
-        "elevation": -14.7
+        "dist": 9201,
+        "elevation": -10
       },
       {
-        "dist": 12133,
-        "elevation": -21.9
+        "dist": 11041,
+        "elevation": -17.7
       },
       {
-        "dist": 13347,
+        "dist": 12881,
         "elevation": -23.9
       },
       {
-        "dist": 14560,
-        "elevation": -19.6
+        "dist": 14722,
+        "elevation": -14.9
       },
       {
-        "dist": 15773,
-        "elevation": -13.6
+        "dist": 16562,
+        "elevation": -6.7
       },
       {
-        "dist": 16987,
-        "elevation": -8.3
+        "dist": 18402,
+        "elevation": -4.4
       },
       {
-        "dist": 18200,
+        "dist": 20242,
         "elevation": -5.1
       },
       {
-        "dist": 19413,
-        "elevation": -4.3
+        "dist": 22082,
+        "elevation": -9.5
       },
       {
-        "dist": 20627,
-        "elevation": -5.3
-      },
-      {
-        "dist": 21840,
-        "elevation": -8
-      },
-      {
-        "dist": 23053,
-        "elevation": -12.3
-      },
-      {
-        "dist": 24267,
-        "elevation": -17.6
-      },
-      {
-        "dist": 25480,
-        "elevation": -20.4
-      },
-      {
-        "dist": 26693,
-        "elevation": -20.7
-      },
-      {
-        "dist": 27907,
-        "elevation": -19.7
-      },
-      {
-        "dist": 29120,
-        "elevation": -19.3
-      },
-      {
-        "dist": 30333,
-        "elevation": -18.4
-      },
-      {
-        "dist": 31547,
+        "dist": 23923,
         "elevation": -16.8
       },
       {
-        "dist": 32760,
-        "elevation": -15.2
+        "dist": 25763,
+        "elevation": -20.8
       },
       {
-        "dist": 33973,
-        "elevation": -13.7
+        "dist": 27603,
+        "elevation": -20.4
       },
       {
-        "dist": 35187,
-        "elevation": -12.3
+        "dist": 29443,
+        "elevation": -19.2
       },
       {
-        "dist": 36400,
-        "elevation": -10.6
+        "dist": 31283,
+        "elevation": -17.1
+      },
+      {
+        "dist": 33124,
+        "elevation": -14.7
+      },
+      {
+        "dist": 34964,
+        "elevation": -12.8
+      },
+      {
+        "dist": 36804,
+        "elevation": -9.4
+      },
+      {
+        "dist": 38644,
+        "elevation": -4.6
+      },
+      {
+        "dist": 40484,
+        "elevation": -0.6
+      },
+      {
+        "dist": 42325,
+        "elevation": -0.1
+      },
+      {
+        "dist": 44165,
+        "elevation": 0.6
+      },
+      {
+        "dist": 46005,
+        "elevation": -4.1
+      },
+      {
+        "dist": 47845,
+        "elevation": -9.6
+      },
+      {
+        "dist": 49685,
+        "elevation": -3.2
+      },
+      {
+        "dist": 51526,
+        "elevation": 1.2
+      },
+      {
+        "dist": 53366,
+        "elevation": 4.4
+      },
+      {
+        "dist": 55206,
+        "elevation": 6.7
       }
     ]
   },
   "characteristics": {
-    "totalTurns": 78,
-    "slowCorners": 20,
-    "mediumCorners": 56,
-    "fastCorners": 2,
-    "longestStraight": 8008,
+    "totalTurns": 21,
+    "slowCorners": 11,
+    "mediumCorners": 9,
+    "fastCorners": 1,
+    "longestStraight": 12145,
     "rhythmOverview": "Technical & Stop-and-Go circuit demanding heavy braking precision.",
     "dangerZones": [
-      "Heavy Braking into Turn 2 (59 km/h)",
-      "Heavy Braking into Turn 3 (0 km/h)",
-      "Heavy Braking into Turn 4 (0 km/h)",
-      "Heavy Braking into Turn 5 (0 km/h)"
+      "Heavy Braking into Turn 2 (46 km/h)",
+      "Heavy Braking into Turn 3 (41 km/h)",
+      "Heavy Braking into Turn 4 (45 km/h)",
+      "Heavy Braking into Turn 5 (41 km/h)"
     ],
     "overtakingZones": [
       "Entry dive into Turn 2",
@@ -2250,13 +1281,13 @@
     ]
   },
   "calibrationMetadata": {
-    "lapsUsed": 3,
-    "avgSpeedKph": 74,
-    "calibratedAt": "2026-08-26T00:41:16.118Z",
+    "lapsUsed": 5,
+    "avgSpeedKph": 92,
+    "calibratedAt": "2026-08-26T01:02:20.548Z",
     "carModel": "E",
     "consistencyScore": 95
   },
   "driverNotes": "",
-  "createdDate": "2026-08-26T00:41:16.118Z",
-  "updatedDate": "2026-08-26T00:41:16.609Z"
+  "createdDate": "2026-08-26T01:02:20.548Z",
+  "updatedDate": "2026-08-26T01:02:20.542Z"
 }

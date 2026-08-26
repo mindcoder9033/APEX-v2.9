@@ -160,8 +160,8 @@ export class ApexPdfBuilder {
       this.drawPageBackground(lapPage);
       let ly = this.height - this.margin;
       const title = p === 0
-        ? 'LAP-BY-LAP & TURN-BY-TURN TELEMETRY ANALYSIS'
-        : `LAP-BY-LAP & TURN-BY-TURN ANALYSIS (PAGE ${p + 1} OF ${lapAnalysisPages})`;
+        ? 'CORNER-BY-CORNER TELEMETRY BREAKDOWN // LAP ANALYSIS'
+        : `CORNER-BY-CORNER TELEMETRY BREAKDOWN (PAGE ${p + 1} OF ${lapAnalysisPages})`;
       ly = this.drawPageHeaderMini(lapPage, ly, title, fonts);
       
       const isFirst = p === 0;
@@ -1181,14 +1181,14 @@ export class ApexPdfBuilder {
     // Column Headers
     let cy = y - headerBarH;
     const colDef = [
-      { name: 'TURN', x: x + 8, w: 42 },
-      { name: 'TYPE', x: x + 52, w: 56 },
-      { name: 'ENTRY (KM/H)', x: x + 112, w: 68 },
-      { name: 'APEX (KM/H)', x: x + 182, w: 65 },
-      { name: 'EXIT (KM/H)', x: x + 248, w: 65 },
-      { name: 'EXIT DELTA', x: x + 316, w: 64 },
-      { name: 'TAP DELTA', x: x + 382, w: 64 },
-      { name: 'TRAIL-BRK %', x: x + 448, w: 64 }
+      { name: 'TURN', x: x + 8, w: 46 },
+      { name: 'TYPE', x: x + 54, w: 52 },
+      { name: 'ENTRY SPEED', x: x + 108, w: 68 },
+      { name: 'APEX SPEED', x: x + 178, w: 64 },
+      { name: 'EXIT SPEED', x: x + 244, w: 64 },
+      { name: 'TAP DELTA', x: x + 310, w: 62 },
+      { name: 'TRAIL-BRAKE', x: x + 374, w: 72 },
+      { name: 'GEAR', x: x + 448, w: 48 }
     ];
 
     colDef.forEach(col => {
@@ -1252,16 +1252,12 @@ export class ApexPdfBuilder {
       });
 
       // Speeds
-      const bestC = bestLap.corners?.find(co => co.cornerNumber === c.cornerNumber);
       const entryKmh = Math.round(c.speed?.entryKmh || (c.speed?.entryMph ? c.speed.entryMph * 1.60934 : 125));
       const apexKmh = Math.round(c.speed?.apexKmh || (c.speed?.apexMph ? c.speed.apexMph * 1.60934 : (c.speed?.minKmh || 90)));
       const exitKmh = Math.round(c.speed?.exitKmh || (c.speed?.exitMph ? c.speed.exitMph * 1.60934 : 118));
 
-      const bestExitKmh = bestC ? Math.round(bestC.speed?.exitKmh || (bestC.speed?.exitMph ? bestC.speed.exitMph * 1.60934 : exitKmh)) : exitKmh;
-      const exitDelta = exitKmh - bestExitKmh;
-
       // 3. Entry Speed
-      page.drawText(`${entryKmh.toFixed(0)}`, {
+      page.drawText(`${entryKmh.toFixed(0)} KM/H`, {
         x: colDef[2].x,
         y: rowY,
         size: 6.5,
@@ -1270,7 +1266,7 @@ export class ApexPdfBuilder {
       });
 
       // 4. Apex Speed
-      page.drawText(`${apexKmh.toFixed(0)}`, {
+      page.drawText(`${apexKmh.toFixed(0)} KM/H`, {
         x: colDef[3].x,
         y: rowY,
         size: 6.5,
@@ -1279,7 +1275,7 @@ export class ApexPdfBuilder {
       });
 
       // 5. Exit Speed
-      page.drawText(`${exitKmh.toFixed(0)}`, {
+      page.drawText(`${exitKmh.toFixed(0)} KM/H`, {
         x: colDef[4].x,
         y: rowY,
         size: 6.5,
@@ -1287,52 +1283,44 @@ export class ApexPdfBuilder {
         color: this.colors.textPrimary
       });
 
-      // 6. Exit Speed Delta vs Best
-      if (isBestLap) {
-        page.drawText('BASE', {
-          x: colDef[5].x,
-          y: rowY,
-          size: 6,
-          font: fonts.mono,
-          color: this.colors.textMuted
-        });
-      } else {
-        const deltaStr = exitDelta >= 0 ? `+${exitDelta.toFixed(1)}` : `${exitDelta.toFixed(1)}`;
-        const deltaColor = exitDelta >= 0 ? this.colors.success : this.colors.f1Red;
-        page.drawText(deltaStr, {
-          x: colDef[5].x,
-          y: rowY,
-          size: 6.5,
-          font: fonts.monoBold,
-          color: deltaColor
-        });
-      }
-
-      // 7. TAP Delta
+      // 6. TAP Delta
       const tapM = c.dynamics?.tapDeltaMeters !== undefined
-        ? Math.round(c.dynamics.tapDeltaMeters)
-        : (c.dynamics?.tapDeltaFeet !== undefined ? Math.round(c.dynamics.tapDeltaFeet * 0.3048) : 2);
-      const tapStr = tapM >= 0 ? `+${tapM}m` : `${tapM}m`;
-      const tapColor = tapM >= 0 ? this.colors.success : this.colors.f1Red;
+        ? Number(c.dynamics.tapDeltaMeters.toFixed(1))
+        : (c.dynamics?.tapDeltaFeet !== undefined ? Number((c.dynamics.tapDeltaFeet * 0.3048).toFixed(1)) : 2.0);
+      const tapStr = tapM > 0 ? `+${tapM.toFixed(1)}m` : `${tapM.toFixed(1)}m`;
+      const tapColor = Math.abs(tapM) <= 4.5 ? this.colors.success : this.colors.f1Red;
       page.drawText(tapStr, {
-        x: colDef[6].x,
+        x: colDef[5].x,
         y: rowY,
         size: 6.5,
         font: fonts.mono,
         color: tapColor
       });
 
-      // 8. Trail-Braking Overlap
+      // 7. Trail-Braking Overlap
       const tbVal = c.dynamics?.trailBrakingOverlapPercent !== undefined
         ? Math.round(c.dynamics.trailBrakingOverlapPercent)
         : (c.dynamics?.trailBrakeOverlap !== undefined ? Math.round(c.dynamics.trailBrakeOverlap * 100) : 32);
       const tbColor = tbVal >= 35 ? this.colors.success : (tbVal >= 20 ? this.colors.warning : this.colors.f1Red);
       page.drawText(`${tbVal}%`, {
-        x: colDef[7].x,
+        x: colDef[6].x,
         y: rowY,
         size: 6.5,
         font: fonts.monoBold,
         color: tbColor
+      });
+
+      // 8. Gear
+      const gearVal = c.inputs?.gear ?? c.gear ?? c.refGear ?? c.actualGear;
+      const gearStr = (gearVal !== undefined && gearVal !== null && gearVal !== 0)
+        ? (gearVal === 0 ? 'R' : gearVal === 1 ? 'N' : `G${gearVal}`)
+        : (c.inputs?.gear ? `G${c.inputs.gear}` : 'G3');
+      page.drawText(gearStr, {
+        x: colDef[7].x,
+        y: rowY,
+        size: 6.5,
+        font: fonts.monoBold,
+        color: this.colors.blue
       });
     });
 
