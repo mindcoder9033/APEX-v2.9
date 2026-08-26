@@ -6,6 +6,8 @@
 
 import { trackLibraryStore } from './track-library-store.js';
 import { PreStintPdfBuilder } from './pre-stint-pdf-builder.js';
+import { WeatherIntelView } from './weather-intel-view.js';
+import { weatherProfileStore } from './weather-profile-store.js';
 
 export class TrackLibraryView {
   constructor() {
@@ -13,6 +15,7 @@ export class TrackLibraryView {
     this.selectedTrackId = null;
     this.activeFilter = 'all'; // 'all' | 'Real' | 'Fictional'
     this.searchQuery = '';
+    this.weatherView = new WeatherIntelView();
 
     // DOM Elements
     this.viewPitwall = document.getElementById('view-pitwall');
@@ -291,6 +294,9 @@ export class TrackLibraryView {
     if (aeroVal) aeroVal.textContent = setupAdv.downforce || 'Medium Downforce';
     if (tireVal) tireVal.textContent = setupAdv.tireWearRisk || 'Front-Left lateral scrub';
     if (brakeVal) brakeVal.textContent = setupAdv.brakingBias || '54% Front / 46% Rear';
+
+    // 6. Weather Intelligence Section
+    this.weatherView.render(trackId, track.stintsRecordedCount || 1);
   }
 
   buildSvgMap(track) {
@@ -395,17 +401,25 @@ export class TrackLibraryView {
       return;
     }
 
+    // Check if a weather condition is active — include in PDF if so
+    const activeWeatherProfile = this.weatherView.getActiveProfile();
+
     const btn = this.btnExportPdf;
     if (btn) {
-      btn.innerHTML = '<span>⏳</span> COMPILING BRIEFING...';
+      btn.innerHTML = activeWeatherProfile
+        ? '<span>⏳</span> COMPILING WEATHER BRIEFING...'
+        : '<span>⏳</span> COMPILING BRIEFING...';
       btn.disabled = true;
     }
 
     try {
-      const pdfBytes = await this.pdfBuilder.generate(track);
+      const pdfBytes = await this.pdfBuilder.generate(track, activeWeatherProfile);
       const safeName = (track.trackName || 'Circuit').replace(/[^a-zA-Z0-9_-]/g, '_');
       const safeLayout = (track.layoutName || 'Layout').replace(/[^a-zA-Z0-9_-]/g, '_');
-      this.pdfBuilder.download(pdfBytes, `APEX_PreStint_${safeName}_${safeLayout}.pdf`);
+      const safeCondition = activeWeatherProfile
+        ? `_${activeWeatherProfile.conditionSlug.replace(/-/g, '_').toUpperCase()}`
+        : '';
+      this.pdfBuilder.download(pdfBytes, `APEX_PreStint_${safeName}_${safeLayout}${safeCondition}.pdf`);
     } catch (err) {
       console.error('[TRACK LIBRARY] Error generating Pre-Stint PDF:', err);
       alert('Failed to generate Pre-Stint PDF: ' + err.message);

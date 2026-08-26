@@ -2648,5 +2648,119 @@ body.layout-edit-active .widget-resize-handle {
 
 
 
+/* ==========================================================================
+   Weather Intelligence — Condition Cards, Detail Panel & Confidence Badges
+   ========================================================================== */
 
+/* Condition Card Grid */
+.weather-conditions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+
+.weather-category-header {
+  grid-column: 1 / -1;
+}
+
+.weather-condition-card {
+  background: rgba(23, 26, 31, 0.8);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.weather-condition-card:hover {
+  transform: translateY(-1px);
+}
+
+.weather-condition-card.active {
+  transform: translateY(-1px);
+}
+
+.weather-confidence-badge {
+  cursor: help;
+  white-space: nowrap;
+}
+
+.weather-detail-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+  animation: weatherPanelIn 0.22s ease-out;
+}
+
+@keyframes weatherPanelIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.weather-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+}
+
+.weather-detail-panel .corner-table {
+  width: 100%;
+  font-size: 11px;
+  border-collapse: collapse;
+}
+
+.weather-detail-panel .corner-table th {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  background: var(--color-panel);
+  padding: 6px 10px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+
+.weather-detail-panel .corner-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.weather-detail-panel .corner-table tr:hover td {
+  background: rgba(255,255,255,0.02);
+}
+
+.aquaplaning-risk-badge {
+  display: inline-block;
+  font-size: 8px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #00D8F4;
+  background: rgba(0, 216, 244, 0.12);
+  border: 1px solid rgba(0, 216, 244, 0.4);
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+  animation: hydroPulse 2s ease-in-out infinite;
+}
+
+@keyframes hydroPulse {
+  0%, 100% { border-color: rgba(0,216,244,0.4); box-shadow: none; }
+  50%       { border-color: rgba(0,216,244,0.9); box-shadow: 0 0 6px rgba(0,216,244,0.4); }
+}
+
+@media (max-width: 900px) {
+  .weather-conditions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 

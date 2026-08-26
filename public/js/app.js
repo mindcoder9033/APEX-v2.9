@@ -7,6 +7,9 @@ import { HudRenderer } from './hud-renderer.js';
 import { SessionManager } from './session-manager.js';
 import { GridLayoutManager } from './components/grid-layout-manager.js';
 import { TrackLibraryView } from './track-library-view.js';
+import { trackLibraryStore } from './track-library-store.js';
+import { weatherProfileStore } from './weather-profile-store.js';
+import { WeatherSimulator } from './analysis/weather-simulator.js';
 
 class ApexApp {
   constructor() {
@@ -54,6 +57,43 @@ class ApexApp {
     this.populateSettingsForm();
     this.bindEvents();
     this.connectBridge();
+    this._migrateWeatherProfiles();
+  }
+
+  /**
+   * One-time migration: generates weather profiles for any existing track
+   * that was saved before the Weather Intelligence feature was introduced.
+   * Runs silently in the background on each app start — skips tracks that
+   * already have profiles stored.
+   */
+  _migrateWeatherProfiles() {
+    try {
+      const tracks = trackLibraryStore.getAllTracks();
+      if (!tracks || tracks.length === 0) return;
+
+      const simulator = new WeatherSimulator();
+      let migratedCount = 0;
+
+      for (const track of tracks) {
+        if (!track.trackId) continue;
+        if (weatherProfileStore.hasProfiles(track.trackId)) continue; // already done
+        if (!track.corners || track.corners.length === 0) continue;   // no corner data to simulate
+
+        try {
+          const profiles = simulator.simulateAll(track);
+          weatherProfileStore.saveProfiles(track.trackId, profiles);
+          migratedCount++;
+        } catch (err) {
+          console.warn(`[WEATHER MIGRATE] Failed for ${track.trackId}:`, err.message);
+        }
+      }
+
+      if (migratedCount > 0) {
+        console.log(`[WEATHER INTEL] Retroactively simulated weather for ${migratedCount} existing track(s).`);
+      }
+    } catch (err) {
+      console.warn('[WEATHER MIGRATE] Migration error:', err);
+    }
   }
 
   populateSettingsForm() {

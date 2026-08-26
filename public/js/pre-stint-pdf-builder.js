@@ -20,11 +20,13 @@ export class PreStintPdfBuilder {
   }
 
   /**
-   * Generates a 2-page PDF document bytes from a Track Profile
+   * Generates a PDF document from a Track Profile.
+   * When weatherProfile is provided, appends a Weather Briefing page.
    * @param {Object} trackProfile 
+   * @param {Object|null} weatherProfile Optional weather simulation profile
    * @returns {Promise<Uint8Array>}
    */
-  async generate(trackProfile) {
+  async generate(trackProfile, weatherProfile = null) {
     if (!trackProfile) {
       throw new Error('PreStintPdfBuilder: No trackProfile provided');
     }
@@ -652,6 +654,157 @@ export class PreStintPdfBuilder {
       font: fontMono,
       color: colors.textMuted
     });
+
+    // =========================================================================
+    // PAGE 3 (OPTIONAL): WEATHER BRIEFING
+    // =========================================================================
+    if (weatherProfile) {
+      const page3 = doc.addPage([this.width, this.height]);
+
+      // Background
+      page3.drawRectangle({ x: 0, y: 0, width: this.width, height: this.height, color: colors.bg });
+
+      // Category colors map
+      const catColor = {
+        Dry: colors.gold,
+        Transitional: rgb(0.0, 0.6, 1.0),
+        Wet: colors.cyan,
+        Dynamic: rgb(0.8, 0.27, 1.0)
+      }[weatherProfile.category] || colors.cyan;
+
+      // Header banner
+      page3.drawRectangle({
+        x: this.margin, y: this.height - 75,
+        width: this.width - (this.margin * 2), height: 48,
+        color: colors.panel, borderColor: colors.border, borderWidth: 1
+      });
+      page3.drawRectangle({ x: this.margin, y: this.height - 75, width: 4, height: 48, color: catColor });
+
+      page3.drawText('APEX // WEATHER BRIEFING', {
+        x: this.margin + 16, y: this.height - 52, size: 13, font: fontBold, color: colors.textPrimary
+      });
+      page3.drawText(`${(trackProfile.trackName || '').toUpperCase()} — ${(weatherProfile.conditionName || '').toUpperCase()} CONDITIONS`, {
+        x: this.margin + 16, y: this.height - 66, size: 8, font: fontMono, color: catColor
+      });
+      page3.drawText(`CONFIDENCE: ${weatherProfile.confidencePct || 75}%`, {
+        x: this.width - this.margin - 120, y: this.height - 52, size: 8, font: fontMono, color: colors.textSecondary
+      });
+      page3.drawText('PHYSICS-BASED SIMULATION', {
+        x: this.width - this.margin - 120, y: this.height - 66, size: 7, font: fontMono, color: colors.textMuted
+      });
+
+      // Global Stats Bar
+      let p3Y = this.height - 100;
+      const statW = (this.width - (this.margin * 2) - 12) / 4;
+      const weatherStats = [
+        { label: 'GRIP LEVEL', val: `${Math.round((weatherProfile.gripFactor || 1) * 100)}% OF DRY`, col: weatherProfile.gripLossPct > 50 ? colors.f1Red : colors.gold },
+        { label: 'BRAKE EARLIER', val: `+${weatherProfile.brakingIncreasePct || 0}%`, col: colors.f1Red },
+        { label: 'SPEED REDUCTION', val: `-${weatherProfile.speedReductionPct || 0}%`, col: colors.gold },
+        { label: 'VISIBILITY', val: `${weatherProfile.visibilityPct || 100}%`, col: weatherProfile.visibilityPct < 40 ? colors.f1Red : colors.textPrimary }
+      ];
+
+      weatherStats.forEach((s, i) => {
+        const sx = this.margin + i * (statW + 4);
+        page3.drawRectangle({ x: sx, y: p3Y, width: statW, height: 42, color: colors.panel, borderColor: colors.border, borderWidth: 1 });
+        page3.drawText(s.label, { x: sx + 8, y: p3Y + 27, size: 6.5, font: fontMono, color: colors.textMuted });
+        page3.drawText(s.val, { x: sx + 8, y: p3Y + 10, size: 11, font: fontBold, color: s.col });
+      });
+
+      p3Y -= 20;
+
+      // Hydroplaning alert banner
+      if (weatherProfile.hydroplaningCorners && weatherProfile.hydroplaningCorners.length > 0) {
+        page3.drawRectangle({
+          x: this.margin, y: p3Y - 18, width: this.width - (this.margin * 2), height: 20,
+          color: rgb(0, 0.2, 0.24), borderColor: colors.cyan, borderWidth: 1
+        });
+        page3.drawText(`⚠  HIGH AQUAPLANING RISK: T${weatherProfile.hydroplaningCorners.join(', T')} — Lift throttle immediately if car floats. Do NOT brake while aquaplaning.`, {
+          x: this.margin + 8, y: p3Y - 12, size: 7.5, font: fontBold, color: colors.cyan
+        });
+        p3Y -= 30;
+      }
+
+      // Corner table header
+      p3Y -= 10;
+      const colsW = [28, 55, 55, 55, 55, 28, 28, 60];
+      const colsX = [this.margin];
+      for (let i = 1; i < colsW.length; i++) colsX.push(colsX[i-1] + colsW[i-1] + 2);
+      const colHeaders = ['T#', 'DRY BRAKE', 'WET BRAKE', 'DRY APEX', 'WET APEX', 'D.GR', 'W.GR', 'AQUAPLANE'];
+
+      page3.drawRectangle({ x: this.margin, y: p3Y, width: this.width - (this.margin * 2), height: 16, color: colors.panelAlt });
+      colHeaders.forEach((h, i) => {
+        page3.drawText(h, { x: colsX[i] + 3, y: p3Y + 4, size: 6, font: fontMono, color: colors.textMuted });
+      });
+      p3Y -= 2;
+
+      const corners = weatherProfile.corners || [];
+      corners.slice(0, 18).forEach((c, idx) => {
+        p3Y -= 14;
+        if (p3Y < this.margin + 60) return;
+
+        const rowBg = idx % 2 === 0 ? colors.panel : colors.bg;
+        page3.drawRectangle({ x: this.margin, y: p3Y, width: this.width - (this.margin * 2), height: 13, color: rowBg });
+
+        const brakeD = c.wetBrakingMarkerMeters - c.dryBrakingMarkerMeters;
+        const speedD = c.wetApexSpeedKmh - c.dryApexSpeedKmh;
+        const gearChanged = c.wetTargetGear < c.dryTargetGear;
+
+        const rowData = [
+          `T${c.turnNumber}`,
+          `${c.dryBrakingMarkerMeters}m`,
+          `${c.wetBrakingMarkerMeters}m (+${brakeD}m)`,
+          `${c.dryApexSpeedKmh} km/h`,
+          `${c.wetApexSpeedKmh} km/h (${speedD})`,
+          `G${c.dryTargetGear}`,
+          `G${c.wetTargetGear}${gearChanged ? ' ↓' : ''}`,
+          c.hydroplaningFlag ? 'HIGH RISK' : 'Low'
+        ];
+
+        rowData.forEach((val, i) => {
+          const isHydro = i === 7 && c.hydroplaningFlag;
+          const isWetCol = i === 2 || i === 4 || i === 6;
+          const textColor = isHydro ? colors.cyan : (isWetCol ? catColor : colors.textPrimary);
+          page3.drawText(val, { x: colsX[i] + 3, y: p3Y + 3, size: 7, font: isWetCol || isHydro ? fontBold : fontRegular, color: textColor });
+        });
+      });
+
+      p3Y -= 24;
+
+      // Strategy + Checklist columns
+      const halfW = (this.width - (this.margin * 2) - 10) / 2;
+      const col2X = this.margin + halfW + 10;
+
+      if (p3Y > this.margin + 80 && weatherProfile.strategy) {
+        page3.drawText('RACE STRATEGY', { x: this.margin, y: p3Y, size: 8, font: fontBold, color: catColor });
+        page3.drawText('PRE-STINT CHECKLIST', { x: col2X, y: p3Y, size: 8, font: fontBold, color: catColor });
+        p3Y -= 14;
+
+        const strat = weatherProfile.strategy;
+        const stratLines = [
+          `Line:     ${strat.line}`,
+          `Tires:    ${strat.tires}`,
+          `Throttle: ${strat.throttle}`,
+          `Braking:  ${strat.braking}`,
+        ];
+        if (strat.hydroNote) stratLines.push(`Hydro:    ${strat.hydroNote}`);
+
+        stratLines.forEach((line, i) => {
+          if (p3Y - (i * 12) < this.margin + 30) return;
+          page3.drawText(line.slice(0, 72), { x: this.margin, y: p3Y - (i * 12), size: 7, font: fontRegular, color: colors.textSecondary });
+        });
+
+        const checklist = weatherProfile.checklist || [];
+        checklist.slice(0, 7).forEach((item, i) => {
+          if (p3Y - (i * 12) < this.margin + 30) return;
+          page3.drawText(`☐  ${item.slice(0, 65)}`, { x: col2X, y: p3Y - (i * 12), size: 7, font: fontRegular, color: colors.textSecondary });
+        });
+      }
+
+      // Page 3 footer
+      page3.drawText('APEX MOTORSPORT — WEATHER INTELLIGENCE BRIEFING — PHYSICS-BASED SIMULATION — NOT A SUBSTITUTE FOR TRACK TIME', {
+        x: this.margin, y: 22, size: 6.5, font: fontMono, color: colors.textMuted
+      });
+    }
 
     return await doc.save();
   }

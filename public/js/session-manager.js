@@ -6,7 +6,9 @@
 
 import { AnalysisEngine } from './analysis/index.js';
 import { TrackLibrarySynthesizer } from './analysis/track-library-synthesizer.js';
+import { WeatherSimulator, WEATHER_CONDITIONS } from './analysis/weather-simulator.js';
 import { trackLibraryStore } from './track-library-store.js';
+import { weatherProfileStore } from './weather-profile-store.js';
 import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
 import { StintMetadataModal } from './components/stint-modal.js';
@@ -351,6 +353,16 @@ export class SessionManager {
           });
           trackLibraryStore.saveTrack(trackProfile);
           console.log(`[TRACK LIBRARY] Covertly synthesized and stored profile for: ${trackProfile.trackName} (${trackProfile.layoutName})`);
+
+          // Auto-generate all 18 weather simulations from the dry baseline
+          try {
+            const simulator = new WeatherSimulator();
+            const weatherProfiles = simulator.simulateAll(trackProfile);
+            weatherProfileStore.saveProfiles(trackProfile.trackId, weatherProfiles);
+            console.log(`[WEATHER INTEL] Simulated 18 conditions for: ${trackProfile.trackName}`);
+          } catch (weatherErr) {
+            console.warn('[WEATHER INTEL] Weather simulation warning:', weatherErr);
+          }
         } catch (synthErr) {
           console.warn('[TRACK LIBRARY] Track profile synthesis warning:', synthErr);
         }
