@@ -183,6 +183,7 @@ export class SessionManager {
         e.preventDefault();
         this.downloadPdfReport();
         return;
+      }
     });
   }
 
