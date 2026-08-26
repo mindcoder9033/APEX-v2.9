@@ -986,7 +986,7 @@ export class SessionManager {
     ];
 
     corners.forEach((c) => {
-      const tempEl = document.getElementById(`tire-temp-${c.id}`);
+      const tempEl = document.getElementById(`stint-tire-temp-${c.id}`) || document.getElementById(`tire-temp-${c.id}`);
       const slipEl = document.getElementById(`tire-slip-${c.id}`);
       const badgeEl = document.getElementById(`tire-status-${c.id}`);
 

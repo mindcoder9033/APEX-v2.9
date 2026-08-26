@@ -617,31 +617,9 @@
 
       <div class="separator-glow"></div>
 
-      <!-- 4-Corner Tire Dynamics & Thermal Matrix -->
-      <div id="tire-management-card" class="tire-management-dashboard-card chamfer-tl-br">
-        <div class="pit-card-header">
-          <div class="pit-card-title-group">
-            <h3 class="pit-card-title">4-Corner Tire Dynamics & Thermal Management</h3>
-
-        <!-- THE PROCEDURE COACHING CARD (SPRINT 9) -->
-        <div class="procedure-coaching-box" style="margin-top: var(--space-md); padding: var(--space-md); background: rgba(0, 204, 102, 0.05); border: 1px solid rgba(0, 204, 102, 0.2); border-radius: 4px;">
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <div style="font-family: var(--font-header); font-size: 12px; font-weight: bold; color: var(--color-success); letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
-              <span>🎯</span> SKIP BARBER RACING TECHNIQUE: "THE PROCEDURE"
-            </div>
-            <span id="procedure-status-badge" class="badge badge-accent" style="font-size: 10px; padding: 2px 6px;">BASELINE CALIBRATING</span>
-          </div>
-          <div id="procedure-coaching-text" style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.5;">
-            Practice The Procedure: Step your brake point in small bites (2-meter increments) to find the limit of deceleration without lockup or ABS cycling.
-          </div>
-        </div>
-      </div>
-
-      <div class="separator-glow"></div>
-
-      <!-- SPRINT 10: 4-CORNER TIRE DYNAMICS & HEAT DISSIPATION MATRIX -->
-      <div class="analysis-card chamfer-tl-br" style="margin-top: var(--space-md);">
-        <div class="analysis-card-header">
+      <!-- SECTION 7: 4-CORNER TIRE DYNAMICS & THERMAL MANAGEMENT -->
+      <div id="tire-management-card" class="tire-management-dashboard-card chamfer-tl-br" style="background: var(--color-panel); border: 1px solid var(--color-border); padding: var(--space-md); margin-top: var(--space-md); margin-bottom: var(--space-md);">
+        <div class="pit-card-header" style="margin-bottom: var(--space-sm);">
           <div class="pit-card-title-group">
             <h3 class="pit-card-title" style="display: flex; align-items: center; gap: 8px;">
               <span style="color: var(--color-warning);">🌡️</span> 4-Corner Tire Dynamics // Slip & Thermal Balance
@@ -650,6 +628,19 @@
           </div>
           <div id="tire-balance-badge" class="badge badge-accent" style="font-size: 10px; padding: 3px 8px;">
             OPTIMAL THERMAL BIAS
+          </div>
+        </div>
+
+        <!-- THE PROCEDURE COACHING CARD (SPRINT 9) -->
+        <div class="procedure-coaching-box" style="margin-top: var(--space-xs); margin-bottom: var(--space-md); padding: var(--space-md); background: rgba(0, 204, 102, 0.05); border: 1px solid rgba(0, 204, 102, 0.2); border-radius: 4px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <div style="font-family: var(--font-header); font-size: 12px; font-weight: bold; color: var(--color-success); letter-spacing: 1px; display: flex; align-items: center; gap: 6px;">
+              <span>🎯</span> SKIP BARBER RACING TECHNIQUE: "THE PROCEDURE"
+            </div>
+            <span id="procedure-status-badge" class="badge badge-accent" style="font-size: 10px; padding: 2px 6px;">BASELINE CALIBRATING</span>
+          </div>
+          <div id="procedure-coaching-text" style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.5;">
+            Practice The Procedure: Step your brake point in small bites (2-meter increments) to find the limit of deceleration without lockup or ABS cycling.
           </div>
         </div>
 
@@ -662,7 +653,7 @@
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Avg / Peak Temp:</span>
-              <span class="tire-metric-value" id="tire-temp-fl">-- / -- °C</span>
+              <span class="tire-metric-value" id="stint-tire-temp-fl">-- / -- °C</span>
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Peak Slip Ratio:</span>
@@ -677,7 +668,7 @@
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Avg / Peak Temp:</span>
-              <span class="tire-metric-value" id="tire-temp-fr">-- / -- °C</span>
+              <span class="tire-metric-value" id="stint-tire-temp-fr">-- / -- °C</span>
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Peak Slip Ratio:</span>
@@ -692,7 +683,7 @@
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Avg / Peak Temp:</span>
-              <span class="tire-metric-value" id="tire-temp-rl">-- / -- °C</span>
+              <span class="tire-metric-value" id="stint-tire-temp-rl">-- / -- °C</span>
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Peak Slip Ratio:</span>
@@ -707,7 +698,7 @@
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Avg / Peak Temp:</span>
-              <span class="tire-metric-value" id="tire-temp-rr">-- / -- °C</span>
+              <span class="tire-metric-value" id="stint-tire-temp-rr">-- / -- °C</span>
             </div>
             <div class="tire-metric-row">
               <span class="tire-metric-label">Peak Slip Ratio:</span>
