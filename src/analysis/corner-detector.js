@@ -2,7 +2,6 @@
  * APEX Deterministic Corner Detector
  * Identifies track apexes and cornering zones using speed minima detection,
  * steering threshold validation, and lateral G-force confirmation.
- * Supports canonical turn snapping against Track Library profiles.
  */
 
 import { RAD_TO_DEG } from '../shared/telemetry-types.js';
@@ -13,92 +12,6 @@ export class CornerDetector {
     this.minLateralG = options.minLateralG || 0.30;
     this.smoothWindow = options.smoothWindow || 5;
     this.apexMergeWindow = options.apexMergeWindow || 50; // Merge minima within ~0.8s
-  }
-
-  /**
-   * Snaps lap samples to canonical Turn IDs defined in an active Track Profile.
-   * If trackProfile is not available or has no turns, falls back to detectApexes.
-   * @param {Array<Object>} samples 
-   * @param {Object} trackProfile 
-   * @returns {Array<Object>}
-   */
-  detectWithTrackProfile(samples, trackProfile) {
-    if (!trackProfile || !Array.isArray(trackProfile.turns) || trackProfile.turns.length === 0) {
-      return this.detectApexes(samples);
-    }
-
-    if (!samples || samples.length < 15) {
-      return [];
-    }
-
-    const n = samples.length;
-    const turns = trackProfile.turns;
-    const matchedTurns = [];
-
-    for (const turn of turns) {
-      const entryDist = turn.entryDist || Math.max(0, turn.apexDist - 60);
-      const exitDist = turn.exitDist || (turn.apexDist + 60);
-      const apexDist = turn.apexDist || Math.round((entryDist + exitDist) / 2);
-
-      // Find samples within the turn window
-      let bestIdx = -1;
-      let minSpeed = Infinity;
-
-      for (let i = 0; i < n; i++) {
-        const s = samples[i];
-        const d = s.lapDistance ?? s.distance ?? (i * 15);
-
-        // Check if sample is inside the turn's spatial window
-        if (d >= entryDist - 25 && d <= exitDist + 25) {
-          const spd = s.motion?.speedMps ? s.motion.speedMps * 3.6 : (s.speedKmh || (s.speedMps || 0) * 3.6);
-          if (spd < minSpeed) {
-            minSpeed = spd;
-            bestIdx = i;
-          }
-        }
-      }
-
-      // If no sample matched within range, find sample closest to turn.apexDist
-      if (bestIdx === -1) {
-        let closestDistDelta = Infinity;
-        for (let i = 0; i < n; i++) {
-          const s = samples[i];
-          const d = s.lapDistance ?? s.distance ?? (i * 15);
-          const delta = Math.abs(d - apexDist);
-          if (delta < closestDistDelta) {
-            closestDistDelta = delta;
-            bestIdx = i;
-          }
-        }
-      }
-
-      if (bestIdx !== -1) {
-        const s = samples[bestIdx];
-        const actualSpd = s.motion?.speedMps ? s.motion.speedMps * 3.6 : (s.speedKmh || (s.speedMps || 0) * 3.6);
-        const actualGear = s.engine?.gear ?? s.gear ?? 3;
-        const actualLatG = Math.abs(s.motion?.acceleration?.lateralG ?? s.accelY ?? s.lateralG ?? 0);
-
-        matchedTurns.push({
-          cornerNumber: turn.turnNumber,
-          turnNumber: turn.turnNumber,
-          name: turn.name || `Turn ${turn.turnNumber}`,
-          type: turn.type || 'Medium Corner',
-          direction: turn.direction || 'Right',
-          apexIndex: bestIdx,
-          apexSample: s,
-          refSpeed: turn.refSpeed || 100,
-          actualSpeed: Math.round(actualSpd),
-          refGear: turn.refGear || 3,
-          actualGear,
-          apexLatG: turn.apexLatG || 1.2,
-          actualLatG: Number(actualLatG.toFixed(2)),
-          brakingDist: turn.brakingDist || 50,
-          canonical: true
-        });
-      }
-    }
-
-    return matchedTurns;
   }
 
   /**

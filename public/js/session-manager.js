@@ -8,8 +8,6 @@ import { AnalysisEngine } from './analysis/index.js';
 import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
 import { StintMetadataModal } from './components/stint-modal.js';
-import { TrackCalibrator } from './analysis/track-calibrator.js';
-import { ClientTrackBriefingPdf } from './track-briefing-pdf.js';
 
 export class SessionManager {
   constructor() {
@@ -23,19 +21,9 @@ export class SessionManager {
     this.lastLapTime = null;
     this.recordedSamples = [];
 
-    // Track Library & Calibration State
-    this.activeTrackProfile = null;
-    this.isCalibrating = false;
-    this.calibrationLaps = [];
-    this.currentCalLapSamples = [];
-    this.calibrationLapIndex = 1;
-    this.pendingCalibratedTrack = null;
-
     this.analysisEngine = new AnalysisEngine();
     this.pdfGenerator = new ClientPdfGenerator();
     this.stintModal = new StintMetadataModal();
-    this.trackCalibrator = new TrackCalibrator();
-    this.trackBriefingPdf = new ClientTrackBriefingPdf();
     this.currentStintMetadata = null;
     this.latestAnalysisReport = null;
 
@@ -195,366 +183,7 @@ export class SessionManager {
         e.preventDefault();
         this.downloadPdfReport();
         return;
-      }
-
-      const startCalBtn = e.target.closest('#btn-start-calibration');
-      if (startCalBtn) {
-        e.preventDefault();
-        this.startCalibrationStint();
-        return;
-      }
-
-      const clearTrackBtn = e.target.closest('#btn-clear-active-track');
-      if (clearTrackBtn) {
-        e.preventDefault();
-        this.clearActiveTrackProfile();
-        return;
-      }
-
-      const cancelCalBtn = e.target.closest('#btn-cancel-calibration');
-      if (cancelCalBtn) {
-        e.preventDefault();
-        this.cancelCalibrationStint();
-        return;
-      }
-
-      const closeCalBtn = e.target.closest('#btn-close-cal-modal') || e.target.closest('#btn-cal-discard');
-      if (closeCalBtn) {
-        e.preventDefault();
-        this.closePostCalModal();
-        return;
-      }
-
-      const exportCalPdfBtn = e.target.closest('#btn-cal-export-pdf');
-      if (exportCalPdfBtn) {
-        e.preventDefault();
-        this.exportPendingCalPdf();
-        return;
-      }
-
-      const saveStintTrackBtn = e.target.closest('#btn-save-stint-track');
-      if (saveStintTrackBtn) {
-        e.preventDefault();
-        this.saveStintAsTrackProfile();
-        return;
-      }
-
-      const saveCalTrackBtn = e.target.closest('#btn-cal-save-track');
-      if (saveCalTrackBtn) {
-        e.preventDefault();
-        this.savePendingCalTrack();
-        return;
-      }
     });
-  }
-
-  /**
-   * Sets active track profile for canonical turn snapping
-   */
-  setActiveTrackProfile(trackProfile) {
-    this.activeTrackProfile = trackProfile;
-    const chip = document.getElementById('active-track-chip');
-    const nameEl = document.getElementById('active-track-name');
-    if (chip && nameEl && trackProfile) {
-      nameEl.textContent = trackProfile.name;
-      chip.style.display = 'flex';
-    }
-  }
-
-  /**
-   * Clears active track profile
-   */
-  clearActiveTrackProfile() {
-    this.activeTrackProfile = null;
-    const chip = document.getElementById('active-track-chip');
-    if (chip) chip.style.display = 'none';
-  }
-
-  /**
-   * Starts a Track Learning Calibration stint
-   * @param {Object|null} targetTrack - Optional existing track profile to calibrate
-   */
-  startCalibrationStint(targetTrack = null) {
-    if (this.isRecording) {
-      this.stopRecording();
-    }
-
-    this.isCalibrating = true;
-    this.targetCalibrationTrack = targetTrack || this.activeTrackProfile || null;
-    this.calibrationLaps = [];
-    this.currentCalLapSamples = [];
-    this.calibrationLapIndex = 1;
-    this.pendingCalibratedTrack = null;
-
-    const banner = document.getElementById('calibration-hud-banner');
-    const phaseEl = document.getElementById('cal-hud-phase');
-    const consEl = document.getElementById('cal-hud-consistency');
-    if (banner) banner.style.display = 'flex';
-    if (phaseEl) {
-      const targetLabel = this.targetCalibrationTrack?.name ? ` [${this.targetCalibrationTrack.name.toUpperCase()}]` : '';
-      phaseEl.textContent = `📡 TRACK CALIBRATION: LAP 1/3 (WARM-UP / OUT-LAP)${targetLabel}`;
-    }
-    if (consEl) consEl.textContent = 'Maintain steady average pace';
-
-    this.startRecording();
-  }
-
-  /**
-   * Cancels calibration stint
-   */
-  cancelCalibrationStint() {
-    this.isCalibrating = false;
-    this.targetCalibrationTrack = null;
-    this.calibrationLaps = [];
-    this.currentCalLapSamples = [];
-    const banner = document.getElementById('calibration-hud-banner');
-    if (banner) banner.style.display = 'none';
-    if (this.isRecording) {
-      this.stopRecording();
-    }
-  }
-
-  /**
-   * Handles completion of a calibration lap
-   */
-  handleCalibrationLapDone(lapSamples) {
-    if (!this.isCalibrating || !lapSamples || lapSamples.length < 15) return;
-
-    this.calibrationLaps.push([...lapSamples]);
-    const phaseEl = document.getElementById('cal-hud-phase');
-    const consEl = document.getElementById('cal-hud-consistency');
-
-    if (this.calibrationLaps.length === 1) {
-      if (phaseEl) phaseEl.textContent = '📡 TRACK CALIBRATION: LAP 2/3 (CALIBRATION LAP 1)';
-      if (consEl) consEl.textContent = 'Lap 1 Logged. Keep steady pace.';
-    } else if (this.calibrationLaps.length === 2) {
-      if (phaseEl) phaseEl.textContent = '📡 TRACK CALIBRATION: LAP 3/3 (CALIBRATION LAP 2)';
-      if (consEl) consEl.textContent = 'Lap 2 Logged. Final consensus lap.';
-    } else if (this.calibrationLaps.length >= 3) {
-      this.finishCalibration();
-    }
-  }
-
-  /**
-   * Finalizes calibration, runs consensus calibration engine, and opens summary modal
-   */
-  finishCalibration() {
-    this.isCalibrating = false;
-    const banner = document.getElementById('calibration-hud-banner');
-    if (banner) banner.style.display = 'none';
-
-    if (this.isRecording) {
-      this.isRecording = false;
-      if (this.timerInterval) {
-        clearInterval(this.timerInterval);
-        this.timerInterval = null;
-      }
-      const btn = document.getElementById('btn-record') || this.btnRecord;
-      if (btn) {
-        btn.classList.remove('btn-danger', 'recording-pulse');
-        btn.classList.add('btn-primary');
-        btn.innerHTML = '<span>⏺</span> START RECORDING';
-      }
-    }
-
-    const latestSample = this.recordedSamples?.[this.recordedSamples.length - 1];
-    const carModel = latestSample?.vehicle?.carName || latestSample?.vehicle?.carClass || 'Calibration Vehicle';
-
-    const target = this.targetCalibrationTrack || this.activeTrackProfile;
-    const trackName = target?.name || this.settings.sessionName || 'Calibrated Circuit';
-    const layout = target?.layout || 'Full Course';
-
-    const result = this.trackCalibrator.calibrate(this.calibrationLaps, {
-      name: trackName,
-      layout,
-      trackOrdinal: target?.trackOrdinal ?? null,
-      carModel,
-      driverName: this.settings.driverName || 'APEX Driver'
-    });
-
-    if (!result.success) {
-      alert(`⚠️ Calibration notice: ${result.error}`);
-      return;
-    }
-
-    if (target?.id) {
-      result.trackProfile.id = target.id;
-    }
-
-    this.pendingCalibratedTrack = result.trackProfile;
-    this.openPostCalModal(result.trackProfile, result.validation);
-  }
-
-  openPostCalModal(track, validation) {
-    const modal = document.getElementById('post-calibration-modal');
-    if (!modal) return;
-
-    const nameInput = document.getElementById('cal-modal-track-name');
-    const layoutInput = document.getElementById('cal-modal-track-layout');
-    const lengthEl = document.getElementById('cal-modal-length');
-    const turnsEl = document.getElementById('cal-modal-turns');
-    const speedEl = document.getElementById('cal-modal-speed');
-    const consEl = document.getElementById('cal-modal-consistency');
-
-    if (nameInput) nameInput.value = track.name || 'Calibrated Circuit';
-    if (layoutInput) layoutInput.value = track.layout || 'Full Course';
-    if (lengthEl) lengthEl.textContent = `${(track.lengthMeters || 0).toLocaleString()} m`;
-    if (turnsEl) turnsEl.textContent = `${track.turns?.length || 0} Turns`;
-    if (speedEl) speedEl.textContent = `${track.calibrationMetadata?.avgSpeedKph || 100} km/h`;
-    if (consEl) consEl.textContent = `${validation?.consistencyScore || 98}%`;
-
-    modal.style.display = 'flex';
-  }
-
-  closePostCalModal() {
-    const modal = document.getElementById('post-calibration-modal');
-    if (modal) modal.style.display = 'none';
-  }
-
-  async exportPendingCalPdf() {
-    if (!this.pendingCalibratedTrack) return;
-    const nameInput = document.getElementById('cal-modal-track-name');
-    const layoutInput = document.getElementById('cal-modal-track-layout');
-    if (nameInput && nameInput.value.trim()) this.pendingCalibratedTrack.name = nameInput.value.trim();
-    if (layoutInput && layoutInput.value.trim()) this.pendingCalibratedTrack.layout = layoutInput.value.trim();
-
-    try {
-      await this.trackBriefingPdf.generate(this.pendingCalibratedTrack, true);
-    } catch (err) {
-      console.warn('Client PDF export failed:', err);
-    }
-  }
-
-  async savePendingCalTrack() {
-    if (!this.pendingCalibratedTrack) return;
-    const nameInput = document.getElementById('cal-modal-track-name');
-    const layoutInput = document.getElementById('cal-modal-track-layout');
-    if (nameInput && nameInput.value.trim()) this.pendingCalibratedTrack.name = nameInput.value.trim();
-    if (layoutInput && layoutInput.value.trim()) this.pendingCalibratedTrack.layout = layoutInput.value.trim();
-
-    if (!this.targetCalibrationTrack?.id) {
-      this.pendingCalibratedTrack.id = this.trackCalibrator.slugify(
-        `${this.pendingCalibratedTrack.name} ${this.pendingCalibratedTrack.layout}`
-      );
-    }
-
-    this.pendingCalibratedTrack.status = 'Calibrated';
-    this.pendingCalibratedTrack.updatedDate = new Date().toISOString();
-
-    try {
-      const res = await fetch('/api/tracks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(this.pendingCalibratedTrack)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const savedTrack = data.track || this.pendingCalibratedTrack;
-        this.setActiveTrackProfile(savedTrack);
-        this.closePostCalModal();
-        if (window.apexApp?.trackLibrary) {
-          await window.apexApp.trackLibrary.loadTracks();
-          await window.apexApp.trackLibrary.selectTrack(savedTrack.id);
-        }
-        alert(`💾 Track "${savedTrack.name}" saved to Track Library and set as active circuit!`);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-    } catch (err) {
-      console.warn('[CALIBRATION SAVE] API save fallback to local state:', err);
-      if (window.apexApp?.trackLibrary) {
-        const lib = window.apexApp.trackLibrary;
-        const existingIdx = lib.tracks.findIndex(t => t.id === this.pendingCalibratedTrack.id);
-        if (existingIdx >= 0) {
-          lib.tracks[existingIdx] = this.pendingCalibratedTrack;
-        } else {
-          lib.tracks.push(this.pendingCalibratedTrack);
-        }
-        lib.renderTrackCards();
-        lib.selectTrack(this.pendingCalibratedTrack.id);
-      }
-      this.setActiveTrackProfile(this.pendingCalibratedTrack);
-      this.closePostCalModal();
-      alert(`💾 Track "${this.pendingCalibratedTrack.name}" calibrated and saved to local Track Library!`);
-    }
-  }
-
-  /**
-   * Generates and saves a Track Profile from recorded stint telemetry
-   */
-  async saveStintAsTrackProfile() {
-    if (!this.recordedSamples || this.recordedSamples.length < 20) {
-      alert('Please complete a recording stint with at least 1-2 laps first to synthesize a track profile.');
-      return;
-    }
-
-    const latestSample = this.recordedSamples[this.recordedSamples.length - 1];
-    const carModel = latestSample?.vehicle?.carName || latestSample?.vehicle?.carClass || 'APEX Vehicle';
-    const target = this.activeTrackProfile;
-    const defaultName = target?.name || this.settings.sessionName || 'Recorded Circuit';
-    const defaultLayout = target?.layout || 'Full Course';
-
-    const trackName = prompt('Enter Circuit Name for Track Profile:', defaultName);
-    if (!trackName) return;
-
-    const layout = prompt('Enter Track Layout / Configuration:', defaultLayout) || 'Full Course';
-
-    const result = this.trackCalibrator.calibrateFromStint(this.recordedSamples, {
-      id: target?.id,
-      name: trackName.trim(),
-      layout: layout.trim(),
-      trackOrdinal: target?.trackOrdinal ?? null,
-      carModel,
-      driverName: this.settings.driverName || 'APEX Driver'
-    });
-
-    if (!result.success || !result.trackProfile) {
-      alert(`⚠️ Unable to synthesize track profile: ${result.error || 'Unknown error'}`);
-      return;
-    }
-
-    const trackProfile = result.trackProfile;
-    trackProfile.status = 'Calibrated';
-    trackProfile.updatedDate = new Date().toISOString();
-
-    try {
-      const res = await fetch('/api/tracks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(trackProfile)
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        const savedTrack = data.track || trackProfile;
-        this.setActiveTrackProfile(savedTrack);
-        if (window.apexApp?.trackLibrary) {
-          await window.apexApp.trackLibrary.loadTracks();
-          await window.apexApp.trackLibrary.selectTrack(savedTrack.id);
-        }
-        alert(`💾 Track "${savedTrack.name}" successfully synthesized and saved to Track Library!\n• ${savedTrack.turns.length} Turns mapped\n• ${savedTrack.lengthMeters.toLocaleString()}m Circuit length`);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || `HTTP ${res.status}`);
-      }
-    } catch (err) {
-      console.warn('[STINT TRACK SAVE] Backend save fallback to local:', err);
-      if (window.apexApp?.trackLibrary) {
-        const lib = window.apexApp.trackLibrary;
-        const existingIdx = lib.tracks.findIndex(t => t.id === trackProfile.id);
-        if (existingIdx >= 0) {
-          lib.tracks[existingIdx] = trackProfile;
-        } else {
-          lib.tracks.push(trackProfile);
-        }
-        lib.renderTrackCards();
-        lib.selectTrack(trackProfile.id);
-      }
-      this.setActiveTrackProfile(trackProfile);
-      alert(`💾 Track "${trackProfile.name}" synthesized and saved locally in Track Library!`);
-    }
   }
 
   exportRawCsv() {
@@ -700,9 +329,7 @@ export class SessionManager {
 
   runAnalysisReport() {
     try {
-      const report = this.analysisEngine.analyzeStint(this.recordedSamples, {
-        trackProfile: this.activeTrackProfile
-      });
+      const report = this.analysisEngine.analyzeStint(this.recordedSamples);
       this.latestAnalysisReport = report;
       this.renderAnalysisReport(report);
     } catch (err) {
@@ -1223,18 +850,10 @@ export class SessionManager {
       }
     }
 
-    if (this.isCalibrating) {
-      this.currentCalLapSamples.push(sample);
-    }
-
     if (sample.timing) {
       let lap = sample.timing.lapNumber !== undefined ? sample.timing.lapNumber : 1;
       if (lap === 0) lap = 1;
       if (lap !== this.currentLap) {
-        if (this.isCalibrating && this.currentCalLapSamples.length > 10) {
-          this.handleCalibrationLapDone(this.currentCalLapSamples);
-          this.currentCalLapSamples = [];
-        }
         this.currentLap = lap;
         const lapEl = document.getElementById('lap-counter-val') || this.lapCounterVal;
         if (lapEl) {
