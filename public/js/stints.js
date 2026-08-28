@@ -92,7 +92,7 @@ export class StintsManager {
     this.mainContainer.style.display = 'none';
     this.hudContainer.style.display = 'block';
     
-    document.getElementById('live-hud-title').textContent = \`Live HUD - \${stint.name}\`;
+    document.getElementById('live-hud-title').textContent = `Live HUD - ${stint.name}`;
     
     this.hud.startStint(stint);
   }
