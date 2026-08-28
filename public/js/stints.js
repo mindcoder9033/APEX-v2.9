@@ -339,11 +339,14 @@ export class StintsManager {
 
   selectStint(stintId) {
     this.selectedStintId = stintId;
-    this.renderStintList();
-    const newStint = this.getSelectedStint();
-    if (this.isStintActive && this.liveHud) {
-      this.liveHud.switchStint(newStint);
+    // Always return to the Briefing Dossier when jumping between stints
+    if (this.isStintActive) {
+      this.isStintActive = false;
+      if (this.liveHud) {
+        this.liveHud.cancelStint();
+      }
     }
+    this.renderStintList();
     this.renderSelectedStintDossier();
   }
 
