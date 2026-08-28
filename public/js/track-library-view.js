@@ -81,8 +81,10 @@ export class TrackLibraryView {
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
 
     if (this.btnNavTrackLibrary) {
-      this.btnNavTrackLibrary.classList.add('btn-primary');
-      this.btnNavTrackLibrary.classList.remove('btn-secondary');
+      this.btnNavTrackLibrary.classList.add('active');
+    }
+    if (this.btnNavPitwall) {
+      this.btnNavPitwall.classList.remove('active');
     }
 
     this.refresh();
@@ -93,8 +95,10 @@ export class TrackLibraryView {
     if (this.viewPitwall) this.viewPitwall.style.display = 'block';
 
     if (this.btnNavTrackLibrary) {
-      this.btnNavTrackLibrary.classList.remove('btn-primary');
-      this.btnNavTrackLibrary.classList.add('btn-secondary');
+      this.btnNavTrackLibrary.classList.remove('active');
+    }
+    if (this.btnNavPitwall) {
+      this.btnNavPitwall.classList.add('active');
     }
   }
 

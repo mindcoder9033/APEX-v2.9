@@ -287,6 +287,12 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--color-f1-red);
 }
 
+.btn-secondary.active {
+  box-shadow: inset 0 -3px 0 var(--color-gold, #FFD700);
+  background: var(--color-surface-elevated);
+  border-color: var(--color-gold, #FFD700);
+}
+
 .btn-icon {
   padding: 8px 12px;
 }
