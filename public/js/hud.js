@@ -4,6 +4,7 @@
  */
 
 import { PdfReportGenerator } from './pdf-report.js';
+import { StintDiagnostics } from './analysis/stint-diagnostics.js';
 
 export class LiveHudRenderer {
   constructor(containerId) {
@@ -61,8 +62,8 @@ export class LiveHudRenderer {
   stopStint() {
     if (!this.activeStint) return;
 
-    // Automatically generate and download the analytical coaching report
-    PdfReportGenerator.generateStintReport(this.activeStint, this.telemetryStats);
+    const stintRef = this.activeStint;
+    const evaluation = StintDiagnostics.evaluate(stintRef, this.sessionSamples, this.telemetryStats);
 
     this.activeStint = null;
     if (this.container) {
@@ -71,7 +72,7 @@ export class LiveHudRenderer {
     }
 
     if (typeof this.onFinishCallback === 'function') {
-      this.onFinishCallback();
+      this.onFinishCallback(evaluation, stintRef, this.sessionSamples);
     }
   }
 

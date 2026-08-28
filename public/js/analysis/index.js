@@ -14,7 +14,10 @@ import { BrakingEntryEngine } from './braking-entry.js';
 import { ChassisAdvisoryEngine } from './chassis-advisory.js';
 import { SurfaceIntelligenceEngine } from './surface-intelligence.js';
 import { RacecraftEngine } from './racecraft-engine.js';
+
 import { TrackLibrarySynthesizer } from './track-library-synthesizer.js';
+import { WeatherSimulator, weatherSimulator, WEATHER_CONDITIONS, WEATHER_CATEGORIES } from './weather-simulator.js';
+import { StintDiagnostics } from './stint-diagnostics.js';
 
 export class AnalysisEngine {
   constructor(options = {}) {
@@ -35,33 +38,32 @@ export class AnalysisEngine {
     this.trackSynthesizer = new TrackLibrarySynthesizer(options.trackSynthesizer);
   }
 
+  /**
+   * Performs end-to-end analysis on raw stint samples
+   * @param {Array<Object>} samples 
+   * @param {Object} options Optional metadata and settings
+   * @returns {Object} Comprehensive stint analysis report
+   */
   analyzeStint(samples, options = {}) {
     if (!samples || samples.length === 0) {
       return {
         laps: [],
-        validLapsCount: 0,
-        totalLapsCount: 0,
         bestLap: null,
+        totalLaps: 0,
         findings: [],
         trackMap: null,
         tireDynamics: null,
         deltaComparison: null,
         brakingAnalysis: null,
-        shiftingAnalysis: null,
-        frictionCircle: null,
-        performanceSummary: null,
-        recommendations: [],
-        carControl: null,
-        brakingEntry: null,
-        chassisAdvisory: null,
-        surfaceIntelligence: null,
-        racecraft: null
+        shiftingAnalysis: null
       };
     }
 
+    // 1. Segment into discrete laps
     const laps = this.segmenter.segmentStint(samples);
     const validLaps = laps.filter(l => l.isValid);
 
+    // 2. Find best lap
     let bestLap = null;
     let minLapTime = Infinity;
     for (const lap of validLaps) {
@@ -71,20 +73,27 @@ export class AnalysisEngine {
       }
     }
 
+    // 3. Process corners and rules for each lap
     const analyzedLaps = laps.map((lap) => {
       const apexes = this.detector.detectApexes(lap.samples);
       const corners = this.extractor.extractAll(lap.samples, apexes);
       const findings = this.rules.evaluateLap(corners);
 
-      return { ...lap, corners, findings, apexCount: apexes.length };
+      return {
+        ...lap,
+        corners,
+        findings,
+        apexCount: apexes.length
+      };
     });
 
+    // 4. Stint-wide aggregate findings
     const allFindings = [];
     for (const lap of analyzedLaps) {
       allFindings.push(...lap.findings);
     }
 
-    // Generate Vector Track Map for best lap or fallback samples
+    // 5. Generate Vector Track Map for the best lap (or full stint samples if no valid lap)
     const mapSamples = (bestLap && bestLap.samples && bestLap.samples.length > 10)
       ? bestLap.samples
       : (validLaps.length > 0 && validLaps[0].samples ? validLaps[0].samples : samples);
@@ -95,27 +104,32 @@ export class AnalysisEngine {
 
     const trackMapSvg = this.trackMapGenerator.generateSvg(mapSamples, mapCorners, mapFindings);
     const trackMapPdf = this.trackMapGenerator.generatePdfVectorData(mapSamples, mapCorners, mapFindings);
+
+    // 6. Perform 4-corner Tire Dynamics & Thermal State Analysis
     const tireDynamics = this.tireEngine.analyzeTires(samples);
 
-    // Delta Lap Comparison & Skip Barber Priority Ranking
+    // 7. Perform Delta Lap Comparison & Skip Barber Priority Ranking
     let deltaComparison = null;
     if (bestLapAnalyzed && bestLapAnalyzed.samples && bestLapAnalyzed.samples.length > 0) {
+      // If we have multiple valid laps, compare the stint's average/second lap against the best lap
       const otherValidLaps = analyzedLaps.filter(l => l.isValid && l.lapNumber !== bestLap.lapNumber);
       let targetLap = null;
 
       if (otherValidLaps.length > 0) {
+        // Compute average lap time among other valid laps and pick closest
         const avgOtherLapTime = otherValidLaps.reduce((acc, l) => acc + l.lapTime, 0) / otherValidLaps.length;
         targetLap = otherValidLaps.reduce((closest, curr) => {
           return Math.abs(curr.lapTime - avgOtherLapTime) < Math.abs(closest.lapTime - avgOtherLapTime) ? curr : closest;
         }, otherValidLaps[0]);
       } else {
+        // Single lap fallback: compare against itself to provide corner classification & base matrix
         targetLap = bestLapAnalyzed;
       }
 
       deltaComparison = this.deltaEngine.compareLaps(bestLapAnalyzed, targetLap, mapCorners);
     }
 
-    // Braking Zone G-Force & Threshold Efficiency Analysis
+    // 8. Perform Braking Zone G-Force & Threshold Efficiency Analysis (Sprint 9)
     const vehicleMeta = options.vehicle || samples[0]?.vehicle || {};
     const brakingAnalysis = this.brakingEngine.analyzeBrakingZones(
       mapSamples,
@@ -124,7 +138,7 @@ export class AnalysisEngine {
       vehicleMeta
     );
 
-    // Shifting, Powerband & Downshift Quality Analysis
+    // 9. Perform Shifting, Powerband & Downshift Quality Analysis (Sprint 10)
     const shiftingAnalysis = this.shiftingEngine.analyzeShifting(
       mapSamples,
       analyzedLaps,
@@ -132,32 +146,32 @@ export class AnalysisEngine {
       vehicleMeta
     );
 
-    // Friction Circle / G-G Diagram (ANALYSIS.md §9)
+    // 10. Friction Circle / G-G Diagram (ANALYSIS.md §9)
     const frictionAnalyzer = new FrictionCircleAnalyzer(mapSamples);
     const frictionCircle = frictionAnalyzer.generateFrictionCircle();
 
-    // Performance Summary Score (ANALYSIS.md §10.1)
+    // 11. Performance Summary Score (ANALYSIS.md §10.1)
     const allAnalysisResults = { brakingAnalysis, shiftingAnalysis, tireDynamics, deltaComparison };
     const summaryEngine = new PerformanceSummaryEngine(analyzedLaps, mapCorners, allAnalysisResults);
     const performanceSummary = summaryEngine.generateSummary();
 
-    // Recommendation Engine (ANALYSIS.md §10.2)
+    // 12. Recommendation Engine (ANALYSIS.md §10.2)
     const recEngine = new RecommendationEngine(mapCorners, allAnalysisResults);
     const recommendations = recEngine.generateRecommendations();
 
-    // Vehicle Dynamics & CPR Skid Control Engine (Sprint 14)
+    // 13. Vehicle Dynamics & CPR Skid Control Engine (Sprint 14)
     const carControl = this.carControlEngine.analyze(mapSamples, mapCorners);
 
-    // 4-Block Corner Entry & Overslowing Engine (Sprint 15)
+    // 14. 4-Block Corner Entry & Overslowing Engine (Sprint 15)
     const brakingEntry = this.brakingEntryEngine.analyze(mapSamples, mapCorners, bestLapAnalyzed);
 
-    // Suspension Load Transfer & Chassis Setup Coach (Sprint 16)
+    // 15. Suspension Load Transfer & Chassis Setup Coach (Sprint 16)
     const chassisAdvisory = this.chassisEngine.analyze(mapSamples, carControl);
 
-    // Dynamic Surface & Wet-Weather Intelligence (Sprint 17)
+    // 16. Dynamic Surface & Wet-Weather Intelligence (Sprint 17)
     const surfaceIntelligence = this.surfaceEngine.analyze(mapSamples, mapCorners);
 
-    // Racecraft Engine & 14-Point Skip Barber Scorecard (Sprint 18)
+    // 17. Racecraft Engine & 14-Point Skip Barber Scorecard (Sprint 18)
     const racecraft = this.racecraftEngine.analyze({
       laps: analyzedLaps,
       samples: mapSamples,
@@ -195,6 +209,7 @@ export class AnalysisEngine {
       frictionCircle,
       performanceSummary,
       recommendations,
+      // Going Faster! Racecraft Expansion Additions
       carControl,
       brakingEntry,
       chassisAdvisory,
@@ -223,6 +238,11 @@ export {
   SurfaceIntelligenceEngine,
   RacecraftEngine,
   TrackLibrarySynthesizer,
+  WeatherSimulator,
+  weatherSimulator,
+  StintDiagnostics,
+  WEATHER_CONDITIONS,
+  WEATHER_CATEGORIES,
   DRIVING_STATE,
   STATE_COLORS,
   TIRE_THERMAL_STATUS,
@@ -236,3 +256,6 @@ export {
   FRICTION_PHASE_COLORS,
   PERFORMANCE_GRADES
 };
+
+
+

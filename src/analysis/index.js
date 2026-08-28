@@ -17,6 +17,7 @@ import { RacecraftEngine } from './racecraft-engine.js';
 
 import { TrackLibrarySynthesizer } from './track-library-synthesizer.js';
 import { WeatherSimulator, weatherSimulator, WEATHER_CONDITIONS, WEATHER_CATEGORIES } from './weather-simulator.js';
+import { StintDiagnostics } from './stint-diagnostics.js';
 
 export class AnalysisEngine {
   constructor(options = {}) {
@@ -239,6 +240,7 @@ export {
   TrackLibrarySynthesizer,
   WeatherSimulator,
   weatherSimulator,
+  StintDiagnostics,
   WEATHER_CONDITIONS,
   WEATHER_CATEGORIES,
   DRIVING_STATE,

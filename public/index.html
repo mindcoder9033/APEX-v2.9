@@ -1265,6 +1265,77 @@
     </div>
   </div>
 
+  <!-- Stint Performance Debrief Modal (Actionable Post-Stint Feedback & PDF Download) -->
+  <div id="stint-debrief-modal" class="modal-backdrop">
+    <div class="modal-card chamfer-tl-br" style="max-width: 680px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header" style="border-bottom: 1px solid var(--color-border); padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="color: var(--color-f1-red); font-size: 22px;">🏁</span>
+          <div>
+            <h2 id="debrief-modal-title" class="modal-title" style="font-size: 16px; margin: 0;">STINT PERFORMANCE DEBRIEF</h2>
+            <span id="debrief-stint-subtitle" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-gold);">TIER 1 // THE PATHFINDER</span>
+          </div>
+        </div>
+        <button id="btn-close-stint-debrief" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+      </div>
+
+      <!-- Quick Grade & Performance Summary Banner -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
+        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold); background: #121212;">
+          <span class="stat-cell-label">Stint Mastery Grade</span>
+          <span id="debrief-grade-val" class="stat-cell-value" style="font-size: 24px; color: var(--color-gold);">94%</span>
+          <span id="debrief-mastery-label" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success);">PASS // GOLD GRADE</span>
+        </div>
+
+        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-accent); background: #121212;">
+          <span id="debrief-metric-label" class="stat-cell-label">Primary Metric</span>
+          <span id="debrief-metric-val" class="stat-cell-value accent" style="font-size: 18px;">94%</span>
+          <span id="debrief-laps-summary" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted);">10 Laps Completed</span>
+        </div>
+      </div>
+
+      <!-- 3 Pillars Dynamic Preview -->
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: var(--space-md);">
+        <!-- Nailed -->
+        <div class="guide-step-card chamfer-all-corners" style="background: rgba(16, 185, 129, 0.08); border-left: 3px solid var(--color-success); padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 11px; color: var(--color-success); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>✓</span> WHAT YOU NAILED
+          </div>
+          <ul id="debrief-nailed-list" style="margin: 0; padding-left: 16px; font-size: 11.5px; color: var(--color-text-primary); line-height: 1.5;">
+          </ul>
+        </div>
+
+        <!-- Needs Refinement -->
+        <div class="guide-step-card chamfer-all-corners" style="background: rgba(245, 158, 11, 0.08); border-left: 3px solid var(--color-gold); padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 11px; color: var(--color-gold); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>⚡</span> NEEDS REFINEMENT
+          </div>
+          <ul id="debrief-refinement-list" style="margin: 0; padding-left: 16px; font-size: 11.5px; color: var(--color-text-primary); line-height: 1.5;">
+          </ul>
+        </div>
+
+        <!-- Critical Attention -->
+        <div class="guide-step-card chamfer-all-corners" style="background: rgba(239, 68, 68, 0.08); border-left: 3px solid var(--color-f1-red); padding: 10px 14px;">
+          <div style="font-weight: 700; font-size: 11px; color: var(--color-f1-red); text-transform: uppercase; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+            <span>⚠️</span> CRITICAL ATTENTION REQUIRED
+          </div>
+          <ul id="debrief-attention-list" style="margin: 0; padding-left: 16px; font-size: 11.5px; color: var(--color-text-primary); line-height: 1.5;">
+          </ul>
+        </div>
+      </div>
+
+      <!-- Action Buttons Footer -->
+      <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px;">
+        <button id="btn-debrief-retry" class="btn btn-secondary chamfer-all-corners" style="height: 44px; padding: 0 18px; font-size: 12px;">
+          <span>🔄</span> RETRY STINT
+        </button>
+        <button id="btn-debrief-download-pdf" class="btn btn-primary chamfer-br" style="height: 44px; padding: 0 20px; font-size: 12.5px; font-weight: 700;">
+          <span>📥</span> DOWNLOAD ACTIONABLE REPORT (PDF)
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings Drawer / Modal -->
   <div id="settings-modal" class="modal-backdrop">
     <div class="modal-card chamfer-tl-br">

@@ -260,6 +260,16 @@ export class StintsManager {
     this.stintsCountBadge = document.getElementById('stints-count-badge');
     this.filterPills = document.querySelectorAll('.stint-filter-pill');
 
+    // Debrief Modal Elements
+    this.debriefModal = document.getElementById('stint-debrief-modal');
+    this.btnCloseDebrief = document.getElementById('btn-close-stint-debrief');
+    this.btnDebriefRetry = document.getElementById('btn-debrief-retry');
+    this.btnDebriefDownloadPdf = document.getElementById('btn-debrief-download-pdf');
+
+    this.lastStintEvaluation = null;
+    this.lastStintRef = null;
+    this.lastStintSamples = [];
+
     this.init();
   }
 
@@ -288,6 +298,28 @@ export class StintsManager {
           this.activeFilter = pill.dataset.filter || 'all';
           this.renderStintList();
         });
+      });
+    }
+
+    // Debrief Modal Actions
+    if (this.btnCloseDebrief) {
+      this.btnCloseDebrief.addEventListener('click', () => {
+        this.closeDebriefModal();
+      });
+    }
+
+    if (this.btnDebriefRetry) {
+      this.btnDebriefRetry.addEventListener('click', () => {
+        this.closeDebriefModal();
+        this.startStint();
+      });
+    }
+
+    if (this.btnDebriefDownloadPdf) {
+      this.btnDebriefDownloadPdf.addEventListener('click', () => {
+        if (this.lastStintRef && this.lastStintEvaluation) {
+          PdfReportGenerator.generateStintReport(this.lastStintRef, this.lastStintEvaluation, this.lastStintSamples);
+        }
       });
     }
   }
@@ -469,8 +501,8 @@ export class StintsManager {
     this.stintBriefingStage.style.display = 'none';
     this.stintActiveHudStage.style.display = 'flex';
 
-    this.liveHud.startStint(stint, () => {
-      this.stopStint();
+    this.liveHud.startStint(stint, (evaluation, stintRef, samples) => {
+      this.handleStintComplete(evaluation, stintRef, samples);
     });
   }
 
@@ -479,4 +511,63 @@ export class StintsManager {
     this.liveHud.stopStint();
     this.renderSelectedStintDossier();
   }
+
+  handleStintComplete(evaluation, stintRef, samples) {
+    this.isStintActive = false;
+    this.lastStintEvaluation = evaluation;
+    this.lastStintRef = stintRef;
+    this.lastStintSamples = samples || [];
+
+    this.renderSelectedStintDossier();
+    this.openDebriefModal(evaluation, stintRef);
+  }
+
+  openDebriefModal(evaluation, stint) {
+    if (!this.debriefModal || !evaluation) return;
+
+    const elSub = document.getElementById('debrief-stint-subtitle');
+    if (elSub) elSub.textContent = `${stint.tierName.toUpperCase()} // ${stint.name.toUpperCase()}`;
+
+    const elGrade = document.getElementById('debrief-grade-val');
+    if (elGrade) elGrade.textContent = `${evaluation.gradeScore}%`;
+
+    const elMastery = document.getElementById('debrief-mastery-label');
+    if (elMastery) {
+      elMastery.textContent = evaluation.masteryLabel;
+      elMastery.style.color = evaluation.targetAchieved ? 'var(--color-success)' : 'var(--color-gold)';
+    }
+
+    const elMetricLabel = document.getElementById('debrief-metric-label');
+    if (elMetricLabel) elMetricLabel.textContent = evaluation.primaryMetricLabel || 'Target Metric';
+
+    const elMetricVal = document.getElementById('debrief-metric-val');
+    if (elMetricVal) elMetricVal.textContent = evaluation.primaryMetricValue || 'Evaluated';
+
+    const elLaps = document.getElementById('debrief-laps-summary');
+    if (elLaps) elLaps.textContent = `${evaluation.telemetryKPIs.totalLaps} Laps • Peak: ${evaluation.telemetryKPIs.peakSpeedMph} MPH (${evaluation.telemetryKPIs.peakLatG}G)`;
+
+    const elNailed = document.getElementById('debrief-nailed-list');
+    if (elNailed) {
+      elNailed.innerHTML = (evaluation.nailed || []).map(item => `<li>${item}</li>`).join('');
+    }
+
+    const elRefinement = document.getElementById('debrief-refinement-list');
+    if (elRefinement) {
+      elRefinement.innerHTML = (evaluation.refinement || []).map(item => `<li>${item}</li>`).join('');
+    }
+
+    const elAttention = document.getElementById('debrief-attention-list');
+    if (elAttention) {
+      elAttention.innerHTML = (evaluation.attention || []).map(item => `<li>${item}</li>`).join('');
+    }
+
+    this.debriefModal.classList.add('active');
+  }
+
+  closeDebriefModal() {
+    if (this.debriefModal) {
+      this.debriefModal.classList.remove('active');
+    }
+  }
 }
+
