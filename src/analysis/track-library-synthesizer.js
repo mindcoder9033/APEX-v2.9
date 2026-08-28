@@ -289,6 +289,7 @@ export class TrackLibrarySynthesizer {
       hazards,
       vectorMap: {
         pointsCount: subsampledPoints.length,
+        originalSamplesCount: lapSamples.length,
         points: subsampledPoints
       },
       setupAdvisories: {

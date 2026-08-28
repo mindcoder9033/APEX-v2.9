@@ -62,24 +62,29 @@ export class TrackLibraryStore {
       const existing = tracks[existingIndex];
       const isFaster = newTrack.bestLapTime > 0 && 
         (existing.bestLapTime <= 0 || newTrack.bestLapTime < existing.bestLapTime);
+        
+      const isMoreDetailed = (newTrack.vectorMap?.originalSamplesCount || 0) > (existing.vectorMap?.originalSamplesCount || 0);
 
-      savedRecord = {
-        ...existing,
-        // If the new stint was faster, update optimal telemetry lines and corners
-        bestLapTime: isFaster ? newTrack.bestLapTime : existing.bestLapTime,
-        bestLapNumber: isFaster ? newTrack.bestLapNumber : existing.bestLapNumber,
-        carName: isFaster ? newTrack.carName : existing.carName,
-        carClass: isFaster ? newTrack.carClass : existing.carClass,
-        driverName: newTrack.driverName || existing.driverName,
-        corners: (isFaster && newTrack.corners?.length > 0) ? newTrack.corners : existing.corners,
-        vectorMap: (isFaster && newTrack.vectorMap?.points?.length > 0) ? newTrack.vectorMap : existing.vectorMap,
-        hazards: (newTrack.hazards?.length > 0) ? newTrack.hazards : existing.hazards,
-        setupAdvisories: newTrack.setupAdvisories || existing.setupAdvisories,
-        // Cumulative counters
-        stintsRecordedCount: (existing.stintsRecordedCount || 1) + 1,
-        totalLapsDriven: (existing.totalLapsDriven || 0) + (newTrack.totalLapsDriven || 1),
-        updatedAt: new Date().toISOString()
-      };
+      const shouldOverwrite = isFaster || isMoreDetailed;
+
+      if (shouldOverwrite) {
+        savedRecord = {
+          ...newTrack,
+          // Preserve cumulative counters and original creation date
+          stintsRecordedCount: (existing.stintsRecordedCount || 1) + 1,
+          totalLapsDriven: (existing.totalLapsDriven || 0) + (newTrack.totalLapsDriven || 1),
+          createdAt: existing.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+      } else {
+        savedRecord = {
+          ...existing,
+          // Only update cumulative counters
+          stintsRecordedCount: (existing.stintsRecordedCount || 1) + 1,
+          totalLapsDriven: (existing.totalLapsDriven || 0) + (newTrack.totalLapsDriven || 1),
+          updatedAt: new Date().toISOString()
+        };
+      }
 
       tracks[existingIndex] = savedRecord;
     } else {
