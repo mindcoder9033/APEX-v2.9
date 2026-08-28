@@ -32,26 +32,31 @@
 
 
 
+      <!-- Primary Navigation Tabs -->
+      <nav class="header-nav-tabs" aria-label="Primary Navigation">
+        <button id="btn-nav-pitwall" class="nav-tab-btn active chamfer-all-corners" title="Live Pit Wall Telemetry (P)">
+          <span class="nav-tab-icon">🏁</span>
+          <span class="nav-tab-label">PIT WALL</span>
+        </button>
+        <button id="btn-nav-track-library" class="nav-tab-btn chamfer-all-corners" title="Track Intelligence & Dossier Hub (T)">
+          <span class="nav-tab-icon">🗺️</span>
+          <span class="nav-tab-label">TRACK DOSSIER</span>
+        </button>
+        <button id="btn-nav-stints" class="nav-tab-btn chamfer-all-corners" title="Motorsport Practice Stints (L)">
+          <span class="nav-tab-icon">🎯</span>
+          <span class="nav-tab-label">PRACTICE STINTS</span>
+        </button>
+      </nav>
+
       <div class="header-status-group">
         <div id="status-pill" class="status-pill disconnected chamfer-all-corners">
           <span class="status-dot"></span>
           <span id="status-text">Bridge Offline</span>
           <span id="rate-text" style="color: #666; font-size: 10px; margin-left: 4px;">0 pkt/s</span>
         </div>
-        <button id="btn-nav-pitwall" class="btn btn-secondary btn-icon chamfer-all-corners active" title="Open Pit Wall (P)">
-          <span>🏁</span>
-        </button>
-
-        <button id="btn-nav-track-library" class="btn btn-secondary btn-icon chamfer-all-corners" title="Open Pre-Stint Track Library (T)">
-          <span>🗺️</span>
-        </button>
 
         <button id="btn-open-udp-guide" class="btn btn-secondary btn-icon chamfer-all-corners" title="Forza UDP Setup Guide (U)">
           <span>📡</span>
-        </button>
-
-        <button id="btn-nav-stints" class="btn btn-secondary btn-icon chamfer-all-corners" title="Open Stints (L)">
-          <span>🎯</span>
         </button>
 
         <button id="btn-toggle-edit-layout" class="btn btn-secondary btn-icon chamfer-all-corners" title="Customize Telemetry Widgets Layout (E)">
@@ -954,7 +959,7 @@
       <!-- Track Library Top Bar -->
       <div class="track-library-top-bar chamfer-br">
         <div style="display: flex; align-items: center; gap: 14px;">
-          <button id="btn-nav-pitwall" class="btn btn-secondary chamfer-all-corners" title="Return to Live Pit Wall">
+          <button id="btn-return-pitwall-from-track" class="btn btn-secondary chamfer-all-corners" title="Return to Live Pit Wall">
             <span>⬅️</span> PIT WALL
           </button>
           <div class="track-library-title-group">
@@ -1150,34 +1155,69 @@
       </div>
     </div> <!-- /#view-track-library -->
 
-    <!-- STINTS VIEW CONTAINER -->
+    <!-- MOTORSPORT PRACTICE STINTS VIEW CONTAINER -->
     <div id="view-stints" class="view-container view-stints" style="display: none;">
-      <main class="stints-dashboard" style="display: block; padding: var(--space-md);">
+      <!-- Stints Hub Top Bar -->
+      <div class="stints-top-bar chamfer-br">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <button id="btn-return-pitwall-from-stints" class="btn btn-secondary chamfer-all-corners" title="Return to Live Pit Wall">
+            <span>⬅️</span> PIT WALL
+          </button>
+          <div class="stints-title-group">
+            <h1 class="stints-heading">MOTORSPORT PRACTICE STINTS // SKILL ACQUISITION HUB</h1>
+            <span class="stints-subheading">Skip Barber "Going Faster!" Stepping Stones · Real-World Racecraft Diagnostics · Live Cockpit HUD & Coaching Reports</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button id="btn-export-stint-report-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
+            <span>📄</span> EXPORT STINT COACHING PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Stints Layout Grid -->
+      <div class="stints-grid">
         
-        <div id="stints-container">
-          <header class="pit-card-header" style="margin-bottom: 20px;">
-            <h2 class="pit-card-title">Training Stints</h2>
-            <span class="pit-card-subtitle">Practice specific skills with real-time feedback</span>
-          </header>
-          
-          <div id="stints-tiers-list">
-            <!-- Tiers will be populated here -->
-          </div>
-        </div>
+        <!-- LEFT SIDEBAR: Stepping Stones Directory -->
+        <aside class="stints-sidebar-panel chamfer-tl-br">
+          <div class="sidebar-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="sidebar-title">PRACTICE STINTS</span>
+              <span id="stints-count-badge" class="badge badge-accent">9 MODULES</span>
+            </div>
 
-        <div id="stints-hud-view" style="display: none; height: 100vh;">
-          <div style="display: flex; justify-content: space-between; padding: 20px;">
-            <h2 id="live-hud-title" class="pit-card-title" style="color: var(--color-f1-red);">Live HUD</h2>
-            <button id="btn-stop-stint" class="btn btn-primary chamfer-br">STOP STINT</button>
+            <!-- Filter Pills -->
+            <div class="stint-filter-pills-row" style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="stint-filter-pill active" data-filter="all">ALL TIERS</button>
+              <button class="stint-filter-pill" data-filter="1">TIER 1</button>
+              <button class="stint-filter-pill" data-filter="2">TIER 2</button>
+              <button class="stint-filter-pill" data-filter="3">TIER 3</button>
+            </div>
           </div>
-          
-          <div id="live-hud-widgets-container" style="padding: 20px;">
-            <!-- Widgets injected here -->
-          </div>
-        </div>
 
-      </main>
-    </div>
+          <!-- Stint Selector List -->
+          <div id="stints-list-container" class="stints-list-container">
+            <!-- Dynamically populated stint cards -->
+          </div>
+        </aside>
+
+        <!-- MAIN STAGE: Selected Stint Briefing & Cockpit Live HUD -->
+        <main class="stints-main-stage">
+          
+          <!-- Stint Dossier / Briefing Stage -->
+          <div id="stint-briefing-stage" class="stint-stage-panel chamfer-tl-br">
+            <!-- Dynamically rendered detailed briefing card -->
+          </div>
+
+          <!-- Live Cockpit HUD Overlay (Visible while stint is actively running) -->
+          <div id="stint-active-hud-stage" class="stint-active-hud-stage chamfer-tl-br" style="display: none;">
+            <!-- Dynamically populated Live HUD with Tier-Specific widgets -->
+          </div>
+
+        </main>
+      </div>
+    </div> <!-- /#view-stints -->
 
   </div> <!-- /.app-container -->
 

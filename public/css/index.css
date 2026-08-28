@@ -175,6 +175,50 @@ h1, h2, h3, h4, h5, h6 {
   border-left: 1px solid var(--color-border);
 }
 
+.header-nav-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #0A0A0A;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+
+.nav-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-tab-btn:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-tab-btn.active {
+  color: var(--color-white);
+  background: var(--color-surface-card);
+  border-color: var(--color-f1-red);
+  box-shadow: 0 0 12px rgba(225, 6, 0, 0.35);
+}
+
+.nav-tab-icon {
+  font-size: 14px;
+}
+
 .header-status-group {
   display: flex;
   align-items: center;
@@ -2769,4 +2813,185 @@ body.layout-edit-active .widget-resize-handle {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ==========================================================================
+   Motorsport Practice Stints Hub Styles
+   ========================================================================== */
+.view-stints {
+  width: 100%;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.stints-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: 14px 20px;
+  margin-bottom: var(--space-md);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.stints-heading {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.stints-subheading {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-muted);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-top: 2px;
+}
+
+.stints-grid {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.stints-sidebar-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 170px);
+  overflow: hidden;
+}
+
+.stints-list-container {
+  overflow-y: auto;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.stint-card-item {
+  background: #0E0E0E;
+  border: 1px solid var(--color-border);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.stint-card-item:hover {
+  background: #141414;
+  border-color: rgba(255, 215, 0, 0.4);
+  transform: translateX(3px);
+}
+
+.stint-card-item.active {
+  background: #181818;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.15);
+}
+
+.stint-card-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-gold);
+}
+
+.stint-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.stint-tier-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.tier-tag-1 { background: rgba(0, 204, 102, 0.15); color: var(--color-success); border: 1px solid rgba(0, 204, 102, 0.4); }
+.tier-tag-2 { background: rgba(255, 215, 0, 0.15); color: var(--color-gold); border: 1px solid rgba(255, 215, 0, 0.4); }
+.tier-tag-3 { background: rgba(225, 6, 0, 0.15); color: var(--color-f1-red); border: 1px solid rgba(225, 6, 0, 0.4); }
+
+.stint-filter-pill {
+  flex: 1;
+  min-width: 60px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 5px 6px;
+  border-radius: 2px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.stint-filter-pill:hover {
+  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stint-filter-pill.active {
+  color: #000;
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+.stint-stage-panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.stint-active-hud-stage {
+  background: #080808;
+  border: 1px solid var(--color-f1-red);
+  box-shadow: 0 0 25px rgba(225, 6, 0, 0.25);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.stints-hud-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-md);
+  margin-top: 10px;
+}
+
+.hud-live-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(225, 6, 0, 0.15);
+  border: 1px solid var(--color-f1-red);
+  border-radius: 4px;
+  animation: pulse-warning 1.2s infinite;
+}
+
 

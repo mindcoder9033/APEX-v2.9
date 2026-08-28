@@ -21,7 +21,7 @@ export class TrackLibraryView {
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
-    this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
+    this.btnReturnPitwall = document.getElementById('btn-return-pitwall-from-track');
     
     this.trackListContainer = document.getElementById('track-library-list');
     this.trackSearchInput = document.getElementById('track-search-input');
@@ -36,15 +36,13 @@ export class TrackLibraryView {
 
   bindEvents() {
     // Navigation Toggles
-    if (this.btnNavTrackLibrary) {
-      this.btnNavTrackLibrary.addEventListener('click', () => {
-        this.showView();
-      });
-    }
-
-    if (this.btnNavPitwall) {
-      this.btnNavPitwall.addEventListener('click', () => {
-        this.hideView();
+    if (this.btnReturnPitwall) {
+      this.btnReturnPitwall.addEventListener('click', () => {
+        if (window.apexApp && typeof window.apexApp.switchView === 'function') {
+          window.apexApp.switchView('pitwall');
+        } else {
+          this.hideView();
+        }
       });
     }
 

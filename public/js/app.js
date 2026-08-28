@@ -47,10 +47,15 @@ class ApexApp {
     this.statusText = document.getElementById('status-text');
     this.rateText = document.getElementById('rate-text');
 
-    this.btnNavStints = document.getElementById('btn-nav-stints');
-    this.viewStints = document.getElementById('view-stints');
-    this.viewPitwall = document.getElementById('view-pitwall');
+    // Primary Navigation Tab Buttons
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
+    this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
+    this.btnNavStints = document.getElementById('btn-nav-stints');
+
+    // Primary View Containers
+    this.viewPitwall = document.getElementById('view-pitwall');
+    this.viewTrackLibrary = document.getElementById('view-track-library');
+    this.viewStints = document.getElementById('view-stints');
     
     this.wsClient = new ApexWsClient({
       url: this.session.settings.wsUrl,
@@ -154,15 +159,22 @@ class ApexApp {
       });
     }
 
-    if (this.btnNavStints) {
-      this.btnNavStints.addEventListener('click', () => {
-        this.showStintsView();
+    // Top Navigation Tabs Click Events
+    if (this.btnNavPitwall) {
+      this.btnNavPitwall.addEventListener('click', () => {
+        this.switchView('pitwall');
       });
     }
 
-    if (this.btnNavPitwall) {
-      this.btnNavPitwall.addEventListener('click', () => {
-        this.showPitwallView();
+    if (this.btnNavTrackLibrary) {
+      this.btnNavTrackLibrary.addEventListener('click', () => {
+        this.switchView('track-library');
+      });
+    }
+
+    if (this.btnNavStints) {
+      this.btnNavStints.addEventListener('click', () => {
+        this.switchView('stints');
       });
     }
 
@@ -187,23 +199,25 @@ class ApexApp {
     const btnEmptyReturn = document.getElementById('btn-empty-return-pitwall');
     if (btnEmptyReturn) {
       btnEmptyReturn.addEventListener('click', () => {
-        if (this.trackLibrary) this.trackLibrary.hideView();
+        this.switchView('pitwall');
       });
     }
 
-    // Keyboard shortcuts
+    // Global Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
       if (e.code === 'Space') {
         e.preventDefault();
         this.session.toggleRecording();
+      } else if (e.key === 'p' || e.key === 'P') {
+        e.preventDefault();
+        this.switchView('pitwall');
       } else if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
-        if (this.trackLibrary) {
-          const isHidden = !this.trackLibrary.viewTrackLibrary || this.trackLibrary.viewTrackLibrary.style.display === 'none';
-          if (isHidden) this.trackLibrary.showView();
-          else this.trackLibrary.hideView();
-        }
+        this.switchView('track-library');
+      } else if (e.key === 'l' || e.key === 'L') {
+        e.preventDefault();
+        this.switchView('stints');
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         this.openSettings();
@@ -290,25 +304,30 @@ class ApexApp {
     if (this.modalUdpGuide) this.modalUdpGuide.classList.remove('active');
   }
 
-  showStintsView() {
+  switchView(viewName) {
+    // 1. Hide all views
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
-    if (this.trackLibrary && this.trackLibrary.viewTrackLibrary) this.trackLibrary.hideView();
-    if (this.viewStints) this.viewStints.style.display = 'block';
-    
-    if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
-    if (this.btnNavStints) this.btnNavStints.classList.add('active');
-    
-    // Dispatch an event so stints.js knows to render
-    window.dispatchEvent(new Event('apex-stints-opened'));
-  }
-
-  showPitwallView() {
+    if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
     if (this.viewStints) this.viewStints.style.display = 'none';
-    if (this.trackLibrary && this.trackLibrary.viewTrackLibrary) this.trackLibrary.hideView();
-    if (this.viewPitwall) this.viewPitwall.style.display = 'block';
-    
+
+    // 2. Deactivate all top navigation tab buttons
+    if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
+    if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
     if (this.btnNavStints) this.btnNavStints.classList.remove('active');
-    if (this.btnNavPitwall) this.btnNavPitwall.classList.add('active');
+
+    // 3. Activate selected view
+    if (viewName === 'pitwall') {
+      if (this.viewPitwall) this.viewPitwall.style.display = 'block';
+      if (this.btnNavPitwall) this.btnNavPitwall.classList.add('active');
+    } else if (viewName === 'track-library') {
+      if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
+      if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.add('active');
+      if (this.trackLibrary) this.trackLibrary.refresh();
+    } else if (viewName === 'stints') {
+      if (this.viewStints) this.viewStints.style.display = 'block';
+      if (this.btnNavStints) this.btnNavStints.classList.add('active');
+      if (this.stintsManager) this.stintsManager.onViewOpened();
+    }
   }
 
   saveSettings() {
