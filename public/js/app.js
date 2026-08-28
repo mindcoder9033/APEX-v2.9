@@ -31,6 +31,9 @@ class ApexApp {
     this.btnCloseSettings = document.getElementById('btn-close-settings');
     this.btnSaveSettings = document.getElementById('btn-save-settings');
 
+    // Fullscreen Toggle
+    this.btnToggleFullscreen = document.getElementById('btn-toggle-fullscreen');
+
     // UDP Guide Modal elements
     this.modalUdpGuide = document.getElementById('udp-guide-modal');
     this.btnOpenUdpGuide = document.getElementById('btn-open-udp-guide');
@@ -224,10 +227,27 @@ class ApexApp {
       } else if (e.key === 'u' || e.key === 'U') {
         e.preventDefault();
         this.openUdpGuide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        e.preventDefault();
+        this.toggleFullscreen();
       } else if (e.key === 'Escape') {
         this.closeSettings();
         this.closeUdpGuide();
       }
+    });
+
+    // Fullscreen button click and change events
+    if (this.btnToggleFullscreen) {
+      this.btnToggleFullscreen.addEventListener('click', () => {
+        this.toggleFullscreen();
+      });
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      this.updateFullscreenButtonState();
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      this.updateFullscreenButtonState();
     });
 
     // Speed unit change button
@@ -348,6 +368,44 @@ class ApexApp {
       this.wsClient.disconnect();
       this.wsClient = new ApexWsClient({ url: updated.wsUrl, autoReconnect: true });
       this.connectBridge();
+    }
+  }
+
+  toggleFullscreen() {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      const docEl = document.documentElement;
+      if (docEl.requestFullscreen) {
+        docEl.requestFullscreen().catch(err => {
+          console.warn('[FULLSCREEN] Request error:', err.message);
+        });
+      } else if (docEl.webkitRequestFullscreen) {
+        docEl.webkitRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => {
+          console.warn('[FULLSCREEN] Exit error:', err.message);
+        });
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    }
+  }
+
+  updateFullscreenButtonState() {
+    const isFullscreen = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+    if (this.btnToggleFullscreen) {
+      const enterIcon = this.btnToggleFullscreen.querySelector('.fullscreen-icon-enter');
+      const exitIcon = this.btnToggleFullscreen.querySelector('.fullscreen-icon-exit');
+      if (enterIcon) enterIcon.style.display = isFullscreen ? 'none' : 'block';
+      if (exitIcon) exitIcon.style.display = isFullscreen ? 'block' : 'none';
+      this.btnToggleFullscreen.setAttribute('title', isFullscreen ? 'Exit Fullscreen (F)' : 'Enter Fullscreen (F)');
+      this.btnToggleFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen');
+      if (isFullscreen) {
+        this.btnToggleFullscreen.classList.add('active');
+      } else {
+        this.btnToggleFullscreen.classList.remove('active');
+      }
     }
   }
 }

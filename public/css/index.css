@@ -341,6 +341,11 @@ h1, h2, h3, h4, h5, h6 {
   padding: 8px 12px;
 }
 
+.btn-icon svg {
+  pointer-events: none;
+  display: block;
+}
+
 /* --- 12-Column Main Dashboard Grid --- */
 .pit-dashboard-grid {
   display: grid;
