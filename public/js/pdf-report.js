@@ -18,6 +18,14 @@ export class PdfReportGenerator {
    */
   static async generateStintReport(stintData, evalResult = null, samples = []) {
     try {
+      // Strict Enforcement: DO NOT generate PDF if telemetry data is not received
+      if (!samples || samples.length === 0) {
+        if (!evalResult || !evalResult.hasTelemetry || (evalResult.telemetryKPIs && evalResult.telemetryKPIs.samplesCount === 0)) {
+          alert('⚠️ Cannot generate PDF: No telemetry data was received from Forza Motorsport.\n\nPlease connect the APEX telemetry bridge and drive on track to record telemetry before generating a report.');
+          return;
+        }
+      }
+
       if (!window.PDFLib) {
         console.error('PDFLib not loaded in window');
         alert('PDF Generation Library (pdf-lib) is not available.');
@@ -25,9 +33,14 @@ export class PdfReportGenerator {
       }
 
       // If evalResult is not a complete diagnostic object, run StintDiagnostics
-      const diagnosis = (evalResult && evalResult.nailed)
+      const diagnosis = (evalResult && evalResult.hasTelemetry && evalResult.nailed)
         ? evalResult
         : StintDiagnostics.evaluate(stintData, samples, evalResult || {});
+
+      if (!diagnosis || !diagnosis.hasTelemetry) {
+        alert('⚠️ Cannot generate PDF: No telemetry data recorded for this stint.');
+        return;
+      }
 
       const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
       const doc = await PDFDocument.create();

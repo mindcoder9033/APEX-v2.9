@@ -317,6 +317,10 @@ export class StintsManager {
 
     if (this.btnDebriefDownloadPdf) {
       this.btnDebriefDownloadPdf.addEventListener('click', () => {
+        if (!this.lastStintSamples || this.lastStintSamples.length === 0 || !this.lastStintEvaluation?.hasTelemetry) {
+          alert('⚠️ Cannot generate PDF: No telemetry data was recorded for this stint.\n\nPlease connect the APEX telemetry bridge and drive on track.');
+          return;
+        }
         if (this.lastStintRef && this.lastStintEvaluation) {
           PdfReportGenerator.generateStintReport(this.lastStintRef, this.lastStintEvaluation, this.lastStintSamples);
         }
@@ -514,6 +518,12 @@ export class StintsManager {
 
   handleStintComplete(evaluation, stintRef, samples) {
     this.isStintActive = false;
+    if (!evaluation || !evaluation.hasTelemetry || !samples || samples.length === 0) {
+      this.renderSelectedStintDossier();
+      alert('⚠️ No live telemetry data was received during this stint.\n\nPlease ensure Forza Motorsport is streaming UDP telemetry to 127.0.0.1:9999 and the APEX bridge is running.');
+      return;
+    }
+
     this.lastStintEvaluation = evaluation;
     this.lastStintRef = stintRef;
     this.lastStintSamples = samples || [];

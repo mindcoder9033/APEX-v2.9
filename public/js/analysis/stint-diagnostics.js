@@ -15,79 +15,95 @@ export class StintDiagnostics {
    */
   static evaluate(stintData, samples = [], liveStats = {}) {
     const totalSamples = samples.length;
+    if (totalSamples === 0) {
+      return {
+        hasTelemetry: false,
+        error: 'No telemetry samples recorded during stint.',
+        totalSamples: 0
+      };
+    }
     
-    // Extract or compute base metrics
-    let peakSpeedMph = liveStats.peakSpeedMph || 0;
-    let peakSpeedKmh = liveStats.peakSpeedKmh || 0;
-    let peakLatG = liveStats.peakLatG || 0;
-    let peakLongG = liveStats.peakLongG || 0;
+    // Extract and compute base metrics strictly from real samples
+    let peakSpeedMph = 0;
+    let peakSpeedKmh = 0;
+    let peakLatG = 0;
+    let peakLongG = 0;
     let speedSum = 0;
     let throttleLiftsMidCorner = 0;
     let harshBrakingEvents = 0;
     let steeringOscillations = 0;
     let prevSteer = 0;
-    let totalLaps = liveStats.currentLap || stintData.laps || 1;
+    let lineScores = [];
+    let totalLaps = liveStats.currentLap || 1;
 
-    if (totalSamples > 0) {
-      for (let i = 0; i < totalSamples; i++) {
-        const s = samples[i];
-        const motion = s.motion || {};
-        const inputs = s.inputs || {};
-        const accel = motion.acceleration || {};
+    for (let i = 0; i < totalSamples; i++) {
+      const s = samples[i];
+      const motion = s.motion || {};
+      const inputs = s.inputs || {};
+      const timing = s.timing || {};
+      const accel = motion.acceleration || {};
 
-        const speedKmh = motion.speedKmh != null ? motion.speedKmh : (s.speedKmh != null ? s.speedKmh : (motion.speedMps ? motion.speedMps * 3.6 : 0));
-        const speedMph = motion.speedMph != null ? motion.speedMph : (speedKmh * 0.621371);
-        speedSum += speedMph;
+      const speedKmh = motion.speedKmh != null ? motion.speedKmh : (s.speedKmh != null ? s.speedKmh : (motion.speedMps ? motion.speedMps * 3.6 : 0));
+      const speedMph = motion.speedMph != null ? motion.speedMph : (speedKmh * 0.621371);
+      speedSum += speedMph;
 
-        if (speedMph > peakSpeedMph) {
-          peakSpeedMph = Math.round(speedMph);
-          peakSpeedKmh = Math.round(speedKmh);
-        }
-
-        const latG = Math.abs(accel.lateralG != null ? accel.lateralG : (motion.lateralG || motion.gLat || s.gLat || 0));
-        const longG = Math.abs(accel.longitudinalG != null ? accel.longitudinalG : (motion.longitudinalG || motion.gLong || s.gLong || 0));
-        if (latG > peakLatG) peakLatG = parseFloat(latG.toFixed(2));
-        if (longG > peakLongG) peakLongG = parseFloat(longG.toFixed(2));
-
-        const throttle = inputs.throttle != null ? inputs.throttle : (s.throttle != null ? s.throttle : (s.accel ? s.accel / 255 : 0));
-        const brake = inputs.brake != null ? inputs.brake : (s.brake != null ? s.brake : (s.brake ? s.brake / 255 : 0));
-        const steer = inputs.steering != null ? inputs.steering : (inputs.steer != null ? inputs.steer : (s.steer ? s.steer / 127 : 0));
-
-        // TTO detection: lifting throttle to 0 when lateral G > 0.85
-        if (throttle < 0.05 && latG > 0.85 && (s.speedMph || speedMph) > 45) {
-          throttleLiftsMidCorner++;
-        }
-
-        // Lockup / Harsh brake spike
-        if (brake > 0.95 && speedMph > 50) {
-          harshBrakingEvents++;
-        }
-
-        // Steering corrections in mid-corner
-        if (i > 0 && latG > 0.6) {
-          if (Math.sign(steer) !== Math.sign(prevSteer) && Math.abs(steer - prevSteer) > 0.25) {
-            steeringOscillations++;
-          }
-        }
-        prevSteer = steer;
+      if (speedMph > peakSpeedMph) {
+        peakSpeedMph = Math.round(speedMph);
+        peakSpeedKmh = Math.round(speedKmh);
       }
+
+      const latG = Math.abs(accel.lateralG != null ? accel.lateralG : (motion.lateralG || motion.gLat || s.gLat || 0));
+      const longG = Math.abs(accel.longitudinalG != null ? accel.longitudinalG : (motion.longitudinalG || motion.gLong || s.gLong || 0));
+      if (latG > peakLatG) peakLatG = parseFloat(latG.toFixed(2));
+      if (longG > peakLongG) peakLongG = parseFloat(longG.toFixed(2));
+
+      const throttle = inputs.throttle != null ? inputs.throttle : (s.throttle != null ? s.throttle : (s.accel ? s.accel / 255 : 0));
+      const brake = inputs.brake != null ? inputs.brake : (s.brake != null ? s.brake : (s.brake ? s.brake / 255 : 0));
+      const steer = inputs.steering != null ? inputs.steering : (inputs.steer != null ? inputs.steer : (s.steer ? s.steer / 127 : 0));
+
+      if (timing.lapNumber != null && timing.lapNumber > totalLaps) {
+        totalLaps = timing.lapNumber;
+      }
+
+      // Track driving line adherence if normalizedDrivingLine present in packet
+      if (timing.normalizedDrivingLine !== undefined) {
+        const lineAdherence = Math.max(0, Math.min(100, Math.round(100 - (Math.abs(timing.normalizedDrivingLine) / 127) * 100)));
+        lineScores.push(lineAdherence);
+      }
+
+      // TTO detection: lifting throttle to 0 when lateral G > 0.85
+      if (throttle < 0.05 && latG > 0.85 && speedMph > 40) {
+        throttleLiftsMidCorner++;
+      }
+
+      // Lockup / Harsh brake spike
+      if (brake > 0.95 && speedMph > 40) {
+        harshBrakingEvents++;
+      }
+
+      // Steering corrections in mid-corner
+      if (i > 0 && latG > 0.6) {
+        if (Math.sign(steer) !== Math.sign(prevSteer) && Math.abs(steer - prevSteer) > 0.25) {
+          steeringOscillations++;
+        }
+      }
+      prevSteer = steer;
     }
 
-    // Default fallbacks if solitary dry-run or low sample count
-    if (peakSpeedMph === 0) peakSpeedMph = 146;
-    if (peakSpeedKmh === 0) peakSpeedKmh = Math.round(peakSpeedMph * 1.60934);
-    if (peakLatG === 0) peakLatG = 1.28;
-    if (peakLongG === 0) peakLongG = 1.15;
-    const avgSpeedMph = totalSamples > 0 ? Math.round(speedSum / totalSamples) : Math.round(peakSpeedMph * 0.72);
+    const avgSpeedMph = Math.round(speedSum / totalSamples);
+    const avgLineScore = lineScores.length > 0 
+      ? Math.round(lineScores.reduce((a, b) => a + b, 0) / lineScores.length)
+      : Math.max(50, Math.min(99, Math.round(95 - Math.min(25, steeringOscillations * 2))));
 
-    // Stint-Specific Evaluation Engine
+    // Stint-Specific Evaluation from actual telemetry
     const stintId = stintData.id || 'stint-1-1';
-    let lineScore = liveStats.lineScore || (92 - Math.min(15, Math.floor(steeringOscillations / 3)));
-    let exitDeltaMph = liveStats.exitDeltaMph != null ? liveStats.exitDeltaMph : 1.8;
-    let arcRadiusFt = liveStats.arcRadiusFt || (195 - Math.min(25, steeringOscillations * 2));
-    let thresholdEffPct = liveStats.thresholdEffPct || (93 - Math.min(20, harshBrakingEvents));
-    let reactionDistFt = liveStats.reactionDistanceFt || 24;
-    let ttoEvents = throttleLiftsMidCorner > 0 ? Math.ceil(throttleLiftsMidCorner / 8) : 0;
+    let lineScore = avgLineScore;
+    let exitDeltaMph = liveStats.exitDeltaMph != null ? liveStats.exitDeltaMph : parseFloat((peakLongG * 15).toFixed(1));
+    let arcRadiusFt = (peakLatG > 0.2 && peakSpeedMph > 20) 
+      ? Math.round((peakSpeedMph * peakSpeedMph) / (15 * peakLatG)) 
+      : 195;
+    let thresholdEffPct = Math.max(50, Math.min(100, Math.round(95 - (harshBrakingEvents * 5))));
+    let ttoEvents = throttleLiftsMidCorner;
 
     let targetAchieved = true;
     let gradeScore = 90;
@@ -273,6 +289,7 @@ export class StintDiagnostics {
     }
 
     return {
+      hasTelemetry: true,
       stintId: stintData.id,
       stintName: stintData.name,
       tierName: stintData.tierName,
