@@ -512,20 +512,9 @@ export class StintsManager {
     this.stintBriefingStage.style.display = 'none';
     this.stintActiveHudStage.style.display = 'flex';
 
-    this.liveHud.startStint(
-      stint,
-      (evaluation, stintRef, samples) => {
-        this.handleStintComplete(evaluation, stintRef, samples);
-      },
-      () => {
-        this.returnToBriefing();
-      }
-    );
-  }
-
-  returnToBriefing() {
-    this.isStintActive = false;
-    this.renderSelectedStintDossier();
+    this.liveHud.startStint(stint, (evaluation, stintRef, samples) => {
+      this.handleStintComplete(evaluation, stintRef, samples);
+    });
   }
 
   stopStint() {
