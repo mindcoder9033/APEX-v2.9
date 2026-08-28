@@ -12,6 +12,7 @@ export class LiveHudRenderer {
     this.container = document.getElementById(containerId);
     this.activeStint = null;
     this.onFinishCallback = null;
+    this.onCancelCallback = null;
     
     this.sessionSamples = [];
     this.lapsCompleted = 0;
@@ -33,9 +34,10 @@ export class LiveHudRenderer {
     };
   }
 
-  startStint(stint, onFinishCallback) {
+  startStint(stint, onFinishCallback, onCancelCallback = null) {
     this.activeStint = stint;
     this.onFinishCallback = onFinishCallback;
+    this.onCancelCallback = onCancelCallback;
     this.sessionSamples = [];
     this.lapsCompleted = 0;
     this.stintStartTime = Date.now();
@@ -56,6 +58,20 @@ export class LiveHudRenderer {
     };
 
     this.renderHudLayout();
+  }
+
+  /**
+   * Closes the active Live Cockpit HUD and returns to the Briefing Dossier screen.
+   */
+  cancelStint() {
+    this.activeStint = null;
+    if (this.container) {
+      this.container.innerHTML = '';
+      this.container.style.display = 'none';
+    }
+    if (typeof this.onCancelCallback === 'function') {
+      this.onCancelCallback();
+    }
   }
 
   /**
@@ -363,14 +379,18 @@ export class LiveHudRenderer {
           </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="text-align: right; font-family: var(--font-mono); font-size: 11px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="text-align: right; font-family: var(--font-mono); font-size: 11px; margin-right: 4px;">
             <span style="color: var(--color-text-muted); display: block; font-size: 9px;">PROGRESS</span>
             <strong id="hud-lap-progress" style="color: var(--color-text-primary); font-size: 14px;">LAP ${this.lapsCompleted || 1} / ${stint.laps}</strong>
           </div>
 
-          <button id="btn-stop-active-stint" class="btn btn-primary chamfer-br" style="height: 42px; font-size: 12px; font-weight: 700;">
-            <span>⏹</span> FINISH STINT & GENERATE PDF
+          <button id="btn-return-briefing" class="btn btn-secondary chamfer-br" style="height: 40px; font-size: 11.5px; font-weight: 700; padding: 0 14px; background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary);" title="Return to Practice Stint Briefing Dossier">
+            <span>◀</span> BRIEFING DOSSIER
+          </button>
+
+          <button id="btn-stop-active-stint" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 11.5px; font-weight: 700; padding: 0 14px;">
+            <span>⏹</span> FINISH & PDF
           </button>
         </div>
       </div>
@@ -413,6 +433,13 @@ export class LiveHudRenderer {
         </div>
       </div>
     `;
+
+    const btnReturn = document.getElementById('btn-return-briefing');
+    if (btnReturn) {
+      btnReturn.addEventListener('click', () => {
+        this.cancelStint();
+      });
+    }
 
     const btnStop = document.getElementById('btn-stop-active-stint');
     if (btnStop) {
