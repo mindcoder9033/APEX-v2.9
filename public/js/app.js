@@ -10,6 +10,7 @@ import { TrackLibraryView } from './track-library-view.js';
 import { trackLibraryStore } from './track-library-store.js';
 import { weatherProfileStore } from './weather-profile-store.js';
 import { WeatherSimulator } from './analysis/weather-simulator.js';
+import { StintsManager } from './stints.js';
 
 class ApexApp {
   constructor() {
@@ -19,6 +20,7 @@ class ApexApp {
     this.session = new SessionManager();
     this.layoutManager = new GridLayoutManager();
     this.trackLibrary = new TrackLibraryView();
+    this.stintsManager = new StintsManager();
 
     // Rebind HUD and Session now that all components exist
     this.layoutManager.rebindTelemetryElements();
@@ -45,6 +47,11 @@ class ApexApp {
     this.statusText = document.getElementById('status-text');
     this.rateText = document.getElementById('rate-text');
 
+    this.btnNavStints = document.getElementById('btn-nav-stints');
+    this.viewStints = document.getElementById('view-stints');
+    this.viewPitwall = document.getElementById('view-pitwall');
+    this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
+    
     this.wsClient = new ApexWsClient({
       url: this.session.settings.wsUrl,
       autoReconnect: true
@@ -147,6 +154,18 @@ class ApexApp {
       });
     }
 
+    if (this.btnNavStints) {
+      this.btnNavStints.addEventListener('click', () => {
+        this.showStintsView();
+      });
+    }
+
+    if (this.btnNavPitwall) {
+      this.btnNavPitwall.addEventListener('click', () => {
+        this.showPitwallView();
+      });
+    }
+
     // Close on backdrop click
     if (this.modalBackdrop) {
       this.modalBackdrop.addEventListener('click', (e) => {
@@ -236,6 +255,9 @@ class ApexApp {
       this.setStatus('connected', 'Live 60Hz');
       this.hud.update(sample, this.session.settings.speedUnit);
       this.session.processSample(sample);
+      if (this.stintsManager && this.stintsManager.hud) {
+        this.stintsManager.hud.update(sample);
+      }
 
       if (this.rateText) {
         this.rateText.textContent = `${this.wsClient.stats.packetsPerSecond} pkt/s`;
@@ -266,6 +288,27 @@ class ApexApp {
 
   closeUdpGuide() {
     if (this.modalUdpGuide) this.modalUdpGuide.classList.remove('active');
+  }
+
+  showStintsView() {
+    if (this.viewPitwall) this.viewPitwall.style.display = 'none';
+    if (this.trackLibrary && this.trackLibrary.viewTrackLibrary) this.trackLibrary.hideView();
+    if (this.viewStints) this.viewStints.style.display = 'block';
+    
+    if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
+    if (this.btnNavStints) this.btnNavStints.classList.add('active');
+    
+    // Dispatch an event so stints.js knows to render
+    window.dispatchEvent(new Event('apex-stints-opened'));
+  }
+
+  showPitwallView() {
+    if (this.viewStints) this.viewStints.style.display = 'none';
+    if (this.trackLibrary && this.trackLibrary.viewTrackLibrary) this.trackLibrary.hideView();
+    if (this.viewPitwall) this.viewPitwall.style.display = 'block';
+    
+    if (this.btnNavStints) this.btnNavStints.classList.remove('active');
+    if (this.btnNavPitwall) this.btnNavPitwall.classList.add('active');
   }
 
   saveSettings() {

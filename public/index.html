@@ -50,6 +50,10 @@
           <span>📡</span>
         </button>
 
+        <button id="btn-nav-stints" class="btn btn-secondary btn-icon chamfer-all-corners" title="Open Stints (L)">
+          <span>🎯</span>
+        </button>
+
         <button id="btn-toggle-edit-layout" class="btn btn-secondary btn-icon chamfer-all-corners" title="Customize Telemetry Widgets Layout (E)">
           <span>📐</span>
         </button>
@@ -1145,6 +1149,35 @@
         </main>
       </div>
     </div> <!-- /#view-track-library -->
+
+    <!-- STINTS VIEW CONTAINER -->
+    <div id="view-stints" class="view-container view-stints" style="display: none;">
+      <main class="pit-dashboard-grid" style="display: block;">
+        
+        <div id="stints-container">
+          <header class="pit-card-header" style="margin-bottom: 20px;">
+            <h2 class="pit-card-title">Training Stints</h2>
+            <span class="pit-card-subtitle">Practice specific skills with real-time feedback</span>
+          </header>
+          
+          <div id="stints-tiers-list">
+            <!-- Tiers will be populated here -->
+          </div>
+        </div>
+
+        <div id="stints-hud-view" style="display: none; height: 100vh;">
+          <div style="display: flex; justify-content: space-between; padding: 20px;">
+            <h2 id="live-hud-title" class="pit-card-title" style="color: var(--color-f1-red);">Live HUD</h2>
+            <button id="btn-stop-stint" class="btn btn-primary chamfer-br">STOP STINT</button>
+          </div>
+          
+          <div id="live-hud-widgets-container" style="padding: 20px;">
+            <!-- Widgets injected here -->
+          </div>
+        </div>
+
+      </main>
+    </div>
 
   </div> <!-- /.app-container -->
 
