@@ -340,6 +340,10 @@ export class StintsManager {
   selectStint(stintId) {
     this.selectedStintId = stintId;
     this.renderStintList();
+    const newStint = this.getSelectedStint();
+    if (this.isStintActive && this.liveHud) {
+      this.liveHud.switchStint(newStint);
+    }
     this.renderSelectedStintDossier();
   }
 

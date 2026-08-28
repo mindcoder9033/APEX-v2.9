@@ -197,11 +197,72 @@ export class PdfReportGenerator {
 
       curY -= 56;
 
-      // Helper function to draw a 3-Pillar Actionable Card
+/**
+ * Helper to wrap text into multiple lines fitted to a maximum pixel/point width
+ * @param {string} text 
+ * @param {Object} font 
+ * @param {number} fontSize 
+ * @param {number} maxWidth 
+ * @returns {string[]}
+ */
+function wrapText(text, font, fontSize, maxWidth) {
+  if (!text) return [];
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    let testWidth = 0;
+    try {
+      if (font && typeof font.widthOfTextAtSize === 'function') {
+        testWidth = font.widthOfTextAtSize(testLine, fontSize);
+      } else {
+        testWidth = testLine.length * (fontSize * 0.52);
+      }
+    } catch {
+      testWidth = testLine.length * (fontSize * 0.52);
+    }
+
+    if (testWidth <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  return lines;
+}
+
+      // Helper function to draw a 3-Pillar Actionable Card with dynamic multi-line text wrapping
       const drawPillarCard = (title, items, theme) => {
         const cardWidth = width - 80;
-        const itemSpacing = 16;
-        const cardHeight = 24 + (items.length * itemSpacing);
+        const textMaxWidth = cardWidth - 32; // x: 64 to width - 48
+        const lineHeight = 11;
+        const itemGap = 5;
+
+        // Precompute wrapped lines for every item so full feedback is rendered without truncation
+        const processedItems = (items || []).map(itemText => ({
+          text: itemText,
+          lines: wrapText(itemText, fontBody, 8.5, textMaxWidth)
+        }));
+
+        // Calculate card height dynamically
+        let totalItemsHeight = 0;
+        processedItems.forEach((pItem, idx) => {
+          totalItemsHeight += pItem.lines.length * lineHeight;
+          if (idx < processedItems.length - 1) {
+            totalItemsHeight += itemGap;
+          }
+        });
+
+        const headerHeight = 22;
+        const bottomPadding = 8;
+        const cardHeight = headerHeight + totalItemsHeight + bottomPadding;
         const cardY = curY - cardHeight;
 
         // Card Background
@@ -227,39 +288,40 @@ export class PdfReportGenerator {
         // Card Header Title
         page.drawText(`${theme.icon} ${title.toUpperCase()}`, {
           x: 52,
-          y: cardY + cardHeight - 16,
-          size: 9,
+          y: cardY + cardHeight - 15,
+          size: 8.5,
           font: fontTitle,
           color: theme.titleColor
         });
 
-        // Bullet Items
-        items.forEach((itemText, i) => {
-          const itemY = cardY + cardHeight - 32 - (i * itemSpacing);
+        // Bullet Items with complete multi-line feedback
+        let currentItemY = cardY + cardHeight - headerHeight - 3;
+        processedItems.forEach(pItem => {
+          // Draw bullet aligned with the first line of the item
           page.drawText('•', {
-            x: 54,
-            y: itemY,
+            x: 53,
+            y: currentItemY,
             size: 9,
             font: fontBodyBold,
             color: theme.bulletColor
           });
 
-          // Truncate cleanly if extra long
-          let displayTxt = itemText;
-          if (displayTxt.length > 95) {
-            displayTxt = displayTxt.substring(0, 92) + '...';
-          }
-
-          page.drawText(displayTxt, {
-            x: 64,
-            y: itemY,
-            size: 8.5,
-            font: fontBody,
-            color: theme.textColor
+          // Draw each wrapped line without truncation
+          pItem.lines.forEach(lineText => {
+            page.drawText(lineText, {
+              x: 64,
+              y: currentItemY,
+              size: 8.5,
+              font: fontBody,
+              color: theme.textColor
+            });
+            currentItemY -= lineHeight;
           });
+
+          currentItemY -= itemGap;
         });
 
-        curY = cardY - 12;
+        curY = cardY - 9;
       };
 
       // 6. PILLAR 1: WHAT YOU NAILED (Green)
@@ -308,7 +370,20 @@ export class PdfReportGenerator {
       );
 
       // 9. Skip Barber Principle & Next Steps Box
-      const footerCardHeight = 65;
+      const quoteClean = (diagnosis.quote || '').replace(/"/g, '');
+      const quoteParts = quoteClean.split(' — ');
+      const quoteMain = quoteParts[0] || '';
+      const quoteAuthor = quoteParts[1] ? `— ${quoteParts[1]}` : '';
+
+      const quoteMaxWidth = width - 80 - 24;
+      const quoteLines = wrapText(`"${quoteMain}"`, fontBody, 8, quoteMaxWidth);
+      const quoteLineHeight = 10.5;
+
+      const footerHeaderH = 18;
+      const quoteBlockH = quoteLines.length * quoteLineHeight;
+      const authorH = quoteAuthor ? 12 : 0;
+      const nextActionH = 16;
+      const footerCardHeight = footerHeaderH + quoteBlockH + authorH + nextActionH + 12;
       const footerCardY = curY - footerCardHeight;
 
       page.drawRectangle({
@@ -329,23 +404,22 @@ export class PdfReportGenerator {
         color: rgb(0.12, 0.18, 0.28)
       });
 
-      const quoteClean = (diagnosis.quote || '').replace(/"/g, '');
-      const quoteParts = quoteClean.split(' — ');
-      let quoteMain = quoteParts[0] || '';
-      if (quoteMain.length > 105) quoteMain = quoteMain.substring(0, 102) + '...';
-
-      page.drawText(`"${quoteMain}"`, {
-        x: 52,
-        y: footerCardY + footerCardHeight - 28,
-        size: 8,
-        font: fontBody,
-        color: rgb(0.25, 0.3, 0.4)
+      let quoteCurY = footerCardY + footerCardHeight - 26;
+      quoteLines.forEach(qLine => {
+        page.drawText(qLine, {
+          x: 52,
+          y: quoteCurY,
+          size: 8,
+          font: fontBody,
+          color: rgb(0.25, 0.3, 0.4)
+        });
+        quoteCurY -= quoteLineHeight;
       });
 
-      if (quoteParts[1]) {
-        page.drawText(`— ${quoteParts[1]}`, {
+      if (quoteAuthor) {
+        page.drawText(quoteAuthor, {
           x: 52,
-          y: footerCardY + footerCardHeight - 40,
+          y: quoteCurY - 1,
           size: 7.5,
           font: fontMono,
           color: rgb(0.45, 0.5, 0.6)
@@ -354,7 +428,7 @@ export class PdfReportGenerator {
 
       page.drawText(`NEXT ACTION: Advance to the subsequent module in ${diagnosis.tierName} or repeat with higher entry velocity.`, {
         x: 52,
-        y: footerCardY + 12,
+        y: footerCardY + 10,
         size: 8,
         font: fontBodyBold,
         color: rgb(0.88, 0.02, 0.0)
