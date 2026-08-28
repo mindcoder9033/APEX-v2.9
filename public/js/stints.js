@@ -466,6 +466,12 @@ export class StintsManager {
     }
   }
 
+  updateTelemetry(sample) {
+    if (this.liveHud) {
+      this.liveHud.update(sample);
+    }
+  }
+
   startStint() {
     const stint = this.getSelectedStint();
     if (!stint) return;

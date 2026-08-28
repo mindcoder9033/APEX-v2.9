@@ -269,8 +269,8 @@ class ApexApp {
       this.setStatus('connected', 'Live 60Hz');
       this.hud.update(sample, this.session.settings.speedUnit);
       this.session.processSample(sample);
-      if (this.stintsManager && this.stintsManager.hud) {
-        this.stintsManager.hud.update(sample);
+      if (this.stintsManager) {
+        this.stintsManager.updateTelemetry(sample);
       }
 
       if (this.rateText) {

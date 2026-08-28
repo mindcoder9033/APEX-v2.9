@@ -252,19 +252,31 @@ export class LiveHudRenderer {
     this.telemetryStats.samplesCount++;
     this.sessionSamples.push(sample);
 
-    const speedKmh = sample.speedKmh || (sample.speed ? sample.speed * 3.6 : 0);
-    const speedMph = sample.speedMph || (sample.speed ? sample.speed * 2.23694 : 0);
-    const accel = Math.round(sample.accel || 0);
-    const brake = Math.round(sample.brake || 0);
-    const gear = sample.gear !== undefined ? (sample.gear === 0 ? 'R' : sample.gear === 11 ? 'N' : sample.gear) : 'N';
-    const gLat = (sample.gLat || 0).toFixed(2);
-    const gLong = (sample.gLong || 0).toFixed(2);
+    const motion = sample.motion || {};
+    const inputs = sample.inputs || {};
+    const engine = sample.engine || {};
+    const timing = sample.timing || {};
+
+    const speedKmh = motion.speedKmh != null ? motion.speedKmh : (sample.speedKmh != null ? sample.speedKmh : (sample.speed ? sample.speed * 3.6 : 0));
+    const speedMph = motion.speedMph != null ? motion.speedMph : (sample.speedMph != null ? sample.speedMph : (sample.speed ? sample.speed * 2.23694 : 0));
+
+    const accel = Math.round(inputs.throttle != null ? inputs.throttle : (sample.accel != null ? sample.accel : 0));
+    const brake = Math.round(inputs.brake != null ? inputs.brake : (sample.brake != null ? sample.brake : 0));
+    const steer = inputs.steer != null ? inputs.steer : (sample.steer != null ? sample.steer : 0);
+
+    const rawGear = inputs.gear != null ? inputs.gear : sample.gear;
+    const gear = rawGear !== undefined ? (rawGear === 0 ? 'R' : rawGear === 1 ? 'N' : rawGear === 11 ? 'N' : (rawGear > 1 ? rawGear - 1 : rawGear)) : 'N';
+
+    const gLatVal = motion.gLat != null ? motion.gLat : (sample.gLat != null ? sample.gLat : 0);
+    const gLongVal = motion.gLong != null ? motion.gLong : (sample.gLong != null ? sample.gLong : 0);
+    const gLat = Number(gLatVal).toFixed(2);
+    const gLong = Number(gLongVal).toFixed(2);
 
     if (speedMph > this.telemetryStats.peakSpeedMph) {
       this.telemetryStats.peakSpeedMph = Math.round(speedMph);
       this.telemetryStats.peakSpeedKmh = Math.round(speedKmh);
     }
-    const currentLatG = Math.abs(sample.gLat || 0);
+    const currentLatG = Math.abs(Number(gLatVal) || 0);
     if (currentLatG > this.telemetryStats.peakLatG) {
       this.telemetryStats.peakLatG = parseFloat(currentLatG.toFixed(2));
     }
@@ -283,8 +295,9 @@ export class LiveHudRenderer {
     if (elGear) elGear.textContent = gear;
 
     // Handle Lap counts
-    if (sample.lapNumber && sample.lapNumber > this.lapsCompleted) {
-      this.lapsCompleted = sample.lapNumber;
+    const currentLapNum = timing.lapNumber != null ? timing.lapNumber : (sample.lapNumber != null ? sample.lapNumber : 1);
+    if (currentLapNum && currentLapNum > this.lapsCompleted) {
+      this.lapsCompleted = currentLapNum;
       this.telemetryStats.currentLap = this.lapsCompleted;
       const elLap = document.getElementById('hud-lap-progress');
       if (elLap) elLap.textContent = `LAP ${this.lapsCompleted} / ${this.activeStint.laps}`;
@@ -299,20 +312,30 @@ export class LiveHudRenderer {
     // Dynamic Tier-specific widget updates
     if (this.activeStint.tier === 1) {
       const elExitDelta = document.getElementById('hud-exit-delta');
-      if (elExitDelta && accel > 80) {
-        const delta = ((Math.sin(Date.now() / 1000) * 1.5) + 1.2).toFixed(1);
+      if (elExitDelta) {
+        const delta = ((Math.sin(Date.now() / 1000) * 1.5) + (accel > 80 ? 2.1 : 0.8)).toFixed(1);
         elExitDelta.textContent = `+${delta} MPH`;
+      }
+      const elLine = document.getElementById('hud-line-score');
+      if (elLine) {
+        const dynamicScore = Math.min(99, Math.max(75, Math.round(92 - Math.abs(steer) * 0.1)));
+        elLine.textContent = `${dynamicScore}%`;
       }
     } else if (this.activeStint.tier === 2) {
       const elArc = document.getElementById('hud-arc-radius');
-      if (elArc && Math.abs(sample.gLat || 0) > 0.5) {
-        const radius = Math.round(180 + Math.abs(sample.gLat || 1) * 15);
+      if (elArc) {
+        const radius = Math.round(180 + Math.abs(currentLatG) * 15);
         elArc.textContent = `${radius} ft`;
+      }
+      const elBrakePulse = document.getElementById('hud-brake-pulse');
+      if (elBrakePulse && brake > 0) {
+        const eff = Math.min(100, Math.round(80 + (brake * 0.2)));
+        elBrakePulse.textContent = `${eff}% EFF`;
       }
     } else if (this.activeStint.tier === 3) {
       const elEarlyApex = document.getElementById('hud-early-apex-alert');
       if (elEarlyApex) {
-        if (brake > 60 && Math.abs(sample.steer || 0) > 40) {
+        if (brake > 60 && Math.abs(steer) > 40) {
           elEarlyApex.textContent = 'EARLY APEX DETECTED!';
           elEarlyApex.style.color = 'var(--color-f1-red)';
         } else {
