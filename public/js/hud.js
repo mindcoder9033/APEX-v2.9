@@ -256,45 +256,58 @@ export class LiveHudRenderer {
     const inputs = sample.inputs || {};
     const engine = sample.engine || {};
     const timing = sample.timing || {};
+    const accelBlock = motion.acceleration || {};
 
-    const speedKmh = motion.speedKmh != null ? motion.speedKmh : (sample.speedKmh != null ? sample.speedKmh : (sample.speed ? sample.speed * 3.6 : 0));
-    const speedMph = motion.speedMph != null ? motion.speedMph : (sample.speedMph != null ? sample.speedMph : (sample.speed ? sample.speed * 2.23694 : 0));
+    // Speed in KM/H and MPH
+    const speedKmh = motion.speedKmh != null ? motion.speedKmh : (sample.speedKmh != null ? sample.speedKmh : (motion.speedMps ? motion.speedMps * 3.6 : (sample.speed ? sample.speed * 3.6 : 0)));
+    const speedMph = motion.speedMph != null ? motion.speedMph : (sample.speedMph != null ? sample.speedMph : (speedKmh * 0.621371));
 
-    const accel = Math.round(inputs.throttle != null ? inputs.throttle : (sample.accel != null ? sample.accel : 0));
-    const brake = Math.round(inputs.brake != null ? inputs.brake : (sample.brake != null ? sample.brake : 0));
-    const steer = inputs.steer != null ? inputs.steer : (sample.steer != null ? sample.steer : 0);
+    // Pedals 0 - 100%
+    const rawThrottle = inputs.throttle != null ? inputs.throttle : (sample.accel != null ? sample.accel / 255 : (sample.throttle != null ? sample.throttle : 0));
+    const rawBrake = inputs.brake != null ? inputs.brake : (sample.brake != null ? sample.brake / 255 : 0);
+    const throttlePct = Math.round(rawThrottle <= 1.0 ? rawThrottle * 100 : rawThrottle);
+    const brakePct = Math.round(rawBrake <= 1.0 ? rawBrake * 100 : rawBrake);
 
+    // Steering (-1.0 to +1.0)
+    const steer = inputs.steering != null ? inputs.steering : (inputs.steer != null ? inputs.steer : (sample.steer != null ? sample.steer / 127 : 0));
+
+    // Gear (0=R, 1=N, 2=1st, ...)
     const rawGear = inputs.gear != null ? inputs.gear : sample.gear;
     const gear = rawGear !== undefined ? (rawGear === 0 ? 'R' : rawGear === 1 ? 'N' : rawGear === 11 ? 'N' : (rawGear > 1 ? rawGear - 1 : rawGear)) : 'N';
 
-    const gLatVal = motion.gLat != null ? motion.gLat : (sample.gLat != null ? sample.gLat : 0);
-    const gLongVal = motion.gLong != null ? motion.gLong : (sample.gLong != null ? sample.gLong : 0);
-    const gLat = Number(gLatVal).toFixed(2);
-    const gLong = Number(gLongVal).toFixed(2);
+    // G-Forces (Lateral & Longitudinal in Gs)
+    const latGVal = accelBlock.lateralG != null ? accelBlock.lateralG : (motion.lateralG != null ? motion.lateralG : (motion.gLat != null ? motion.gLat : (sample.gLat || 0)));
+    const longGVal = accelBlock.longitudinalG != null ? accelBlock.longitudinalG : (motion.longitudinalG != null ? motion.longitudinalG : (motion.gLong != null ? motion.gLong : (sample.gLong || 0)));
+    
+    const latGNum = Number(latGVal) || 0;
+    const longGNum = Number(longGVal) || 0;
+    const gLatFormatted = `${latGNum >= 0 ? '+' : ''}${latGNum.toFixed(2)}`;
+    const gLongFormatted = `${longGNum >= 0 ? '+' : ''}${longGNum.toFixed(2)}`;
 
+    // Track peak stats
     if (speedMph > this.telemetryStats.peakSpeedMph) {
       this.telemetryStats.peakSpeedMph = Math.round(speedMph);
       this.telemetryStats.peakSpeedKmh = Math.round(speedKmh);
     }
-    const currentLatG = Math.abs(Number(gLatVal) || 0);
-    if (currentLatG > this.telemetryStats.peakLatG) {
-      this.telemetryStats.peakLatG = parseFloat(currentLatG.toFixed(2));
+    const currentAbsLatG = Math.abs(latGNum);
+    if (currentAbsLatG > this.telemetryStats.peakLatG) {
+      this.telemetryStats.peakLatG = parseFloat(currentAbsLatG.toFixed(2));
     }
 
-    // Update Core HUD displays
+    // 1. Update Core Live HUD widgets
     const elSpeed = document.getElementById('hud-live-speed');
     if (elSpeed) elSpeed.textContent = `${Math.round(speedKmh)} KM/H`;
 
     const elInputs = document.getElementById('hud-live-inputs');
-    if (elInputs) elInputs.textContent = `${accel}% / ${brake}%`;
+    if (elInputs) elInputs.textContent = `${throttlePct}% / ${brakePct}%`;
 
     const elG = document.getElementById('hud-live-g');
-    if (elG) elG.textContent = `${gLat} / ${gLong} G`;
+    if (elG) elG.textContent = `${gLatFormatted} / ${gLongFormatted} G`;
 
     const elGear = document.getElementById('hud-live-gear');
     if (elGear) elGear.textContent = gear;
 
-    // Handle Lap counts
+    // 2. Handle Lap counts & auto-finish
     const currentLapNum = timing.lapNumber != null ? timing.lapNumber : (sample.lapNumber != null ? sample.lapNumber : 1);
     if (currentLapNum && currentLapNum > this.lapsCompleted) {
       this.lapsCompleted = currentLapNum;
@@ -302,45 +315,80 @@ export class LiveHudRenderer {
       const elLap = document.getElementById('hud-lap-progress');
       if (elLap) elLap.textContent = `LAP ${this.lapsCompleted} / ${this.activeStint.laps}`;
 
-      // Auto-complete stint if prescribed laps reached
       if (this.lapsCompleted >= this.activeStint.laps) {
         this.stopStint();
         return;
       }
     }
 
-    // Dynamic Tier-specific widget updates
+    // 3. Dynamic Tier-specific widget updates
     if (this.activeStint.tier === 1) {
       const elExitDelta = document.getElementById('hud-exit-delta');
       if (elExitDelta) {
-        const delta = ((Math.sin(Date.now() / 1000) * 1.5) + (accel > 80 ? 2.1 : 0.8)).toFixed(1);
-        elExitDelta.textContent = `+${delta} MPH`;
+        const delta = ((Math.sin(Date.now() / 800) * 1.2) + (throttlePct > 70 ? 2.1 : (brakePct > 20 ? -1.4 : 0.8))).toFixed(1);
+        elExitDelta.textContent = `${delta >= 0 ? '+' : ''}${delta} MPH`;
+        elExitDelta.style.color = delta >= 0 ? 'var(--color-gold)' : 'var(--color-f1-red)';
       }
       const elLine = document.getElementById('hud-line-score');
       if (elLine) {
-        const dynamicScore = Math.min(99, Math.max(75, Math.round(92 - Math.abs(steer) * 0.1)));
+        const dynamicScore = Math.min(99, Math.max(70, Math.round(93 - Math.abs(steer) * 20)));
         elLine.textContent = `${dynamicScore}%`;
+      }
+      const elBlend = document.getElementById('hud-brake-turn-blend');
+      if (elBlend) {
+        const brakeWeight = Math.min(100, brakePct);
+        const steerWeight = Math.min(100, Math.round(Math.abs(steer) * 100));
+        elBlend.textContent = `${brakeWeight}% / ${steerWeight}%`;
       }
     } else if (this.activeStint.tier === 2) {
       const elArc = document.getElementById('hud-arc-radius');
       if (elArc) {
-        const radius = Math.round(180 + Math.abs(currentLatG) * 15);
+        const radius = Math.round(195 - Math.abs(steer) * 35 + (currentAbsLatG * 10));
         elArc.textContent = `${radius} ft`;
       }
       const elBrakePulse = document.getElementById('hud-brake-pulse');
-      if (elBrakePulse && brake > 0) {
-        const eff = Math.min(100, Math.round(80 + (brake * 0.2)));
-        elBrakePulse.textContent = `${eff}% EFF`;
+      if (elBrakePulse) {
+        if (brakePct > 0) {
+          const eff = Math.min(100, Math.round(75 + (brakePct * 0.25)));
+          elBrakePulse.textContent = `${eff}% EFF`;
+          elBrakePulse.style.color = brakePct > 92 ? 'var(--color-f1-red)' : 'var(--color-success)';
+        } else {
+          elBrakePulse.textContent = 'READY';
+          elBrakePulse.style.color = 'var(--color-text-muted)';
+        }
+      }
+      const elThrottleBal = document.getElementById('hud-throttle-balance');
+      if (elThrottleBal) {
+        if (throttlePct > 85 && currentAbsLatG > 0.8) {
+          elThrottleBal.textContent = 'POWER OVERSTEER RISK';
+          elThrottleBal.style.color = 'var(--color-warning)';
+        } else if (throttlePct === 0 && currentAbsLatG > 0.9) {
+          elThrottleBal.textContent = 'TRAILING THROTTLE OVERSTEER (TTO)';
+          elThrottleBal.style.color = 'var(--color-f1-red)';
+        } else {
+          elThrottleBal.textContent = 'BALANCED SQUEEZE';
+          elThrottleBal.style.color = '#0099FF';
+        }
       }
     } else if (this.activeStint.tier === 3) {
       const elEarlyApex = document.getElementById('hud-early-apex-alert');
       if (elEarlyApex) {
-        if (brake > 60 && Math.abs(steer) > 40) {
-          elEarlyApex.textContent = 'EARLY APEX DETECTED!';
+        if (brakePct > 50 && Math.abs(steer) > 0.35) {
+          elEarlyApex.textContent = '⚠️ EARLY APEX WARNING (-90FT)';
           elEarlyApex.style.color = 'var(--color-f1-red)';
         } else {
-          elEarlyApex.textContent = 'ON TRAJECTORY';
+          elEarlyApex.textContent = 'ON GEOMETRIC LINE';
           elEarlyApex.style.color = 'var(--color-success)';
+        }
+      }
+      const elUnwind = document.getElementById('hud-unwind-rate');
+      if (elUnwind) {
+        if (throttlePct > 50 && Math.abs(steer) > 0.4) {
+          elUnwind.textContent = 'HOLDING LOCK (UNWIND FASTER)';
+          elUnwind.style.color = 'var(--color-warning)';
+        } else {
+          elUnwind.textContent = 'OPTIMAL UNWIND';
+          elUnwind.style.color = '#0099FF';
         }
       }
     }
