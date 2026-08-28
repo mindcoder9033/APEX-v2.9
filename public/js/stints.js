@@ -253,7 +253,6 @@ export class StintsManager {
     this.viewStints = document.getElementById('view-stints');
     this.btnNavStints = document.getElementById('btn-nav-stints');
     this.btnReturnPitwall = document.getElementById('btn-return-pitwall-from-stints');
-    this.btnExportPdf = document.getElementById('btn-export-stint-report-pdf');
 
     this.stintsListContainer = document.getElementById('stints-list-container');
     this.stintBriefingStage = document.getElementById('stint-briefing-stage');
@@ -289,16 +288,6 @@ export class StintsManager {
           this.activeFilter = pill.dataset.filter || 'all';
           this.renderStintList();
         });
-      });
-    }
-
-    // PDF Export button
-    if (this.btnExportPdf) {
-      this.btnExportPdf.addEventListener('click', () => {
-        const stint = this.getSelectedStint();
-        if (stint) {
-          PdfReportGenerator.generateStintReport(stint, this.liveHud.telemetryStats || {});
-        }
       });
     }
   }
