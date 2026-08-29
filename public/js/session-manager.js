@@ -363,6 +363,11 @@ export class SessionManager {
           } catch (weatherErr) {
             console.warn('[WEATHER INTEL] Weather simulation warning:', weatherErr);
           }
+
+          // Trigger immediate UI refresh if Track Dossier is active
+          if (window.apexApp && window.apexApp.trackLibrary && typeof window.apexApp.trackLibrary.refresh === 'function') {
+            window.apexApp.trackLibrary.refresh();
+          }
         } catch (synthErr) {
           console.warn('[TRACK LIBRARY] Track profile synthesis warning:', synthErr);
         }

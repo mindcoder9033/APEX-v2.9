@@ -65,26 +65,22 @@ export class TrackLibraryStore {
         
       const isMoreDetailed = (newTrack.vectorMap?.originalSamplesCount || 0) > (existing.vectorMap?.originalSamplesCount || 0);
 
-      const shouldOverwrite = isFaster || isMoreDetailed;
-
-      if (shouldOverwrite) {
-        savedRecord = {
-          ...newTrack,
-          // Preserve cumulative counters and original creation date
-          stintsRecordedCount: (existing.stintsRecordedCount || 1) + 1,
-          totalLapsDriven: (existing.totalLapsDriven || 0) + (newTrack.totalLapsDriven || 1),
-          createdAt: existing.createdAt || new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        };
-      } else {
-        savedRecord = {
-          ...existing,
-          // Only update cumulative counters
-          stintsRecordedCount: (existing.stintsRecordedCount || 1) + 1,
-          totalLapsDriven: (existing.totalLapsDriven || 0) + (newTrack.totalLapsDriven || 1),
-          updatedAt: new Date().toISOString()
-        };
-      }
+      savedRecord = {
+        ...existing,
+        ...newTrack,
+        // Preserve all-time personal best lap time if existing was faster
+        bestLapTime: isFaster ? newTrack.bestLapTime : (existing.bestLapTime > 0 ? existing.bestLapTime : newTrack.bestLapTime),
+        bestLapNumber: isFaster ? (newTrack.bestLapNumber || 1) : (existing.bestLapNumber || newTrack.bestLapNumber || 1),
+        // Preserve optimal vector map if existing was faster and not more detailed, otherwise update
+        vectorMap: (!isFaster && existing.vectorMap?.points?.length > 0 && !isMoreDetailed)
+          ? existing.vectorMap
+          : (newTrack.vectorMap || existing.vectorMap),
+        // Update cumulative telemetry counters and timestamps
+        stintsRecordedCount: (existing.stintsRecordedCount || 1) + 1,
+        totalLapsDriven: (existing.totalLapsDriven || 0) + (newTrack.totalLapsDriven || 1),
+        createdAt: existing.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
 
       tracks[existingIndex] = savedRecord;
     } else {

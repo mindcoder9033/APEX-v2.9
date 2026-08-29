@@ -176,3 +176,72 @@ test('PreStintPdfBuilder: Compiles full 2-page Pre-Stint Driver Briefing PDF', a
   const header = String.fromCharCode(...pdfBytes.slice(0, 4));
   assert.equal(header, '%PDF', 'Buffer should contain valid PDF signature');
 });
+
+test('TrackLibrarySynthesizer: Correctly resolves Brands Hatch (Grad Prix Circuit) with typo tolerance and parenthesized layout', () => {
+  const match1 = TrackLibrarySynthesizer.matchCatalogTrack('Brands Hatch (Grad Prix Circuit)');
+  assert.equal(match1.trackName, 'Brands Hatch');
+  assert.equal(match1.layoutName, 'Grand Prix Circuit');
+  assert.equal(match1.officialLength, '3.916 km');
+
+  const match2 = TrackLibrarySynthesizer.matchCatalogTrack('Brands Hatch', 'Grad Prix Circuit');
+  assert.equal(match2.trackName, 'Brands Hatch');
+  assert.equal(match2.layoutName, 'Grand Prix Circuit');
+
+  const match3 = TrackLibrarySynthesizer.matchCatalogTrack('Brands Hatch — Grand Prix Circuit', 'Grand Prix Circuit');
+  assert.equal(match3.trackName, 'Brands Hatch');
+  assert.equal(match3.layoutName, 'Grand Prix Circuit');
+
+  const synthesizer = new TrackLibrarySynthesizer();
+  const samples = generateStintSamples(180);
+  const profile = synthesizer.synthesize({
+    samples,
+    metadata: {
+      trackName: 'Brands Hatch (Grad Prix Circuit)',
+      carName: '2023 Porsche 911 GT3 R'
+    }
+  });
+
+  assert.equal(profile.trackId, 'brands-hatch--grand-prix-circuit');
+  assert.equal(profile.trackName, 'Brands Hatch');
+  assert.equal(profile.layoutName, 'Grand Prix Circuit');
+  assert.equal(profile.officialLength, '3.916 km');
+});
+
+test('TrackLibraryStore: Updates track dossier with new telemetry while preserving PB lap time', async () => {
+  const { TrackLibraryStore } = await import('../public/js/track-library-store.js');
+  const store = new TrackLibraryStore('apex_test_track_library_' + Date.now());
+
+  const synthesizer = new TrackLibrarySynthesizer();
+  const stint1Samples = generateStintSamples(150);
+  const stint1Profile = synthesizer.synthesize({
+    samples: stint1Samples,
+    metadata: { trackName: 'Brands Hatch (Grad Prix Circuit)', carName: '2019 Aston Martin Vantage' }
+  });
+  stint1Profile.bestLapTime = 92.500;
+  stint1Profile.corners[0].apexSpeedKmh = 95;
+
+  store.saveTrack(stint1Profile);
+  let saved = store.getTrackById('brands-hatch--grand-prix-circuit');
+  assert.ok(saved);
+  assert.equal(saved.bestLapTime, 92.500);
+  assert.equal(saved.carName, '2019 Aston Martin Vantage');
+  assert.equal(saved.stintsRecordedCount, 1);
+  assert.equal(saved.corners[0].apexSpeedKmh, 95);
+
+  // Second stint with new telemetry (new car, updated corner speed, slower lap time)
+  const stint2Samples = generateStintSamples(160);
+  const stint2Profile = synthesizer.synthesize({
+    samples: stint2Samples,
+    metadata: { trackName: 'Brands Hatch', layoutName: 'Grand Prix Circuit', carName: '2023 Porsche 911 GT3 R' }
+  });
+  stint2Profile.bestLapTime = 94.200; // Slower than PB
+  stint2Profile.corners[0].apexSpeedKmh = 105; // Faster corner telemetry
+
+  store.saveTrack(stint2Profile);
+  saved = store.getTrackById('brands-hatch--grand-prix-circuit');
+  assert.equal(saved.stintsRecordedCount, 2);
+  assert.equal(saved.bestLapTime, 92.500, 'Should preserve faster PB lap time');
+  assert.equal(saved.carName, '2023 Porsche 911 GT3 R', 'Should update to latest car');
+  assert.equal(saved.corners[0].apexSpeedKmh, 105, 'Should update corner telemetry with new stint data');
+});
+

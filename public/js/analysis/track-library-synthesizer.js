@@ -1,5 +1,5 @@
 /**
- * APEX Track Library Synthesizer (Browser Edition)
+ * APEX Track Library Synthesizer
  * Covertly parses stint telemetry to extract high-fidelity circuit geometry,
  * corner profiles, braking markers, gear targets, and hazard advisories.
  */
@@ -42,21 +42,45 @@ export class TrackLibrarySynthesizer {
    * @returns {Object} Catalog metadata
    */
   static matchCatalogTrack(trackName, layoutName, lapDistanceMeters = 0) {
+    // 1. Direct or fuzzy name match
     if (trackName) {
+      const cleanTrackInput = String(trackName).trim();
       const trackObj = FM23_TRACKS.find(t => 
-        t.name.toLowerCase() === trackName.toLowerCase() ||
-        t.name.toLowerCase().includes(trackName.toLowerCase()) ||
-        trackName.toLowerCase().includes(t.name.toLowerCase())
+        t.name.toLowerCase() === cleanTrackInput.toLowerCase() ||
+        cleanTrackInput.toLowerCase().includes(t.name.toLowerCase()) ||
+        t.name.toLowerCase().includes(cleanTrackInput.toLowerCase())
       );
 
       if (trackObj) {
         let layoutObj = null;
-        if (layoutName && trackObj.layouts) {
-          layoutObj = trackObj.layouts.find(l => 
-            l.name.toLowerCase() === layoutName.toLowerCase() ||
-            l.name.toLowerCase().includes(layoutName.toLowerCase())
-          );
+        const cleanLayoutInput = String(layoutName || '').trim();
+
+        const matchLayoutItem = (candidateStr) => {
+          if (!candidateStr || !trackObj.layouts) return null;
+          const candLower = candidateStr.toLowerCase();
+          return trackObj.layouts.find(l => {
+            const targetLower = l.name.toLowerCase();
+            return targetLower === candLower ||
+              targetLower.includes(candLower) ||
+              candLower.includes(targetLower) ||
+              // Typo / phonetic tolerance for "Grad Prix" -> "Grand Prix", "GP" -> "Grand Prix"
+              (candLower.includes('grad prix') && targetLower.includes('grand prix')) ||
+              (candLower.includes('gp') && targetLower.includes('grand prix')) ||
+              (candLower.includes('indy') && targetLower.includes('indy'));
+          });
+        };
+
+        // Attempt 1: Match against layoutName if explicitly provided
+        if (cleanLayoutInput) {
+          layoutObj = matchLayoutItem(cleanLayoutInput);
         }
+
+        // Attempt 2: Extract embedded layout from trackName (e.g. "Brands Hatch (Grad Prix Circuit)", "Brands Hatch — Grand Prix Circuit")
+        if (!layoutObj && cleanTrackInput) {
+          layoutObj = matchLayoutItem(cleanTrackInput);
+        }
+
+        // Fallback: Default to primary catalog layout
         if (!layoutObj && trackObj.layouts?.length > 0) {
           layoutObj = trackObj.layouts[0];
         }
@@ -70,6 +94,7 @@ export class TrackLibrarySynthesizer {
       }
     }
 
+    // 2. Fallback using lap distance approximation (within 500m)
     if (lapDistanceMeters > 500) {
       const distKm = lapDistanceMeters / 1000;
       for (const t of FM23_TRACKS) {
@@ -112,6 +137,7 @@ export class TrackLibrarySynthesizer {
       throw new Error('Cannot synthesize track profile: empty samples');
     }
 
+    // 1. Identify best valid lap samples
     let bestLap = null;
     if (laps && laps.length > 0) {
       const validLaps = laps.filter(l => l.isValid);
@@ -129,6 +155,7 @@ export class TrackLibrarySynthesizer {
       (lapSamples[lapSamples.length - 1]?.timing?.distanceTraveled - lapSamples[0]?.timing?.distanceTraveled) ||
       (lapSamples.length * 15);
 
+    // 2. Correlate with FM23 catalog metadata
     const catalog = TrackLibrarySynthesizer.matchCatalogTrack(
       metadata.trackName || metadata.track,
       metadata.layoutName || metadata.layout,
@@ -136,15 +163,19 @@ export class TrackLibrarySynthesizer {
     );
 
     const trackId = TrackLibrarySynthesizer.generateTrackId(catalog.trackName, catalog.layoutName);
+
+    // 3. Extract apexes & corner telemetry
     const apexes = this.detector.detectApexes(lapSamples);
     const extractedCorners = this.extractor.extractAll(lapSamples, apexes);
 
+    // 4. Build corner profile matrix
     const corners = extractedCorners.map((c, idx) => {
       const turnNum = idx + 1;
       const entrySpdKmh = (c.speed?.entryMph ? c.speed.entryMph * 1.60934 : (c.speed?.entryKmh || 0));
       const apexSpdKmh = (c.speed?.apexMph ? c.speed.apexMph * 1.60934 : (c.speed?.apexKmh || 0));
       const exitSpdKmh = (c.speed?.exitMph ? c.speed.exitMph * 1.60934 : (c.speed?.exitKmh || 0));
 
+      // Calculate braking point distance before apex (meters)
       let brakingDistMeters = 75;
       if (c.entryIndex !== undefined && c.apexIndex !== undefined && c.entryIndex < c.apexIndex) {
         const brakeSub = lapSamples.slice(c.entryIndex, c.apexIndex + 1);
@@ -161,10 +192,12 @@ export class TrackLibrarySynthesizer {
         }
       }
 
+      // Determine target gear at apex
       const apexSample = lapSamples[c.apexIndex] || lapSamples[c.entryIndex] || {};
       let targetGear = apexSample.inputs?.gear || 3;
       if (targetGear <= 0 || targetGear > 8) targetGear = (apexSpdKmh < 90 ? 2 : (apexSpdKmh < 140 ? 3 : 4));
 
+      // Corner classification & Skip Barber notes
       let cornerType = 'Type I';
       let coachingNotes = 'Prioritize exit speed. Commit to throttle early as you pass the apex clipping point.';
 
@@ -176,6 +209,7 @@ export class TrackLibrarySynthesizer {
         coachingNotes = 'High-speed flow section. Maintain chassis platform stability with gentle, smooth throttle transitions.';
       }
 
+      // Check elevation / kerb characteristics
       const vertG = apexSample.motion?.acceleration?.verticalG || 1.0;
       const kerbHit = apexSample.chassis?.wheelOnRumbleStrip ? 
         Object.values(apexSample.chassis.wheelOnRumbleStrip).some(v => v > 0) : false;
@@ -197,7 +231,10 @@ export class TrackLibrarySynthesizer {
       };
     });
 
+    // 5. Detect Track Hazards & Advisories
     const hazards = [];
+
+    // Check for unweighting crests or heavy compression
     lapSamples.forEach((s, idx) => {
       const vertG = s.motion?.acceleration?.verticalG;
       if (vertG !== undefined && vertG < 0.55 && hazards.length < 3) {
@@ -215,6 +252,7 @@ export class TrackLibrarySynthesizer {
       }
     });
 
+    // Check for heavy threshold braking hazard
     const maxBrakeTurn = [...corners].sort((a, b) => (b.entrySpeedKmh - b.apexSpeedKmh) - (a.entrySpeedKmh - a.apexSpeedKmh))[0];
     if (maxBrakeTurn && (maxBrakeTurn.entrySpeedKmh - maxBrakeTurn.apexSpeedKmh > 80)) {
       hazards.push({
@@ -236,6 +274,7 @@ export class TrackLibrarySynthesizer {
       });
     }
 
+    // 6. Subsample coordinates for crisp vector rendering (target ~250-400 points)
     const rawPoints = this.trackMapGenerator.extractRawPoints(lapSamples);
     const step = Math.max(1, Math.floor(rawPoints.length / 300));
     const subsampledPoints = [];
@@ -249,6 +288,7 @@ export class TrackLibrarySynthesizer {
       });
     }
 
+    // 7. Compile Completed Track Profile
     const bestLapTimeVal = (bestLap?.lapTime && bestLap.lapTime > 0)
       ? bestLap.lapTime
       : (analysisReport?.bestLap?.lapTime || 95.42);
@@ -272,6 +312,7 @@ export class TrackLibrarySynthesizer {
       hazards,
       vectorMap: {
         pointsCount: subsampledPoints.length,
+        originalSamplesCount: lapSamples.length,
         points: subsampledPoints
       },
       setupAdvisories: {

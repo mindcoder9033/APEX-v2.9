@@ -42,22 +42,45 @@ export class TrackLibrarySynthesizer {
    * @returns {Object} Catalog metadata
    */
   static matchCatalogTrack(trackName, layoutName, lapDistanceMeters = 0) {
-    // 1. Direct name match
+    // 1. Direct or fuzzy name match
     if (trackName) {
+      const cleanTrackInput = String(trackName).trim();
       const trackObj = FM23_TRACKS.find(t => 
-        t.name.toLowerCase() === trackName.toLowerCase() ||
-        t.name.toLowerCase().includes(trackName.toLowerCase()) ||
-        trackName.toLowerCase().includes(t.name.toLowerCase())
+        t.name.toLowerCase() === cleanTrackInput.toLowerCase() ||
+        cleanTrackInput.toLowerCase().includes(t.name.toLowerCase()) ||
+        t.name.toLowerCase().includes(cleanTrackInput.toLowerCase())
       );
 
       if (trackObj) {
         let layoutObj = null;
-        if (layoutName && trackObj.layouts) {
-          layoutObj = trackObj.layouts.find(l => 
-            l.name.toLowerCase() === layoutName.toLowerCase() ||
-            l.name.toLowerCase().includes(layoutName.toLowerCase())
-          );
+        const cleanLayoutInput = String(layoutName || '').trim();
+
+        const matchLayoutItem = (candidateStr) => {
+          if (!candidateStr || !trackObj.layouts) return null;
+          const candLower = candidateStr.toLowerCase();
+          return trackObj.layouts.find(l => {
+            const targetLower = l.name.toLowerCase();
+            return targetLower === candLower ||
+              targetLower.includes(candLower) ||
+              candLower.includes(targetLower) ||
+              // Typo / phonetic tolerance for "Grad Prix" -> "Grand Prix", "GP" -> "Grand Prix"
+              (candLower.includes('grad prix') && targetLower.includes('grand prix')) ||
+              (candLower.includes('gp') && targetLower.includes('grand prix')) ||
+              (candLower.includes('indy') && targetLower.includes('indy'));
+          });
+        };
+
+        // Attempt 1: Match against layoutName if explicitly provided
+        if (cleanLayoutInput) {
+          layoutObj = matchLayoutItem(cleanLayoutInput);
         }
+
+        // Attempt 2: Extract embedded layout from trackName (e.g. "Brands Hatch (Grad Prix Circuit)", "Brands Hatch — Grand Prix Circuit")
+        if (!layoutObj && cleanTrackInput) {
+          layoutObj = matchLayoutItem(cleanTrackInput);
+        }
+
+        // Fallback: Default to primary catalog layout
         if (!layoutObj && trackObj.layouts?.length > 0) {
           layoutObj = trackObj.layouts[0];
         }
