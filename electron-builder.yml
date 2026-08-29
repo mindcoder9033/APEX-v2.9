@@ -1,0 +1,28 @@
+appId: com.apex.telemetry
+productName: APEX Telemetry Command Center
+copyright: Copyright © 2026 APEX Team
+
+directories:
+  output: dist
+  buildResources: build
+
+files:
+  - src/**/*
+  - public/**/*
+  - package.json
+  - "!tests/**/*"
+  - "!Docs/**/*"
+  - "!*.md"
+
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+  icon: public/favicon.ico
+  requestedExecutionLevel: asInvoker
+
+portable:
+  artifactName: "APEX-Telemetry-Portable-${version}.exe"
+  splashImage: null
+  unpackDirName: "apex-telemetry"

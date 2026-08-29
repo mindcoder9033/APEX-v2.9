@@ -3258,4 +3258,104 @@ body.layout-edit-active .widget-resize-handle {
   animation: pulse-warning 1s infinite;
 }
 
+/* ==========================================================================
+   ELECTRON STANDALONE DESKTOP STYLES
+   Frameless Window Controls, Drag Regions, & Loopback Diagnostics Modal
+   ========================================================================== */
+
+.app-drag-region {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.no-drag,
+.header-nav-tabs,
+.brand-section,
+.header-status-group,
+button,
+input,
+select,
+.modal-card {
+  -webkit-app-region: no-drag;
+}
+
+.desktop-window-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.btn-win-ctrl {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  padding: 0;
+}
+
+.btn-win-ctrl:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-win-ctrl.btn-win-close:hover {
+  background: var(--color-f1-red, #E10600);
+  border-color: var(--color-f1-red, #E10600);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(225, 6, 0, 0.5);
+}
+
+/* UWP Loopback & Diagnostics Package Row Items */
+.uwp-pkg-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 6px 10px;
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.uwp-pkg-name {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.uwp-pkg-id {
+  color: var(--color-text-secondary);
+  font-size: 9px;
+}
+
+.uwp-status-exempt {
+  color: var(--color-success, #00CC66);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.uwp-status-restricted {
+  color: var(--color-f1-red, #E10600);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+
 

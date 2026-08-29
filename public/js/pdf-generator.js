@@ -3520,7 +3520,31 @@ export class ClientPdfGenerator {
     return `${m}:${s.padStart(6, '0')}`;
   }
 
-  download(pdfBytes, filename = 'APEX_Telemetry_Report.pdf') {
+  async download(pdfBytes, filename = 'APEX_Telemetry_Report.pdf') {
+    if (typeof window !== 'undefined' && window.apexDesktop?.saveFile) {
+      let binary = '';
+      const len = pdfBytes.byteLength;
+      const chunkSize = 8192;
+      for (let i = 0; i < len; i += chunkSize) {
+        const chunk = pdfBytes.subarray(i, Math.min(i + chunkSize, len));
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      const base64 = btoa(binary);
+
+      // Auto-archive in background to Documents/APEX Telemetry/Reports/
+      window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf' });
+
+      // Native save dialog
+      await window.apexDesktop.saveFile({
+        title: 'Save APEX Telemetry Dossier PDF',
+        suggestedName: filename,
+        filters: [{ name: 'PDF Document (*.pdf)', extensions: ['pdf'] }],
+        data: base64,
+        encoding: 'base64'
+      });
+      return;
+    }
+
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

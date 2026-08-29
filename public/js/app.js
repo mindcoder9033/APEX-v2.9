@@ -12,6 +12,7 @@ import { weatherProfileStore } from './weather-profile-store.js';
 import { WeatherSimulator } from './analysis/weather-simulator.js';
 import { StintsManager } from './stints.js';
 import { IsometricTrackMap } from './components/isometric-track-map.js';
+import { LoopbackModal } from './components/loopback-modal.js';
 
 class ApexApp {
   constructor() {
@@ -22,6 +23,7 @@ class ApexApp {
     this.layoutManager = new GridLayoutManager();
     this.trackLibrary = new TrackLibraryView();
     this.stintsManager = new StintsManager();
+    this.loopbackModal = new LoopbackModal();
     this.trackMap3D = null;
     this.modalTrackMap3D = null;
     this.isMapModalOpen = false;
@@ -77,8 +79,51 @@ class ApexApp {
   init() {
     this.populateSettingsForm();
     this.bindEvents();
+    this.initDesktopWindowControls();
     this.connectBridge();
     this._migrateWeatherProfiles();
+  }
+
+  /**
+   * Initializes Electron frameless window controls if running inside desktop app
+   */
+  initDesktopWindowControls() {
+    if (!window.apexDesktop?.isDesktop) return;
+
+    const controlsEl = document.getElementById('desktop-window-controls');
+    const btnMin = document.getElementById('btn-win-minimize');
+    const btnMax = document.getElementById('btn-win-maximize');
+    const btnClose = document.getElementById('btn-win-close');
+    const maxIcon = document.getElementById('btn-win-maximize-icon');
+
+    if (controlsEl) {
+      controlsEl.style.display = 'inline-flex';
+    }
+
+    if (btnMin) {
+      btnMin.addEventListener('click', () => window.apexDesktop.minimize());
+    }
+
+    if (btnMax) {
+      btnMax.addEventListener('click', async () => {
+        const isMax = await window.apexDesktop.isMaximized();
+        if (isMax) {
+          window.apexDesktop.unmaximize();
+        } else {
+          window.apexDesktop.maximize();
+        }
+      });
+    }
+
+    if (btnClose) {
+      btnClose.addEventListener('click', () => window.apexDesktop.close());
+    }
+
+    if (window.apexDesktop.onMaximizeChange && maxIcon) {
+      window.apexDesktop.onMaximizeChange((isMax) => {
+        maxIcon.textContent = isMax ? '❐' : '□';
+      });
+    }
   }
 
   /**

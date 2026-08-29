@@ -88,10 +88,28 @@ export class TelemetryCsvExporter {
   }
 
   /**
-   * Triggers a browser download of the CSV data
+   * Triggers a browser download or native desktop save of the CSV data
    */
-  static downloadCsv(samples = [], filename = 'APEX_Stint_Telemetry.csv') {
+  static async downloadCsv(samples = [], filename = 'APEX_Stint_Telemetry.csv') {
     const csvContent = this.exportToCsv(samples);
+
+    if (typeof window !== 'undefined' && window.apexDesktop?.saveFile) {
+      const base64 = btoa(unescape(encodeURIComponent(csvContent)));
+
+      // Auto-archive in background to Documents/APEX Telemetry/Reports/
+      window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'csv' });
+
+      // Native save dialog
+      await window.apexDesktop.saveFile({
+        title: 'Save APEX Telemetry CSV Log',
+        suggestedName: filename,
+        filters: [{ name: 'CSV File (*.csv)', extensions: ['csv'] }],
+        data: base64,
+        encoding: 'base64'
+      });
+      return;
+    }
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

@@ -693,12 +693,37 @@ export class PreStintPdfBuilder {
   }
 
   /**
-   * Triggers client-side browser file download for the compiled PDF.
+   * Triggers client-side browser file download or native desktop save for the compiled PDF.
    * @param {Uint8Array} pdfBytes
    * @param {string} filename
    */
-  download(pdfBytes, filename = 'APEX_PreStint_Briefing.pdf') {
+  async download(pdfBytes, filename = 'APEX_PreStint_Briefing.pdf') {
     if (typeof window === 'undefined') return;
+
+    if (window.apexDesktop?.saveFile) {
+      let binary = '';
+      const len = pdfBytes.byteLength;
+      const chunkSize = 8192;
+      for (let i = 0; i < len; i += chunkSize) {
+        const chunk = pdfBytes.subarray(i, Math.min(i + chunkSize, len));
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      const base64 = btoa(binary);
+
+      // Auto-archive in background to Documents/APEX Telemetry/Reports/
+      window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf' });
+
+      // Native save dialog
+      await window.apexDesktop.saveFile({
+        title: 'Save APEX Pre-Stint Briefing PDF',
+        suggestedName: filename,
+        filters: [{ name: 'PDF Document (*.pdf)', extensions: ['pdf'] }],
+        data: base64,
+        encoding: 'base64'
+      });
+      return;
+    }
+
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
