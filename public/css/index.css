@@ -90,6 +90,22 @@ h1, h2, h3, h4, h5, h6 {
 
 /* --- Precision 45° Angle Chamfer Cuts --- */
 .chamfer-br {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%);
+}
+
+.chamfer-bl {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, var(--cut-sm) 100%, 0 calc(100% - var(--cut-sm)));
+}
+
+.chamfer-tr {
+  clip-path: polygon(0 0, calc(100% - var(--cut-sm)) 0, 100% var(--cut-sm), 100% 100%, 0 100%);
+}
+
+.chamfer-tl {
+  clip-path: polygon(var(--cut-sm) 0, 100% 0, 100% 100%, 0 100%, 0 var(--cut-sm));
+}
+
+.chamfer-br-lg {
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-md)), calc(100% - var(--cut-md)) 100%, 0 100%);
 }
 
@@ -289,6 +305,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-text-primary);
   background: var(--color-surface-card);
   user-select: none;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut-sm)), calc(100% - var(--cut-sm)) 100%, 0 100%);
 }
 
 .btn:hover {

@@ -32,12 +32,12 @@ export class SearchableSelect {
   render() {
     this.container.innerHTML = `
       <div class="searchable-select" id="${this.id}-wrapper">
-        <div class="select-trigger chamfer-all-corners" id="${this.id}-trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
+        <div class="select-trigger chamfer-br" id="${this.id}-trigger" tabindex="0" role="combobox" aria-expanded="false" aria-haspopup="listbox">
           <span class="select-value-text" id="${this.id}-display">${this.escapeHtml(this.placeholder)}</span>
           <span class="select-chevron">▾</span>
         </div>
 
-        <div class="select-dropdown chamfer-all-corners" id="${this.id}-dropdown" style="display: none;">
+        <div class="select-dropdown chamfer-br" id="${this.id}-dropdown" style="display: none;">
           <div class="select-search-box">
             <input type="text" class="select-search-input" id="${this.id}-search" placeholder="Filter..." autocomplete="off" />
           </div>

@@ -32,44 +32,44 @@
 
       <!-- Primary Navigation Tabs -->
       <nav class="header-nav-tabs no-drag" aria-label="Primary Navigation">
-        <button id="btn-nav-pitwall" class="nav-tab-btn active chamfer-all-corners" title="Live Pit Wall Telemetry (P)">
+        <button id="btn-nav-pitwall" class="nav-tab-btn active chamfer-br" title="Live Pit Wall Telemetry (P)">
           <span class="nav-tab-icon">🏁</span>
           <span class="nav-tab-label">PIT WALL</span>
         </button>
-        <button id="btn-nav-track-library" class="nav-tab-btn chamfer-all-corners" title="Track Intelligence & Dossier Hub (T)">
+        <button id="btn-nav-track-library" class="nav-tab-btn chamfer-br" title="Track Intelligence & Dossier Hub (T)">
           <span class="nav-tab-icon">🗺️</span>
           <span class="nav-tab-label">TRACK DOSSIER</span>
         </button>
-        <button id="btn-nav-stints" class="nav-tab-btn chamfer-all-corners" title="Motorsport Practice Stints (L)">
+        <button id="btn-nav-stints" class="nav-tab-btn chamfer-br" title="Motorsport Practice Stints (L)">
           <span class="nav-tab-icon">🎯</span>
           <span class="nav-tab-label">PRACTICE STINTS</span>
         </button>
       </nav>
 
       <div class="header-status-group no-drag">
-        <div id="status-pill" class="status-pill disconnected chamfer-all-corners">
+        <div id="status-pill" class="status-pill disconnected chamfer-br">
           <span class="status-dot"></span>
           <span id="status-text">Bridge Offline</span>
           <span id="rate-text" style="color: #666; font-size: 10px; margin-left: 4px;">0 pkt/s</span>
         </div>
 
-        <button id="btn-open-loopback-tool" class="btn btn-secondary btn-icon chamfer-all-corners" title="Forza UWP Loopback & Network Helper">
+        <button id="btn-open-loopback-tool" class="btn btn-secondary btn-icon chamfer-br" title="Forza UWP Loopback & Network Helper">
           <span>⚡</span>
         </button>
 
-        <button id="btn-open-udp-guide" class="btn btn-secondary btn-icon chamfer-all-corners" title="Forza UDP Setup Guide (U)">
+        <button id="btn-open-udp-guide" class="btn btn-secondary btn-icon chamfer-br" title="Forza UDP Setup Guide (U)">
           <span>📡</span>
         </button>
 
-        <button id="btn-toggle-edit-layout" class="btn btn-secondary btn-icon chamfer-all-corners" title="Customize Telemetry Widgets Layout (E)">
+        <button id="btn-toggle-edit-layout" class="btn btn-secondary btn-icon chamfer-br" title="Customize Telemetry Widgets Layout (E)">
           <span>📐</span>
         </button>
 
-        <button id="btn-open-settings" class="btn btn-secondary btn-icon chamfer-all-corners" title="Open Settings (S)">
+        <button id="btn-open-settings" class="btn btn-secondary btn-icon chamfer-br" title="Open Settings (S)">
           <span>⚙️</span>
         </button>
 
-        <button id="btn-toggle-fullscreen" class="btn btn-secondary btn-icon chamfer-all-corners" title="Toggle Fullscreen (F)" aria-label="Toggle Fullscreen">
+        <button id="btn-toggle-fullscreen" class="btn btn-secondary btn-icon chamfer-br" title="Toggle Fullscreen (F)" aria-label="Toggle Fullscreen">
           <svg class="fullscreen-icon-enter" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
           </svg>
@@ -80,13 +80,13 @@
 
         <!-- Frameless Desktop Window Controls (Visible only in Electron) -->
         <div id="desktop-window-controls" class="desktop-window-controls" style="display: none;">
-          <button id="btn-win-minimize" class="btn-win-ctrl chamfer-all-corners" title="Minimize">
+          <button id="btn-win-minimize" class="btn-win-ctrl chamfer-br" title="Minimize">
             <span>—</span>
           </button>
-          <button id="btn-win-maximize" class="btn-win-ctrl chamfer-all-corners" title="Maximize / Restore">
+          <button id="btn-win-maximize" class="btn-win-ctrl chamfer-br" title="Maximize / Restore">
             <span id="btn-win-maximize-icon">□</span>
           </button>
-          <button id="btn-win-close" class="btn-win-ctrl btn-win-close chamfer-all-corners" title="Close APEX">
+          <button id="btn-win-close" class="btn-win-ctrl btn-win-close chamfer-tr" title="Close APEX">
             <span>✕</span>
           </button>
         </div>
@@ -266,19 +266,19 @@
               <h3 class="pit-card-title">2.5D Real-Time Track Map</h3>
             </div>
             <div class="track-map-3d-controls" style="display: flex; gap: 6px; align-items: center;">
-              <button id="btn-toggle-map-3d-dim" class="btn btn-secondary btn-xs chamfer-all-corners" title="Toggle 2.5D Isometric / 2D Top-Down">
+              <button id="btn-toggle-map-3d-dim" class="btn btn-secondary btn-xs chamfer-br" title="Toggle 2.5D Isometric / 2D Top-Down">
                 <span id="btn-map-dim-label">2.5D</span>
               </button>
-              <button id="btn-rotate-map-left" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Left (⟲)">
+              <button id="btn-rotate-map-left" class="btn btn-secondary btn-icon-xs chamfer-bl" title="Rotate Left (⟲)">
                 <span>⟲</span>
               </button>
-              <button id="btn-rotate-map-right" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Right (⟳)">
+              <button id="btn-rotate-map-right" class="btn btn-secondary btn-icon-xs chamfer-br" title="Rotate Right (⟳)">
                 <span>⟳</span>
               </button>
-              <button id="btn-reset-map-view" class="btn btn-secondary btn-xs chamfer-all-corners" title="Reset View (R)">
+              <button id="btn-reset-map-view" class="btn btn-secondary btn-xs chamfer-br" title="Reset View (R)">
                 <span>RESET</span>
               </button>
-              <button id="btn-expand-map-3d" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Maximize Map">
+              <button id="btn-expand-map-3d" class="btn btn-secondary btn-icon-xs chamfer-br" title="Maximize Map">
                 <span>⛶</span>
               </button>
             </div>
@@ -1023,7 +1023,7 @@
       <!-- Track Library Top Bar -->
       <div class="track-library-top-bar chamfer-br">
         <div style="display: flex; align-items: center; gap: 14px;">
-          <button id="btn-return-pitwall-from-track" class="btn btn-secondary chamfer-all-corners" title="Return to Live Pit Wall">
+          <button id="btn-return-pitwall-from-track" class="btn btn-secondary chamfer-bl" title="Return to Live Pit Wall">
             <span>⬅️</span> PIT WALL
           </button>
           <div class="track-library-title-group">
@@ -1224,7 +1224,7 @@
       <!-- Stints Hub Top Bar -->
       <div class="stints-top-bar chamfer-br">
         <div style="display: flex; align-items: center; gap: 14px;">
-          <button id="btn-return-pitwall-from-stints" class="btn btn-secondary chamfer-all-corners" title="Return to Live Pit Wall">
+          <button id="btn-return-pitwall-from-stints" class="btn btn-secondary chamfer-bl" title="Return to Live Pit Wall">
             <span>⬅️</span> PIT WALL
           </button>
           <div class="stints-title-group">
@@ -1341,7 +1341,7 @@
             <span id="debrief-stint-subtitle" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-gold);">TIER 1 // THE PATHFINDER</span>
           </div>
         </div>
-        <button id="btn-close-stint-debrief" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+        <button id="btn-close-stint-debrief" class="btn btn-secondary chamfer-tr btn-icon">✕</button>
       </div>
 
       <!-- Quick Grade & Performance Summary Banner -->
@@ -1391,7 +1391,7 @@
 
       <!-- Action Buttons Footer -->
       <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 14px;">
-        <button id="btn-debrief-retry" class="btn btn-secondary chamfer-all-corners" style="height: 44px; padding: 0 18px; font-size: 12px;">
+        <button id="btn-debrief-retry" class="btn btn-secondary chamfer-bl" style="height: 44px; padding: 0 18px; font-size: 12px;">
           <span>🔄</span> RETRY STINT
         </button>
         <button id="btn-debrief-download-pdf" class="btn btn-primary chamfer-br" style="height: 44px; padding: 0 20px; font-size: 12.5px; font-weight: 700;">
@@ -1406,7 +1406,7 @@
     <div class="modal-card chamfer-tl-br">
       <div class="modal-header">
         <h2 class="modal-title">APEX Configuration</h2>
-        <button id="btn-close-settings" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+        <button id="btn-close-settings" class="btn btn-secondary chamfer-tr btn-icon">✕</button>
       </div>
 
       <div class="form-group">
@@ -1450,7 +1450,7 @@
           <span style="color: var(--color-f1-red); font-size: 18px;">📡</span>
           <h2 class="modal-title">Forza Telemetry UDP Setup Guide</h2>
         </div>
-        <button id="btn-close-udp-guide" class="btn btn-secondary chamfer-all-corners btn-icon">✕</button>
+        <button id="btn-close-udp-guide" class="btn btn-secondary chamfer-tr btn-icon">✕</button>
       </div>
 
       <div class="guide-content" style="display: flex; flex-direction: column; gap: var(--space-md);">
@@ -1519,13 +1519,13 @@
           <h2 class="modal-title" style="font-size: 16px; margin: 0;">2.5D Track Map & Corner Coaching Studio</h2>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-          <button id="btn-modal-map-dim" class="btn btn-secondary btn-xs chamfer-all-corners">
+          <button id="btn-modal-map-dim" class="btn btn-secondary btn-xs chamfer-br">
             <span id="btn-modal-map-dim-label">2.5D</span>
           </button>
-          <button id="btn-modal-map-reset" class="btn btn-secondary btn-xs chamfer-all-corners">
+          <button id="btn-modal-map-reset" class="btn btn-secondary btn-xs chamfer-br">
             <span>RESET CAMERA</span>
           </button>
-          <button id="btn-close-map-modal" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Close">✕</button>
+          <button id="btn-close-map-modal" class="btn btn-secondary btn-icon-xs chamfer-tr" title="Close">✕</button>
         </div>
       </div>
 
@@ -1555,7 +1555,7 @@
           <span style="color: var(--color-gold, #FFD700); font-size: 16px;">⚡</span>
           <h2 class="modal-title" style="font-size: 16px; margin: 0;">Forza Network & UWP Loopback Diagnostics</h2>
         </div>
-        <button id="btn-close-loopback-modal" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Close">✕</button>
+        <button id="btn-close-loopback-modal" class="btn btn-secondary btn-icon-xs chamfer-tr" title="Close">✕</button>
       </div>
 
       <div class="modal-body" style="padding: 16px; display: flex; flex-direction: column; gap: 14px;">
@@ -1568,7 +1568,7 @@
           <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;" id="lan-ip-list-container">
             <div class="stat-cell-value accent" style="font-size: 18px;" id="primary-lan-ip">Detecting...</div>
             <span style="font-size: 12px; color: var(--color-text-secondary);">Target Port: <strong style="color: #FFF;">9988</strong></span>
-            <button id="btn-copy-lan-ip" class="btn btn-secondary btn-xs chamfer-all-corners" style="margin-left: auto;">
+            <button id="btn-copy-lan-ip" class="btn btn-secondary btn-xs chamfer-br" style="margin-left: auto;">
               <span>📋</span> COPY IP
             </button>
           </div>
@@ -1595,7 +1595,7 @@
             <button id="btn-enable-loopback" class="btn btn-primary chamfer-br" style="height: 38px; font-size: 11px; font-weight: 700;">
               <span>⚡</span> ONE-CLICK ENABLE EXEMPTION
             </button>
-            <button id="btn-refresh-loopback" class="btn btn-secondary chamfer-all-corners" style="height: 38px; font-size: 11px;">
+            <button id="btn-refresh-loopback" class="btn btn-secondary chamfer-bl" style="height: 38px; font-size: 11px;">
               <span>⟲</span> RECHECK
             </button>
           </div>
@@ -1610,7 +1610,7 @@
                 Documents / APEX Telemetry / Reports
               </div>
             </div>
-            <button id="btn-open-archive-folder" class="btn btn-secondary btn-xs chamfer-all-corners">
+            <button id="btn-open-archive-folder" class="btn btn-secondary btn-xs chamfer-br">
               <span>📂</span> OPEN FOLDER
             </button>
           </div>
