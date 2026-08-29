@@ -11,6 +11,7 @@ import { trackLibraryStore } from './track-library-store.js';
 import { weatherProfileStore } from './weather-profile-store.js';
 import { WeatherSimulator } from './analysis/weather-simulator.js';
 import { StintsManager } from './stints.js';
+import { IsometricTrackMap } from './components/isometric-track-map.js';
 
 class ApexApp {
   constructor() {
@@ -21,9 +22,14 @@ class ApexApp {
     this.layoutManager = new GridLayoutManager();
     this.trackLibrary = new TrackLibraryView();
     this.stintsManager = new StintsManager();
+    this.trackMap3D = null;
+    this.modalTrackMap3D = null;
+    this.isMapModalOpen = false;
+    this.mapRenderRequested = false;
 
     // Rebind HUD and Session now that all components exist
     this.layoutManager.rebindTelemetryElements();
+    this.initTrackMap3D();
 
     // Settings Modal elements
     this.modalBackdrop = document.getElementById('settings-modal');
@@ -293,12 +299,141 @@ class ApexApp {
         this.stintsManager.updateTelemetry(sample);
       }
 
+      if (this.trackMap3D) {
+        this.trackMap3D.updateLiveTelemetry(sample, this.session.recordedSamples);
+      }
+      if (this.modalTrackMap3D && this.isMapModalOpen) {
+        this.modalTrackMap3D.updateLiveTelemetry(sample, this.session.recordedSamples);
+      }
+      this.requestTrackMapRender();
+
       if (this.rateText) {
         this.rateText.textContent = `${this.wsClient.stats.packetsPerSecond} pkt/s`;
       }
     });
 
     this.wsClient.connect();
+  }
+
+  requestTrackMapRender() {
+    if (this.mapRenderRequested) return;
+    this.mapRenderRequested = true;
+    requestAnimationFrame(() => {
+      this.mapRenderRequested = false;
+      if (this.trackMap3D) this.trackMap3D.render();
+      if (this.modalTrackMap3D && this.isMapModalOpen) this.modalTrackMap3D.render();
+    });
+  }
+
+  initTrackMap3D() {
+    const canvas = document.getElementById('track-map-3d-canvas');
+    if (canvas) {
+      if (!this.trackMap3D) {
+        this.trackMap3D = new IsometricTrackMap(canvas);
+      } else {
+        this.trackMap3D.canvas = canvas;
+        this.trackMap3D.ctx = canvas.getContext('2d');
+        this.trackMap3D.resizeCanvas();
+      }
+
+      // Bind button controls
+      const btnDim = document.getElementById('btn-toggle-map-3d-dim');
+      const lblDim = document.getElementById('btn-map-dim-label');
+      if (btnDim) {
+        btnDim.onclick = () => {
+          const is3D = this.trackMap3D.toggleViewMode();
+          if (lblDim) lblDim.textContent = is3D ? '2.5D' : '2D';
+        };
+      }
+
+      const btnRotateLeft = document.getElementById('btn-rotate-map-left');
+      if (btnRotateLeft) {
+        btnRotateLeft.onclick = () => {
+          this.trackMap3D.yaw -= 0.2;
+          this.trackMap3D.render();
+        };
+      }
+
+      const btnRotateRight = document.getElementById('btn-rotate-map-right');
+      if (btnRotateRight) {
+        btnRotateRight.onclick = () => {
+          this.trackMap3D.yaw += 0.2;
+          this.trackMap3D.render();
+        };
+      }
+
+      const btnReset = document.getElementById('btn-reset-map-view');
+      if (btnReset) {
+        btnReset.onclick = () => {
+          this.trackMap3D.resetView();
+        };
+      }
+
+      const btnExpand = document.getElementById('btn-expand-map-3d');
+      if (btnExpand) {
+        btnExpand.onclick = () => {
+          this.openMapModal();
+        };
+      }
+    }
+
+    // Modal Map init
+    const modalCanvas = document.getElementById('track-map-3d-modal-canvas');
+    if (modalCanvas && !this.modalTrackMap3D) {
+      this.modalTrackMap3D = new IsometricTrackMap(modalCanvas);
+
+      const btnCloseModal = document.getElementById('btn-close-map-modal');
+      if (btnCloseModal) {
+        btnCloseModal.onclick = () => this.closeMapModal();
+      }
+
+      const modalBackdrop = document.getElementById('track-map-3d-modal');
+      if (modalBackdrop) {
+        modalBackdrop.onclick = (e) => {
+          if (e.target === modalBackdrop) this.closeMapModal();
+        };
+      }
+
+      const btnModalDim = document.getElementById('btn-modal-map-dim');
+      const lblModalDim = document.getElementById('btn-modal-map-dim-label');
+      if (btnModalDim) {
+        btnModalDim.onclick = () => {
+          const is3D = this.modalTrackMap3D.toggleViewMode();
+          if (lblModalDim) lblModalDim.textContent = is3D ? '2.5D' : '2D';
+        };
+      }
+
+      const btnModalReset = document.getElementById('btn-modal-map-reset');
+      if (btnModalReset) {
+        btnModalReset.onclick = () => this.modalTrackMap3D.resetView();
+      }
+    }
+  }
+
+  openMapModal() {
+    const modal = document.getElementById('track-map-3d-modal');
+    if (modal) {
+      modal.classList.add('active');
+      this.isMapModalOpen = true;
+      if (this.modalTrackMap3D) {
+        if (this.trackMap3D) {
+          this.modalTrackMap3D.setReferenceData(this.trackMap3D.referenceLap, this.trackMap3D.corners3D);
+          this.modalTrackMap3D.liveSamples = [...this.trackMap3D.liveSamples];
+          this.modalTrackMap3D.currentSample = this.trackMap3D.currentSample;
+        }
+        this.modalTrackMap3D.resizeCanvas();
+        this.modalTrackMap3D.fitToView();
+        this.modalTrackMap3D.render();
+      }
+    }
+  }
+
+  closeMapModal() {
+    const modal = document.getElementById('track-map-3d-modal');
+    if (modal) {
+      modal.classList.remove('active');
+      this.isMapModalOpen = false;
+    }
   }
 
   setStatus(state, label) {

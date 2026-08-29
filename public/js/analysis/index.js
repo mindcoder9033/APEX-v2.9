@@ -14,6 +14,7 @@ import { BrakingEntryEngine } from './braking-entry.js';
 import { ChassisAdvisoryEngine } from './chassis-advisory.js';
 import { SurfaceIntelligenceEngine } from './surface-intelligence.js';
 import { RacecraftEngine } from './racecraft-engine.js';
+import { CornerDynamics3DEngine, APEX_TYPE, CORNER_PHASE } from './corner-dynamics-3d.js';
 
 import { TrackLibrarySynthesizer } from './track-library-synthesizer.js';
 import { WeatherSimulator, weatherSimulator, WEATHER_CONDITIONS, WEATHER_CATEGORIES } from './weather-simulator.js';
@@ -26,6 +27,7 @@ export class AnalysisEngine {
     this.extractor = new CornerExtractor(options.extractor);
     this.rules = new RulesEngine();
     this.trackMapGenerator = new TrackMapGenerator(options.trackMap);
+    this.cornerDynamics3D = new CornerDynamics3DEngine(options.cornerDynamics3D);
     this.tireEngine = new TireDynamicsEngine(options.tireEngine);
     this.deltaEngine = new DeltaComparisonEngine(options.deltaEngine);
     this.brakingEngine = new BrakingZoneEngine(options.brakingEngine);
@@ -183,6 +185,9 @@ export class AnalysisEngine {
       perfSummary: performanceSummary
     });
 
+    // 18. 3D Real-Time Corner Dynamics & Apex Benchmarks
+    const corners3D = this.cornerDynamics3D.analyzeCorners3D(mapSamples, bestLapAnalyzed, vehicleMeta);
+
     return {
       laps: analyzedLaps,
       validLapsCount: validLaps.length,
@@ -202,6 +207,7 @@ export class AnalysisEngine {
         svg: trackMapSvg,
         pdfVectorData: trackMapPdf
       },
+      corners3D,
       tireDynamics,
       deltaComparison,
       brakingAnalysis,
@@ -225,6 +231,9 @@ export {
   CornerExtractor,
   RulesEngine,
   TrackMapGenerator,
+  CornerDynamics3DEngine,
+  APEX_TYPE,
+  CORNER_PHASE,
   TireDynamicsEngine,
   DeltaComparisonEngine,
   BrakingZoneEngine,

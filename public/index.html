@@ -242,6 +242,46 @@
         </div>
       </section>
 
+      <!-- 2.5D REAL-TIME ISOMETRIC TRACK MAP WIDGET -->
+      <section class="pit-widget pit-card chamfer-tl-br" data-widget-id="widget-track-map-3d" data-col-span="6" style="--col-span: 6; grid-column: span 6;" aria-label="2.5D Real-Time Track Map">
+        <div class="widget-body">
+          <div class="pit-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="color: var(--color-f1-red); font-size: 14px;">🏎️</span>
+              <h3 class="pit-card-title">2.5D Real-Time Track Map</h3>
+            </div>
+            <div class="track-map-3d-controls" style="display: flex; gap: 6px; align-items: center;">
+              <button id="btn-toggle-map-3d-dim" class="btn btn-secondary btn-xs chamfer-all-corners" title="Toggle 2.5D Isometric / 2D Top-Down">
+                <span id="btn-map-dim-label">2.5D</span>
+              </button>
+              <button id="btn-rotate-map-left" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Left (⟲)">
+                <span>⟲</span>
+              </button>
+              <button id="btn-rotate-map-right" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Right (⟳)">
+                <span>⟳</span>
+              </button>
+              <button id="btn-reset-map-view" class="btn btn-secondary btn-xs chamfer-all-corners" title="Reset View (R)">
+                <span>RESET</span>
+              </button>
+              <button id="btn-expand-map-3d" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Maximize Map">
+                <span>⛶</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="track-map-3d-viewport-container chamfer-all-corners">
+            <canvas id="track-map-3d-canvas" class="track-map-3d-canvas"></canvas>
+          </div>
+
+          <div class="track-map-3d-legend-bar">
+            <span class="legend-badge"><span class="legend-dot" style="background: #0099FF; box-shadow: 0 0 6px #0099FF;"></span> Entry Target</span>
+            <span class="legend-badge"><span class="legend-dot" style="background: #AAAAAA;"></span> Geom Apex</span>
+            <span class="legend-badge"><span class="legend-dot" style="background: #FF9900; box-shadow: 0 0 6px #FF9900;"></span> Late Apex (+Δ)</span>
+            <span class="legend-badge"><span class="legend-dot" style="background: #00CC66; box-shadow: 0 0 6px #00CC66;"></span> Exit Target</span>
+          </div>
+        </div>
+      </section>
+
     </main>
 
     <!-- POST-STINT ANALYSIS & CORNER COACHING PANEL -->
@@ -1451,6 +1491,43 @@
 
       <div class="modal-footer">
         <button id="btn-understood-udp" class="btn btn-primary chamfer-br">GOT IT / CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.5D REAL-TIME TRACK MAP EXPANDED / FULLSCREEN MODAL -->
+  <div id="track-map-3d-modal" class="modal-backdrop">
+    <div class="modal-card chamfer-tl-br" style="max-width: 1100px; width: 94vw; height: 86vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--color-f1-red); font-size: 16px;">🏎️</span>
+          <h2 class="modal-title" style="font-size: 16px; margin: 0;">2.5D Track Map & Corner Coaching Studio</h2>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <button id="btn-modal-map-dim" class="btn btn-secondary btn-xs chamfer-all-corners">
+            <span id="btn-modal-map-dim-label">2.5D</span>
+          </button>
+          <button id="btn-modal-map-reset" class="btn btn-secondary btn-xs chamfer-all-corners">
+            <span>RESET CAMERA</span>
+          </button>
+          <button id="btn-close-map-modal" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Close">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="flex: 1; display: flex; flex-direction: column; padding: 12px; min-height: 0;">
+        <div class="track-map-3d-viewport-container chamfer-all-corners" style="flex: 1; min-height: 350px; height: 100%;">
+          <canvas id="track-map-3d-modal-canvas" class="track-map-3d-canvas" style="width: 100%; height: 100%;"></canvas>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 16px;">
+        <div class="track-map-3d-legend-bar" style="margin: 0;">
+          <span class="legend-badge"><span class="legend-dot" style="background: #0099FF; box-shadow: 0 0 6px #0099FF;"></span> Entry Target Speed/Gear</span>
+          <span class="legend-badge"><span class="legend-dot" style="background: #AAAAAA;"></span> Geometric Center Apex</span>
+          <span class="legend-badge"><span class="legend-dot" style="background: #FF9900; box-shadow: 0 0 6px #FF9900;"></span> Actual Late Apex (+Delta)</span>
+          <span class="legend-badge"><span class="legend-dot" style="background: #00CC66; box-shadow: 0 0 6px #00CC66;"></span> Exit Target Speed/Gear</span>
+        </div>
+        <button class="btn btn-primary chamfer-br" onclick="document.getElementById('track-map-3d-modal').classList.remove('active')">CLOSE</button>
       </div>
     </div>
   </div>

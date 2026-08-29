@@ -91,6 +91,17 @@ export class GridLayoutManager {
         maxColSpan: 12,
         defaultOrder: 7,
         renderTemplate: () => this.getWheelSlipWidgetTemplate()
+      },
+      'widget-track-map-3d': {
+        id: 'widget-track-map-3d',
+        title: '2.5D Real-Time Track Map',
+        category: 'Track Map & Coaching',
+        description: 'Interactive 2.5D elevation ribbon, ghost lap comparison, live car blip, and Entry/Late-Apex/Exit coaching markers.',
+        defaultColSpan: 6,
+        minColSpan: 4,
+        maxColSpan: 12,
+        defaultOrder: 8,
+        renderTemplate: () => this.getTrackMap3DWidgetTemplate()
       }
     };
 
@@ -98,14 +109,27 @@ export class GridLayoutManager {
     this.presets = {
       default: {
         name: 'Default Pit-Wall',
-        description: 'Balanced 3-column F1 pit-wall setup with centered cockpit HUD',
+        description: 'Balanced F1 pit-wall setup with centered cockpit HUD and live 2.5D track map',
         layout: [
           { id: 'widget-session', colSpan: 3, order: 1 },
           { id: 'widget-rpm', colSpan: 6, order: 2 },
           { id: 'widget-gg', colSpan: 3, order: 3 },
-          { id: 'widget-speed', colSpan: 6, order: 4 },
-          { id: 'widget-tires', colSpan: 3, order: 5 },
-          { id: 'widget-inputs', colSpan: 6, order: 6 }
+          { id: 'widget-track-map-3d', colSpan: 6, order: 4 },
+          { id: 'widget-speed', colSpan: 6, order: 5 },
+          { id: 'widget-tires', colSpan: 3, order: 6 },
+          { id: 'widget-inputs', colSpan: 6, order: 7 }
+        ]
+      },
+      trackMapFocus: {
+        name: 'Track Map & Coaching Focus',
+        description: 'Full-width 2.5D circuit ribbon, corner coaching markers, and cockpit telemetry',
+        layout: [
+          { id: 'widget-track-map-3d', colSpan: 12, order: 1 },
+          { id: 'widget-rpm', colSpan: 6, order: 2 },
+          { id: 'widget-speed', colSpan: 6, order: 3 },
+          { id: 'widget-session', colSpan: 4, order: 4 },
+          { id: 'widget-gg', colSpan: 4, order: 5 },
+          { id: 'widget-inputs', colSpan: 4, order: 6 }
         ]
       },
       driver: {
@@ -122,14 +146,14 @@ export class GridLayoutManager {
       },
       engineer: {
         name: 'Telemetry Engineer',
-        description: 'Emphasis on tire dynamics, friction circle, and wheel slip metrics',
+        description: 'Emphasis on tire dynamics, friction circle, track map, and wheel slip metrics',
         layout: [
-          { id: 'widget-gg', colSpan: 4, order: 1 },
-          { id: 'widget-tires', colSpan: 4, order: 2 },
-          { id: 'widget-slip', colSpan: 4, order: 3 },
-          { id: 'widget-session', colSpan: 3, order: 4 },
-          { id: 'widget-rpm', colSpan: 6, order: 5 },
-          { id: 'widget-inputs', colSpan: 3, order: 6 }
+          { id: 'widget-track-map-3d', colSpan: 6, order: 1 },
+          { id: 'widget-gg', colSpan: 3, order: 2 },
+          { id: 'widget-tires', colSpan: 3, order: 3 },
+          { id: 'widget-slip', colSpan: 4, order: 4 },
+          { id: 'widget-session', colSpan: 4, order: 5 },
+          { id: 'widget-rpm', colSpan: 4, order: 6 }
         ]
       }
     };
@@ -334,6 +358,45 @@ export class GridLayoutManager {
           <div class="tire-header"><span>REAR RIGHT</span><span>RR</span></div>
           <div id="wheel-slip-rr" class="tire-temp" style="font-size: 16px; color: var(--color-success);">0.0%</div>
         </div>
+      </div>
+    `;
+  }
+
+  getTrackMap3DWidgetTemplate() {
+    return `
+      <div class="pit-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="color: var(--color-f1-red); font-size: 14px;">🏎️</span>
+          <h3 class="pit-card-title">2.5D Real-Time Track Map</h3>
+        </div>
+        <div class="track-map-3d-controls" style="display: flex; gap: 6px; align-items: center;">
+          <button id="btn-toggle-map-3d-dim" class="btn btn-secondary btn-xs chamfer-all-corners" title="Toggle 2.5D Isometric / 2D Top-Down">
+            <span id="btn-map-dim-label">2.5D</span>
+          </button>
+          <button id="btn-rotate-map-left" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Left (⟲)">
+            <span>⟲</span>
+          </button>
+          <button id="btn-rotate-map-right" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Right (⟳)">
+            <span>⟳</span>
+          </button>
+          <button id="btn-reset-map-view" class="btn btn-secondary btn-xs chamfer-all-corners" title="Reset View (R)">
+            <span>RESET</span>
+          </button>
+          <button id="btn-expand-map-3d" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Maximize Map">
+            <span>⛶</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="track-map-3d-viewport-container chamfer-all-corners">
+        <canvas id="track-map-3d-canvas" class="track-map-3d-canvas"></canvas>
+      </div>
+
+      <div class="track-map-3d-legend-bar">
+        <span class="legend-badge"><span class="legend-dot" style="background: #0099FF; box-shadow: 0 0 6px #0099FF;"></span> Entry Target</span>
+        <span class="legend-badge"><span class="legend-dot" style="background: #AAAAAA;"></span> Geom Apex</span>
+        <span class="legend-badge"><span class="legend-dot" style="background: #FF9900; box-shadow: 0 0 6px #FF9900;"></span> Late Apex (+Δ)</span>
+        <span class="legend-badge"><span class="legend-dot" style="background: #00CC66; box-shadow: 0 0 6px #00CC66;"></span> Exit Target</span>
       </div>
     `;
   }
@@ -596,6 +659,11 @@ export class GridLayoutManager {
         session.lastLapVal = document.getElementById('last-lap-val');
         session.samplesCountVal = document.getElementById('samples-count-val');
       }
+    }
+
+    // Rebind 2.5D Real-Time Track Map component
+    if (window.apexApp && typeof window.apexApp.initTrackMap3D === 'function') {
+      window.apexApp.initTrackMap3D();
     }
   }
 

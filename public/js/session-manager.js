@@ -391,6 +391,12 @@ export class SessionManager {
     // Render Priority Recommendations (Sprint 10.5)
     this.renderPriorityRecommendations(report.recommendations);
 
+    // Update 2.5D Real-Time Track Map with best lap and 3D corner benchmarks
+    if (window.apexApp && window.apexApp.trackMap3D) {
+      const bestLapObj = (report.laps || []).find(l => l.lapNumber === report.bestLap?.lapNumber) || report.laps?.[0];
+      window.apexApp.trackMap3D.setReferenceData(bestLapObj, report.corners3D);
+    }
+
     // Render 2D Vector Track Map
     if (this.trackMapContainer && report.trackMap && report.trackMap.svg) {
       this.trackMapContainer.innerHTML = report.trackMap.svg;
