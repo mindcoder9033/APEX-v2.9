@@ -237,6 +237,83 @@ export const STINTS_DATABASE = [
       'Pin the throttle early and carry compound velocity all the way down the straight.'
     ],
     hudWidgets: ['Corner Priority Grade Badge (Type I / II / III)', 'Compromise Corner Loss vs Gain Delta', 'Exit Speed Launch Monitor', 'Downhill Steering Unwind Dial']
+  },
+
+  // --- TIER 4: MASTERING CAR CONTROL ---
+  {
+    id: 'stint-4-1',
+    tier: 4,
+    tierName: 'Tier 4: Mastering Car Control',
+    tierShort: 'T4 // CAR CONTROL',
+    name: 'The Skid Savior',
+    subtitle: 'Over-Rotation & Correction-Pause-Recovery (C/P/R)',
+    focus: 'Over-Rotation & C/P/R Sequence',
+    targetMetric: 'CPR Recovery Success Rate: 100% / 0 Secondary Spins',
+    prescribedCar: '2016 Dodge Viper ACR (High-Power RWD)',
+    prescribedTrack: 'Sebring International Raceway (Turn 7 Focus)',
+    gameType: 'Circuit Race / Solitary Testing',
+    timeOfDay: 'Late Morning (10:00 AM)',
+    weather: 'Clear (Dry Asphalt)',
+    laps: 20,
+    drivatars: 0,
+    quote: '"The rotation begins to slow, then stops... This is the \'pause\' phase, your cue to start taking out the opposite lock." — Skip Barber (Page 64)',
+    briefing: 'Intentionally induce over-rotation by trail-braking deep or popping off the brake at turn-in. Practice the strict three-step Correction, Pause, Recovery (CPR) sequence. You must wait for the rotation to halt during "The Pause" before unwinding opposite lock, avoiding fatal second-reaction tankslappers.',
+    actionPlan: [
+      'Step 1 (Correction): Apply swift opposite steering lock as the rear steps out.',
+      'Step 2 (Pause): Hold the wheel steady at opposite lock during the "eye of the storm" as yaw velocity drops to zero.',
+      'Step 3 (Recovery): Rapidly unwind the steering back to center as the car grips up, preventing reverse tankslappers.'
+    ],
+    hudWidgets: ['Yaw Angle Gauge (7°-10° Zone)', 'CPR Step-by-Step Tracker', 'Rotation Velocity (deg/s)', 'Front vs Rear Slip Angle Balance']
+  },
+  {
+    id: 'stint-4-2',
+    tier: 4,
+    tierName: 'Tier 4: Mastering Car Control',
+    tierShort: 'T4 // CAR CONTROL',
+    name: 'The Throttle Squeeze',
+    subtitle: 'Power Oversteer Prevention & Exit Drive Balance',
+    focus: 'Throttle Rate-of-Change & Rear Slip Limit',
+    targetMetric: 'Throttle Squeeze Distance: 50-60 ft / Rear Slip: <10°',
+    prescribedCar: '2016 Dodge Viper ACR (High-Power RWD)',
+    prescribedTrack: 'Sebring International Raceway (Carousel Focus)',
+    gameType: 'Circuit Race / Solitary Testing',
+    timeOfDay: 'Late Morning (10:00 AM)',
+    weather: 'Clear (Dry Asphalt)',
+    laps: 20,
+    drivatars: 0,
+    quote: '"The elapsed time through the turn was a tenth of a second slower... because you had to interrupt throttle application... reducing corner exit speed by 2 m.p.h." — Skip Barber (Page 67)',
+    briefing: 'On corner exit through long sweepers (like Sebring\'s Carousel), avoid treating the throttle like an on/off switch. Stomping from 0% to 100% in 30 feet spikes rear slip angle to 16°, provoking severe power oversteer and costing exit speed. Squeeze power smoothly across 50-60 feet.',
+    actionPlan: [
+      'Progressively feed the throttle onto the rear axle as you unwind steering lock.',
+      'Aim for a steady rear slip angle in the 7°-10° neutral grip envelope rather than snapping to 16°.',
+      'Never force a lift-and-catch mid-exit — sustain progressive forward momentum to gain +2 mph exit speed.'
+    ],
+    hudWidgets: ['Throttle Squeeze Rate Gauge', 'Rear Slip Angle Spike Monitor', 'Exit Speed Delta (+MPH)', 'Throttle Squeeze Distance Bar']
+  },
+  {
+    id: 'stint-4-3',
+    tier: 4,
+    tierName: 'Tier 4: Mastering Car Control',
+    tierShort: 'T4 // CAR CONTROL',
+    name: 'The Understeer Cure',
+    subtitle: 'The "Breathe" Technique & Front Tire Loading',
+    focus: 'Managing Understeer via Throttle Lift',
+    targetMetric: 'Turn-In Throttle Breathe: 60-70% / 0 Lock Pinches',
+    prescribedCar: '2016 Dodge Viper ACR (High-Power RWD)',
+    prescribedTrack: 'Sebring International Raceway (Chicane / T2 Focus)',
+    gameType: 'Circuit Race / Solitary Testing',
+    timeOfDay: 'Late Morning (10:00 AM)',
+    weather: 'Clear (Dry Asphalt)',
+    laps: 20,
+    drivatars: 0,
+    quote: '"The technique... is to breathe the throttle just an instant before the turn... just enough to settle a little load onto the front tires." — Skip Barber (Page 68)',
+    briefing: 'Approaching fast chicanes and bends at full throttle unloads the front tires and causes severe understeer. Adding more steering lock reduces grip further ("More Steering = Less Grip"). Train yourself to "breathe" the throttle to 60-70% at turn-in to transfer weight forward, then squeeze power back on.',
+    actionPlan: [
+      'Breathe the throttle to 60-70% an instant before turn-in to load the front tires.',
+      'Resist the urge to turn the steering wheel further when the front end pushes wide.',
+      'Once the nose bites and rotates, immediately feed throttle back to 100% down the ensuing chute.'
+    ],
+    hudWidgets: ['Front Tire Vertical Load %', 'Throttle Breathe Depth Meter', 'Steering Lock vs Grip Ratio', 'MORE STEERING = LESS GRIP Alert']
   }
 ];
 

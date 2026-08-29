@@ -257,24 +257,128 @@ export class StintDiagnostics {
 
       // --- TIER 3: REAL-WORLD LINE ---
       case 'stint-3-1': // The Speed of Recognition
+        targetAchieved = true;
+        gradeScore = 94;
+        masteryLabel = 'PASS // GOLD GRADE';
+        primaryMetricLabel = 'Mistake Detection Reaction Distance';
+        primaryMetricValue = '< 28 ft (Target: < 30 ft)';
+
+        nailed.push('Recognized early turn-in errors 90 feet before the corner.');
+        nailed.push('Applied "Relax Steering + Firm Brake" procedure promptly.');
+        nailed.push('Successfully realigned car heading for a clean late apex.');
+
+        refinement.push('Keep looking further ahead toward the exit track-out marker.');
+        refinement.push('Ease off the brake slightly earlier when entering the corrective arc.');
+
+        if (steeringOscillations > 4) {
+          attention.push('Multiple abrupt steering corrections detected during high-speed entry.');
+        }
+        break;
+
       case 'stint-3-2': // The Camber Hunter
+        targetAchieved = true;
+        gradeScore = 95;
+        masteryLabel = 'PASS // GOLD GRADE';
+        primaryMetricLabel = 'Camber Grip Utilization';
+        primaryMetricValue = '+12% Compression G-Force Gain';
+
+        nailed.push('Exploited positive-camber compression bowls for elevated cornering velocity.');
+        nailed.push('Adjusted turn-in timing dynamically between banked and off-camber sections.');
+        nailed.push(`Sustained up to ${peakLatG}G lateral grip through road surface elevation changes.`);
+
+        refinement.push('Turn in 5 feet earlier into positive-camber bowls to ride the compression.');
+        refinement.push('Anticipate off-camber crests by braking earlier in a straight line.');
+        break;
+
       case 'stint-3-3': // The Compromise Architect
-      default:
         targetAchieved = true;
         gradeScore = 93;
         masteryLabel = 'PASS // GOLD GRADE';
-        primaryMetricLabel = stintData.targetMetric.split(':')[0] || 'Discipline Adherence';
-        primaryMetricValue = 'Target Exceeded';
+        primaryMetricLabel = 'Main Straight Exit Velocity Gain';
+        primaryMetricValue = '+4.2 MPH Launch Gain';
 
-        nailed.push(`Flawlessly executed ${stintData.name} racecraft directives.`);
-        nailed.push(`Maintained high-velocity chassis control at peak ${peakLatG}G lateral loading.`);
-        nailed.push('Applied Skip Barber real-world line adjustments dynamically across all sectors.');
+        nailed.push('Consciously over-slowed for Type III entry corners to optimize Type I exit launch.');
+        nailed.push('Maintained early full-throttle commitment down the main straight.');
+        nailed.push('Executed clean steering unwind without destabilizing the rear axle.');
 
-        refinement.push('Continue fine-tuning corner entry prioritization to maximize high-speed exit corridors.');
-        refinement.push('Leverage positive track banking compressions for even higher entry velocity.');
+        refinement.push('Sacrifice another 2 MPH on the chicane entry to straighten the exit chute even further.');
+        refinement.push('Ensure 100% wide-open throttle is pinned before the final kerb apex.');
+        break;
 
-        if (steeringOscillations > 4) {
-          attention.push('Mid-corner chassis instability detected due to rapid steering corrections under compression.');
+      // --- TIER 4: MASTERING CAR CONTROL ---
+      case 'stint-4-1': // The Skid Savior (Over-Rotation & CPR Sequence)
+        const cprPassed = steeringOscillations < 4 && ttoEvents === 0;
+        gradeScore = cprPassed ? 96 : 82;
+        targetAchieved = cprPassed;
+        masteryLabel = cprPassed ? 'PASS // GOLD GRADE' : 'NEEDS PRACTICE';
+        primaryMetricLabel = 'CPR Recovery & Anti-Spin Mastery';
+        primaryMetricValue = cprPassed ? '100% Saved / 0 Counterspins' : 'Partial Recovery / Secondary Spin Risk';
+
+        if (cprPassed) {
+          nailed.push('Flawlessly executed the three-step Correction, Pause, Recovery (CPR) sequence.');
+          nailed.push('Held steering steady during "The Pause" until vehicle rotation slowed to zero.');
+          nailed.push('Rapidly unwound opposite lock back to center, preventing secondary tankslappers.');
+        } else {
+          nailed.push(`Active countersteering detected, managing up to ${peakLatG}G lateral slide.`);
+        }
+
+        refinement.push('Focus on holding opposite lock steady in the "eye of the storm" before initiating unwind.');
+        refinement.push('Ensure countersteer reaction is instantaneous when yaw angle exceeds the 7°-10° window.');
+
+        if (steeringOscillations >= 4) {
+          attention.push('Detected oscillating countersteer snaps (tankslapper risk): unwound wheel prematurely before the rotation paused.');
+        }
+        if (ttoEvents > 0) {
+          attention.push('Abrupt throttle lift during slide aggravated rear-end breakaway — maintain light maintenance throttle.');
+        }
+        break;
+
+      case 'stint-4-2': // The Throttle Squeeze (Power Oversteer Prevention)
+        const squeezePassed = ttoEvents === 0;
+        gradeScore = squeezePassed ? 95 : 79;
+        targetAchieved = squeezePassed;
+        masteryLabel = squeezePassed ? 'PASS // GOLD GRADE' : 'NEEDS REFINEMENT';
+        primaryMetricLabel = 'Exit Squeeze Distance & Rear Slip';
+        primaryMetricValue = squeezePassed ? '55 ft Squeeze / Rear Slip: 8.8°' : '30 ft Snap Squeeze / Rear Slip: 15.2°';
+
+        if (squeezePassed) {
+          nailed.push('Progressively squeezed throttle across 50-60 ft through corner exit.');
+          nailed.push('Maintained rear slip angle in the optimal 7°-10° neutral grip window with zero 16° spikes.');
+          nailed.push('Generated uninterrupted forward acceleration with +2.0+ MPH exit delta.');
+        } else {
+          nailed.push('Maintained forward drive through the initial phase of corner exit.');
+        }
+
+        refinement.push('Feed throttle smoothly in direct linear proportion to steering wheel unwind.');
+        refinement.push('Target applying initial 20% maintenance throttle slightly earlier at the apex.');
+
+        if (!squeezePassed) {
+          attention.push('Stomped throttle from 0% to 100% in under 30 ft — provoked 16° rear slip spike and power oversteer slide.');
+        }
+        break;
+
+      case 'stint-4-3': // The Understeer Cure (The Breathe Technique)
+      default:
+        const breathePassed = harshBrakingEvents === 0;
+        gradeScore = breathePassed ? 94 : 80;
+        targetAchieved = breathePassed;
+        masteryLabel = breathePassed ? 'PASS // GOLD GRADE' : 'NEEDS PRACTICE';
+        primaryMetricLabel = 'Turn-In Throttle Breathe Compliance';
+        primaryMetricValue = breathePassed ? '65% Breathe (Optimal Front Load)' : '100% Pinned (Understeer Push)';
+
+        if (breathePassed) {
+          nailed.push('Breathed throttle to 60-70% at turn-in, transferring vertical load onto front tire patches.');
+          nailed.push('Resisted adding steering lock when the nose pushed ("More Steering = Less Grip" discipline).');
+          nailed.push('Pinned throttle back to 100% wide open the instant the front tires hooked up and rotated.');
+        } else {
+          nailed.push('Good entry speed commitment into fast corner sequences.');
+        }
+
+        refinement.push('Time the throttle breathe an instant before turn-in so the nose is loaded right as the wheel turns.');
+        refinement.push('Smooth out the re-application of throttle once the car rotates toward the exit.');
+
+        if (!breathePassed) {
+          attention.push('Kept throttle pinned at turn-in and added excessive steering lock, overloading front tires and causing push.');
         }
         break;
     }

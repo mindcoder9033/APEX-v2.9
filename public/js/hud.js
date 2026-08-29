@@ -313,7 +313,6 @@ export class LiveHudRenderer {
         `;
 
       case 'stint-3-3': // The Compromise Architect
-      default:
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
@@ -336,6 +335,127 @@ export class LiveHudRenderer {
               <span id="hud-unwind-rate" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
               <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Exit wheel opening rate</span>
             </div>
+          </div>
+        `;
+
+      // --- TIER 4: MASTERING CAR CONTROL ---
+      case 'stint-4-1': // The Skid Savior (Over-Rotation & CPR)
+        return `
+          <div class="stints-hud-kpi-grid">
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Yaw Angle (Optimal: 7°-10°)</span>
+              <span id="hud-yaw-angle" class="stat-cell-value" style="color: var(--color-cyan); font-size: 26px;">0.0°</span>
+              <span id="hud-yaw-zone-label" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Neutral Window</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Rotation Velocity (Yaw Rate)</span>
+              <span id="hud-rotation-velocity" class="stat-cell-value" style="color: var(--color-text-primary); font-size: 24px;">0.0°/s</span>
+              <span id="hud-rotation-status" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Stable Rotation</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan); grid-column: span 2;">
+              <span class="stat-cell-label">Slip Angle Balance (Front vs Rear)</span>
+              <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 10px; margin-top: 2px;">
+                <span id="hud-front-slip-text">Front: 0.0°</span>
+                <span id="hud-balance-badge" class="badge" style="background: rgba(0, 204, 102, 0.2); color: var(--color-success); font-size: 9px;">NEUTRAL</span>
+                <span id="hud-rear-slip-text">Rear: 0.0°</span>
+              </div>
+              <div class="slip-balance-track">
+                <div class="slip-balance-opt-zone"></div>
+                <div class="slip-balance-center"></div>
+                <div id="hud-slip-cursor" class="slip-balance-cursor"></div>
+              </div>
+            </div>
+          </div>
+          <div class="cpr-tracker-container chamfer-all-corners">
+            <div id="cpr-step-1" class="cpr-step-item">
+              <span class="cpr-step-label">Step 1</span>
+              <span class="cpr-step-name">1. CORRECT (Lock)</span>
+            </div>
+            <span class="cpr-arrow">➔</span>
+            <div id="cpr-step-2" class="cpr-step-item">
+              <span class="cpr-step-label">Step 2</span>
+              <span class="cpr-step-name">2. PAUSE (Hold)</span>
+            </div>
+            <span class="cpr-arrow">➔</span>
+            <div id="cpr-step-3" class="cpr-step-item">
+              <span class="cpr-step-label">Step 3</span>
+              <span class="cpr-step-name">3. RECOVER (Unwind)</span>
+            </div>
+          </div>
+        `;
+
+      case 'stint-4-2': // The Throttle Squeeze (Power Oversteer Prevention)
+        return `
+          <div class="stints-hud-kpi-grid">
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Throttle Application Distance</span>
+              <span id="hud-squeeze-dist" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">0 ft</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 50-60 ft progressive squeeze</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Rear Slip Angle Limit</span>
+              <span id="hud-rear-slip-spike" class="stat-cell-value" style="color: var(--color-success); font-size: 24px;">0.0°</span>
+              <span id="hud-rear-slip-status" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">< 10° Target (Avoid 16° Spike)</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Exit Speed Delta Target</span>
+              <span id="hud-exit-speed-gain" class="stat-cell-value accent" style="font-size: 24px;">+0.0 MPH</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: +2.0 MPH uninterrupted drive</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Power Oversteer Monitor</span>
+              <span id="hud-power-oversteer-alert" class="stat-cell-value" style="color: var(--color-success); font-size: 15px; margin-top: 4px;">CLEAN EXIT DRIVE</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Zero snap countersteer</span>
+            </div>
+          </div>
+          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px;">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary);">
+              <span>THROTTLE PROGRESSIVE SQUEEZE (0% ➔ 100%)</span>
+              <span id="hud-squeeze-rate-text">PEDAL: 0%</span>
+            </div>
+            <div class="throttle-squeeze-progress-bar">
+              <div id="hud-squeeze-fill" class="throttle-squeeze-fill"></div>
+            </div>
+          </div>
+        `;
+
+      case 'stint-4-3': // The Understeer Cure (The Breathe Technique)
+      default:
+        return `
+          <div class="stints-hud-kpi-grid">
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Turn-In Throttle Breathe Depth</span>
+              <span id="hud-breathe-depth" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">100%</span>
+              <span id="hud-breathe-status" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 60-70% Breathe</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Front Tire Vertical Load Bias</span>
+              <span id="hud-front-load-bias" class="stat-cell-value" style="color: var(--color-cyan); font-size: 24px;">50%</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Load transferred to front patch</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Steering Lock vs Grip Ratio</span>
+              <span id="hud-steer-grip-ratio" class="stat-cell-value" style="color: var(--color-success); font-size: 24px;">OPTIMAL</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Front tire saturation</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-cyan);">
+              <span class="stat-cell-label">Understeer State</span>
+              <span id="hud-understeer-state" class="stat-cell-value" style="color: var(--color-success); font-size: 15px; margin-top: 4px;">NO PUSH DETECTED</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Nose rotation tracking</span>
+            </div>
+          </div>
+          <div class="breathe-target-box">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary);">
+              <span>THROTTLE BREATHE WINDOW (GREEN = 60-70% SWEET SPOT)</span>
+              <span id="hud-breathe-needle-text">PEDAL: 0%</span>
+            </div>
+            <div class="breathe-meter-bar">
+              <div class="breathe-sweet-spot"></div>
+              <div id="hud-breathe-needle" class="breathe-meter-needle"></div>
+            </div>
+          </div>
+          <div id="hud-less-grip-alert" class="hud-less-grip-alert" style="display: none; margin-top: 8px;">
+            ⚠️ MORE STEERING = LESS GRIP! LIFT THROTTLE TO 60% TO SETTLE NOSE
           </div>
         `;
     }
@@ -864,6 +984,280 @@ export class LiveHudRenderer {
         } else {
           elUnwind.textContent = 'NEUTRAL TRACKING';
           elUnwind.style.color = 'var(--color-text-muted)';
+        }
+      }
+    }
+
+    // --- TIER 4: MASTERING CAR CONTROL ---
+    // 4-1 The Skid Savior (Over-Rotation & CPR)
+    else if (stintId === 'stint-4-1') {
+      // 1. Calculate Yaw Angle (Heading vs Velocity Vector)
+      const rawYawRad = motion.yaw != null ? motion.yaw : (sample.yaw || 0);
+      const vx = motion.velocityX != null ? motion.velocityX : (sample.velocityX || 0);
+      const vz = motion.velocityZ != null ? motion.velocityZ : (sample.velocityZ || 0);
+      let velAngleRad = 0;
+      if (Math.abs(vx) > 0.1 || Math.abs(vz) > 0.1) {
+        velAngleRad = Math.atan2(vx, vz);
+      }
+      let yawDiffRad = rawYawRad - velAngleRad;
+      while (yawDiffRad > Math.PI) yawDiffRad -= 2 * Math.PI;
+      while (yawDiffRad < -Math.PI) yawDiffRad += 2 * Math.PI;
+      const yawAngleDeg = Math.abs(yawDiffRad * (180 / Math.PI));
+
+      const elYaw = document.getElementById('hud-yaw-angle');
+      if (elYaw) {
+        elYaw.textContent = `${yawAngleDeg.toFixed(1)}°`;
+        if (yawAngleDeg >= 7.0 && yawAngleDeg <= 10.0) {
+          elYaw.style.color = 'var(--color-success)';
+        } else if (yawAngleDeg > 12.0) {
+          elYaw.style.color = 'var(--color-f1-red)';
+        } else {
+          elYaw.style.color = 'var(--color-cyan)';
+        }
+      }
+      const elYawZone = document.getElementById('hud-yaw-zone-label');
+      if (elYawZone) {
+        if (yawAngleDeg >= 7.0 && yawAngleDeg <= 10.0) {
+          elYawZone.textContent = '🎯 OPTIMAL SLIP ZONE (7°-10°)';
+          elYawZone.style.color = 'var(--color-success)';
+        } else if (yawAngleDeg > 12.0) {
+          elYawZone.textContent = '⚠️ OVER-ROTATION / SLIDE';
+          elYawZone.style.color = 'var(--color-f1-red)';
+        } else {
+          elYawZone.textContent = 'NEUTRAL / TRACKING';
+          elYawZone.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      // 2. Rotational Velocity (Yaw Rate)
+      const yawRateRad = motion.angularVelocityY != null ? motion.angularVelocityY : (sample.angularVelocityY || 0);
+      const yawRateDeg = Math.abs(yawRateRad * (180 / Math.PI));
+      const elRotVel = document.getElementById('hud-rotation-velocity');
+      if (elRotVel) {
+        elRotVel.textContent = `${yawRateDeg.toFixed(1)}°/s`;
+        elRotVel.style.color = yawRateDeg > 45 ? 'var(--color-f1-red)' : (yawRateDeg > 20 ? 'var(--color-warning)' : 'var(--color-text-primary)');
+      }
+      const elRotStat = document.getElementById('hud-rotation-status');
+      if (elRotStat) {
+        if (yawRateDeg > 45) {
+          elRotStat.textContent = '🚨 OVER-ROTATION SNAP!';
+          elRotStat.style.color = 'var(--color-f1-red)';
+        } else if (yawRateDeg < 5 && yawAngleDeg > 6) {
+          elRotStat.textContent = '⏸️ THE PAUSE (ZERO ROTATION)';
+          elRotStat.style.color = 'var(--color-cyan)';
+        } else {
+          elRotStat.textContent = 'STABLE ROTATION';
+          elRotStat.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      // 3. Slip Angle Balance & Bar Cursor
+      const tireSlip = chassis.tireSlipAngle || sample.tireSlipAngle || {};
+      const slipFL = Math.abs(tireSlip.frontLeft || 0) * (180 / Math.PI);
+      const slipFR = Math.abs(tireSlip.frontRight || 0) * (180 / Math.PI);
+      const slipRL = Math.abs(tireSlip.rearLeft || 0) * (180 / Math.PI);
+      const slipRR = Math.abs(tireSlip.rearRight || 0) * (180 / Math.PI);
+      const avgFrontSlip = (slipFL + slipFR) / 2;
+      const avgRearSlip = (slipRL + slipRR) / 2;
+      const slipDiff = avgFrontSlip - avgRearSlip; // >0 Understeer, <0 Oversteer
+
+      const elFrontSlip = document.getElementById('hud-front-slip-text');
+      if (elFrontSlip) elFrontSlip.textContent = `Front: ${avgFrontSlip.toFixed(1)}°`;
+      const elRearSlip = document.getElementById('hud-rear-slip-text');
+      if (elRearSlip) elRearSlip.textContent = `Rear: ${avgRearSlip.toFixed(1)}°`;
+
+      const elBadge = document.getElementById('hud-balance-badge');
+      if (elBadge) {
+        if (slipDiff > 1.5) {
+          elBadge.textContent = 'UNDERSTEER';
+          elBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+          elBadge.style.color = 'var(--color-warning)';
+        } else if (slipDiff < -1.5) {
+          elBadge.textContent = 'OVERSTEER';
+          elBadge.style.background = 'rgba(225, 6, 0, 0.2)';
+          elBadge.style.color = 'var(--color-f1-red)';
+        } else {
+          elBadge.textContent = 'NEUTRAL';
+          elBadge.style.background = 'rgba(0, 204, 102, 0.2)';
+          elBadge.style.color = 'var(--color-success)';
+        }
+      }
+
+      const elCursor = document.getElementById('hud-slip-cursor');
+      if (elCursor) {
+        // Map slipDiff (-10° to +10°) to 0% - 100%
+        const normalizedPos = Math.max(5, Math.min(95, 50 - (slipDiff * 4)));
+        elCursor.style.left = `calc(${normalizedPos}% - 6px)`;
+        elCursor.style.background = Math.abs(slipDiff) <= 1.5 ? 'var(--color-success)' : (slipDiff < -1.5 ? 'var(--color-f1-red)' : 'var(--color-warning)');
+      }
+
+      // 4. CPR Step Tracker Animation
+      const step1 = document.getElementById('cpr-step-1');
+      const step2 = document.getElementById('cpr-step-2');
+      const step3 = document.getElementById('cpr-step-3');
+      if (step1 && step2 && step3) {
+        step1.classList.remove('active-correct');
+        step2.classList.remove('active-pause');
+        step3.classList.remove('active-recover');
+
+        const isOversteering = yawAngleDeg > 5.0 || slipDiff < -2.0;
+        const isCountersteering = (rawYawRad > 0 && steer < -0.08) || (rawYawRad < 0 && steer > 0.08);
+
+        if (isOversteering && isCountersteering) {
+          if (yawRateDeg < 8.0) {
+            // Rotation halted: The Pause
+            step2.classList.add('active-pause');
+          } else {
+            // Active countersteer correction
+            step1.classList.add('active-correct');
+          }
+        } else if (!isOversteering && Math.abs(steer) < 0.15 && speedMph > 30) {
+          // Wheel unwound back to center: Recovered
+          step3.classList.add('active-recover');
+        }
+      }
+    }
+
+    // 4-2 The Throttle Squeeze (Power Oversteer Prevention)
+    else if (stintId === 'stint-4-2') {
+      const elDist = document.getElementById('hud-squeeze-dist');
+      if (elDist) {
+        const estDist = Math.round((speedMph * 1.467) * (throttlePct / 100) * 0.5);
+        elDist.textContent = `${estDist} ft`;
+        elDist.style.color = estDist >= 50 ? 'var(--color-success)' : (estDist >= 30 ? 'var(--color-gold)' : 'var(--color-f1-red)');
+      }
+
+      const tireSlip = chassis.tireSlipAngle || sample.tireSlipAngle || {};
+      const slipRL = Math.abs(tireSlip.rearLeft || 0) * (180 / Math.PI);
+      const slipRR = Math.abs(tireSlip.rearRight || 0) * (180 / Math.PI);
+      const avgRearSlip = (slipRL + slipRR) / 2;
+
+      const elRearSpike = document.getElementById('hud-rear-slip-spike');
+      if (elRearSpike) {
+        elRearSpike.textContent = `${avgRearSlip.toFixed(1)}°`;
+        elRearSpike.style.color = avgRearSlip <= 10.0 ? 'var(--color-success)' : (avgRearSlip <= 14.0 ? 'var(--color-warning)' : 'var(--color-f1-red)');
+      }
+      const elRearStat = document.getElementById('hud-rear-slip-status');
+      if (elRearStat) {
+        if (avgRearSlip > 14.0) {
+          elRearStat.textContent = '⚠️ 16° POWER OVERSTEER SPIKE!';
+          elRearStat.style.color = 'var(--color-f1-red)';
+        } else if (avgRearSlip >= 7.0 && avgRearSlip <= 10.0) {
+          elRearStat.textContent = '🎯 OPTIMAL EXIT GRIP (7°-10°)';
+          elRearStat.style.color = 'var(--color-success)';
+        } else {
+          elRearStat.textContent = '< 10° Target (Linear Drive)';
+          elRearStat.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      const elExitGain = document.getElementById('hud-exit-speed-gain');
+      if (elExitGain) {
+        const exitDelta = parseFloat(((longGNum || 0) * 16.5).toFixed(1));
+        elExitGain.textContent = `${exitDelta >= 0 ? '+' : ''}${exitDelta} MPH`;
+        elExitGain.style.color = exitDelta >= 2.0 ? 'var(--color-success)' : 'var(--color-gold)';
+      }
+
+      const elPowerAlert = document.getElementById('hud-power-oversteer-alert');
+      if (elPowerAlert) {
+        if (throttlePct > 80 && avgRearSlip > 12.0) {
+          elPowerAlert.textContent = '⚠️ POWER OVERSTEER TRIGGERED';
+          elPowerAlert.style.color = 'var(--color-f1-red)';
+        } else if (throttlePct > 50 && avgRearSlip <= 10.0) {
+          elPowerAlert.textContent = 'PROGRESSIVE EXIT SQUEEZE';
+          elPowerAlert.style.color = 'var(--color-success)';
+        } else {
+          elPowerAlert.textContent = 'CLEAN EXIT DRIVE';
+          elPowerAlert.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      const elRateText = document.getElementById('hud-squeeze-rate-text');
+      if (elRateText) elRateText.textContent = `PEDAL: ${throttlePct}%`;
+      const elFill = document.getElementById('hud-squeeze-fill');
+      if (elFill) elFill.style.width = `${throttlePct}%`;
+    }
+
+    // 4-3 The Understeer Cure (The Breathe Technique)
+    else if (stintId === 'stint-4-3') {
+      const elBreatheDepth = document.getElementById('hud-breathe-depth');
+      if (elBreatheDepth) {
+        elBreatheDepth.textContent = `${throttlePct}%`;
+        if (throttlePct >= 60 && throttlePct <= 70) {
+          elBreatheDepth.style.color = 'var(--color-success)';
+        } else if (throttlePct < 60) {
+          elBreatheDepth.style.color = 'var(--color-warning)';
+        } else {
+          elBreatheDepth.style.color = 'var(--color-text-primary)';
+        }
+      }
+
+      const elBreatheStat = document.getElementById('hud-breathe-status');
+      if (elBreatheStat) {
+        if (throttlePct >= 60 && throttlePct <= 70 && currentAbsLatG > 0.6) {
+          elBreatheStat.textContent = '🎯 PERFECT BREATHE (60-70%)';
+          elBreatheStat.style.color = 'var(--color-success)';
+        } else if (throttlePct > 90 && currentAbsLatG > 0.7) {
+          elBreatheStat.textContent = 'UNLOADED FRONTS (PINNED 100%)';
+          elBreatheStat.style.color = 'var(--color-f1-red)';
+        } else {
+          elBreatheStat.textContent = 'Target: 60-70% Breathe';
+          elBreatheStat.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      // Front Load Bias %
+      const elFrontLoad = document.getElementById('hud-front-load-bias');
+      if (elFrontLoad) {
+        const frontBias = Math.min(90, Math.max(10, Math.round(50 - (longGNum * 30))));
+        elFrontLoad.textContent = `${frontBias}% FRONT`;
+        elFrontLoad.style.color = frontBias > 55 ? 'var(--color-success)' : (frontBias < 40 ? 'var(--color-f1-red)' : 'var(--color-cyan)');
+      }
+
+      // Needle position
+      const elNeedle = document.getElementById('hud-breathe-needle');
+      if (elNeedle) elNeedle.style.left = `${throttlePct}%`;
+      const elNeedleText = document.getElementById('hud-breathe-needle-text');
+      if (elNeedleText) elNeedleText.textContent = `PEDAL: ${throttlePct}%`;
+
+      // Understeer / More Steering = Less Grip Alert
+      const tireSlip = chassis.tireSlipAngle || sample.tireSlipAngle || {};
+      const slipFL = Math.abs(tireSlip.frontLeft || 0) * (180 / Math.PI);
+      const slipFR = Math.abs(tireSlip.frontRight || 0) * (180 / Math.PI);
+      const slipRL = Math.abs(tireSlip.rearLeft || 0) * (180 / Math.PI);
+      const slipRR = Math.abs(tireSlip.rearRight || 0) * (180 / Math.PI);
+      const avgFrontSlip = (slipFL + slipFR) / 2;
+      const avgRearSlip = (slipRL + slipRR) / 2;
+      const isPushing = (avgFrontSlip - avgRearSlip) > 2.0 && currentAbsLatG > 0.5;
+
+      const elSteerRatio = document.getElementById('hud-steer-grip-ratio');
+      if (elSteerRatio) {
+        if (isPushing && Math.abs(steer) > 0.4) {
+          elSteerRatio.textContent = 'SATURATED / SCRUB';
+          elSteerRatio.style.color = 'var(--color-f1-red)';
+        } else {
+          elSteerRatio.textContent = 'OPTIMAL GRIP';
+          elSteerRatio.style.color = 'var(--color-success)';
+        }
+      }
+
+      const elUnderState = document.getElementById('hud-understeer-state');
+      if (elUnderState) {
+        if (isPushing) {
+          elUnderState.textContent = 'FRONT TIRES UNLOADED';
+          elUnderState.style.color = 'var(--color-f1-red)';
+        } else {
+          elUnderState.textContent = 'NO PUSH DETECTED';
+          elUnderState.style.color = 'var(--color-success)';
+        }
+      }
+
+      const elAlert = document.getElementById('hud-less-grip-alert');
+      if (elAlert) {
+        if (isPushing && Math.abs(steer) > 0.35 && throttlePct > 80) {
+          elAlert.style.display = 'block';
+        } else {
+          elAlert.style.display = 'none';
         }
       }
     }
