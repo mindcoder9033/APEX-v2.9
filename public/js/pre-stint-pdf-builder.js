@@ -710,7 +710,7 @@ export class PreStintPdfBuilder {
       }
       const base64 = btoa(binary);
 
-      // Auto-archive in background to Documents/APEX Telemetry/Reports/
+      // Auto-archive automatically to Documents/APEX v2.9/user/
       window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf' });
 
       // Native save dialog

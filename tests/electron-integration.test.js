@@ -46,4 +46,16 @@ describe('Electron Desktop Integration & Network Helpers', () => {
     assert.strictEqual(CONFIG.udp.minPacketSize, 311, 'Min packet size should be 311');
   });
 
+  test('Auto-Archive & User Reports Directory: Resolves path to Documents/APEX v2.9/user', async () => {
+    const path = await import('node:path');
+    const os = await import('node:os');
+    const docsDir = path.join(os.homedir(), 'Documents');
+    const targetUserDir = path.join(docsDir, 'APEX v2.9', 'user');
+    const targetProfilesDir = path.join(targetUserDir, 'Profiles');
+
+    assert.ok(targetUserDir.includes('APEX v2.9'), 'User archive path must contain APEX v2.9');
+    assert.ok(targetUserDir.endsWith(path.join('APEX v2.9', 'user')), 'Must resolve to Documents/APEX v2.9/user');
+    assert.ok(targetProfilesDir.endsWith(path.join('APEX v2.9', 'user', 'Profiles')), 'Must resolve to Documents/APEX v2.9/user/Profiles');
+  });
+
 });

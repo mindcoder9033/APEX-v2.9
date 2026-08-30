@@ -467,7 +467,7 @@ function wrapText(text, font, fontSize, maxWidth) {
         }
         const base64 = btoa(binary);
 
-        // Auto-archive in background to Documents/APEX Telemetry/Reports/<DriverName>/
+        // Auto-archive automatically to Documents/APEX v2.9/user/
         window.apexDesktop.autoArchive?.({ fileName: defaultFilename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
 
         await window.apexDesktop.saveFile({

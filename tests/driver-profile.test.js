@@ -197,7 +197,7 @@ describe('Driver Profiles System & State Store', () => {
           if (activeId === id) activeId = null;
           return { success: true };
         },
-        openFolder: async () => ({ success: true, path: 'C:\\Users\\User\\Documents\\APEX Telemetry\\Profiles' })
+        openFolder: async () => ({ success: true, path: 'C:\\Users\\User\\Documents\\APEX v2.9\\user\\Profiles' })
       }
     };
 

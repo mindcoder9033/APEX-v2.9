@@ -113,9 +113,15 @@ function registerIpcHandlers() {
     if (!mainWindow) return { success: false, error: 'No active window' };
 
     try {
+      const docsDir = app.getPath('documents');
+      const defaultUserDir = path.join(docsDir, 'APEX v2.9', 'user');
+      await fs.promises.mkdir(defaultUserDir, { recursive: true });
+
+      const defaultSavePath = options.defaultPath || (options.suggestedName ? path.join(defaultUserDir, options.suggestedName) : defaultUserDir);
+
       const result = await dialog.showSaveDialog(mainWindow, {
         title: options.title || 'Save APEX Export',
-        defaultPath: options.defaultPath || options.suggestedName || 'APEX_Export',
+        defaultPath: defaultSavePath,
         filters: options.filters || [
           { name: 'All Supported', extensions: ['pdf', 'csv', 'json'] },
           { name: 'PDF Reports (*.pdf)', extensions: ['pdf'] },
@@ -141,17 +147,14 @@ function registerIpcHandlers() {
     }
   });
 
-  // Auto-Archive Stint Reports to Documents/APEX Telemetry/Reports/
+  // Auto-Archive Stint Reports to Documents/APEX v2.9/user/
   ipcMain.handle('file:auto-archive', async (_event, fileData = {}) => {
     try {
       const docsDir = app.getPath('documents');
-      const driverSubdir = fileData.driverName ? fileData.driverName.replace(/[^a-zA-Z0-9_-]/g, '_') : '';
-      const archiveDir = driverSubdir
-        ? path.join(docsDir, 'APEX Telemetry', 'Reports', driverSubdir)
-        : path.join(docsDir, 'APEX Telemetry', 'Reports');
+      const archiveDir = path.join(docsDir, 'APEX v2.9', 'user');
       await fs.promises.mkdir(archiveDir, { recursive: true });
 
-      const fileName = fileData.fileName || `APEX_Stint_${Date.now()}.${fileData.extension || 'pdf'}`;
+      const fileName = fileData.fileName || `APEX_Report_${Date.now()}.${fileData.extension || 'pdf'}`;
       const filePath = path.join(archiveDir, fileName);
 
       if (fileData.data) {
@@ -170,7 +173,7 @@ function registerIpcHandlers() {
   ipcMain.handle('system:open-reports-folder', async () => {
     try {
       const docsDir = app.getPath('documents');
-      const archiveDir = path.join(docsDir, 'APEX Telemetry', 'Reports');
+      const archiveDir = path.join(docsDir, 'APEX v2.9', 'user');
       await fs.promises.mkdir(archiveDir, { recursive: true });
       await shell.openPath(archiveDir);
       return { success: true, path: archiveDir };
@@ -184,7 +187,7 @@ function registerIpcHandlers() {
   // ==========================================
   const getProfilesDir = async () => {
     const docsDir = app.getPath('documents');
-    const profilesDir = path.join(docsDir, 'APEX Telemetry', 'Profiles');
+    const profilesDir = path.join(docsDir, 'APEX v2.9', 'user', 'Profiles');
     await fs.promises.mkdir(profilesDir, { recursive: true });
     return profilesDir;
   };

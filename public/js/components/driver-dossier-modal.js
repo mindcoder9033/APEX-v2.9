@@ -182,7 +182,7 @@ export class DriverDossierModal {
               <div class="dossier-form-group full-width">
                 <label class="dossier-checkbox-label">
                   <input type="checkbox" id="dossier-pref-auto-archive" checked />
-                  <span>Auto-Archive Generated PDF Stint Reports to <code>Documents/APEX Telemetry/Reports/</code></span>
+                  <span>Auto-Archive Generated PDF Stint Reports to <code>Documents/APEX v2.9/user/</code></span>
                 </label>
               </div>
             </div>
