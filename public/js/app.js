@@ -112,52 +112,12 @@ class ApexApp {
         }
       });
 
-      // Bind header driver pill toggle
+      // Bind header driver pill to directly open Driver Dossier Modal
       const btnPill = document.getElementById('btn-driver-pill');
-      const dropdown = document.getElementById('driver-dropdown-menu');
-      const btnOpenDossier = document.getElementById('btn-dropdown-open-dossier');
-      const btnAddDriver = document.getElementById('btn-dropdown-add-driver');
-      const btnOpenFolder = document.getElementById('btn-dropdown-open-folder');
-
-      if (btnPill && dropdown) {
+      if (btnPill) {
         btnPill.addEventListener('click', (e) => {
-          e.stopPropagation();
-          dropdown.classList.toggle('hidden');
-          if (!dropdown.classList.contains('hidden')) {
-            this.renderHeaderDropdownList();
-          }
-        });
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-          if (!dropdown.contains(e.target) && !btnPill.contains(e.target)) {
-            dropdown.classList.add('hidden');
-          }
-        });
-      }
-
-      if (btnOpenDossier) {
-        btnOpenDossier.addEventListener('click', () => {
-          dropdown?.classList.add('hidden');
+          e.preventDefault();
           this.driverDossierModal.open();
-        });
-      }
-
-      if (btnAddDriver) {
-        btnAddDriver.addEventListener('click', () => {
-          dropdown?.classList.add('hidden');
-          this.driverDossierModal.open();
-          this.driverDossierModal.handleCreateNew();
-        });
-      }
-
-      if (btnOpenFolder) {
-        btnOpenFolder.addEventListener('click', async () => {
-          dropdown?.classList.add('hidden');
-          const res = await driverProfileStore.openFolder();
-          if (!res.success && res.error) {
-            alert(res.error);
-          }
         });
       }
     } catch (err) {

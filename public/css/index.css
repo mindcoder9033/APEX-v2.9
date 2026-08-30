@@ -3474,15 +3474,18 @@ select,
   letter-spacing: 0.8px;
 }
 
-.driver-pill-arrow {
-  font-size: 9px;
+.driver-pill-arrow,
+.driver-pill-icon {
+  font-size: 10px;
   color: var(--color-text-secondary);
-  margin-left: 2px;
-  transition: transform 0.15s ease;
+  margin-left: 3px;
+  transition: all 0.15s ease;
 }
 
-.driver-pill-btn:hover .driver-pill-arrow {
-  color: #FFF;
+.driver-pill-btn:hover .driver-pill-arrow,
+.driver-pill-btn:hover .driver-pill-icon {
+  color: var(--color-f1-red, #e10600);
+  transform: translateX(1px) translateY(-1px);
 }
 
 /* --- Header Quick-Switcher Dropdown Menu --- */

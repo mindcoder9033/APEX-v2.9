@@ -32,9 +32,9 @@
           </div>
         </div>
 
-        <!-- Driver Profile Quick-Switcher Pill & Dropdown -->
+        <!-- Driver Profile Header Pill (Direct Modal Trigger) -->
         <div class="driver-switcher-container" id="driver-switcher-container">
-          <button id="btn-driver-pill" class="driver-pill-btn chamfer-br" title="Current Active Driver (Click for Dossier & Quick Switch)">
+          <button id="btn-driver-pill" class="driver-pill-btn chamfer-br" title="Open Driver Dossier & Profile Management (Click or Press 'D')">
             <div class="driver-pill-badge" id="header-driver-badge">
               <span id="header-driver-number">#01</span>
             </div>
@@ -42,27 +42,8 @@
               <span id="header-driver-name" class="driver-pill-name">APEX Driver</span>
               <span id="header-driver-tier" class="driver-pill-tier">CLUB</span>
             </div>
-            <span class="driver-pill-arrow">▾</span>
+            <span class="driver-pill-icon">↗</span>
           </button>
-
-          <!-- Driver Dropdown Menu -->
-          <div id="driver-dropdown-menu" class="driver-dropdown-menu hidden">
-            <div class="driver-dropdown-header">
-              <span>ACTIVE DRIVERS</span>
-              <button type="button" id="btn-dropdown-open-dossier" class="driver-dropdown-dossier-link">Dossier ↗</button>
-            </div>
-            <div id="driver-dropdown-list" class="driver-dropdown-list">
-              <!-- Rendered dynamically -->
-            </div>
-            <div class="driver-dropdown-footer">
-              <button type="button" id="btn-dropdown-add-driver" class="dropdown-action-btn">
-                <span>+</span> Add Driver
-              </button>
-              <button type="button" id="btn-dropdown-open-folder" class="dropdown-action-btn">
-                <span>📁</span> Folder
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
