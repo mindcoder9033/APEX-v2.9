@@ -17,10 +17,59 @@
   <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
+  <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
+  <div id="apex-titlebar" class="apex-titlebar app-drag-region">
+    <!-- Left Zone: App Branding & Title -->
+    <div class="titlebar-left no-drag">
+      <div class="titlebar-logo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="titlebar-icon">
+          <path d="M12 2L2 22h20L12 2z" fill="#E10600" opacity="0.9"/>
+          <path d="M12 6L5 20h14L12 6z" fill="#0A0B0E"/>
+          <path d="M12 10L8 18h8L12 10z" fill="#E10600"/>
+        </svg>
+        <span class="titlebar-brand-title">APEX</span>
+        <span class="titlebar-slash">//</span>
+        <span class="titlebar-brand-sub">PIT-WALL TELEMETRY</span>
+        <span class="titlebar-version-tag">v2.9</span>
+      </div>
+    </div>
+
+    <!-- Center Zone: Draggable Area & Dynamic Live Session Breadcrumb -->
+    <div class="titlebar-center app-drag-region" id="titlebar-drag-area">
+      <div id="titlebar-session-breadcrumb" class="titlebar-session-breadcrumb no-drag" title="Session Status & Track Context">
+        <span id="titlebar-session-dot" class="titlebar-dot"></span>
+        <span id="titlebar-session-text">STANDBY // AWAITING TELEMETRY</span>
+      </div>
+    </div>
+
+    <!-- Right Zone: Motorsport Window Controls -->
+    <div class="titlebar-right no-drag">
+      <button id="btn-titlebar-min" class="titlebar-btn btn-min chamfer-br" title="Minimize" aria-label="Minimize Window">
+        <svg width="10" height="2" viewBox="0 0 10 2">
+          <rect width="10" height="2" fill="currentColor"/>
+        </svg>
+      </button>
+      <button id="btn-titlebar-max" class="titlebar-btn btn-max chamfer-br" title="Maximize / Restore" aria-label="Maximize or Restore Window">
+        <svg id="titlebar-max-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3">
+          <rect x="1" y="1" width="8" height="8"/>
+        </svg>
+        <svg id="titlebar-restore-icon" width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3" style="display: none;">
+          <rect x="2.5" y="1" width="6.5" height="6.5"/>
+          <path d="M1 3.5V9h5.5"/>
+        </svg>
+      </button>
+      <button id="btn-titlebar-close" class="titlebar-btn btn-close chamfer-tr" title="Close APEX" aria-label="Close Application">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <path d="M1.5 1.5L8.5 8.5M8.5 1.5L1.5 8.5"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
   <div class="app-container">
     
     <!-- Top Pit Navigation Header with Electron Frameless Drag Support -->
-    <header class="pit-header chamfer-br app-drag-region">
+    <header class="pit-header chamfer-br">
       <!-- Zone 1 (Left): Brand & Driver Profile Quick-Switcher -->
       <div class="header-left-group no-drag">
         <div class="brand-section">
@@ -88,19 +137,6 @@
             <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
           </svg>
         </button>
-
-        <!-- Frameless Desktop Window Controls (Visible only in Electron) -->
-        <div id="desktop-window-controls" class="desktop-window-controls" style="display: none;">
-          <button id="btn-win-minimize" class="btn-win-ctrl chamfer-br" title="Minimize">
-            <span>—</span>
-          </button>
-          <button id="btn-win-maximize" class="btn-win-ctrl chamfer-br" title="Maximize / Restore">
-            <span id="btn-win-maximize-icon">□</span>
-          </button>
-          <button id="btn-win-close" class="btn-win-ctrl btn-win-close chamfer-tr" title="Close APEX">
-            <span>✕</span>
-          </button>
-        </div>
       </div>
     </header>
 

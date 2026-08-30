@@ -3303,7 +3303,7 @@ body.layout-edit-active .widget-resize-handle {
 
 /* ==========================================================================
    ELECTRON STANDALONE DESKTOP STYLES
-   Frameless Window Controls, Drag Regions, & Loopback Diagnostics Modal
+   Frameless Window Titlebar, Drag Regions, & Controls
    ========================================================================== */
 
 .app-drag-region {
@@ -3312,6 +3312,9 @@ body.layout-edit-active .widget-resize-handle {
 }
 
 .no-drag,
+.titlebar-left,
+.titlebar-right,
+.titlebar-session-breadcrumb,
 .header-nav-tabs,
 .brand-section,
 .header-status-group,
@@ -3322,43 +3325,177 @@ select,
   -webkit-app-region: no-drag;
 }
 
-.desktop-window-controls {
-  display: inline-flex;
+/* --- Dedicated APEX Motorsport Windows App Header / Titlebar --- */
+.apex-titlebar {
+  display: flex;
   align-items: center;
-  gap: 4px;
-  margin-left: 8px;
-  padding-left: 8px;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  justify-content: space-between;
+  height: 32px;
+  min-height: 32px;
+  background: #08090C;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 4px 0 12px;
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  width: 100%;
+  box-sizing: border-box;
+  -webkit-app-region: drag;
+  user-select: none;
 }
 
-.btn-win-ctrl {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  width: 28px;
-  height: 28px;
+.titlebar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.titlebar-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(225, 6, 0, 0.4));
+}
+
+.titlebar-brand-title {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  color: #FFFFFF;
+}
+
+.titlebar-slash {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--color-f1-red, #E10600);
+}
+
+.titlebar-brand-sub {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary, #9CA3AF);
+  text-transform: uppercase;
+}
+
+.titlebar-version-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  background: rgba(225, 6, 0, 0.15);
+  border: 1px solid rgba(225, 6, 0, 0.35);
+  color: var(--color-f1-red, #FF2A2A);
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.titlebar-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0 16px;
+  overflow: hidden;
+  -webkit-app-region: drag;
+  cursor: default;
+}
+
+.titlebar-session-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: var(--color-text-muted, #6B7280);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  max-width: 500px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 10px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-muted, #6B7280);
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.titlebar-dot.active {
+  background: #10B981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+}
+
+.titlebar-dot.recording {
+  background: #E10600;
+  box-shadow: 0 0 6px rgba(225, 6, 0, 0.8);
+  animation: pulse-recording 1.2s infinite;
+}
+
+.titlebar-right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 11px;
+  width: 36px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--color-text-secondary, #A0A5B5);
   cursor: pointer;
-  transition: all 0.15s ease-in-out;
   padding: 0;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.btn-win-ctrl:hover {
-  background: rgba(255, 255, 255, 0.15);
+.titlebar-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
   border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
-.btn-win-ctrl.btn-win-close:hover {
+.titlebar-btn:active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.titlebar-btn.btn-close:hover {
   background: var(--color-f1-red, #E10600);
   border-color: var(--color-f1-red, #E10600);
   color: #FFFFFF;
-  box-shadow: 0 0 10px rgba(225, 6, 0, 0.5);
+  box-shadow: 0 0 12px rgba(225, 6, 0, 0.6);
+}
+
+.titlebar-btn.btn-close:active {
+  background: #B30000;
 }
 
 /* UWP Loopback & Diagnostics Package Row Items */

@@ -203,43 +203,96 @@ class ApexApp {
   }
 
   /**
-   * Initializes Electron frameless window controls if running inside desktop app
+   * Initializes APEX Motorsport custom titlebar and window controls (Desktop & Web)
    */
   initDesktopWindowControls() {
-    if (!window.apexDesktop?.isDesktop) return;
+    const btnMin = document.getElementById('btn-titlebar-min');
+    const btnMax = document.getElementById('btn-titlebar-max');
+    const btnClose = document.getElementById('btn-titlebar-close');
+    const maxIcon = document.getElementById('titlebar-max-icon');
+    const restoreIcon = document.getElementById('titlebar-restore-icon');
+    const titlebarDrag = document.getElementById('apex-titlebar');
 
-    const controlsEl = document.getElementById('desktop-window-controls');
-    const btnMin = document.getElementById('btn-win-minimize');
-    const btnMax = document.getElementById('btn-win-maximize');
-    const btnClose = document.getElementById('btn-win-close');
-    const maxIcon = document.getElementById('btn-win-maximize-icon');
+    const isDesktop = !!(window.apexDesktop && window.apexDesktop.isDesktop);
 
-    if (controlsEl) {
-      controlsEl.style.display = 'inline-flex';
-    }
-
+    // Minimize Handler
     if (btnMin) {
-      btnMin.addEventListener('click', () => window.apexDesktop.minimize());
-    }
-
-    if (btnMax) {
-      btnMax.addEventListener('click', async () => {
-        const isMax = await window.apexDesktop.isMaximized();
-        if (isMax) {
-          window.apexDesktop.unmaximize();
+      btnMin.addEventListener('click', () => {
+        if (isDesktop) {
+          window.apexDesktop.minimize();
         } else {
-          window.apexDesktop.maximize();
+          // Browser fallback: notify user
+          if (this.hud?.showToast) {
+            this.hud.showToast('Minimize is native to the APEX Desktop App', 'info');
+          }
         }
       });
     }
 
-    if (btnClose) {
-      btnClose.addEventListener('click', () => window.apexDesktop.close());
+    // Maximize / Restore Handler
+    if (btnMax) {
+      btnMax.addEventListener('click', async () => {
+        if (isDesktop) {
+          const isMax = await window.apexDesktop.isMaximized();
+          if (isMax) {
+            window.apexDesktop.unmaximize();
+          } else {
+            window.apexDesktop.maximize();
+          }
+        } else {
+          // Browser fallback: toggle HTML5 fullscreen
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        }
+      });
     }
 
-    if (window.apexDesktop.onMaximizeChange && maxIcon) {
-      window.apexDesktop.onMaximizeChange((isMax) => {
-        maxIcon.textContent = isMax ? '❐' : '□';
+    // Close Handler
+    if (btnClose) {
+      btnClose.addEventListener('click', () => {
+        if (isDesktop) {
+          window.apexDesktop.close();
+        } else {
+          // Browser fallback: confirmation dialog
+          if (confirm('Close APEX Pit-Wall Telemetry session?')) {
+            window.close();
+          }
+        }
+      });
+    }
+
+    // Desktop-specific double click titlebar to maximize & state sync
+    if (isDesktop) {
+      if (titlebarDrag) {
+        titlebarDrag.addEventListener('dblclick', async (e) => {
+          // Ignore double clicks on interactive buttons
+          if (e.target.closest('.no-drag')) return;
+          const isMax = await window.apexDesktop.isMaximized();
+          if (isMax) {
+            window.apexDesktop.unmaximize();
+          } else {
+            window.apexDesktop.maximize();
+          }
+        });
+      }
+
+      if (window.apexDesktop.onMaximizeChange) {
+        window.apexDesktop.onMaximizeChange((isMax) => {
+          if (maxIcon) maxIcon.style.display = isMax ? 'none' : 'block';
+          if (restoreIcon) restoreIcon.style.display = isMax ? 'block' : 'none';
+          if (btnMax) btnMax.title = isMax ? 'Restore Down' : 'Maximize';
+        });
+      }
+    } else {
+      // In browser mode, listen to fullscreenchange to sync maximize / restore icon
+      document.addEventListener('fullscreenchange', () => {
+        const isFull = !!document.fullscreenElement;
+        if (maxIcon) maxIcon.style.display = isFull ? 'none' : 'block';
+        if (restoreIcon) restoreIcon.style.display = isFull ? 'block' : 'none';
+        if (btnMax) btnMax.title = isFull ? 'Exit Fullscreen' : 'Fullscreen / Maximize';
       });
     }
   }
@@ -607,9 +660,26 @@ class ApexApp {
   }
 
   setStatus(state, label) {
-    if (!this.statusPill) return;
-    this.statusPill.className = `status-pill ${state} chamfer-all-corners`;
+    if (this.statusPill) {
+      this.statusPill.className = `status-pill ${state} chamfer-all-corners`;
+    }
     if (this.statusText) this.statusText.textContent = label;
+
+    // Sync Titlebar Live Session Breadcrumb
+    const titleDot = document.getElementById('titlebar-session-dot');
+    const titleText = document.getElementById('titlebar-session-text');
+    if (titleDot && titleText) {
+      titleDot.className = 'titlebar-dot';
+      if (state === 'connected') {
+        titleDot.classList.add('active');
+        const sessionName = this.session?.sessionName || 'PIT-WALL TELEMETRY';
+        titleText.textContent = `LIVE // ${sessionName.toUpperCase()}`;
+      } else if (state === 'connecting') {
+        titleText.textContent = 'CONNECTING // AWAITING UDP TELEMETRY';
+      } else {
+        titleText.textContent = 'STANDBY // NO ACTIVE TELEMETRY';
+      }
+    }
   }
 
   openSettings() {
