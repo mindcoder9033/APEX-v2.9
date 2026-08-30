@@ -12,6 +12,7 @@ import { weatherProfileStore } from './weather-profile-store.js';
 import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
 import { StintMetadataModal } from './components/stint-modal.js';
+import { driverProfileStore } from './driver-profile-store.js';
 
 export class SessionManager {
   constructor() {
@@ -229,9 +230,15 @@ export class SessionManager {
       const trackTitle = this.currentStintMetadata?.trackName || 'Grand Prix Circuit';
       const carTitle = this.currentStintMetadata?.carName || 'Custom Vehicle';
 
+      const activeProfile = driverProfileStore.getActiveProfile();
+      const driverName = activeProfile?.name || this.settings.driverName || 'APEX Driver';
+
       const metadata = {
         sessionName: sessionTitle,
-        driverName: this.settings.driverName || 'APEX Driver',
+        driverName: driverName,
+        driverNumber: activeProfile?.number || '01',
+        driverTeam: activeProfile?.team || 'Privateer Motorsport',
+        driverTier: activeProfile?.tier || 'Club',
         trackName: trackTitle,
         circuit: this.currentStintMetadata?.circuit || 'Circuit',
         layout: this.currentStintMetadata?.layout || 'Full Circuit',
@@ -245,7 +252,7 @@ export class SessionManager {
 
       const pdfBytes = await this.pdfGenerator.generate(this.latestAnalysisReport, metadata);
       const safeName = sessionTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
-      this.pdfGenerator.download(pdfBytes, `${safeName}_Report.pdf`);
+      this.pdfGenerator.download(pdfBytes, `${safeName}_Report.pdf`, { driverName });
     } catch (err) {
       console.error('[PDF] Error generating PDF report:', err);
       alert('Failed to generate PDF: ' + err.message);
@@ -370,6 +377,24 @@ export class SessionManager {
           }
         } catch (synthErr) {
           console.warn('[TRACK LIBRARY] Track profile synthesis warning:', synthErr);
+        }
+      }
+
+      // Update Active Driver Profile Career Stats & Track Personal Bests
+      if (this.recordedSamples && this.recordedSamples.length > 0) {
+        try {
+          driverProfileStore.recordStintStats({
+            trackName: this.currentStintMetadata?.trackName || 'Grand Prix Circuit',
+            layout: this.currentStintMetadata?.layout || 'Full Circuit',
+            car: this.currentStintMetadata?.carName || 'Custom Vehicle',
+            carClass: this.currentStintMetadata?.carClass || 'S Class',
+            lapCount: report.validLapsCount || (report.laps ? report.laps.length : 1),
+            durationMs: this.stintDurationMs,
+            distanceMeters: report.totalDistanceMeters || 0,
+            bestLapTimeSec: report.bestLapTimeSec || this.bestLapTime || 0
+          });
+        } catch (driverErr) {
+          console.warn('[DRIVER PROFILE] Stats update warning:', driverErr);
         }
       }
     } catch (err) {

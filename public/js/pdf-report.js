@@ -451,14 +451,39 @@ function wrapText(text, font, fontSize, maxWidth) {
         color: rgb(0.55, 0.6, 0.7)
       });
 
-      // Trigger client-side PDF download
+      // Trigger client-side PDF download or native Electron export
       const pdfBytes = await doc.save();
+      const defaultFilename = `APEX_Stint_Debrief_${diagnosis.stintId}_${Date.now()}.pdf`;
+
+      if (typeof window !== 'undefined' && window.apexDesktop?.saveFile) {
+        let binary = '';
+        const len = pdfBytes.byteLength;
+        const chunkSize = 8192;
+        for (let i = 0; i < len; i += chunkSize) {
+          const chunk = pdfBytes.subarray(i, Math.min(i + chunkSize, len));
+          binary += String.fromCharCode.apply(null, chunk);
+        }
+        const base64 = btoa(binary);
+
+        // Auto-archive in background to Documents/APEX Telemetry/Reports/<DriverName>/
+        window.apexDesktop.autoArchive?.({ fileName: defaultFilename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
+
+        await window.apexDesktop.saveFile({
+          title: 'Save APEX Stint Debrief PDF',
+          suggestedName: defaultFilename,
+          filters: [{ name: 'PDF Document (*.pdf)', extensions: ['pdf'] }],
+          data: base64,
+          encoding: 'base64'
+        });
+        return diagnosis;
+      }
+
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement('a');
       a.href = url;
-      a.download = `APEX_Stint_Debrief_${diagnosis.stintId}_${Date.now()}.pdf`;
+      a.download = defaultFilename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

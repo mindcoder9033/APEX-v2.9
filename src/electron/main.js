@@ -145,7 +145,10 @@ function registerIpcHandlers() {
   ipcMain.handle('file:auto-archive', async (_event, fileData = {}) => {
     try {
       const docsDir = app.getPath('documents');
-      const archiveDir = path.join(docsDir, 'APEX Telemetry', 'Reports');
+      const driverSubdir = fileData.driverName ? fileData.driverName.replace(/[^a-zA-Z0-9_-]/g, '_') : '';
+      const archiveDir = driverSubdir
+        ? path.join(docsDir, 'APEX Telemetry', 'Reports', driverSubdir)
+        : path.join(docsDir, 'APEX Telemetry', 'Reports');
       await fs.promises.mkdir(archiveDir, { recursive: true });
 
       const fileName = fileData.fileName || `APEX_Stint_${Date.now()}.${fileData.extension || 'pdf'}`;
@@ -171,6 +174,219 @@ function registerIpcHandlers() {
       await fs.promises.mkdir(archiveDir, { recursive: true });
       await shell.openPath(archiveDir);
       return { success: true, path: archiveDir };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // ==========================================
+  // DRIVER PROFILES IPC HANDLERS
+  // ==========================================
+  const getProfilesDir = async () => {
+    const docsDir = app.getPath('documents');
+    const profilesDir = path.join(docsDir, 'APEX Telemetry', 'Profiles');
+    await fs.promises.mkdir(profilesDir, { recursive: true });
+    return profilesDir;
+  };
+
+  // Get list of all driver profiles (summary registry)
+  ipcMain.handle('profile:get-all', async () => {
+    try {
+      const profilesDir = await getProfilesDir();
+      const registryPath = path.join(profilesDir, 'profiles.json');
+      if (fs.existsSync(registryPath)) {
+        const raw = await fs.promises.readFile(registryPath, 'utf8');
+        return { success: true, profiles: JSON.parse(raw) };
+      }
+      return { success: true, profiles: [] };
+    } catch (err) {
+      return { success: false, error: err.message, profiles: [] };
+    }
+  });
+
+  // Get active profile ID
+  ipcMain.handle('profile:get-active-id', async () => {
+    try {
+      const profilesDir = await getProfilesDir();
+      const activePath = path.join(profilesDir, 'active_profile.json');
+      if (fs.existsSync(activePath)) {
+        const raw = await fs.promises.readFile(activePath, 'utf8');
+        const data = JSON.parse(raw);
+        return { success: true, activeId: data.activeId || null };
+      }
+      return { success: true, activeId: null };
+    } catch (err) {
+      return { success: false, error: err.message, activeId: null };
+    }
+  });
+
+  // Get detailed profile file
+  ipcMain.handle('profile:get-detail', async (_event, profileId) => {
+    try {
+      if (!profileId) return { success: false, error: 'Profile ID required' };
+      const profilesDir = await getProfilesDir();
+      const sanitizedId = String(profileId).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const profilePath = path.join(profilesDir, `profile_${sanitizedId}.json`);
+      if (fs.existsSync(profilePath)) {
+        const raw = await fs.promises.readFile(profilePath, 'utf8');
+        return { success: true, profile: JSON.parse(raw) };
+      }
+      return { success: false, error: 'Profile not found' };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Save / Update profile and update registry
+  ipcMain.handle('profile:save', async (_event, profile) => {
+    try {
+      if (!profile || !profile.id) return { success: false, error: 'Invalid profile payload' };
+      const profilesDir = await getProfilesDir();
+      const sanitizedId = String(profile.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const profilePath = path.join(profilesDir, `profile_${sanitizedId}.json`);
+
+      // Write full profile file
+      await fs.promises.writeFile(profilePath, JSON.stringify(profile, null, 2), 'utf8');
+
+      // Update registry index
+      const registryPath = path.join(profilesDir, 'profiles.json');
+      let registry = [];
+      if (fs.existsSync(registryPath)) {
+        try {
+          const raw = await fs.promises.readFile(registryPath, 'utf8');
+          registry = JSON.parse(raw);
+        } catch {
+          registry = [];
+        }
+      }
+
+      const summary = {
+        id: profile.id,
+        name: profile.name || 'APEX Driver',
+        number: profile.number || '01',
+        team: profile.team || 'Privateer',
+        tier: profile.tier || 'Club',
+        color: profile.color || '#e10600',
+        avatar: profile.avatar || 'helmet',
+        updatedAt: new Date().toISOString()
+      };
+
+      const existingIndex = registry.findIndex(p => p.id === profile.id);
+      if (existingIndex >= 0) {
+        registry[existingIndex] = { ...registry[existingIndex], ...summary };
+      } else {
+        registry.push(summary);
+      }
+
+      await fs.promises.writeFile(registryPath, JSON.stringify(registry, null, 2), 'utf8');
+      return { success: true, profile };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Set active driver profile
+  ipcMain.handle('profile:set-active', async (_event, profileId) => {
+    try {
+      const profilesDir = await getProfilesDir();
+      const activePath = path.join(profilesDir, 'active_profile.json');
+      await fs.promises.writeFile(activePath, JSON.stringify({ activeId: profileId, updatedAt: new Date().toISOString() }, null, 2), 'utf8');
+      return { success: true, activeId: profileId };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Delete profile
+  ipcMain.handle('profile:delete', async (_event, profileId) => {
+    try {
+      if (!profileId) return { success: false, error: 'Profile ID required' };
+      const profilesDir = await getProfilesDir();
+      const sanitizedId = String(profileId).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const profilePath = path.join(profilesDir, `profile_${sanitizedId}.json`);
+
+      if (fs.existsSync(profilePath)) {
+        await fs.promises.unlink(profilePath);
+      }
+
+      // Update registry
+      const registryPath = path.join(profilesDir, 'profiles.json');
+      if (fs.existsSync(registryPath)) {
+        try {
+          const raw = await fs.promises.readFile(registryPath, 'utf8');
+          let registry = JSON.parse(raw);
+          registry = registry.filter(p => p.id !== profileId);
+          await fs.promises.writeFile(registryPath, JSON.stringify(registry, null, 2), 'utf8');
+        } catch {}
+      }
+
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Export profile to external .apexprofile JSON file
+  ipcMain.handle('profile:export', async (_event, profile) => {
+    if (!mainWindow) return { success: false, error: 'No active window' };
+    try {
+      const defaultName = `APEX_Driver_${(profile.name || 'Driver').replace(/[^a-zA-Z0-9_-]/g, '_')}_#${profile.number || '01'}.apexprofile`;
+      const result = await dialog.showSaveDialog(mainWindow, {
+        title: 'Export APEX Driver Dossier',
+        defaultPath: defaultName,
+        filters: [
+          { name: 'APEX Driver Profile (*.apexprofile)', extensions: ['apexprofile'] },
+          { name: 'JSON Document (*.json)', extensions: ['json'] }
+        ]
+      });
+
+      if (result.canceled || !result.filePath) {
+        return { success: false, canceled: true };
+      }
+
+      await fs.promises.writeFile(result.filePath, JSON.stringify(profile, null, 2), 'utf8');
+      return { success: true, filePath: result.filePath };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Import profile from external file
+  ipcMain.handle('profile:import', async () => {
+    if (!mainWindow) return { success: false, error: 'No active window' };
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        title: 'Import APEX Driver Dossier',
+        filters: [
+          { name: 'APEX Driver Profile (*.apexprofile, *.json)', extensions: ['apexprofile', 'json'] }
+        ],
+        properties: ['openFile']
+      });
+
+      if (result.canceled || !result.filePaths || result.filePaths.length === 0) {
+        return { success: false, canceled: true };
+      }
+
+      const filePath = result.filePaths[0];
+      const raw = await fs.promises.readFile(filePath, 'utf8');
+      const parsed = JSON.parse(raw);
+
+      if (!parsed || !parsed.name) {
+        return { success: false, error: 'Invalid driver profile structure' };
+      }
+
+      return { success: true, profile: parsed, filePath };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Open Profiles folder in Explorer
+  ipcMain.handle('profile:open-folder', async () => {
+    try {
+      const profilesDir = await getProfilesDir();
+      await shell.openPath(profilesDir);
+      return { success: true, path: profilesDir };
     } catch (err) {
       return { success: false, error: err.message };
     }

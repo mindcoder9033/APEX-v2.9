@@ -24,6 +24,19 @@ contextBridge.exposeInMainWorld('apexDesktop', {
   autoArchive: (data) => ipcRenderer.invoke('file:auto-archive', data),
   openReportsFolder: () => ipcRenderer.invoke('system:open-reports-folder'),
 
+  // Driver Profiles
+  profiles: {
+    getAll: () => ipcRenderer.invoke('profile:get-all'),
+    getActiveId: () => ipcRenderer.invoke('profile:get-active-id'),
+    getDetail: (id) => ipcRenderer.invoke('profile:get-detail', id),
+    save: (profile) => ipcRenderer.invoke('profile:save', profile),
+    setActive: (id) => ipcRenderer.invoke('profile:set-active', id),
+    delete: (id) => ipcRenderer.invoke('profile:delete', id),
+    export: (profile) => ipcRenderer.invoke('profile:export', profile),
+    import: () => ipcRenderer.invoke('profile:import'),
+    openFolder: () => ipcRenderer.invoke('profile:open-folder')
+  },
+
   // Forza UWP Loopback & Network Info
   getLanIp: () => ipcRenderer.invoke('system:get-lan-ip'),
   checkLoopback: () => ipcRenderer.invoke('system:check-loopback'),

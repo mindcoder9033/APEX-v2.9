@@ -3520,7 +3520,8 @@ export class ClientPdfGenerator {
     return `${m}:${s.padStart(6, '0')}`;
   }
 
-  async download(pdfBytes, filename = 'APEX_Telemetry_Report.pdf') {
+  async download(pdfBytes, filename = 'APEX_Telemetry_Report.pdf', options = {}) {
+    const driverName = options.driverName || 'APEX Driver';
     if (typeof window !== 'undefined' && window.apexDesktop?.saveFile) {
       let binary = '';
       const len = pdfBytes.byteLength;
@@ -3531,8 +3532,8 @@ export class ClientPdfGenerator {
       }
       const base64 = btoa(binary);
 
-      // Auto-archive in background to Documents/APEX Telemetry/Reports/
-      window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf' });
+      // Auto-archive in background to Documents/APEX Telemetry/Reports/<DriverName>/
+      window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
 
       // Native save dialog
       await window.apexDesktop.saveFile({

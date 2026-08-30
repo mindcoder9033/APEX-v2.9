@@ -47,6 +47,39 @@
       </nav>
 
       <div class="header-status-group no-drag">
+        <!-- Driver Profile Quick-Switcher Pill & Dropdown -->
+        <div class="driver-switcher-container" id="driver-switcher-container">
+          <button id="btn-driver-pill" class="driver-pill-btn chamfer-br" title="Current Active Driver (Click for Dossier & Quick Switch)">
+            <div class="driver-pill-badge" id="header-driver-badge">
+              <span id="header-driver-number">#01</span>
+            </div>
+            <div class="driver-pill-info">
+              <span id="header-driver-name" class="driver-pill-name">APEX Driver</span>
+              <span id="header-driver-tier" class="driver-pill-tier">CLUB</span>
+            </div>
+            <span class="driver-pill-arrow">▾</span>
+          </button>
+
+          <!-- Driver Dropdown Menu -->
+          <div id="driver-dropdown-menu" class="driver-dropdown-menu hidden">
+            <div class="driver-dropdown-header">
+              <span>ACTIVE DRIVERS</span>
+              <button type="button" id="btn-dropdown-open-dossier" class="driver-dropdown-dossier-link">Dossier ↗</button>
+            </div>
+            <div id="driver-dropdown-list" class="driver-dropdown-list">
+              <!-- Rendered dynamically -->
+            </div>
+            <div class="driver-dropdown-footer">
+              <button type="button" id="btn-dropdown-add-driver" class="dropdown-action-btn">
+                <span>+</span> Add Driver
+              </button>
+              <button type="button" id="btn-dropdown-open-folder" class="dropdown-action-btn">
+                <span>📁</span> Folder
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div id="status-pill" class="status-pill disconnected chamfer-br">
           <span class="status-dot"></span>
           <span id="status-text">Bridge Offline</span>
@@ -1622,6 +1655,10 @@
       </div>
     </div>
   </div>
+
+  <!-- Driver Dossier and Onboarding Wizard Modals -->
+  <div id="modal-driver-dossier-container"></div>
+  <div id="modal-driver-wizard-container"></div>
 
   <!-- Main ES Module Bootstrap -->
   <script type="module" src="js/app.js"></script>

@@ -13,6 +13,9 @@ import { WeatherSimulator } from './analysis/weather-simulator.js';
 import { StintsManager } from './stints.js';
 import { IsometricTrackMap } from './components/isometric-track-map.js';
 import { LoopbackModal } from './components/loopback-modal.js';
+import { driverProfileStore } from './driver-profile-store.js';
+import { DriverDossierModal } from './components/driver-dossier-modal.js';
+import { DriverWizardModal } from './components/driver-wizard-modal.js';
 
 class ApexApp {
   constructor() {
@@ -24,6 +27,9 @@ class ApexApp {
     this.trackLibrary = new TrackLibraryView();
     this.stintsManager = new StintsManager();
     this.loopbackModal = new LoopbackModal();
+    this.driverDossierModal = new DriverDossierModal();
+    this.driverWizardModal = new DriverWizardModal();
+    this.driverStore = driverProfileStore;
     this.trackMap3D = null;
     this.modalTrackMap3D = null;
     this.isMapModalOpen = false;
@@ -76,12 +82,164 @@ class ApexApp {
     this.init();
   }
 
-  init() {
+  async init() {
     this.populateSettingsForm();
     this.bindEvents();
     this.initDesktopWindowControls();
     this.connectBridge();
     this._migrateWeatherProfiles();
+    await this.initDriverProfiles();
+  }
+
+  /**
+   * Initializes driver profile store, header quick-switcher, and first-launch wizard
+   */
+  async initDriverProfiles() {
+    try {
+      const { hasProfiles, activeProfile } = await driverProfileStore.init();
+
+      if (!hasProfiles) {
+        // First-launch setup wizard
+        this.driverWizardModal.open();
+      } else if (activeProfile) {
+        this.updateHeaderDriver(activeProfile);
+      }
+
+      // Listen for profile changes across app
+      driverProfileStore.subscribe((event, profile) => {
+        if (profile) {
+          this.updateHeaderDriver(profile);
+        }
+      });
+
+      // Bind header driver pill toggle
+      const btnPill = document.getElementById('btn-driver-pill');
+      const dropdown = document.getElementById('driver-dropdown-menu');
+      const btnOpenDossier = document.getElementById('btn-dropdown-open-dossier');
+      const btnAddDriver = document.getElementById('btn-dropdown-add-driver');
+      const btnOpenFolder = document.getElementById('btn-dropdown-open-folder');
+
+      if (btnPill && dropdown) {
+        btnPill.addEventListener('click', (e) => {
+          e.stopPropagation();
+          dropdown.classList.toggle('hidden');
+          if (!dropdown.classList.contains('hidden')) {
+            this.renderHeaderDropdownList();
+          }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!dropdown.contains(e.target) && !btnPill.contains(e.target)) {
+            dropdown.classList.add('hidden');
+          }
+        });
+      }
+
+      if (btnOpenDossier) {
+        btnOpenDossier.addEventListener('click', () => {
+          dropdown?.classList.add('hidden');
+          this.driverDossierModal.open();
+        });
+      }
+
+      if (btnAddDriver) {
+        btnAddDriver.addEventListener('click', () => {
+          dropdown?.classList.add('hidden');
+          this.driverDossierModal.open();
+          this.driverDossierModal.handleCreateNew();
+        });
+      }
+
+      if (btnOpenFolder) {
+        btnOpenFolder.addEventListener('click', async () => {
+          dropdown?.classList.add('hidden');
+          const res = await driverProfileStore.openFolder();
+          if (!res.success && res.error) {
+            alert(res.error);
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('[DriverProfile] Init warning:', err);
+    }
+  }
+
+  /**
+   * Updates top header driver badge, name, tier, and session settings
+   */
+  updateHeaderDriver(profile) {
+    if (!profile) return;
+
+    const badgeEl = document.getElementById('header-driver-badge');
+    const numEl = document.getElementById('header-driver-number');
+    const nameEl = document.getElementById('header-driver-name');
+    const tierEl = document.getElementById('header-driver-tier');
+
+    const color = profile.color || '#e10600';
+    if (badgeEl) {
+      badgeEl.style.borderColor = color;
+      badgeEl.style.color = color;
+    }
+    if (numEl) {
+      numEl.textContent = `#${profile.number || '01'}`;
+      numEl.style.color = color;
+    }
+    if (nameEl) nameEl.textContent = profile.name || 'APEX Driver';
+    if (tierEl) {
+      tierEl.textContent = (profile.tier || 'CLUB').toUpperCase();
+    }
+
+    // Sync active driver name with session manager and settings
+    if (this.session && this.session.settings) {
+      this.session.settings.driverName = profile.name;
+    }
+    if (this.inputDriverName) {
+      this.inputDriverName.value = profile.name;
+    }
+
+    // If speed unit preference is configured on profile, sync it
+    if (profile.preferences?.speedUnit && this.session) {
+      this.session.settings.speedUnit = profile.preferences.speedUnit;
+    }
+  }
+
+  /**
+   * Renders the fast-switch driver items inside the header dropdown
+   */
+  renderHeaderDropdownList() {
+    const listEl = document.getElementById('driver-dropdown-list');
+    if (!listEl) return;
+
+    const profiles = driverProfileStore.getAllProfiles();
+    const active = driverProfileStore.getActiveProfile();
+
+    if (profiles.length === 0) {
+      listEl.innerHTML = `<div style="padding: 10px; color: #888; font-size: 10px; text-align: center;">No driver profiles</div>`;
+      return;
+    }
+
+    listEl.innerHTML = profiles.map(p => {
+      const isActive = active && active.id === p.id;
+      return `
+        <button type="button" class="dropdown-driver-item ${isActive ? 'active' : ''}" data-id="${p.id}">
+          <div class="dropdown-driver-badge" style="border-color: ${p.color || '#e10600'}; color: ${p.color || '#e10600'};">
+            #${p.number || '01'}
+          </div>
+          <span class="dropdown-driver-name">${p.name || 'Driver'}</span>
+          <span class="dropdown-driver-tier tier-${(p.tier || 'club').toLowerCase()}">${(p.tier || 'CLUB').toUpperCase()}</span>
+        </button>
+      `;
+    }).join('');
+
+    listEl.querySelectorAll('.dropdown-driver-item').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        await driverProfileStore.setActiveProfile(id);
+        const dropdown = document.getElementById('driver-dropdown-menu');
+        dropdown?.classList.add('hidden');
+      });
+    });
   }
 
   /**
