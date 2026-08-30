@@ -13,7 +13,7 @@ When new releases or git tags are pushed to GitHub (`mindcoder9033/APEX-v2.9`), 
 ---
 
 ## Success Criteria
-- [ ] Automated GitHub Actions release workflow builds and drafts a release with `APEX-Telemetry-Portable-${version}.exe` upon pushing version tags (e.g. `v2.9.1`).
+- [x] Automated GitHub Actions release workflow builds and drafts a release with `APEX-Telemetry-Portable-${version}.exe` upon pushing version tags (e.g. `v2.9.1`).
 - [ ] Portable APEX client checks for updates on startup (and on-demand) via GitHub Releases API without requiring user authentication.
 - [ ] Sleek telemetry-style UI banner/modal appears in titlebar or notification area when a newer version is available with release notes and update actions.
 - [ ] 1-Click Update downloads the `.exe` with visual progress percentage and sha256 checksum verification.
@@ -39,7 +39,7 @@ When new releases or git tags are pushed to GitHub (`mindcoder9033/APEX-v2.9`), 
 d:/AI Workspace/APEX v2.9/
 ├── .github/
 │   └── workflows/
-│       └── release.yml                 # [NEW] GitHub Actions CI/CD build & release workflow
+│       └── release.yml                 # [COMPLETED] GitHub Actions CI/CD build & release workflow
 ├── src/
 │   └── electron/
 │       ├── updater/
@@ -67,6 +67,7 @@ d:/AI Workspace/APEX v2.9/
 - **Agent:** `devops-automator`
 - **Skill:** `deployment-procedures`
 - **Priority:** P1
+- **Status:** COMPLETED
 - **Dependencies:** None
 - **INPUT:** `package.json` build config & git tag triggers.
 - **OUTPUT:** `.github/workflows/release.yml` automating clean install, test run, `electron-builder --win portable`, and GitHub Release draft/publish.
