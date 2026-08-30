@@ -1,7 +1,4 @@
-Viewed package.json:1-56
-Viewed main.js:1-214
-Viewed MEMORY.md:1-8
-Viewed config.js:1-25
+# APEX Telemetry Command Center - Build & Launch Guide
 
 Here is how you can run **APEX Telemetry Command Center** locally and build the standalone portable Windows executable:
 

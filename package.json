@@ -2,7 +2,7 @@
   "name": "apex-telemetry",
   "version": "1.0.0",
   "description": "APEX: Racing Telemetry Analysis Tool for Forza Motorsport 2023",
-  "main": "src/server/udp-proxy.js",
+  "main": "src/electron/main.js",
   "type": "module",
   "scripts": {
     "start": "node src/server/udp-proxy.js",
