@@ -436,12 +436,19 @@ class ApexApp {
       } else if (e.key === 'u' || e.key === 'U') {
         e.preventDefault();
         this.openUdpGuide();
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        this.driverDossierModal.open();
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         this.toggleFullscreen();
       } else if (e.key === 'Escape') {
         this.closeSettings();
         this.closeUdpGuide();
+        this.driverDossierModal.close();
+        this.driverWizardModal.close();
+        const dropdown = document.getElementById('driver-dropdown-menu');
+        dropdown?.classList.add('hidden');
       }
     });
 

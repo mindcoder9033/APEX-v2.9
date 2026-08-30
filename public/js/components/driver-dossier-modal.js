@@ -363,11 +363,16 @@ export class DriverDossierModal {
   }
 
   async open(profileId = null) {
-    const active = profileId 
-      ? await driverProfileStore.getProfileById(profileId)
-      : driverProfileStore.getActiveProfile();
-
-    if (!active) return;
+    let active = null;
+    if (profileId) {
+      active = await driverProfileStore.getProfileById(profileId);
+    }
+    if (!active) {
+      active = driverProfileStore.getActiveProfile();
+    }
+    if (!active) {
+      active = driverProfileStore.createDefaultProfile();
+    }
 
     // Clone to edit safely
     this.editingProfile = JSON.parse(JSON.stringify(active));
