@@ -131,7 +131,8 @@ export function fetchJson(url, options = {}) {
     const req = client.get(url, reqOptions, (res) => {
       // Handle HTTP redirects (301, 302, 307, 308)
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        return fetchJson(res.headers.location, options).then(resolve).catch(reject);
+        const redirectUrl = new URL(res.headers.location, url).toString();
+        return fetchJson(redirectUrl, options).then(resolve).catch(reject);
       }
 
       let rawData = '';

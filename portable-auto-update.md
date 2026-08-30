@@ -16,8 +16,8 @@ When new releases or git tags are pushed to GitHub (`mindcoder9033/APEX-v2.9`), 
 - [x] Automated GitHub Actions release workflow builds and drafts a release with `APEX-Telemetry-Portable-${version}.exe` upon pushing version tags (e.g. `v2.9.1`).
 - [x] Portable APEX client checks for updates on startup (and on-demand) via GitHub Releases API without requiring user authentication.
 - [ ] Sleek telemetry-style UI banner/modal appears in titlebar or notification area when a newer version is available with release notes and update actions.
-- [ ] 1-Click Update downloads the `.exe` with visual progress percentage and sha256 checksum verification.
-- [ ] Safe in-place executable swap via detached PowerShell / batch script that waits for process termination, replaces `APEX-Telemetry-Portable.exe`, and relaunches the updated executable seamlessly.
+- [x] 1-Click Update downloads the `.exe` with visual progress percentage and sha256 checksum verification.
+- [x] Safe in-place executable swap via detached PowerShell / batch script that waits for process termination, replaces `APEX-Telemetry-Portable.exe`, and relaunches the updated executable seamlessly.
 - [ ] Graceful fallback: If automatic swap fails (e.g. permission/AV lock), direct manual download / folder open link is provided.
 
 ---
@@ -44,7 +44,7 @@ d:/AI Workspace/APEX v2.9/
 │   └── electron/
 │       ├── updater/
 │       │   ├── update-checker.js       # [COMPLETED] GitHub Release API polling & version comparison
-│       │   ├── binary-swapper.js       # [NEW] Detached swap script execution & download engine
+│       │   ├── binary-swapper.js       # [COMPLETED] Detached swap script execution & download engine
 │       │   └── index.js                # [NEW] Updater IPC bridge & lifecycle orchestration
 │       ├── main.js                     # [MODIFY] Register updater IPC handlers & startup check
 │       └── preload.js                  # [MODIFY] Expose apexDesktop.updater APIs
@@ -95,6 +95,7 @@ d:/AI Workspace/APEX v2.9/
 - **Agent:** `backend-architect`
 - **Skill:** `powershell-windows`
 - **Priority:** P1
+- **Status:** COMPLETED
 - **Dependencies:** `TASK-02`
 - **INPUT:** Portable executable execution path (`process.env.PORTABLE_EXECUTABLE_FILE` or `process.execPath`) and target download URL.
 - **OUTPUT:** `src/electron/updater/binary-swapper.js` supporting progress streaming, SHA256 integrity check, temp file staging, and detached PowerShell swap script execution.
