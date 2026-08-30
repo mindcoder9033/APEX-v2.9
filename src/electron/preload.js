@@ -40,5 +40,31 @@ contextBridge.exposeInMainWorld('apexDesktop', {
   // Forza UWP Loopback & Network Info
   getLanIp: () => ipcRenderer.invoke('system:get-lan-ip'),
   checkLoopback: () => ipcRenderer.invoke('system:check-loopback'),
-  enableLoopback: (packageIds) => ipcRenderer.invoke('system:enable-loopback', packageIds)
+  enableLoopback: (packageIds) => ipcRenderer.invoke('system:enable-loopback', packageIds),
+
+  // In-Place Portable Auto-Updater
+  updater: {
+    check: (options) => ipcRenderer.invoke('updater:check', options),
+    download: (params) => ipcRenderer.invoke('updater:download', params),
+    installAndRestart: () => ipcRenderer.invoke('updater:install-restart'),
+    cancel: () => ipcRenderer.invoke('updater:cancel'),
+    openDownloadFolder: () => ipcRenderer.invoke('updater:open-download-folder'),
+    getStatus: () => ipcRenderer.invoke('updater:get-status'),
+    onStatusChange: (callback) => {
+      const handler = (_event, status) => callback(status);
+      ipcRenderer.on('updater:status-change', handler);
+      return () => ipcRenderer.removeListener('updater:status-change', handler);
+    },
+    onProgress: (callback) => {
+      const handler = (_event, progress) => callback(progress);
+      ipcRenderer.on('updater:download-progress', handler);
+      return () => ipcRenderer.removeListener('updater:download-progress', handler);
+    },
+    onUpdateAvailable: (callback) => {
+      const handler = (_event, info) => callback(info);
+      ipcRenderer.on('updater:available', handler);
+      return () => ipcRenderer.removeListener('updater:available', handler);
+    }
+  }
 });
+

@@ -45,9 +45,9 @@ d:/AI Workspace/APEX v2.9/
 │       ├── updater/
 │       │   ├── update-checker.js       # [COMPLETED] GitHub Release API polling & version comparison
 │       │   ├── binary-swapper.js       # [COMPLETED] Detached swap script execution & download engine
-│       │   └── index.js                # [NEW] Updater IPC bridge & lifecycle orchestration
-│       ├── main.js                     # [MODIFY] Register updater IPC handlers & startup check
-│       └── preload.js                  # [MODIFY] Expose apexDesktop.updater APIs
+│       │   └── index.js                # [COMPLETED] Updater IPC bridge & lifecycle orchestration
+│       ├── main.js                     # [COMPLETED] Register updater IPC handlers & startup check
+│       └── preload.js                  # [COMPLETED] Expose apexDesktop.updater APIs
 └── public/
     ├── js/
     │   └── ui-updater.js               # [NEW] Update badge, modal dialog, changelog & progress UI
@@ -109,6 +109,7 @@ d:/AI Workspace/APEX v2.9/
 - **Agent:** `backend-architect`
 - **Skill:** `clean-code`
 - **Priority:** P2
+- **Status:** COMPLETED
 - **Dependencies:** `TASK-02`, `TASK-03`
 - **INPUT:** `src/electron/updater/index.js`, `main.js`, `preload.js`.
 - **OUTPUT:** IPC channels (`updater:check`, `updater:download`, `updater:install-restart`, `updater:cancel`) and renderer bridge `window.apexDesktop.updater`.

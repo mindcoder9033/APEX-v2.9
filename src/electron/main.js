@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { UdpProxyServer } from '../server/udp-proxy.js';
 import { CONFIG } from '../server/config.js';
 import { getLanIpv4Addresses, checkLoopbackStatus, enableLoopbackExemption } from './loopback-helper.js';
+import { registerUpdaterIpc, scheduleStartupUpdateCheck } from './updater/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -412,8 +413,10 @@ function registerIpcHandlers() {
 // Application Lifecycle
 app.whenReady().then(async () => {
   registerIpcHandlers();
+  registerUpdaterIpc({ get mainWindow() { return mainWindow; } });
   await startEmbeddedBackend();
   createMainWindow();
+  scheduleStartupUpdateCheck(mainWindow, 3500);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
