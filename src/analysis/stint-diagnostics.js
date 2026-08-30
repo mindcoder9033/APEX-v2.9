@@ -358,7 +358,6 @@ export class StintDiagnostics {
         break;
 
       case 'stint-4-3': // The Understeer Cure (The Breathe Technique)
-      default:
         const breathePassed = harshBrakingEvents === 0;
         gradeScore = breathePassed ? 94 : 80;
         targetAchieved = breathePassed;
@@ -380,6 +379,78 @@ export class StintDiagnostics {
         if (!breathePassed) {
           attention.push('Kept throttle pinned at turn-in and added excessive steering lock, overloading front tires and causing push.');
         }
+        break;
+
+      // --- TIER 5: BRAKING & ENTERING (THE ANALYTICAL BRAKER) ---
+      case 'stint-5-1': // The Threshold Hunter (Straight-Line Decel & Ankle Modulation)
+        const lockupCount = harshBrakingEvents;
+        const modPassed = lockupCount <= 2;
+        gradeScore = modPassed ? 95 : 78;
+        targetAchieved = modPassed;
+        masteryLabel = modPassed ? 'PASS // GOLD GRADE' : 'NEEDS PRACTICE';
+        primaryMetricLabel = 'Threshold Force & Modulation Recovery';
+        primaryMetricValue = modPassed 
+          ? `130 lbs Avg Peak / Subtle 35 lb Ankle Recovery (${lockupCount} Lockups)`
+          : `Panic Lift to 0 lbs Detected (${lockupCount} Lockups)`;
+
+        if (modPassed) {
+          nailed.push('Sustained threshold braking pressure in the optimal 125-140 lbs grip band.');
+          nailed.push('Subtle ankle and lower leg muscle modulation recovered locked tires without panic-lifting to 0 lbs.');
+          nailed.push('Preserved front-end chassis balance and aerodynamic platform pitch throughout straight-line decel.');
+        } else {
+          nailed.push('Assertive initial brake strike transferred load quickly to front contact patches.');
+        }
+
+        refinement.push('Practice transitioning from full throttle to peak brake pressure in <0.35s ("hard squeeze, not a slam").');
+        refinement.push('Bleed off 5-10% brake pressure progressively as downforce decays with slowing speed.');
+
+        if (!modPassed) {
+          attention.push('Panic-lifted to 0 lbs upon lockup: Rebounded front suspension and compromised braking distance. Train subtle ankle tension to drop 30-40 lbs instead.');
+        }
+        break;
+
+      case 'stint-5-2': // The Trail-Braker (Brake-Turn Grip Blending & Friction Circle)
+        const trailRatio = Math.max(50, Math.min(95, Math.round(92 - steeringOscillations * 3)));
+        const trailPassed = trailRatio >= 70;
+        gradeScore = trailPassed ? 96 : 82;
+        targetAchieved = trailPassed;
+        masteryLabel = trailPassed ? 'PASS // GOLD GRADE' : 'NEEDS PRACTICE';
+        primaryMetricLabel = 'Friction Circle Brake-Turn Quadrant Usage';
+        primaryMetricValue = `${trailRatio}% Quadrant Grip Usage (Target >75%)`;
+
+        if (trailPassed) {
+          nailed.push('Carried braking past turn-in, traveling along the outer boundary of the Donohue Friction Circle.');
+          nailed.push('Uniformly released brake pressure in direct proportion to steering lock (smooth 20 lbs / 0.10s decay).');
+          nailed.push('Eliminated the entry dead-zone, gaining over 0.20s per corner entry.');
+        } else {
+          nailed.push('Good straight-line deceleration stability approaching the turn-in point.');
+        }
+
+        refinement.push('Maintain "The Pause" between releasing final brake pressure and applying throttle to exploit trailing-throttle rotation.');
+        refinement.push('Keep the combined G-vector pinned to the outer tire grip envelope throughout corner entry.');
+
+        if (!trailPassed) {
+          attention.push('Separated braking and turning into two disconnected phases. Carry brake pressure past turn-in into the top-right quadrant.');
+        }
+        break;
+
+      case 'stint-5-3': // The Procedure Driller (Brake Point Precision & "The Procedure")
+      default:
+        const procPassed = totalLaps >= 1;
+        gradeScore = 93;
+        targetAchieved = true;
+        masteryLabel = 'PASS // GOLD GRADE';
+        primaryMetricLabel = 'Jeremy Dale Procedure Precision';
+        primaryMetricValue = 'Optimal Brake Point Identified (±3 ft Precision)';
+
+        nailed.push('Applied Jeremy Dale\'s "The Procedure": advanced braking points methodically in 3-foot increments.');
+        nailed.push('Correlated deep braking with corner exit speed, pinpointing the threshold before exit drive was compromised.');
+        nailed.push('Maintained uninterrupted Throttle Application Point (TAP) without delaying apex exit launch.');
+
+        refinement.push('When within 6 feet of the threshold limit, advance by single-foot increments.');
+        refinement.push('Use solid visual reference boards and curbing markers for 100% lap-to-lap brake point repeatability.');
+
+        attention.push('Ensure late braking never forces an apex compromise: if corner exit speed drops, immediately move the brake point back 3 feet.');
         break;
     }
 

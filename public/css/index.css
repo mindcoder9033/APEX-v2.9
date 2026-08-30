@@ -3046,6 +3046,7 @@ body.layout-edit-active .widget-resize-handle {
 .tier-tag-2 { background: rgba(255, 215, 0, 0.15); color: var(--color-gold); border: 1px solid rgba(255, 215, 0, 0.4); }
 .tier-tag-3 { background: rgba(225, 6, 0, 0.15); color: var(--color-f1-red); border: 1px solid rgba(225, 6, 0, 0.4); }
 .tier-tag-4 { background: rgba(0, 216, 244, 0.15); color: var(--color-cyan); border: 1px solid rgba(0, 216, 244, 0.4); }
+.tier-tag-5 { background: rgba(255, 107, 0, 0.15); color: #FF6B00; border: 1px solid rgba(255, 107, 0, 0.4); }
 
 .stint-filter-pill {
   flex: 1;

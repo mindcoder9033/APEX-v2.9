@@ -80,10 +80,12 @@ export class PdfReportGenerator {
       });
 
       // Document Title
-      page.drawText('STINT PERFORMANCE & COACHING DEBRIEF', {
+      const isChapter5 = diagnosis.stintId && diagnosis.stintId.startsWith('stint-5');
+      const docTitle = isChapter5 ? 'BRAKING AND ENTERING // THE ANALYTICAL BRAKER' : 'STINT PERFORMANCE & COACHING DEBRIEF';
+      page.drawText(docTitle, {
         x: 40,
         y: height - 58,
-        size: 17,
+        size: isChapter5 ? 15 : 17,
         font: fontTitle,
         color: rgb(0.06, 0.09, 0.16) // Deep Dark Slate #0F172A
       });
