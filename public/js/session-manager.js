@@ -34,6 +34,7 @@ export class SessionManager {
 
     // DOM Elements Cache
     this.btnRecord = document.getElementById('btn-record');
+    this.btnResetStint = document.getElementById('btn-reset-stint');
     this.btnExportCsv = document.getElementById('btn-export-csv');
     this.btnDownloadPdf = document.getElementById('btn-download-pdf');
     this.timerVal = document.getElementById('stint-timer-val');
@@ -157,6 +158,7 @@ export class SessionManager {
 
   refreshDomElements() {
     this.btnRecord = document.getElementById('btn-record');
+    this.btnResetStint = document.getElementById('btn-reset-stint');
     this.btnExportCsv = document.getElementById('btn-export-csv');
     this.btnDownloadPdf = document.getElementById('btn-download-pdf');
     this.timerVal = document.getElementById('stint-timer-val');
@@ -173,6 +175,13 @@ export class SessionManager {
       if (recordBtn) {
         e.preventDefault();
         this.toggleRecording();
+        return;
+      }
+
+      const resetBtn = e.target.closest('#btn-reset-stint');
+      if (resetBtn) {
+        e.preventDefault();
+        this.resetStint();
         return;
       }
 
@@ -271,6 +280,71 @@ export class SessionManager {
     } else {
       this.startRecording();
     }
+  }
+
+  resetStint(force = false) {
+    if (!force && (this.isRecording || (this.recordedSamples && this.recordedSamples.length > 0))) {
+      const confirmed = typeof window !== 'undefined' && typeof window.confirm === 'function'
+        ? window.confirm('Are you sure you want to discard the current recorded stint telemetry and reset?')
+        : true;
+      if (!confirmed) return false;
+    }
+
+    // Stop active recording if running
+    this.isRecording = false;
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+
+    // Clear recorded state
+    this.recordedSamples = [];
+    this.stintStartTime = 0;
+    this.stintDurationMs = 0;
+    this.bestLapTime = null;
+    this.lastLapTime = null;
+    this.currentLap = 1;
+    this.currentStintMetadata = null;
+
+    // Reset UI Counters
+    const timerEl = document.getElementById('stint-timer-val') || this.timerVal;
+    if (timerEl) timerEl.textContent = '00:00.0';
+
+    const lapCounterEl = document.getElementById('lap-counter-val') || this.lapCounterVal;
+    if (lapCounterEl) lapCounterEl.textContent = 'L00';
+
+    const bestLapEl = document.getElementById('best-lap-val') || this.bestLapVal;
+    if (bestLapEl) bestLapEl.textContent = '--:--.---';
+
+    const lastLapEl = document.getElementById('last-lap-val') || this.lastLapVal;
+    if (lastLapEl) lastLapEl.textContent = '--:--.---';
+
+    const samplesCountEl = document.getElementById('samples-count-val') || this.samplesCountVal;
+    if (samplesCountEl) samplesCountEl.textContent = '0';
+
+    // Restore Record button state
+    const btnRecord = document.getElementById('btn-record') || this.btnRecord;
+    if (btnRecord) {
+      btnRecord.classList.remove('btn-danger', 'recording-pulse');
+      btnRecord.classList.add('btn-primary');
+      btnRecord.innerHTML = '<span>⏺</span> START RECORDING';
+    }
+
+    // Visual feedback on Reset button
+    const btnReset = document.getElementById('btn-reset-stint') || this.btnResetStint;
+    if (btnReset) {
+      const originalHtml = '<span>↺</span> RESET';
+      btnReset.innerHTML = '<span>✓</span> RESET';
+      btnReset.style.borderColor = 'var(--color-success, #00CC66)';
+      btnReset.style.color = 'var(--color-success, #00CC66)';
+      setTimeout(() => {
+        btnReset.innerHTML = originalHtml;
+        btnReset.style.borderColor = '';
+        btnReset.style.color = '';
+      }, 1200);
+    }
+
+    return true;
   }
 
   startRecording() {

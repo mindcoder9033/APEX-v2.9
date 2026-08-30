@@ -178,9 +178,14 @@ export class GridLayoutManager {
         <span id="display-session-name" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary);">Track Day</span>
       </div>
 
-      <button id="btn-record" class="btn btn-primary chamfer-br" style="height: 52px; font-size: 14px; width: 100%;">
-        <span>⏺</span> START RECORDING
-      </button>
+      <div class="session-actions-row" style="display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px;">
+        <button id="btn-record" class="btn btn-primary chamfer-br" style="height: 52px; font-size: 14px; flex: 1;">
+          <span>⏺</span> START RECORDING
+        </button>
+        <button id="btn-reset-stint" class="btn btn-secondary chamfer-br" style="height: 52px; font-size: 12px; font-weight: 700; padding: 0 16px; white-space: nowrap;" title="Reset Stint Telemetry & Stopwatch">
+          <span>↺</span> RESET
+        </button>
+      </div>
 
       <div class="timer-hero-display chamfer-all-corners">
         <span class="timer-hero-label">Stint Duration</span>
@@ -653,6 +658,7 @@ export class GridLayoutManager {
         session.refreshDomElements();
       } else {
         session.btnRecord = document.getElementById('btn-record');
+        session.btnResetStint = document.getElementById('btn-reset-stint');
         session.timerVal = document.getElementById('stint-timer-val');
         session.lapCounterVal = document.getElementById('lap-counter-val');
         session.bestLapVal = document.getElementById('best-lap-val');
