@@ -16,6 +16,7 @@ import { LoopbackModal } from './components/loopback-modal.js';
 import { driverProfileStore } from './driver-profile-store.js';
 import { DriverDossierModal } from './components/driver-dossier-modal.js';
 import { DriverWizardModal } from './components/driver-wizard-modal.js';
+import { UiUpdater } from './components/ui-updater.js';
 
 class ApexApp {
   constructor() {
@@ -29,6 +30,7 @@ class ApexApp {
     this.loopbackModal = new LoopbackModal();
     this.driverDossierModal = new DriverDossierModal();
     this.driverWizardModal = new DriverWizardModal();
+    this.uiUpdater = new UiUpdater();
     this.driverStore = driverProfileStore;
     this.trackMap3D = null;
     this.modalTrackMap3D = null;

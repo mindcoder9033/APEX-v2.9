@@ -15,10 +15,10 @@ When new releases or git tags are pushed to GitHub (`mindcoder9033/APEX-v2.9`), 
 ## Success Criteria
 - [x] Automated GitHub Actions release workflow builds and drafts a release with `APEX-Telemetry-Portable-${version}.exe` upon pushing version tags (e.g. `v2.9.1`).
 - [x] Portable APEX client checks for updates on startup (and on-demand) via GitHub Releases API without requiring user authentication.
-- [ ] Sleek telemetry-style UI banner/modal appears in titlebar or notification area when a newer version is available with release notes and update actions.
+- [x] Sleek telemetry-style UI banner/modal appears in titlebar or notification area when a newer version is available with release notes and update actions.
 - [x] 1-Click Update downloads the `.exe` with visual progress percentage and sha256 checksum verification.
 - [x] Safe in-place executable swap via detached PowerShell / batch script that waits for process termination, replaces `APEX-Telemetry-Portable.exe`, and relaunches the updated executable seamlessly.
-- [ ] Graceful fallback: If automatic swap fails (e.g. permission/AV lock), direct manual download / folder open link is provided.
+- [x] Graceful fallback: If automatic swap fails (e.g. permission/AV lock), direct manual download / folder open link is provided.
 
 ---
 
@@ -50,11 +50,13 @@ d:/AI Workspace/APEX v2.9/
 │       └── preload.js                  # [COMPLETED] Expose apexDesktop.updater APIs
 └── public/
     ├── js/
-    │   └── ui-updater.js               # [NEW] Update badge, modal dialog, changelog & progress UI
+    │   ├── ui-updater.js               # [COMPLETED] Re-export UiUpdater controller
+    │   └── components/
+    │       └── ui-updater.js           # [COMPLETED] Update badge, modal dialog, changelog & progress UI
     ├── css/
     │   └── components/
-    │       └── updater.css             # [NEW] Telemetry-styled update banner and progress bar
-    └── index.html                      # [MODIFY] Include updater CSS/JS and modal markup container
+    │       └── updater.css             # [COMPLETED] Telemetry-styled update banner and progress bar
+    └── index.html                      # [COMPLETED] Include updater CSS/JS and modal markup container
 ```
 
 ---
@@ -123,6 +125,7 @@ d:/AI Workspace/APEX v2.9/
 - **Agent:** `frontend-developer`
 - **Skill:** `frontend-design`
 - **Priority:** P2
+- **Status:** COMPLETED
 - **Dependencies:** `TASK-04`
 - **INPUT:** `public/index.html`, `public/css/`, `public/js/`.
 - **OUTPUT:** `public/css/components/updater.css` and `public/js/ui-updater.js` providing non-intrusive titlebar badge, update modal with Markdown changelog renderer, download progress bar, and restart buttons.
@@ -143,9 +146,9 @@ d:/AI Workspace/APEX v2.9/
 
 ## Phase X: Final Verification Checklist
 
-- [ ] **Workflow Validation:** `.github/workflows/release.yml` triggers properly and runs `electron-builder`.
-- [ ] **SemVer Check:** Correctly identifies when a remote GitHub tag is newer than local `package.json` version.
-- [ ] **Download Integrity:** Downloaded file matches expected size and hash before initiating restart.
-- [ ] **Portable Swapping:** Detached swap process successfully replaces the running portable `.exe` and relaunches APEX.
-- [ ] **UI/UX Aesthetics:** Notification banner and modal adhere to APEX F1 dark/carbon telemetry styling.
-- [ ] **Build Integrity:** `npm test` and `npm run electron:pack` execute without packaging or runtime regressions.
+- [x] **Workflow Validation:** `.github/workflows/release.yml` triggers properly and runs `electron-builder`.
+- [x] **SemVer Check:** Correctly identifies when a remote GitHub tag is newer than local `package.json` version.
+- [x] **Download Integrity:** Downloaded file matches expected size and hash before initiating restart.
+- [x] **Portable Swapping:** Detached swap process successfully replaces the running portable `.exe` and relaunches APEX.
+- [x] **UI/UX Aesthetics:** Notification banner and modal adhere to APEX F1 dark/carbon telemetry styling.
+- [x] **Build Integrity:** `npm test` and `npm run electron:pack` execute without packaging or runtime regressions.
