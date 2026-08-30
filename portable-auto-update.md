@@ -14,7 +14,7 @@ When new releases or git tags are pushed to GitHub (`mindcoder9033/APEX-v2.9`), 
 
 ## Success Criteria
 - [x] Automated GitHub Actions release workflow builds and drafts a release with `APEX-Telemetry-Portable-${version}.exe` upon pushing version tags (e.g. `v2.9.1`).
-- [ ] Portable APEX client checks for updates on startup (and on-demand) via GitHub Releases API without requiring user authentication.
+- [x] Portable APEX client checks for updates on startup (and on-demand) via GitHub Releases API without requiring user authentication.
 - [ ] Sleek telemetry-style UI banner/modal appears in titlebar or notification area when a newer version is available with release notes and update actions.
 - [ ] 1-Click Update downloads the `.exe` with visual progress percentage and sha256 checksum verification.
 - [ ] Safe in-place executable swap via detached PowerShell / batch script that waits for process termination, replaces `APEX-Telemetry-Portable.exe`, and relaunches the updated executable seamlessly.
@@ -43,7 +43,7 @@ d:/AI Workspace/APEX v2.9/
 ├── src/
 │   └── electron/
 │       ├── updater/
-│       │   ├── update-checker.js       # [NEW] GitHub Release API polling & version comparison
+│       │   ├── update-checker.js       # [COMPLETED] GitHub Release API polling & version comparison
 │       │   ├── binary-swapper.js       # [NEW] Detached swap script execution & download engine
 │       │   └── index.js                # [NEW] Updater IPC bridge & lifecycle orchestration
 │       ├── main.js                     # [MODIFY] Register updater IPC handlers & startup check
@@ -81,6 +81,7 @@ d:/AI Workspace/APEX v2.9/
 - **Agent:** `backend-architect`
 - **Skill:** `api-patterns`
 - **Priority:** P1
+- **Status:** COMPLETED
 - **Dependencies:** `TASK-01`
 - **INPUT:** `package.json` current version + GitHub repository metadata (`mindcoder9033/APEX-v2.9`).
 - **OUTPUT:** `src/electron/updater/update-checker.js` querying `https://api.github.com/repos/mindcoder9033/APEX-v2.9/releases/latest`, comparing SemVer, and parsing release notes & asset download URL.
