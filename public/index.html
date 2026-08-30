@@ -21,32 +21,17 @@
     
     <!-- Top Pit Navigation Header with Electron Frameless Drag Support -->
     <header class="pit-header chamfer-br app-drag-region">
-      <div class="brand-section no-drag">
-        <div class="brand-logo">
-          APEX <span class="accent">//</span>
+      <!-- Zone 1 (Left): Brand & Driver Profile Quick-Switcher -->
+      <div class="header-left-group no-drag">
+        <div class="brand-section">
+          <div class="brand-logo">
+            APEX <span class="accent">//</span>
+          </div>
+          <div class="brand-tagline">
+            Pit-Wall Telemetry
+          </div>
         </div>
-        <div class="brand-tagline">
-          Telemetry & Racecraft Engine
-        </div>
-      </div>
 
-      <!-- Primary Navigation Tabs -->
-      <nav class="header-nav-tabs no-drag" aria-label="Primary Navigation">
-        <button id="btn-nav-pitwall" class="nav-tab-btn active chamfer-br" title="Live Pit Wall Telemetry (P)">
-          <span class="nav-tab-icon">🏁</span>
-          <span class="nav-tab-label">PIT WALL</span>
-        </button>
-        <button id="btn-nav-track-library" class="nav-tab-btn chamfer-br" title="Track Intelligence & Dossier Hub (T)">
-          <span class="nav-tab-icon">🗺️</span>
-          <span class="nav-tab-label">TRACK DOSSIER</span>
-        </button>
-        <button id="btn-nav-stints" class="nav-tab-btn chamfer-br" title="Motorsport Practice Stints (L)">
-          <span class="nav-tab-icon">🎯</span>
-          <span class="nav-tab-label">PRACTICE STINTS</span>
-        </button>
-      </nav>
-
-      <div class="header-status-group no-drag">
         <!-- Driver Profile Quick-Switcher Pill & Dropdown -->
         <div class="driver-switcher-container" id="driver-switcher-container">
           <button id="btn-driver-pill" class="driver-pill-btn chamfer-br" title="Current Active Driver (Click for Dossier & Quick Switch)">
@@ -79,20 +64,32 @@
             </div>
           </div>
         </div>
+      </div>
 
-        <div id="status-pill" class="status-pill disconnected chamfer-br">
+      <!-- Zone 2 (Center): Primary Navigation Tabs -->
+      <nav class="header-nav-tabs no-drag" aria-label="Primary Navigation">
+        <button id="btn-nav-pitwall" class="nav-tab-btn active chamfer-br" title="Live Pit Wall Telemetry (P)">
+          <span class="nav-tab-icon">🏁</span>
+          <span class="nav-tab-label">PIT WALL</span>
+        </button>
+        <button id="btn-nav-track-library" class="nav-tab-btn chamfer-br" title="Track Intelligence & Dossier Hub (T)">
+          <span class="nav-tab-icon">🗺️</span>
+          <span class="nav-tab-label">TRACK DOSSIER</span>
+        </button>
+        <button id="btn-nav-stints" class="nav-tab-btn chamfer-br" title="Motorsport Practice Stints (L)">
+          <span class="nav-tab-icon">🎯</span>
+          <span class="nav-tab-label">PRACTICE STINTS</span>
+        </button>
+      </nav>
+
+      <!-- Zone 3 (Right): Live Telemetry Status & Window Controls -->
+      <div class="header-status-group no-drag">
+        <!-- Interactive Telemetry Status Pill -->
+        <div id="status-pill" class="status-pill disconnected chamfer-br" role="button" tabindex="0" title="Telemetry Connection Status (Click for Network Setup & Loopback Diagnostics)">
           <span class="status-dot"></span>
           <span id="status-text">Bridge Offline</span>
           <span id="rate-text" style="color: #666; font-size: 10px; margin-left: 4px;">0 pkt/s</span>
         </div>
-
-        <button id="btn-open-loopback-tool" class="btn btn-secondary btn-icon chamfer-br" title="Forza UWP Loopback & Network Helper">
-          <span>⚡</span>
-        </button>
-
-        <button id="btn-open-udp-guide" class="btn btn-secondary btn-icon chamfer-br" title="Forza UDP Setup Guide (U)">
-          <span>📡</span>
-        </button>
 
         <button id="btn-toggle-edit-layout" class="btn btn-secondary btn-icon chamfer-br" title="Customize Telemetry Widgets Layout (E)">
           <span>📐</span>

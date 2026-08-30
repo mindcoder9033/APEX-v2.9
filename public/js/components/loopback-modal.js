@@ -24,6 +24,17 @@ export class LoopbackModal {
   }
 
   bindEvents() {
+    const statusPill = document.getElementById('status-pill');
+    if (statusPill) {
+      statusPill.addEventListener('click', () => this.open());
+      statusPill.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.open();
+        }
+      });
+    }
+
     if (this.btnOpen) {
       this.btnOpen.addEventListener('click', () => this.open());
     }

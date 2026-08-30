@@ -142,11 +142,12 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-md) var(--space-lg);
+  padding: 10px var(--space-lg);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   position: relative;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  gap: var(--space-md);
 }
 
 .pit-header::after {
@@ -159,16 +160,23 @@ h1, h2, h3, h4, h5, h6 {
   background: linear-gradient(90deg, var(--color-f1-red) 0%, transparent 60%);
 }
 
+.header-left-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
 .brand-section {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .brand-logo {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 26px;
+  font-size: 24px;
   letter-spacing: 0.12em;
   color: var(--color-text-primary);
   display: flex;
@@ -182,13 +190,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .brand-tagline {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-text-secondary);
   letter-spacing: 0.12em;
-  padding-left: var(--space-md);
+  padding-left: var(--space-sm);
   border-left: 1px solid var(--color-border);
+  white-space: nowrap;
 }
 
 .header-nav-tabs {
@@ -238,15 +247,16 @@ h1, h2, h3, h4, h5, h6 {
 .header-status-group {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 8px;
+  flex-shrink: 0;
 }
 
-/* Status Indicator Pill */
+/* Status Indicator Pill - Interactive */
 .status-pill {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 14px;
+  padding: 5px 12px;
   background: #0D0D0D;
   border: 1px solid var(--color-border);
   font-family: var(--font-mono);
@@ -254,6 +264,21 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.status-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.status-pill:focus-visible {
+  outline: 2px solid var(--color-cyan, #00E5FF);
+  outline-offset: 1px;
 }
 
 .status-dot {
