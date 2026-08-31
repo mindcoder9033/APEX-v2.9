@@ -19,7 +19,7 @@ win:
     - target: portable
       arch:
         - x64
-  icon: public/favicon.ico
+  icon: public/apex icon.ico
   requestedExecutionLevel: asInvoker
 
 portable:

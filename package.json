@@ -27,7 +27,7 @@
       "target": [
         "portable"
       ],
-      "icon": "public/favicon.ico"
+      "icon": "public/apex icon.ico"
     },
     "portable": {
       "artifactName": "APEX-Telemetry-Portable-${version}.exe"

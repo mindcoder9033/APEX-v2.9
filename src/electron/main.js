@@ -40,7 +40,9 @@ async function startEmbeddedBackend() {
 }
 
 function createMainWindow() {
-  const iconPath = path.join(__dirname, '../../public/favicon.ico');
+  const customIconPath = path.join(__dirname, '../../public/apex icon.ico');
+  const fallbackIconPath = path.join(__dirname, '../../public/favicon.ico');
+  const iconPath = fs.existsSync(customIconPath) ? customIconPath : (fs.existsSync(fallbackIconPath) ? fallbackIconPath : undefined);
 
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -50,7 +52,7 @@ function createMainWindow() {
     backgroundColor: '#0a0a0c',
     frame: false,
     titleBarStyle: 'hidden',
-    icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
