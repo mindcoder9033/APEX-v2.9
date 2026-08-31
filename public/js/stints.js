@@ -391,6 +391,83 @@ export const STINTS_DATABASE = [
       'Monitor Exit Speed Delta: if exit speed drops due to delayed throttle application, move the brake point back 3 feet.'
     ],
     hudWidgets: ['Brake Point Delta Meter (ft)', 'Exit Speed vs Baseline Correlator', '3-Ft Procedure Progression Tracker', 'Throttle Application Timing (TAP)']
+  },
+
+  // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---
+  {
+    id: 'stint-12-1',
+    tier: 12,
+    tierName: 'Tier 12: Racing in the Rain',
+    tierShort: 'T12 // WET RACING',
+    name: 'The Visibility Drill',
+    subtitle: 'Seeing in the Wet & Spray Following Distance',
+    focus: 'Visibility Management & Spray Navigation',
+    targetMetric: 'Visibility Score: 85%+ / Spray Distance: >2 Car Lengths',
+    prescribedCar: '2014 BAC Mono',
+    prescribedTrack: 'Lime Rock Park (Full Circuit)',
+    gameType: 'Circuit Race / Wet Practice',
+    timeOfDay: 'Late Morning (10:00 AM)',
+    weather: 'Heavy Rain (Wet Asphalt)',
+    laps: 5,
+    drivatars: 10,
+    quote: '"Obviously, first and foremost, you can\'t control your car if you can\'t see where you\'re going. Maintaining the ability to see comes even before car changes as a priority in wet driving." — Skip Barber (Page 181)',
+    briefing: 'In open-wheel cars, rooster tails of water hang in the air, creating severe blinding spray. Practice tracking apexes and brake boards through dense spray while managing your following distance. If your Visibility Score drops below 50%, drop back 2 car lengths or move offline to find clean air.',
+    actionPlan: [
+      'Look far ahead through the rooster tails to spot brake markers before you arrive at turn-in.',
+      'Drop back 2-3 car lengths in traffic to elevate your real-time Visibility Score.',
+      'If the POOR VISIBILITY alert flashes, back off immediately and adjust your slot position.'
+    ],
+    hudWidgets: ['Visibility Score Meter (0-100%)', 'Spray Density & Following Distance', 'Visor Anti-Fog / Ventilation Status', 'POOR VISIBILITY Safety Alert']
+  },
+  {
+    id: 'stint-12-2',
+    tier: 12,
+    tierName: 'Tier 12: Racing in the Rain',
+    tierShort: 'T12 // WET RACING',
+    name: 'The Rim Shot Hunter',
+    subtitle: 'Rain Line Selection & The Outside Rim Arc',
+    focus: 'The Rim Shot vs Polished Dry Line',
+    targetMetric: 'Rim Shot Grip Delta: +42% Grip (0.85G vs 0.60G) / +3.0+ MPH Exit Speed',
+    prescribedCar: '2014 BAC Mono',
+    prescribedTrack: 'Lime Rock Park (Full Circuit)',
+    gameType: 'Circuit Race / Wet Testing',
+    timeOfDay: 'Late Morning (10:00 AM)',
+    weather: 'Heavy Rain (Wet Asphalt)',
+    laps: 5,
+    drivatars: 10,
+    quote: '"The average lap time around the outside was eight seconds per lap faster... the cornering force available on the dry line was in the neighborhood of .6 Gs. On the outside, the G readings were in the vicinity of .85 Gs, some 42% better." — Skip Barber (Page 186-187)',
+    briefing: 'The traditional rubbered-in dry line becomes an ice rink when wet as oil, rubber, and water create a polished surface. Hunt for grip on the unpolished, porous asphalt on the outside of Lime Rock\'s sweepers (The Big Bend, West Bend, and Downhill). Ride the rim shot line and verify higher corner exit speeds on your HUD.',
+    actionPlan: [
+      'Steer clear of the shiny, polished rubber line on turn-in and mid-corner sweepers.',
+      'Drive wide on the porous outside rim where traction readings jump from 0.60G to 0.85G.',
+      'Check the Corner Exit Speed Delta at West Bend to confirm the compounding 8-second lap time advantage.'
+    ],
+    hudWidgets: ['Rain Line Advisor (Rim Shot vs Dry Line)', 'Grip Surface Indicator (Glossy vs Dull Gray)', 'Exit Speed Delta (+MPH)', 'Lateral Grip Multiplier (0.85G vs 0.60G)']
+  },
+  {
+    id: 'stint-12-3',
+    tier: 12,
+    tierName: 'Tier 12: Racing in the Rain',
+    tierShort: 'T12 // WET RACING',
+    name: 'The Squaring-Off Artist',
+    subtitle: 'Wet Cornering Technique & Reduced Traction Budget',
+    focus: 'Squaring Off Corners & Anti-Wheelspin Throttle',
+    targetMetric: 'Late Turn-In & Early Straight Drive / 0 Wheelspin Events / 0 TTO Snaps',
+    prescribedCar: '2014 BAC Mono',
+    prescribedTrack: 'Lime Rock Park (Full Circuit)',
+    gameType: 'Circuit Race / Wet Testing',
+    timeOfDay: 'Late Morning (10:00 AM)',
+    weather: 'Heavy Rain (Wet Asphalt)',
+    laps: 5,
+    drivatars: 10,
+    quote: '"You would do this by trying to square off the corners—that is, turn later at a slower speed and get the car pointing as straight as possible as early as possible... tires lose more cornering ability in the wet than braking or accelerating grip." — Skip Barber (Page 187)',
+    briefing: 'Rain reduces cornering grip by 50%, while braking and straight acceleration lose only ~36%. Capitalize on this asymmetry: square off tight corners by turning in later, rotating sharply at lower speed, and pointing the car straight early so you can deploy straight-line acceleration without breaking rear tire traction.',
+    actionPlan: [
+      'Over-slow entry and delay turn-in to achieve a pointed, straight vehicle heading early.',
+      'Squeeze the throttle smoothly once straight — avoid abrupt stomps that trigger wheelspin.',
+      'Monitor the Wet Traction Circle on the HUD to respect the reduced 50% lateral grip boundary.'
+    ],
+    hudWidgets: ['Squaring-Off Trajectory Angle Indicator', '2D Wet Traction Circle (50% Lat vs 64% Long)', 'Throttle Progressive Squeeze & Anti-Wheelspin', 'Trailing Throttle Oversteer (TTO) Alert']
   }
 ];
 

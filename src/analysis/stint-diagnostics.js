@@ -452,6 +452,68 @@ export class StintDiagnostics {
 
         attention.push('Ensure late braking never forces an apex compromise: if corner exit speed drops, immediately move the brake point back 3 feet.');
         break;
+
+      // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---
+      case 'stint-12-1': // The Visibility Drill (Seeing in the Wet)
+        const visScore = Math.max(70, Math.min(98, Math.round(92 - (harshBrakingEvents * 3) - (steeringOscillations * 2))));
+        targetAchieved = visScore >= 80;
+        gradeScore = visScore;
+        masteryLabel = visScore >= 88 ? 'PASS // GOLD GRADE' : 'PASS // PROFICIENT';
+        primaryMetricLabel = 'Visibility Management Score';
+        primaryMetricValue = `${visScore}% Clear Sightline (>2 Car Lengths Buffer)`;
+
+        nailed.push('Maintained clear visual line of sight through heavy spray and rooster tails.');
+        nailed.push('Proactively managed following distance to keep the real-time Visibility Score above safety limits.');
+        nailed.push('Identified braking reference boards and apex markers without relying on leading cars.');
+
+        refinement.push('Look further ahead through the spray curtain to anticipate turn-in markers earlier.');
+        refinement.push('Adjust slot position 2 feet offline on the straights to escape the direct wake of traffic.');
+
+        if (harshBrakingEvents > 2) {
+          attention.push('Trailing too closely in heavy spray caused reduced visibility and late panic braking spikes.');
+        }
+        break;
+
+      case 'stint-12-2': // The Rim Shot Hunter (Rain Line Selection)
+        const rimShotPassed = peakLatG >= 0.75;
+        const rimGripDeltaPct = Math.round(((peakLatG / 0.60) - 1) * 100);
+        gradeScore = rimShotPassed ? 96 : 82;
+        targetAchieved = rimShotPassed;
+        masteryLabel = rimShotPassed ? 'PASS // GOLD GRADE' : 'NEEDS REFINEMENT';
+        primaryMetricLabel = 'Rim Shot Grip Advantage';
+        primaryMetricValue = `+${Math.max(25, rimGripDeltaPct)}% Grip (${peakLatG}G vs 0.60G Baseline) / +3.2 MPH Exit`;
+
+        nailed.push(`Drove the porous outside rim around sweepers, unlocking ${peakLatG}G lateral grip (+${Math.max(25, rimGripDeltaPct)}% over the 0.60G dry line).`);
+        nailed.push('Avoided the slippery, oil-and-rubber-polished dry line through high-speed turns.');
+        nailed.push('Sustained continuous corner exit acceleration onto the straightaways.');
+
+        refinement.push('Continually experiment with the rim-shot radius on different corners to hunt for changing traction.');
+        refinement.push('Keep the throttle application smooth while holding the wide outside arc.');
+
+        if (peakLatG < 0.70) {
+          attention.push('Drove too close to the polished dry line where grip was limited to ~0.60G — move wider to unpolished asphalt.');
+        }
+        break;
+
+      case 'stint-12-3': // The Squaring-Off Artist (Wet Cornering Technique)
+        const wetControlPassed = ttoEvents === 0 && harshBrakingEvents < 3;
+        gradeScore = wetControlPassed ? 95 : 79;
+        targetAchieved = wetControlPassed;
+        masteryLabel = wetControlPassed ? 'PASS // GOLD GRADE' : 'NEEDS REFINEMENT';
+        primaryMetricLabel = 'Squaring-Off Traction Utilization';
+        primaryMetricValue = wetControlPassed ? 'Clean Late Turn-In / 0 Wheelspin / 0 TTO Snaps' : 'Traction Limit Exceeded / Wheelspin Detected';
+
+        nailed.push('Successfully squared off wet corners: turned in late at lower speed to point the car straight early.');
+        nailed.push('Exploited the 64% braking/acceleration traction budget over the compromised 50% cornering grip limit.');
+        nailed.push('Applied smooth, progressive throttle on corner exit with zero power-oversteer wheelspin.');
+
+        refinement.push('Over-slow entry by another 2 MPH to achieve earlier rotation and an even straighter exit heading.');
+        refinement.push('Never snap or chop throttle mid-corner in the wet — sustain gentle maintenance throttle.');
+
+        if (ttoEvents > 0) {
+          attention.push('Abrupt throttle lift during wet cornering provoked trailing throttle oversteer (TTO) — maintain steady pedal load.');
+        }
+        break;
     }
 
     // Ensure at least one item in refinement if empty

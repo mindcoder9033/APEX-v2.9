@@ -4389,3 +4389,57 @@ select,
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 20px;
 }
+
+/* ==========================================================================
+   TIER 12: RACING IN THE RAIN & WET HUD WIDGETS
+   ========================================================================== */
+.stint-tier-tag.tier-tag-12 {
+  background: rgba(0, 191, 255, 0.15);
+  border: 1px solid #00BFFF;
+  color: #00BFFF;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.hud-poor-vis-alert {
+  background: rgba(225, 6, 0, 0.2);
+  border: 1px solid var(--color-f1-red);
+  color: #FFFFFF;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 2px;
+  animation: pulse-border 1s infinite alternate;
+}
+
+@keyframes pulse-border {
+  0% { border-color: rgba(225, 6, 0, 0.4); box-shadow: 0 0 4px rgba(225, 6, 0, 0.2); }
+  100% { border-color: rgba(225, 6, 0, 1); box-shadow: 0 0 12px rgba(225, 6, 0, 0.6); }
+}
+
+.wet-line-advisor-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.wet-line-advisor-badge.rim-shot {
+  background: rgba(0, 204, 102, 0.15);
+  border: 1px solid var(--color-success);
+  color: var(--color-success);
+}
+
+.wet-line-advisor-badge.dry-line {
+  background: rgba(225, 6, 0, 0.15);
+  border: 1px solid var(--color-f1-red);
+  color: var(--color-f1-red);
+}
+

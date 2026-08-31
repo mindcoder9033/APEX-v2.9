@@ -538,7 +538,6 @@ export class LiveHudRenderer {
         `;
 
       case 'stint-5-3': // The Procedure Driller (Brake Point Precision)
-      default:
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
@@ -569,6 +568,121 @@ export class LiveHudRenderer {
             </div>
             <div id="hud-proc-guidance-box" style="margin-top: 5px; font-size: 11px; font-family: var(--font-mono); color: var(--color-success); line-height: 1.4;">
               🎯 Lap 1: Establishing safe reference braking point. Focus on clean corner exit speed.
+            </div>
+          </div>
+        `;
+
+      // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---
+      case 'stint-12-1': // The Visibility Drill (Seeing in the Wet)
+        return `
+          <div class="stints-hud-kpi-grid">
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Visibility Score</span>
+              <span id="hud-vis-score-val" class="stat-cell-value" style="color: #00BFFF; font-size: 26px;">100%</span>
+              <span id="hud-vis-score-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 85%+ Sightline</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Spray Density &amp; Distance</span>
+              <span id="hud-spray-dist-val" class="stat-cell-value" style="color: var(--color-success); font-size: 20px; margin-top: 2px;">CLEAR AIR</span>
+              <span id="hud-spray-dist-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">>2 Car Lengths Buffer</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Visor Prep &amp; Ventilation</span>
+              <span id="hud-visor-status-val" class="stat-cell-value" style="color: var(--color-success); font-size: 16px; margin-top: 4px;">ANTI-FOG APPLIED</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Visor Propped 1/4" Open</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Apex &amp; Brake Point Sight</span>
+              <span id="hud-vis-apex-sight" class="stat-cell-value" style="color: var(--color-text-primary); font-size: 18px; margin-top: 4px;">TRACKING APEX</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Looking through spray</span>
+            </div>
+          </div>
+          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px;">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary); margin-bottom: 4px;">
+              <span>VISIBILITY &amp; SPRAY SATURATION GAUGE</span>
+              <span id="hud-vis-meter-text" style="color: #00BFFF;">OPTIMAL VISIBILITY (>85%)</span>
+            </div>
+            <div style="position: relative; height: 14px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+              <div style="position: absolute; left: 50%; width: 50%; height: 100%; background: rgba(0, 191, 255, 0.15); border-left: 1px dashed #00BFFF;"></div>
+              <div id="hud-vis-meter-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #E10600 0%, #FFD700 45%, #00BFFF 80%, #00CC66 100%); transition: width 0.08s ease-out;"></div>
+            </div>
+            <div id="hud-poor-vis-alert" class="hud-poor-vis-alert" style="display: none; margin-top: 8px;">
+              ⚠️ SLOW DOWN - POOR VISIBILITY (<50%)! DROP BACK 2 CAR LENGTHS OR MOVE OFFLINE
+            </div>
+          </div>
+        `;
+
+      case 'stint-12-2': // The Rim Shot Hunter (Rain Line Selection)
+        return `
+          <div class="stints-hud-kpi-grid">
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Rain Line Selection</span>
+              <span id="hud-rain-line-state" class="stat-cell-value" style="color: var(--color-success); font-size: 20px; margin-top: 2px;">RIM SHOT (OUTSIDE)</span>
+              <span id="hud-rain-line-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Porous Outer Asphalt</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Grip Surface Indicator</span>
+              <span id="hud-surface-grip-indicator" class="stat-cell-value" style="color: var(--color-success); font-size: 20px; margin-top: 2px;">DULL GRAY GRIP</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Avoid glossy rubber line</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Corner Exit Speed Delta</span>
+              <span id="hud-wet-exit-delta" class="stat-cell-value accent" style="color: var(--color-gold); font-size: 24px;">+0.0 MPH</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: +3.0+ MPH Launch</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Sweeper Lateral Grip</span>
+              <span id="hud-rim-grip-reading" class="stat-cell-value" style="color: #00BFFF; font-size: 24px;">0.00 G</span>
+              <span id="hud-rim-grip-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 0.85G vs 0.60G Dry (+42%)</span>
+            </div>
+          </div>
+          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary);">
+              <div><strong style="color: #00BFFF;">LIME ROCK RAIN LINE ADVISOR:</strong> Ride outer rim on Turn 1 &amp; West Bend.</div>
+              <div style="color: var(--color-text-muted); margin-top: 2px;">Dry line = 0.60G (polished rubber) | Outside line = 0.85G (+42% grip advantage)</div>
+            </div>
+            <span id="hud-rim-advisor-badge" class="wet-line-advisor-badge rim-shot">RIM SHOT ENGAGED</span>
+          </div>
+        `;
+
+      case 'stint-12-3': // The Squaring-Off Artist (Wet Cornering Technique)
+      default:
+        return `
+          <div class="stints-hud-kpi-grid">
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Squaring-Off Trajectory</span>
+              <span id="hud-square-trajectory" class="stat-cell-value" style="color: var(--color-gold); font-size: 18px; margin-top: 4px;">LATE TURN-IN READY</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Point car straight early</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Wet Lateral Grip Budget</span>
+              <span id="hud-wet-lat-budget" class="stat-cell-value" style="color: #00BFFF; font-size: 24px;">50% LIMIT</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">50% Lat vs 64% Long Asymmetry</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">Exit Throttle Modulation</span>
+              <span id="hud-wet-throttle-status" class="stat-cell-value" style="color: var(--color-success); font-size: 18px; margin-top: 4px;">CLEAN SQUEEZE</span>
+              <span id="hud-wet-wheelspin-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">0 Wheelspin Events</span>
+            </div>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00BFFF;">
+              <span class="stat-cell-label">TTO Instability Monitor</span>
+              <span id="hud-wet-tto-status" class="stat-cell-value" style="color: var(--color-success); font-size: 16px; margin-top: 4px;">NO SNAP DETECTED</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Smooth throttle releases only</span>
+            </div>
+          </div>
+          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px; display: flex; gap: 14px; align-items: center;">
+            <div style="position: relative; width: 110px; height: 110px; background: #0c0c0e; border: 1px solid rgba(0, 191, 255, 0.25); border-radius: 50%; overflow: hidden; flex-shrink: 0;">
+              <!-- Wet Friction Circle (50% Lat, 64% Long scaled boundary) -->
+              <div style="position: absolute; top: 18%; left: 25%; width: 50%; height: 64%; border: 1px dashed #00BFFF; border-radius: 50%;"></div>
+              <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.12);"></div>
+              <div style="position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(255,255,255,0.12);"></div>
+              <div id="hud-wet-friction-dot" style="position: absolute; width: 8px; height: 8px; background: #00BFFF; border-radius: 50%; top: calc(50% - 4px); left: calc(50% - 4px); box-shadow: 0 0 8px #00BFFF; transition: top 0.05s ease-out, left 0.05s ease-out;"></div>
+            </div>
+            <div style="flex: 1; font-family: var(--font-mono); font-size: 10px; line-height: 1.5; color: var(--color-text-secondary);">
+              <div style="color: #00BFFF; font-weight: 700; font-size: 11px; margin-bottom: 3px;">2D WET TRACTION CIRCLE (REDUCED ENVELOPE)</div>
+              <div>Cornering Limit: <strong style="color: var(--color-gold);">-50% Lateral G</strong> | Decel/Accel: <strong style="color: var(--color-success);">-36% Grip</strong></div>
+              <div>Live Traction Vector: <span id="hud-wet-g-breakdown" style="color: var(--color-text-primary);">Lat: 0.00G | Long: 0.00G</span></div>
+              <div id="hud-wet-coach-tip" style="color: var(--color-success); margin-top: 4px;">Square off turn: slow entry, point straight early, squeeze throttle</div>
             </div>
           </div>
         `;
@@ -1589,6 +1703,222 @@ export class LiveHudRenderer {
 
       const elProgText = document.getElementById('hud-proc-current-lap-delta');
       if (elProgText) elProgText.textContent = `LAP ${lapNum} // ADVANCE: ${targetDeltaFt} FT`;
+    }
+
+    // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---
+    // 12-1 The Visibility Drill (Seeing in the Wet)
+    else if (stintId === 'stint-12-1') {
+      // Calculate dynamic visibility score based on speed, spray density, and following distance
+      let speedPenalty = speedMph > 60 ? (speedMph - 60) * 0.35 : 0;
+      let steerPenalty = Math.abs(steer) > 0.3 ? 12 : 0;
+      let brakePenalty = brakePct > 80 ? 8 : 0;
+      let visScore = Math.max(35, Math.min(100, Math.round(98 - speedPenalty - steerPenalty - brakePenalty)));
+
+      const elVisVal = document.getElementById('hud-vis-score-val');
+      if (elVisVal) {
+        elVisVal.textContent = `${visScore}%`;
+        elVisVal.style.color = visScore >= 80 ? '#00BFFF' : (visScore >= 50 ? 'var(--color-gold)' : 'var(--color-f1-red)');
+      }
+
+      const elVisMeterFill = document.getElementById('hud-vis-meter-fill');
+      if (elVisMeterFill) {
+        elVisMeterFill.style.width = `${visScore}%`;
+      }
+
+      const elVisMeterText = document.getElementById('hud-vis-meter-text');
+      if (elVisMeterText) {
+        if (visScore >= 85) {
+          elVisMeterText.textContent = 'OPTIMAL VISIBILITY (>85%) — CLEAR APEX SIGHT';
+          elVisMeterText.style.color = '#00BFFF';
+        } else if (visScore >= 50) {
+          elVisMeterText.textContent = 'MODERATE SPRAY — MAINTAIN 2 CAR LENGTHS BUFFER';
+          elVisMeterText.style.color = 'var(--color-gold)';
+        } else {
+          elVisMeterText.textContent = 'DENSE ROOSTER TAIL SPRAY — VISIBILITY COMPROMISED';
+          elVisMeterText.style.color = 'var(--color-f1-red)';
+        }
+      }
+
+      const elSprayDist = document.getElementById('hud-spray-dist-val');
+      const elSpraySub = document.getElementById('hud-spray-dist-sub');
+      if (elSprayDist) {
+        if (visScore >= 80) {
+          elSprayDist.textContent = 'CLEAN AIR';
+          elSprayDist.style.color = 'var(--color-success)';
+          if (elSpraySub) elSpraySub.textContent = '>2 Car Lengths Buffer';
+        } else if (visScore >= 50) {
+          elSprayDist.textContent = 'IN ROOSTER WAKE';
+          elSprayDist.style.color = 'var(--color-gold)';
+          if (elSpraySub) elSpraySub.textContent = '1-2 Car Lengths (Back Off)';
+        } else {
+          elSprayDist.textContent = 'BLINDING SPRAY';
+          elSprayDist.style.color = 'var(--color-f1-red)';
+          if (elSpraySub) elSpraySub.textContent = '<1 Car Length (Drop Back!)';
+        }
+      }
+
+      const elVisApex = document.getElementById('hud-vis-apex-sight');
+      if (elVisApex) {
+        if (visScore < 50) {
+          elVisApex.textContent = 'APEX OBSCURED';
+          elVisApex.style.color = 'var(--color-f1-red)';
+        } else if (speedMph > 40 && Math.abs(steer) > 0.15) {
+          elVisApex.textContent = 'APEX IN VIEW';
+          elVisApex.style.color = 'var(--color-success)';
+        } else {
+          elVisApex.textContent = 'TRACKING APEX';
+          elVisApex.style.color = 'var(--color-text-primary)';
+        }
+      }
+
+      const elPoorAlert = document.getElementById('hud-poor-vis-alert');
+      if (elPoorAlert) {
+        elPoorAlert.style.display = visScore < 50 ? 'block' : 'none';
+      }
+    }
+
+    // 12-2 The Rim Shot Hunter (Rain Line Selection)
+    else if (stintId === 'stint-12-2') {
+      const isSweeper = speedMph > 45 && Math.abs(steer) > 0.12;
+      const isRimShot = currentAbsLatG >= 0.70;
+
+      const elLineState = document.getElementById('hud-rain-line-state');
+      const elLineSub = document.getElementById('hud-rain-line-sub');
+      if (elLineState) {
+        if (!isSweeper) {
+          elLineState.textContent = 'STRAIGHTAWAY';
+          elLineState.style.color = 'var(--color-text-secondary)';
+          if (elLineSub) elLineSub.textContent = 'Porous Outside Stance';
+        } else if (isRimShot) {
+          elLineState.textContent = 'RIM SHOT (OUTSIDE)';
+          elLineState.style.color = 'var(--color-success)';
+          if (elLineSub) elLineSub.textContent = 'High Grip Outside Asphalt';
+        } else {
+          elLineState.textContent = 'POLISHED DRY LINE';
+          elLineState.style.color = 'var(--color-f1-red)';
+          if (elLineSub) elLineSub.textContent = 'Slippery Rubber Surface';
+        }
+      }
+
+      const elSurface = document.getElementById('hud-surface-grip-indicator');
+      if (elSurface) {
+        if (isRimShot || (!isSweeper && currentAbsLatG < 0.3)) {
+          elSurface.textContent = 'DULL GRAY GRIP';
+          elSurface.style.color = 'var(--color-success)';
+        } else {
+          elSurface.textContent = 'GLOSSY SLIPPERY';
+          elSurface.style.color = 'var(--color-f1-red)';
+        }
+      }
+
+      const elExitDelta = document.getElementById('hud-wet-exit-delta');
+      if (elExitDelta) {
+        if (throttlePct > 50 && speedMph > 40) {
+          const deltaMph = isRimShot ? '+3.4 MPH' : '+0.4 MPH';
+          elExitDelta.textContent = deltaMph;
+          elExitDelta.style.color = isRimShot ? 'var(--color-success)' : 'var(--color-gold)';
+        } else {
+          elExitDelta.textContent = '+0.0 MPH';
+          elExitDelta.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      const elRimGrip = document.getElementById('hud-rim-grip-reading');
+      if (elRimGrip) {
+        elRimGrip.textContent = `${currentAbsLatG.toFixed(2)} G`;
+        elRimGrip.style.color = currentAbsLatG >= 0.80 ? 'var(--color-success)' : (currentAbsLatG >= 0.65 ? '#00BFFF' : 'var(--color-gold)');
+      }
+
+      const elAdvisorBadge = document.getElementById('hud-rim-advisor-badge');
+      if (elAdvisorBadge) {
+        if (isRimShot) {
+          elAdvisorBadge.textContent = 'RIM SHOT ENGAGED (+42% GRIP)';
+          elAdvisorBadge.className = 'wet-line-advisor-badge rim-shot';
+        } else if (isSweeper) {
+          elAdvisorBadge.textContent = 'MOVE OUTSIDE (DRY LINE SLIPPERY)';
+          elAdvisorBadge.className = 'wet-line-advisor-badge dry-line';
+        } else {
+          elAdvisorBadge.textContent = 'HUNTING POROUS ASPHALT';
+          elAdvisorBadge.className = 'wet-line-advisor-badge rim-shot';
+        }
+      }
+    }
+
+    // 12-3 The Squaring-Off Artist (Wet Cornering Technique)
+    else if (stintId === 'stint-12-3') {
+      // 1. Scaled 2D Wet Traction Circle (50% Lat vs 64% Long scaled envelope)
+      const latGVal = motion.acceleration?.lateralG != null ? motion.acceleration.lateralG : (motion.lateralG || motion.gLat || sample.gLat || 0);
+      const longGVal = motion.acceleration?.longitudinalG != null ? motion.acceleration.longitudinalG : (motion.longitudinalG || motion.gLong || sample.gLong || 0);
+
+      // Lat boundary is clamped closer (50% scale), Long boundary is 64%
+      const latPos = Math.max(25, Math.min(75, 50 + (latGVal / 1.0) * 25));
+      const longPos = Math.max(18, Math.min(82, 50 - (longGVal / 1.2) * 32));
+
+      const elDot = document.getElementById('hud-wet-friction-dot');
+      if (elDot) {
+        elDot.style.left = `calc(${latPos}% - 4px)`;
+        elDot.style.top = `calc(${longPos}% - 4px)`;
+        elDot.style.background = (currentAbsLatG > 0.80 || throttlePct > 90 && Math.abs(steer) > 0.2) ? 'var(--color-f1-red)' : '#00BFFF';
+      }
+
+      const elWetGBreakdown = document.getElementById('hud-wet-g-breakdown');
+      if (elWetGBreakdown) {
+        elWetGBreakdown.textContent = `Lat: ${Math.abs(latGVal).toFixed(2)}G | Long: ${longGVal.toFixed(2)}G`;
+      }
+
+      // 2. Squaring-Off Trajectory Heading Indicator
+      const elTrajectory = document.getElementById('hud-square-trajectory');
+      if (elTrajectory) {
+        if (brake > 0.4 && speedMph > 35) {
+          elTrajectory.textContent = 'OVERSLOWING ENTRY (POINT NOSE)';
+          elTrajectory.style.color = '#00BFFF';
+        } else if (Math.abs(steer) > 0.25 && speedMph < 45) {
+          elTrajectory.textContent = 'ROTATING CAR EARLY';
+          elTrajectory.style.color = 'var(--color-gold)';
+        } else if (throttlePct > 50 && Math.abs(steer) < 0.15 && speedMph > 40) {
+          elTrajectory.textContent = 'EARLY STRAIGHT ACCELERATION';
+          elTrajectory.style.color = 'var(--color-success)';
+        } else {
+          elTrajectory.textContent = 'LATE TURN-IN READY';
+          elTrajectory.style.color = 'var(--color-text-primary)';
+        }
+      }
+
+      // 3. Exit Throttle & Wheelspin Monitor
+      const elThrottleStatus = document.getElementById('hud-wet-throttle-status');
+      const elWheelspinSub = document.getElementById('hud-wet-wheelspin-sub');
+      const wheelspinSpike = throttlePct > 80 && Math.abs(steer) > 0.25 && speedMph < 55;
+      if (elThrottleStatus) {
+        if (wheelspinSpike) {
+          elThrottleStatus.textContent = '⚠️ REAR WHEELSPIN SPIKE';
+          elThrottleStatus.style.color = 'var(--color-f1-red)';
+          if (elWheelspinSub) elWheelspinSub.textContent = 'Squeeze pedal, do not stomp!';
+        } else if (throttlePct > 70 && Math.abs(steer) < 0.15) {
+          elThrottleStatus.textContent = 'OPTIMAL STRAIGHT DRIVE';
+          elThrottleStatus.style.color = 'var(--color-success)';
+          if (elWheelspinSub) elWheelspinSub.textContent = 'Full traction deployed';
+        } else if (throttlePct > 0) {
+          elThrottleStatus.textContent = 'PROGRESSIVE SQUEEZE';
+          elThrottleStatus.style.color = '#00BFFF';
+          if (elWheelspinSub) elWheelspinSub.textContent = 'Feeding power to rear axle';
+        } else {
+          elThrottleStatus.textContent = 'OFF THROTTLE (MID-CORNER)';
+          elThrottleStatus.style.color = 'var(--color-text-muted)';
+        }
+      }
+
+      // 4. Trailing Throttle Oversteer (TTO) Monitor
+      const elTtoStatus = document.getElementById('hud-wet-tto-status');
+      const ttoSnap = throttlePct < 5 && currentAbsLatG > 0.75 && speedMph > 45;
+      if (elTtoStatus) {
+        if (ttoSnap) {
+          elTtoStatus.textContent = '⚠️ TTO LIFT DETECTED!';
+          elTtoStatus.style.color = 'var(--color-f1-red)';
+        } else {
+          elTtoStatus.textContent = 'NO SNAP DETECTED';
+          elTtoStatus.style.color = 'var(--color-success)';
+        }
+      }
     }
   }
 }
