@@ -776,13 +776,32 @@ export class StintsManager {
     const elSub = document.getElementById('debrief-stint-subtitle');
     if (elSub) elSub.textContent = `${stint.tierName.toUpperCase()} // ${stint.name.toUpperCase()}`;
 
+    // Letter Grade Badge
+    const elLetter = document.getElementById('debrief-letter-grade');
+    if (elLetter) {
+      elLetter.textContent = evaluation.letterGrade || 'A';
+      elLetter.style.color = evaluation.gradeColor || 'var(--color-gold)';
+      elLetter.style.textShadow = `0 0 16px ${evaluation.gradeColor || 'rgba(255,215,0,0.4)'}`;
+    }
+
     const elGrade = document.getElementById('debrief-grade-val');
-    if (elGrade) elGrade.textContent = `${evaluation.gradeScore}%`;
+    if (elGrade) elGrade.textContent = `${evaluation.gradeScore}% Composite`;
 
     const elMastery = document.getElementById('debrief-mastery-label');
     if (elMastery) {
       elMastery.textContent = evaluation.masteryLabel;
-      elMastery.style.color = evaluation.targetAchieved ? 'var(--color-success)' : 'var(--color-gold)';
+      elMastery.style.color = evaluation.gradeColor || (evaluation.targetAchieved ? 'var(--color-success)' : 'var(--color-gold)');
+    }
+
+    const elGate = document.getElementById('debrief-stint-gate-status');
+    if (elGate) {
+      if (evaluation.scorecard?.isCapped) {
+        elGate.textContent = `⚠️ Capped: ${evaluation.scorecard.capReason}`;
+        elGate.style.color = 'var(--color-f1-red)';
+      } else {
+        elGate.textContent = 'Formula: 50% Disc + 30% Smooth + 20% Pace';
+        elGate.style.color = 'var(--color-text-muted)';
+      }
     }
 
     const elMetricLabel = document.getElementById('debrief-metric-label');
@@ -793,6 +812,35 @@ export class StintsManager {
 
     const elLaps = document.getElementById('debrief-laps-summary');
     if (elLaps) elLaps.textContent = `${evaluation.telemetryKPIs.totalLaps} Laps • Peak: ${evaluation.telemetryKPIs.peakSpeedMph} MPH (${evaluation.telemetryKPIs.peakLatG}G)`;
+
+    // Populate Telemetry Scorecard
+    const sc = evaluation.scorecard;
+    if (sc) {
+      const elDiscPts = document.getElementById('scorecard-discipline-pts');
+      if (elDiscPts) elDiscPts.textContent = `${sc.discipline.weightedPoints} / 50 PTS`;
+
+      const elDiscName = document.getElementById('scorecard-discipline-name');
+      if (elDiscName) elDiscName.textContent = sc.discipline.name || 'Discipline Metric';
+
+      const elDiscVal = document.getElementById('scorecard-discipline-val');
+      if (elDiscVal) elDiscVal.textContent = sc.discipline.value || `${sc.discipline.score}% Adherence`;
+
+      const elSmoothPts = document.getElementById('scorecard-smoothness-pts');
+      if (elSmoothPts) elSmoothPts.textContent = `${sc.smoothness.weightedPoints} / 30 PTS`;
+
+      const elSmoothEvents = document.getElementById('scorecard-smoothness-events');
+      if (elSmoothEvents) {
+        elSmoothEvents.textContent = `${sc.smoothness.ttoEvents} TTO Chops • ${sc.smoothness.lockupEvents} Lockups • ${sc.smoothness.steeringOscillations} Snaps`;
+      }
+
+      const elPacePts = document.getElementById('scorecard-pace-pts');
+      if (elPacePts) elPacePts.textContent = `${sc.pace.weightedPoints} / 20 PTS`;
+
+      const elPaceSummary = document.getElementById('scorecard-pace-summary');
+      if (elPaceSummary) {
+        elPaceSummary.textContent = `${sc.pace.totalLaps}/${sc.pace.prescribedLaps} Laps (${sc.pace.validFlyingSamples || 0} Flying Pkts) • ${sc.pace.avgSpeedMph} MPH Avg`;
+      }
+    }
 
     const elNailed = document.getElementById('debrief-nailed-list');
     if (elNailed) {

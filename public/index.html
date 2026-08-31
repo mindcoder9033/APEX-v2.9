@@ -1402,17 +1402,70 @@
       </div>
 
       <!-- Quick Grade & Performance Summary Banner -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-md);">
-        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold); background: #121212;">
-          <span class="stat-cell-label">Stint Mastery Grade</span>
-          <span id="debrief-grade-val" class="stat-cell-value" style="font-size: 24px; color: var(--color-gold);">94%</span>
-          <span id="debrief-mastery-label" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success);">PASS // GOLD GRADE</span>
+      <div style="display: grid; grid-template-columns: 140px 1fr 1fr; gap: var(--space-sm); margin-bottom: var(--space-sm);">
+        <!-- Letter Grade Block -->
+        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold); background: #121212; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 10px;">
+          <span class="stat-cell-label" style="font-size: 9px;">OVERALL GRADE</span>
+          <div id="debrief-letter-grade" style="font-family: var(--font-display); font-size: 38px; font-weight: 900; line-height: 1; color: var(--color-gold); text-shadow: 0 0 16px rgba(255,215,0,0.4); margin: 4px 0 2px 0;">A</div>
+          <span id="debrief-grade-val" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">94% Score</span>
         </div>
 
-        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-accent); background: #121212;">
+        <!-- Mastery Badge & Status Block -->
+        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold); background: #121212; display: flex; flex-direction: column; justify-content: center;">
+          <span class="stat-cell-label">Curriculum Standing</span>
+          <span id="debrief-mastery-label" style="font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--color-success); margin-top: 2px;">PASS // GOLD GRADE</span>
+          <span id="debrief-stint-gate-status" style="font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-muted); margin-top: 4px;">Balanced 50/30/20 Formula</span>
+        </div>
+
+        <!-- Primary Target Metric Block -->
+        <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-accent); background: #121212; display: flex; flex-direction: column; justify-content: center;">
           <span id="debrief-metric-label" class="stat-cell-label">Primary Metric</span>
-          <span id="debrief-metric-val" class="stat-cell-value accent" style="font-size: 18px;">94%</span>
-          <span id="debrief-laps-summary" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted);">10 Laps Completed</span>
+          <span id="debrief-metric-val" class="stat-cell-value accent" style="font-size: 15px; margin-top: 2px;">94%</span>
+          <span id="debrief-laps-summary" style="font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-muted); margin-top: 4px;">10 Laps Completed</span>
+        </div>
+      </div>
+
+      <!-- Telemetry Scorecard Breakdown Section -->
+      <div id="debrief-scorecard-section" style="margin-bottom: var(--space-sm); background: #0E0E10; border: 1px solid var(--color-border); border-radius: 4px; padding: 10px 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px;">
+            📊 Telemetry Scorecard Breakdown
+          </span>
+          <span style="font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-muted);">
+            Discipline (50%) + Smoothness (30%) + Pace (20%)
+          </span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+          <!-- Component 1: Discipline -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 8px 10px; border-radius: 3px;">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">
+              <span>1. DISCIPLINE (50%)</span>
+              <strong id="scorecard-discipline-pts" style="color: var(--color-gold);">45.0 / 50 PTS</strong>
+            </div>
+            <div id="scorecard-discipline-name" style="font-size: 11px; font-weight: 600; color: var(--color-text-primary); margin-top: 3px;">Arc Radius / Target</div>
+            <div id="scorecard-discipline-val" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); margin-top: 1px;">Adherence: 90%</div>
+          </div>
+
+          <!-- Component 2: Smoothness -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 8px 10px; border-radius: 3px;">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">
+              <span>2. SMOOTHNESS (30%)</span>
+              <strong id="scorecard-smoothness-pts" style="color: var(--color-cyan);">28.5 / 30 PTS</strong>
+            </div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--color-text-primary); margin-top: 3px;">Vehicle Dynamics</div>
+            <div id="scorecard-smoothness-events" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); margin-top: 1px;">0 TTO • 0 Lockups • 0 Snaps</div>
+          </div>
+
+          <!-- Component 3: Pace & Laps -->
+          <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); padding: 8px 10px; border-radius: 3px;">
+            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">
+              <span>3. PACE & LAPS (20%)</span>
+              <strong id="scorecard-pace-pts" style="color: var(--color-success);">20.0 / 20 PTS</strong>
+            </div>
+            <div style="font-size: 11px; font-weight: 600; color: var(--color-text-primary); margin-top: 3px;">Session Execution</div>
+            <div id="scorecard-pace-summary" style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-secondary); margin-top: 1px;">10 / 10 Laps • 112 MPH Avg</div>
+          </div>
         </div>
       </div>
 

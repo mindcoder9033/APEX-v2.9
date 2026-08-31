@@ -103,10 +103,10 @@ export class PdfReportGenerator {
       });
 
       // Grade Stamp Box (Top Right)
-      const gradeBoxWidth = 130;
-      const gradeBoxHeight = 44;
+      const gradeBoxWidth = 145;
+      const gradeBoxHeight = 48;
       const gradeBoxX = width - 40 - gradeBoxWidth;
-      const gradeBoxY = height - 76;
+      const gradeBoxY = height - 80;
 
       page.drawRectangle({
         x: gradeBoxX,
@@ -120,22 +120,31 @@ export class PdfReportGenerator {
 
       page.drawText('MASTERY GRADE', {
         x: gradeBoxX + 10,
-        y: gradeBoxY + 30,
+        y: gradeBoxY + 34,
         size: 7.5,
         font: fontMono,
         color: rgb(0.3, 0.4, 0.6)
       });
 
-      page.drawText(`${diagnosis.gradeScore}% • ${diagnosis.masteryLabel}`, {
+      const letter = diagnosis.letterGrade || 'A';
+      page.drawText(`GRADE ${letter} (${diagnosis.gradeScore}%)`, {
         x: gradeBoxX + 10,
-        y: gradeBoxY + 12,
-        size: 8.5,
+        y: gradeBoxY + 20,
+        size: 11,
         font: fontTitle,
         color: diagnosis.targetAchieved ? rgb(0.05, 0.55, 0.25) : rgb(0.85, 0.45, 0.0)
       });
 
+      page.drawText(diagnosis.masteryLabel || 'PASS // GOLD GRADE', {
+        x: gradeBoxX + 10,
+        y: gradeBoxY + 8,
+        size: 6.5,
+        font: fontMono,
+        color: rgb(0.4, 0.45, 0.55)
+      });
+
       // 4. Driver & Session Metadata Card
-      const metaY = height - 142;
+      const metaY = height - 146;
       page.drawRectangle({
         x: 40,
         y: metaY,
@@ -166,7 +175,7 @@ export class PdfReportGenerator {
 
       // 5. Telemetry & Target KPI Row
       let curY = metaY - 14;
-      page.drawText('TELEMETRY PERFORMANCE SUMMARY', {
+      page.drawText('TELEMETRY PERFORMANCE SCORECARD (50/30/20 FORMULA)', {
         x: 40,
         y: curY,
         size: 9.5,
@@ -176,11 +185,16 @@ export class PdfReportGenerator {
       curY -= 6;
 
       const kpiCardWidth = (width - 80 - 24) / 4;
+      const sc = diagnosis.scorecard || {};
+      const discPts = sc.discipline ? `${sc.discipline.weightedPoints}/50` : `${diagnosis.gradeScore}%`;
+      const smoothPts = sc.smoothness ? `${sc.smoothness.weightedPoints}/30` : '30/30';
+      const pacePts = sc.pace ? `${sc.pace.weightedPoints}/20` : '20/20';
+
       const kpis = [
-        { label: 'PEAK VELOCITY', val: `${diagnosis.telemetryKPIs.peakSpeedMph} MPH`, sub: `${diagnosis.telemetryKPIs.peakSpeedKmh} KM/H` },
-        { label: 'MAX LATERAL G', val: `${diagnosis.telemetryKPIs.peakLatG} G`, sub: 'Cornering Grip' },
-        { label: 'MAX BRAKE DECEL', val: `${diagnosis.telemetryKPIs.peakLongG} G`, sub: 'Threshold Pitch' },
-        { label: 'DISCIPLINE SCORE', val: `${diagnosis.gradeScore}%`, sub: diagnosis.primaryMetricLabel || 'Target Metric' }
+        { label: '1. DISCIPLINE (50%)', val: discPts, sub: diagnosis.primaryMetricLabel || 'Target Metric' },
+        { label: '2. SMOOTHNESS (30%)', val: smoothPts, sub: `${sc.smoothness?.ttoEvents || 0} TTO • ${sc.smoothness?.lockupEvents || 0} Lockups` },
+        { label: '3. PACE & LAPS (20%)', val: pacePts, sub: `${diagnosis.telemetryKPIs.totalLaps} Laps • ${diagnosis.telemetryKPIs.peakSpeedMph} MPH Peak` },
+        { label: 'COMPOSITE GRADE', val: `GRADE ${letter}`, sub: `${diagnosis.gradeScore}% Overall Score` }
       ];
 
       kpis.forEach((kpi, idx) => {
@@ -195,7 +209,7 @@ export class PdfReportGenerator {
           borderWidth: 1
         });
 
-        page.drawText(kpi.label, { x: kX + 8, y: curY - 13, size: 7, font: fontMono, color: rgb(0.45, 0.5, 0.6) });
+        page.drawText(kpi.label, { x: kX + 8, y: curY - 13, size: 6.8, font: fontMono, color: rgb(0.45, 0.5, 0.6) });
         page.drawText(kpi.val, { x: kX + 8, y: curY - 26, size: 10.5, font: fontTitle, color: rgb(0.08, 0.12, 0.2) });
         page.drawText(kpi.sub, { x: kX + 8, y: curY - 37, size: 6.5, font: fontBody, color: rgb(0.5, 0.55, 0.65) });
       });
