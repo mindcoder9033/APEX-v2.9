@@ -18,6 +18,7 @@
 
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/components/updater.css">
+  <link rel="stylesheet" href="css/components/lap-analyzer.css">
 </head>
 <body>
   <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
@@ -112,6 +113,10 @@
         <button id="btn-nav-stints" class="nav-tab-btn chamfer-br" title="Motorsport Practice Stints (L)">
           <span class="nav-tab-icon">🎯</span>
           <span class="nav-tab-label">PRACTICE STINTS</span>
+        </button>
+        <button id="btn-nav-lap-analyzer" class="nav-tab-btn chamfer-br" title="Post-Session Lap Analyzer (A)">
+          <span class="nav-tab-icon">📈</span>
+          <span class="nav-tab-label">LAP ANALYZER</span>
         </button>
       </nav>
 
@@ -1334,6 +1339,165 @@
         </main>
       </div>
     </div> <!-- /#view-stints -->
+
+    <!-- LAP ANALYZER VIEW CONTAINER -->
+    <div id="view-lap-analyzer" class="view-container view-lap-analyzer" style="display: none;">
+
+      <!-- STANDBY EMPTY STATE -->
+      <div id="lap-analyzer-standby" class="lap-analyzer-standby-container chamfer-tl-br">
+        <div class="standby-radar-icon">📡</div>
+        <h2 class="standby-title">STANDBY // AWAITING RECORDED STINT</h2>
+        <p class="standby-subtitle">
+          The Lap Analyzer is APEX's self-discovery review suite. Start recording on the Pit Wall, drive your stint on track, and stop recording. Return here to inspect your continuous racing line, exit speeds, braking points, and session progression.
+        </p>
+        <div class="standby-actions">
+          <button id="btn-analyzer-go-pitwall" class="btn btn-primary chamfer-br">
+            <span>🏁</span> GO TO PIT WALL
+          </button>
+        </div>
+      </div>
+
+      <!-- ACTIVE CONTENT VIEW -->
+      <div id="lap-analyzer-content" style="display: none; flex-direction: column; gap: 14px; width: 100%;">
+        
+        <!-- HEADER CONTROL BAR -->
+        <header class="lap-analyzer-header-bar chamfer-br">
+          <div class="analyzer-header-left">
+            <div class="analyzer-session-tag">
+              <span id="analyzer-track-name" class="analyzer-session-title">CIRCUIT SESSION</span>
+              <span id="analyzer-car-name" class="analyzer-session-meta">TELEMETRY REVIEW</span>
+            </div>
+
+            <div class="analyzer-selectors">
+              <div class="selector-group">
+                <span class="selector-label">PRIMARY LAP:</span>
+                <select id="select-analyzer-primary-lap" class="analyzer-select chamfer-all-corners" title="Select primary analyzed lap">
+                  <option value="1">Lap 1</option>
+                </select>
+              </div>
+
+              <div class="selector-group">
+                <span class="selector-label">GHOST COMPARE:</span>
+                <select id="select-analyzer-ghost-lap" class="analyzer-select chamfer-all-corners" title="Overlay a secondary lap for line comparison">
+                  <option value="none">None (Single Lap)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="analyzer-header-actions">
+            <button id="btn-analyzer-export-png" class="btn btn-secondary chamfer-br" title="Save high-resolution PNG snapshot of the 2D track map">
+              <span>📷</span> EXPORT PNG
+            </button>
+            <button id="btn-analyzer-download-pdf" class="btn btn-primary chamfer-br" title="Download official APEX Lap Analyzer PDF telemetry report">
+              <span>📄</span> DOWNLOAD PDF REPORT
+            </button>
+          </div>
+        </header>
+
+        <!-- 2D TRACK MAP CLUSTER -->
+        <div class="lap-map-card chamfer-tl-br">
+          <canvas id="lap-analyzer-map-canvas" class="lap-map-canvas"></canvas>
+
+          <!-- Floating Map Toolbar -->
+          <div class="map-floating-toolbar chamfer-br">
+            <button id="btn-map-zoom-in" class="map-tool-btn chamfer-all-corners" title="Zoom in (+)">➕</button>
+            <button id="btn-map-zoom-out" class="map-tool-btn chamfer-all-corners" title="Zoom out (-)">➖</button>
+            <button id="btn-map-reset-view" class="map-tool-btn chamfer-all-corners" title="Reset map camera">↺ RESET</button>
+            <span style="color: rgba(255,255,255,0.2); margin: 0 2px;">|</span>
+            <button id="btn-map-toggle-heatmap" class="map-tool-btn active chamfer-all-corners" title="Toggle Speed Heatmap Gradient">SPEED HEATMAP</button>
+            <button id="btn-map-toggle-brakes" class="map-tool-btn active chamfer-all-corners" title="Toggle Brake Point Markers">BRAKE PINS</button>
+            <button id="btn-map-toggle-exits" class="map-tool-btn active chamfer-all-corners" title="Toggle Corner Exit Speed Labels">EXIT SPEEDS</button>
+          </div>
+
+          <!-- Legend Pill -->
+          <div class="map-legend-pill chamfer-br">
+            <div class="legend-item">
+              <span class="legend-dot brake"></span>
+              <span>Brake Point (>10%)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-dot ghost"></span>
+              <span>Ghost Lap Compare</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SPLIT LOWER DECK: Speed Profile & Corner Table -->
+        <div class="analyzer-lower-deck">
+          <!-- Left: Speed Profile Graph -->
+          <div class="speed-profile-card chamfer-tl-br">
+            <div class="card-header-simple">
+              <span class="card-header-title">
+                <span>📈</span> SPEED PROFILE & PEDALS TELEMETRY
+              </span>
+              <div class="card-header-legend">
+                <span style="color: #FFFFFF;">— Speed</span>
+                <span style="color: #00CC66;">— Throttle</span>
+                <span style="color: #E10600;">— Brake</span>
+                <span style="color: #00E5FF;">-- Ghost</span>
+              </div>
+            </div>
+            <canvas id="speed-profile-canvas" class="speed-profile-canvas"></canvas>
+          </div>
+
+          <!-- Right: Corner Data Panel -->
+          <div class="corner-data-card chamfer-tl-br">
+            <div class="card-header-simple">
+              <span class="card-header-title">
+                <span>🎯</span> CORNER DATA & EXIT SPEEDS
+              </span>
+              <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted);">CLICK ROW TO HIGHLIGHT</span>
+            </div>
+            <div class="corner-table-scroll">
+              <table class="corner-table">
+                <thead>
+                  <tr>
+                    <th>TURN</th>
+                    <th>ENTRY</th>
+                    <th>APEX</th>
+                    <th>EXIT SPEED & GEAR</th>
+                    <th>BRAKE DIST</th>
+                    <th>TIME</th>
+                  </tr>
+                </thead>
+                <tbody id="corner-table-body">
+                  <!-- Dynamically populated corner rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- SESSION SUMMARY DECK -->
+        <div class="analyzer-summary-deck">
+          <div class="analyzer-kpi-card accent chamfer-tl-br">
+            <span class="kpi-card-header">BEST LAP TIME</span>
+            <span id="analyzer-kpi-best-lap" class="kpi-card-val">--:--.---</span>
+            <span id="analyzer-kpi-best-lap-sub" class="kpi-card-sub">Session Reference</span>
+          </div>
+
+          <div class="analyzer-kpi-card cyan chamfer-tl-br">
+            <span class="kpi-card-header">LAP TIME PROGRESSION</span>
+            <span id="analyzer-kpi-progression" class="kpi-card-val">±0.00s</span>
+            <span id="analyzer-kpi-progression-sub" class="kpi-card-sub">Initial → Best Delta</span>
+          </div>
+
+          <div class="analyzer-kpi-card chamfer-tl-br">
+            <span class="kpi-card-header">MOST INCONSISTENT CORNER</span>
+            <span id="analyzer-kpi-inconsistent" class="kpi-card-val">--</span>
+            <span id="analyzer-kpi-inconsistent-sub" class="kpi-card-sub">Highest Corner Variation</span>
+          </div>
+
+          <div class="analyzer-kpi-card green chamfer-tl-br">
+            <span class="kpi-card-header">BRAKING CONSISTENCY</span>
+            <span id="analyzer-kpi-braking-score" class="kpi-card-val">--%</span>
+            <span class="kpi-card-sub">Threshold Accuracy Score</span>
+          </div>
+        </div>
+
+      </div>
+    </div> <!-- /#view-lap-analyzer -->
 
   </div> <!-- /.app-container -->
 

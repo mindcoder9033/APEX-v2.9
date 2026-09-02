@@ -17,6 +17,7 @@ import { driverProfileStore } from './driver-profile-store.js';
 import { DriverDossierModal } from './components/driver-dossier-modal.js';
 import { DriverWizardModal } from './components/driver-wizard-modal.js';
 import { UiUpdater } from './components/ui-updater.js';
+import { LapAnalyzerView } from './components/lap-analyzer-view.js';
 
 class ApexApp {
   constructor() {
@@ -31,6 +32,7 @@ class ApexApp {
     this.driverDossierModal = new DriverDossierModal();
     this.driverWizardModal = new DriverWizardModal();
     this.uiUpdater = new UiUpdater();
+    this.lapAnalyzerView = new LapAnalyzerView();
     this.driverStore = driverProfileStore;
     this.trackMap3D = null;
     this.modalTrackMap3D = null;
@@ -70,11 +72,13 @@ class ApexApp {
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
     this.btnNavStints = document.getElementById('btn-nav-stints');
+    this.btnNavLapAnalyzer = document.getElementById('btn-nav-lap-analyzer');
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
     this.viewStints = document.getElementById('view-stints');
+    this.viewLapAnalyzer = document.getElementById('view-lap-analyzer');
     
     this.wsClient = new ApexWsClient({
       url: this.session.settings.wsUrl,
@@ -405,6 +409,19 @@ class ApexApp {
       });
     }
 
+    if (this.btnNavLapAnalyzer) {
+      this.btnNavLapAnalyzer.addEventListener('click', () => {
+        this.switchView('lap-analyzer');
+      });
+    }
+
+    const btnAnalyzerGoPitwall = document.getElementById('btn-analyzer-go-pitwall');
+    if (btnAnalyzerGoPitwall) {
+      btnAnalyzerGoPitwall.addEventListener('click', () => {
+        this.switchView('pitwall');
+      });
+    }
+
     // Close on backdrop click
     if (this.modalBackdrop) {
       this.modalBackdrop.addEventListener('click', (e) => {
@@ -445,6 +462,9 @@ class ApexApp {
       } else if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         this.switchView('stints');
+      } else if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        this.switchView('lap-analyzer');
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         this.openSettings();
@@ -706,11 +726,13 @@ class ApexApp {
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
     if (this.viewStints) this.viewStints.style.display = 'none';
+    if (this.viewLapAnalyzer) this.viewLapAnalyzer.style.display = 'none';
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
     if (this.btnNavStints) this.btnNavStints.classList.remove('active');
+    if (this.btnNavLapAnalyzer) this.btnNavLapAnalyzer.classList.remove('active');
 
     // 3. Activate selected view
     if (viewName === 'pitwall') {
@@ -724,6 +746,10 @@ class ApexApp {
       if (this.viewStints) this.viewStints.style.display = 'block';
       if (this.btnNavStints) this.btnNavStints.classList.add('active');
       if (this.stintsManager) this.stintsManager.onViewOpened();
+    } else if (viewName === 'lap-analyzer') {
+      if (this.viewLapAnalyzer) this.viewLapAnalyzer.style.display = 'block';
+      if (this.btnNavLapAnalyzer) this.btnNavLapAnalyzer.classList.add('active');
+      if (this.lapAnalyzerView) this.lapAnalyzerView.onViewActivated(this.session);
     }
   }
 
