@@ -1,5 +1,7 @@
 # APEX: Racing Telemetry Command Center
 
+public\favicon.ico
+
 [![Forza Motorsport 2023](https://img.shields.io/badge/Forza_Motorsport-2023-red.svg?style=flat-square&logo=xbox)](https://www.xbox.com/en-US/games/forza-motorsport)
 [![Telemetry Stream](https://img.shields.io/badge/Telemetry-60Hz_UDP-00ffcc.svg?style=flat-square)](https://github.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows_Portable_%7C_Web-blue.svg?style=flat-square&logo=windows)](https://github.com)
