@@ -35,7 +35,11 @@ async function startEmbeddedBackend() {
 
     console.log(`[ELECTRON] Embedded UDP Ingestion & WebSocket Hub active on ports ${CONFIG.udp.port} / ${CONFIG.ws.port}`);
   } catch (err) {
-    console.error(`[ELECTRON ERROR] Failed to start embedded backend:`, err.message);
+    console.warn(`[ELECTRON] Embedded backend not started (${err.message}). Connecting to existing telemetry proxy on port ${CONFIG.ws.port}.`);
+    if (proxyServer) {
+      try { await proxyServer.stop(); } catch {}
+      proxyServer = null;
+    }
   }
 }
 
@@ -54,11 +58,20 @@ function createMainWindow() {
     titleBarStyle: 'hidden',
     icon: iconPath,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: fs.existsSync(path.join(__dirname, 'preload.cjs'))
+        ? path.join(__dirname, 'preload.cjs')
+        : path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: false,
       webSecurity: false // Allows loading local fonts and scripts via file://
+    }
+  });
+
+  // Forward renderer console errors to terminal for effortless debugging
+  mainWindow.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    if (level >= 2) {
+      console.log(`[RENDERER CONSOLE ${level === 3 ? 'ERROR' : 'WARN'}] ${message} (${sourceId ? path.basename(sourceId) : 'unknown'}:${line})`);
     }
   });
 

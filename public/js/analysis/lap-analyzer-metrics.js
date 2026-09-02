@@ -5,7 +5,8 @@
  * session lap progression, most inconsistent corner, and braking consistency %.
  */
 
-import { mpsToKmh, mpsToMph } from '../shared/telemetry-types.js';
+export const mpsToKmh = (mps) => (mps || 0) * 3.6;
+export const mpsToMph = (mps) => (mps || 0) * 2.236936;
 
 export class LapAnalyzerMetrics {
   /**
