@@ -314,74 +314,54 @@ export class StintDiagnostics {
       // ==============================================
       // --- TIER 3: REAL-WORLD LINE & ADAPTATION ---
       // ==============================================
-      case 'stint-3-1': { // The Speed of Recognition
-        primaryMetricLabel = 'Early Apex Correction Distance';
-        const reactionDistFt = Math.max(18, Math.min(65, Math.round(24 + (steeringOscillations * 4))));
-        disciplineScore = Math.max(30, Math.min(100, Math.round(100 - (reactionDistFt - 25) * 1.8)));
-        primaryMetricValue = `< ${reactionDistFt} ft (Target: < 30 ft)`;
-        targetAchieved = reactionDistFt <= 30;
+      case 'stint-3-1': { // The Real-World Line: Adaptation (Chapter 3 Holistic Stint)
+        primaryMetricLabel = 'Composite Real-World Mastery';
 
-        if (reactionDistFt <= 30) {
-          nailed.push('Recognized trajectory deviations early before arriving at the apex clipping point.');
-          nailed.push('Applied "Relax Steering + Firm Brake" discipline promptly to realign vehicle heading.');
-          nailed.push('Successfully preserved corner exit trajectory onto subsequent acceleration chutes.');
-        } else {
-          nailed.push('Demonstrated proactive steering recovery when catching vehicle rotation.');
-        }
+        // 1. Early Apex Recognition Distance (40% Weight, Target: < 30 ft)
+        const reactionDistFt = Math.max(18, Math.min(65, Math.round(22 + (steeringOscillations * 3))));
+        const apexScore = Math.max(30, Math.min(100, Math.round(100 - (reactionDistFt - 22) * 2.0)));
 
-        refinement.push('Keep looking further ahead toward the track-out rumble strips to identify errors earlier.');
-        refinement.push('Ease off the brake slightly earlier when entering the corrective arc.');
-
-        if (reactionDistFt > 32) {
-          attention.push('Late recognition of early turn-in pinched the corner radius and forced late corrective braking.');
-        }
-        break;
-      }
-
-      case 'stint-3-2': { // The Camber Hunter
-        primaryMetricLabel = 'Camber & Banking Grip Utilization';
+        // 2. Camber & Banking Grip Utilization (30% Weight, Target: +10% Compression G-Gain)
         const gripDeltaPct = Math.round(peakLatG >= 0.75 ? ((peakLatG / 0.75) - 1) * 100 : 0);
-        disciplineScore = Math.max(35, Math.min(100, Math.round(75 + (gripDeltaPct * 2) - (throttleLiftsMidCorner * 8))));
-        primaryMetricValue = `+${Math.max(5, gripDeltaPct)}% Compression G-Force Gain (${peakLatG}G Peak)`;
-        targetAchieved = gripDeltaPct >= 8;
+        const camberScore = Math.max(35, Math.min(100, Math.round(70 + (gripDeltaPct * 2.5) - (throttleLiftsMidCorner * 6))));
 
+        // 3. Main Straight Exit Velocity Gain (30% Weight, Target: +4.0 MPH Launch)
+        const launchGain = parseFloat((Math.max(1.0, (peakSpeedMph - avgSpeedMph) * 0.085)).toFixed(1));
+        const launchScore = Math.max(30, Math.min(100, Math.round((launchGain / 4.0) * 95)));
+
+        // Composite Discipline Score (40/30/30)
+        disciplineScore = Math.round((0.40 * apexScore) + (0.30 * camberScore) + (0.30 * launchScore));
+        primaryMetricValue = `${disciplineScore}% [Recog: <${reactionDistFt}ft | Banking: +${Math.max(0, gripDeltaPct)}% G | Launch: +${launchGain} MPH]`;
+        targetAchieved = disciplineScore >= 85 && reactionDistFt <= 30 && launchGain >= 3.5;
+
+        // Feedback: Nailed
+        if (reactionDistFt <= 30) {
+          nailed.push('Recognized trajectory deviations early (<30 ft) and cured line before reaching the apex clipping point.');
+        }
         if (gripDeltaPct >= 8) {
-          nailed.push('Exploited positive-camber compression bowls for elevated cornering velocity.');
-          nailed.push('Adjusted turn-in timing dynamically between banked and flat road sections.');
-          nailed.push(`Sustained up to ${peakLatG}G lateral grip through road surface elevation changes.`);
-        } else {
-          nailed.push('Maintained steady throttle through elevation transitions.');
+          nailed.push(`Exploited positive-camber compression bowls, sustaining +${gripDeltaPct}% dynamic G-force (${peakLatG}G peak).`);
         }
-
-        refinement.push('Turn in 5 feet earlier into positive-camber bowls (The Uphill) to ride the compression.');
-        refinement.push('Anticipate off-camber crests by braking earlier in a straight line.');
-
-        if (peakLatG < 0.70) {
-          attention.push('Failed to fully load the chassis into positive camber bowls, leaving cornering grip unused.');
-        }
-        break;
-      }
-
-      case 'stint-3-3': { // The Compromise Architect
-        primaryMetricLabel = 'Main Straight Exit Velocity Gain';
-        const launchGain = parseFloat((Math.max(1.0, (peakSpeedMph - avgSpeedMph) * 0.08)).toFixed(1));
-        disciplineScore = Math.max(30, Math.min(100, Math.round((launchGain / 4.0) * 92)));
-        primaryMetricValue = `+${launchGain} MPH Launch Gain (Target: +4.0 MPH)`;
-        targetAchieved = launchGain >= 3.5;
-
         if (launchGain >= 3.5) {
-          nailed.push('Consciously over-slowed for Type III entry corners to optimize Type I exit launch.');
-          nailed.push('Maintained early full-throttle commitment down the main straight.');
-          nailed.push('Executed clean steering unwind without destabilizing the rear axle.');
-        } else {
-          nailed.push('Good commitment to the throttle on final corner exit.');
+          nailed.push('Mastered corner grading: sacrificed Type III entry in The Esses to launch with maximum velocity onto the main straight.');
+        }
+        if (nailed.length === 0) {
+          nailed.push('Demonstrated proactive steering recovery and throttle commitment through corner complexes.');
         }
 
-        refinement.push('Sacrifice another 2 MPH on the chicane entry to straighten the exit chute even further.');
-        refinement.push('Ensure 100% wide-open throttle is pinned before the final kerb apex.');
+        // Feedback: Refinement
+        refinement.push('Maintain an active visual "Sight Picture" looking far ahead to spot early apex deviations before peak steering lock.');
+        refinement.push('Turn in 5 feet earlier into positive-camber compression bowls (The Uphill) to ride the banking downforce.');
+        refinement.push('Sacrifice an additional 2 MPH into Type III chicane entries to straighten the launch chute for earlier wide-open throttle.');
 
+        // Feedback: Attention
+        if (reactionDistFt > 32) {
+          attention.push('Detected late recognition of early turn-in, pinching corner radius and compromising trajectory.');
+        }
+        if (peakLatG < 0.70) {
+          attention.push('Failed to fully load chassis into positive-camber bowls, leaving potential cornering downforce unused.');
+        }
         if (launchGain < 3.0) {
-          attention.push('Over-attacked the Type III entry corner, compromising vehicle placement and straightaway launch velocity.');
+          attention.push('Over-attacked Type III entry corner, ruining vehicle placement and losing critical straightaway launch velocity.');
         }
         break;
       }

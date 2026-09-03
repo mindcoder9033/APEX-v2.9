@@ -158,80 +158,28 @@ export class LiveHudRenderer {
         `;
 
       // --- TIER 3: REAL-WORLD ADAPTATION ---
-      case 'stint-3-1': // The Speed of Recognition
+      case 'stint-3-1': // The Real-World Line: Adaptation
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Early Apex Warning Alert</span>
-              <span id="hud-early-apex-alert" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Lookahead: 90ft before apex</span>
+              <span class="stat-cell-label">Early Apex & Attitude Vector</span>
+              <span id="hud-early-apex-alert" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 16px; margin-top: 2px;">TRACK MONITOR ACTIVE</span>
+              <span id="hud-apex-attitude" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">90ft Lookahead // Trajectory Aligned</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Apex Attitude Vector</span>
-              <span id="hud-apex-attitude" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Heading error detection</span>
+              <span class="stat-cell-label">Camber & Banking G-Gain</span>
+              <span id="hud-camber-grip" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 24px;">--</span>
+              <span id="hud-banking-gain" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Dynamic Compression G-Force Gain</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Reaction Distance Meter</span>
-              <span id="hud-reaction-dist" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">-- ft</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: <30 ft recognition</span>
+              <span class="stat-cell-label">Corner Priority & Exit Launch</span>
+              <span id="hud-straight-launch" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 24px;">-- MPH</span>
+              <span id="hud-corner-priority" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Type III Sacrifice -> Type I Launch</span>
             </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Emergency Cure Procedure</span>
-              <span id="hud-cure-procedure" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">READY</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Relax steer + firm brake</span>
-            </div>
-          </div>
-        `;
-
-      case 'stint-3-2': // The Camber Hunter
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Suspension Compression Load</span>
-              <span id="hud-camber-grip" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Banking compression readout</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Dynamic Banking G-Gain</span>
-              <span id="hud-banking-gain" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">+10% compression G-force</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Road Camber Traction Index</span>
-              <span id="hud-surface-grip" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Surface micro-grip readout</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Lateral Roll Gradient</span>
-              <span id="hud-chassis-roll" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Chassis roll rate & crown</span>
-            </div>
-          </div>
-        `;
-
-      case 'stint-3-3': // The Compromise Architect
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Corner Priority Grade</span>
-              <span id="hud-corner-priority" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Type I / II / III sequence</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Sacrifice Loss vs Exit Gain</span>
-              <span id="hud-compromise-gain" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Compound velocity delta</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Main Straight Launch Delta</span>
-              <span id="hud-straight-launch" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">-- MPH</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: +4.0 MPH launch</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Downhill Steering Unwind</span>
-              <span id="hud-unwind-rate" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Exit wheel opening rate</span>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold);">
+              <span class="stat-cell-label">Composite Real-World Mastery</span>
+              <span id="hud-realworld-mastery" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">--%</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">40/30/30 Metric Scoring</span>
             </div>
           </div>
         `;
@@ -943,109 +891,99 @@ export class LiveHudRenderer {
       }
     }
 
-    // 3-1 The Speed of Recognition
+    // 3-1 The Real-World Line: Adaptation (Chapter 3 Holistic Stint)
     else if (stintId === 'stint-3-1') {
+      let apexScore = 85;
+      let camberScore = 80;
+      let launchScore = 80;
+
+      // 1. Early Apex Warning Alert & Attitude Vector (40% Weight)
       const elEarlyApex = document.getElementById('hud-early-apex-alert');
+      const elAttitude = document.getElementById('hud-apex-attitude');
       if (elEarlyApex) {
         if (brakePct > 40 && Math.abs(steer) > 0.35 && speedMph > 45) {
           elEarlyApex.textContent = '⚠️ EARLY APEX WARNING (-90FT)';
           elEarlyApex.style.color = 'var(--color-f1-red)';
+          apexScore = 45;
+          if (elAttitude) {
+            elAttitude.textContent = 'HEADING ERROR DETECTED // RELAX STEER + FIRM BRAKE';
+            elAttitude.style.color = 'var(--color-f1-red)';
+          }
         } else if (currentAbsLatG > 0.6) {
           elEarlyApex.textContent = 'ON GEOMETRIC LINE';
           elEarlyApex.style.color = 'var(--color-success)';
+          apexScore = 95;
+          if (elAttitude) {
+            elAttitude.textContent = 'TRAJECTORY ALIGNED // SIGHT PICTURE OPTIMAL';
+            elAttitude.style.color = 'var(--color-success)';
+          }
         } else {
           elEarlyApex.textContent = 'TRACK MONITOR ACTIVE';
           elEarlyApex.style.color = 'var(--color-text-muted)';
+          if (elAttitude) {
+            elAttitude.textContent = '90ft Lookahead // Trajectory Aligned';
+            elAttitude.style.color = 'var(--color-text-muted)';
+          }
         }
       }
-      const elAttitude = document.getElementById('hud-apex-attitude');
-      if (elAttitude) {
-        elAttitude.textContent = Math.abs(steer) > 0.35 ? 'HEADING ERROR DETECTED' : 'TRAJECTORY ALIGNED';
-        elAttitude.style.color = Math.abs(steer) > 0.35 ? 'var(--color-warning)' : 'var(--color-success)';
-      }
-      const elReaction = document.getElementById('hud-reaction-dist');
-      if (elReaction) {
-        const rDist = Math.max(10, Math.round(35 - (speedMph * 0.1)));
-        elReaction.textContent = `${rDist} ft`;
-        elReaction.style.color = rDist < 30 ? 'var(--color-success)' : 'var(--color-gold)';
-      }
-      const elCure = document.getElementById('hud-cure-procedure');
-      if (elCure) {
-        if (brakePct > 40 && Math.abs(steer) > 0.35) {
-          elCure.textContent = 'RELAX STEER + FIRM BRAKE';
-          elCure.style.color = 'var(--color-f1-red)';
-        } else {
-          elCure.textContent = 'READY / STABLE';
-          elCure.style.color = 'var(--color-success)';
-        }
-      }
-    }
 
-    // 3-2 The Camber Hunter
-    else if (stintId === 'stint-3-2') {
+      // 2. Camber & Banking Dynamic G-Gain (30% Weight)
       const elCamber = document.getElementById('hud-camber-grip');
-      if (elCamber) {
-        const normTravel = chassis.normalizedSuspensionTravel || {};
-        const avgTravel = normTravel.frontLeft != null 
-          ? ((normTravel.frontLeft + normTravel.frontRight + normTravel.rearLeft + normTravel.rearRight) / 4) * 100 
-          : 0;
-        elCamber.textContent = `${Math.round(avgTravel)}% SUSP LOAD`;
-        elCamber.style.color = avgTravel > 75 ? 'var(--color-warning)' : '#00CC66';
-      }
       const elBanking = document.getElementById('hud-banking-gain');
-      if (elBanking) {
-        elBanking.textContent = currentAbsLatG > 0.8 ? '+10% COMPRESSION GRIP' : 'FLAT / ZERO BANKING';
-        elBanking.style.color = currentAbsLatG > 0.8 ? 'var(--color-success)' : 'var(--color-text-muted)';
-      }
-      const elSurface = document.getElementById('hud-surface-grip');
-      if (elSurface) {
-        elSurface.textContent = currentAbsLatG > 1.0 ? 'HIGH BANKING BOWL' : 'STANDARD ASPHALT';
-        elSurface.style.color = '#00CC66';
-      }
-      const elRoll = document.getElementById('hud-chassis-roll');
-      if (elRoll) {
-        elRoll.textContent = `${(currentAbsLatG * 2.8).toFixed(1)}° ROLL GRADIENT`;
-        elRoll.style.color = 'var(--color-gold)';
-      }
-    }
+      const normTravel = chassis.normalizedSuspensionTravel || {};
+      const avgTravel = normTravel.frontLeft != null 
+        ? ((normTravel.frontLeft + normTravel.frontRight + normTravel.rearLeft + normTravel.rearRight) / 4) * 100 
+        : 0;
 
-    // 3-3 The Compromise Architect
-    else if (stintId === 'stint-3-3') {
+      if (elCamber) {
+        elCamber.textContent = `${Math.round(avgTravel)}% SUSP LOAD (${currentAbsLatG.toFixed(2)}G)`;
+        elCamber.style.color = currentAbsLatG >= 1.0 ? 'var(--color-success)' : avgTravel > 75 ? 'var(--color-warning)' : '#00CC66';
+      }
+      if (elBanking) {
+        if (currentAbsLatG > 0.85) {
+          elBanking.textContent = '+10% COMPRESSION G-GAIN (BANKING LOADED)';
+          elBanking.style.color = 'var(--color-success)';
+          camberScore = 95;
+        } else if (currentAbsLatG > 0.6) {
+          elBanking.textContent = 'MODERATE CAMBER GRIP ACTIVE';
+          elBanking.style.color = 'var(--color-gold)';
+          camberScore = 85;
+        } else {
+          elBanking.textContent = 'STANDARD SURFACE / FLAT SECTION';
+          elBanking.style.color = 'var(--color-text-muted)';
+          camberScore = 75;
+        }
+      }
+
+      // 3. Corner Priority & Main Straight Exit Launch (30% Weight)
+      const elStraightLaunch = document.getElementById('hud-straight-launch');
       const elCornerPriority = document.getElementById('hud-corner-priority');
+      const currentLaunchGain = speedMph > 65 ? 4.2 : speedMph > 50 ? 3.4 : 1.8;
+
+      if (elStraightLaunch) {
+        elStraightLaunch.textContent = `+${currentLaunchGain.toFixed(1)} MPH`;
+        elStraightLaunch.style.color = currentLaunchGain >= 3.5 ? 'var(--color-success)' : 'var(--color-gold)';
+        launchScore = Math.min(100, Math.round((currentLaunchGain / 4.0) * 95));
+      }
       if (elCornerPriority) {
         if (throttlePct > 70 && speedMph > 45) {
-          elCornerPriority.textContent = 'TYPE I (EXIT ACCEL ZONE)';
+          elCornerPriority.textContent = 'TYPE I EXIT // FULL THROTTLE LAUNCH';
           elCornerPriority.style.color = 'var(--color-success)';
         } else if (brakePct > 70) {
-          elCornerPriority.textContent = 'TYPE III (SACRIFICE ENTRY)';
+          elCornerPriority.textContent = 'TYPE III ENTRY // SACRIFICE ENTRY SPEED';
           elCornerPriority.style.color = 'var(--color-f1-red)';
         } else {
-          elCornerPriority.textContent = 'TYPE II (MID-CORNER LINK)';
+          elCornerPriority.textContent = 'TYPE II TRANSITION // MID-CORNER LINK';
           elCornerPriority.style.color = 'var(--color-gold)';
         }
       }
-      const elCompromise = document.getElementById('hud-compromise-gain');
-      if (elCompromise) {
-        elCompromise.textContent = throttlePct > 70 ? '+0.25s COMPOUND GAIN' : '-0.10s SACRIFICE LOSS';
-        elCompromise.style.color = throttlePct > 70 ? 'var(--color-success)' : 'var(--color-gold)';
-      }
-      const elStraightLaunch = document.getElementById('hud-straight-launch');
-      if (elStraightLaunch) {
-        elStraightLaunch.textContent = `+${(speedMph > 60 ? 4.2 : 1.8).toFixed(1)} MPH`;
-        elStraightLaunch.style.color = 'var(--color-gold)';
-      }
-      const elUnwind = document.getElementById('hud-unwind-rate');
-      if (elUnwind) {
-        if (throttlePct > 50 && Math.abs(steer) <= 0.2 && speedMph > 30) {
-          elUnwind.textContent = 'PROGRESSIVE UNWIND (OPTIMAL)';
-          elUnwind.style.color = 'var(--color-success)';
-        } else if (throttlePct > 50 && Math.abs(steer) > 0.35) {
-          elUnwind.textContent = 'HOLDING LOCK (UNWIND FASTER)';
-          elUnwind.style.color = 'var(--color-warning)';
-        } else {
-          elUnwind.textContent = 'NEUTRAL TRACKING';
-          elUnwind.style.color = 'var(--color-text-muted)';
-        }
+
+      // 4. Composite Real-World Mastery Index (40% Apex + 30% Camber + 30% Launch)
+      const elRealWorldMastery = document.getElementById('hud-realworld-mastery');
+      if (elRealWorldMastery) {
+        const compositeLive = Math.round((0.40 * apexScore) + (0.30 * camberScore) + (0.30 * launchScore));
+        elRealWorldMastery.textContent = `${compositeLive}%`;
+        elRealWorldMastery.style.color = compositeLive >= 85 ? 'var(--color-success)' : 'var(--color-gold)';
       }
     }
 
