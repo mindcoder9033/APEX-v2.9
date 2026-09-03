@@ -35,81 +35,31 @@ export const STINTS_DATABASE = [
     hudWidgets: ['Driving Line Score', 'Corner Exit Speed Delta (km/h)', 'Brake & Turn G-Meter (Traction Circle)', 'Composite Foundation Mastery Gauge']
   },
 
-  // --- TIER 2: PHYSICS & VEHICLE DYNAMICS ---
+  // --- TIER 2: VEHICLE DYNAMICS (CHAPTER 2: THE THREE BASICS) ---
   {
     id: 'stint-2-1',
     tier: 2,
-    tierName: 'Tier 2: Physics',
+    tierName: 'Tier 2: Vehicle Dynamics',
     tierShort: 'T2 // DYNAMICS',
-    name: 'The Line Hunter',
-    subtitle: 'Late Apex Strategy & Arc Radius Optimization (15GR = mph²)',
-    focus: 'Constant Radius vs Late Apexing',
-    targetMetric: 'Realized Arc Radius: 195 ft (Sebring T7 Baseline)',
-    prescribedCar: '2020 Chevrolet Corvette Stingray (C8 Mid-Engine)',
+    name: 'The Three Basics: Dynamics',
+    subtitle: 'Arc Radius Optimization (15GR = mph²), Dynamic Weight Transfer & 4-Block Corner Entry',
+    focus: 'The 3 Basics: Line Radius (15GR), Chassis Throttle Balance & 4-Block Threshold Braking',
+    targetMetric: 'Composite Dynamics Mastery >= 85% [Radius: 195 ft, TTO: 0 Snaps, Decel: >=88% (Peak >1.25G)]',
+    prescribedCar: '2020 Chevrolet Corvette Stingray Coupe',
     prescribedTrack: 'Sebring International Raceway (Full Circuit)',
-    gameType: 'Circuit Race / Solitary Testing',
-    timeOfDay: 'Late Morning (10:00 AM)',
-    weather: 'Clear (Dry Track)',
+    gameType: 'Circuit Race',
+    timeOfDay: 'Late morning',
+    weather: 'Clear',
     laps: 12,
     drivatars: 0,
-    quote: '"To find out how much faster you can go through Turn 7 on the right line... the radius of the arc that represents the racing line... is a whopping 195 feet. That\'s 89% bigger than the inside arc." (Page 19)',
-    briefing: 'Tire lateral grip obeys 15GR = mph². A wider radius arc allows mathematically higher speed for the exact same cornering G-load. Early apexing shrinks the radius and forces panic steering corrections.',
+    quote: '"To find out how much faster you can go through Turn 7 on the right line... the radius of the arc that represents the racing line is a whopping 195 feet... A gradual increase in throttle will tend to create understeer; an abrupt application will create oversteer." — Skip Barber (Page 19, 27, 30)',
+    briefing: 'Execute a comprehensive 12-lap vehicle dynamics session synthesizing the three core physics fundamentals from Chapter 2: 1) The Line: Carve the 195 ft radius arc (15GR = mph²) at Sebring Turn 7 without early-apex pinching. 2) Exit Speed & Chassis Balance: Squeeze the throttle progressively to transfer load rearward while eliminating trailing throttle oversteer (TTO) snap slides. 3) Braking & Entering: Execute the 4 blocks of corner entry with an assertive initial brake strike, straight-line threshold decel, and smooth load transition into turn-in.',
     actionPlan: [
-      'Overrule your early-turn instinct: turn in later than your eye initially suggests.',
-      'Keep steering angle steady through the mid-corner to maintain a clean 195 ft radius.',
-      'Check the Live Arc Radius gauge and Apex Predictor to catch early turn-in errors.'
+      'Line Radius: Overrule your early turn-in instinct; turn in at the correct geometric mark to maintain a sweeping 195 ft radius arc.',
+      'Throttle Balance: Squeeze throttle smoothly on corner exit to stabilize rear axle loading; never chop throttle mid-corner at peak lateral load.',
+      '4-Block Braking: Strike the brake firmly in a straight line at the threshold limit, then bleed off pressure smoothly as you transition into corner entry.'
     ],
-    hudWidgets: ['Arc Radius Gauge (ft/m)', 'Apex Predictor (Early / Late)', 'Radius Expansion Delta', 'Tire G-Load Limit']
-  },
-  {
-    id: 'stint-2-2',
-    tier: 2,
-    tierName: 'Tier 2: Physics',
-    tierShort: 'T2 // DYNAMICS',
-    name: 'The Throttle Squeeze',
-    subtitle: 'Dynamic Weight Transfer & Trailing Throttle Oversteer',
-    focus: 'Throttle Modulation & Chassis Balance',
-    targetMetric: 'Throttle Rate-of-Change Smoothness & 0 TTO Snap Events',
-    prescribedCar: '2020 Chevrolet Corvette Stingray (C8 Mid-Engine)',
-    prescribedTrack: 'Sebring International Raceway',
-    gameType: 'Circuit Race / Solitary Testing',
-    timeOfDay: 'Late Morning (10:00 AM)',
-    weather: 'Clear (Dry Track)',
-    laps: 12,
-    drivatars: 0,
-    quote: '"A gradual increase in throttle will tend to create understeer. An abrupt application of throttle will tend to create oversteer... Lifting off while near the limit creates oversteer in direct proportion to the severity of the lift." (Page 27)',
-    briefing: 'Understand how throttle inputs shift vertical load between the front and rear tire contact patches. Learn to "dance on the throttle" and execute Countersteer-Pause-Recovery (CPR) without provoking secondary tankslappers.',
-    actionPlan: [
-      'Never chop or lift throttle abruptly at peak mid-corner lateral loading.',
-      'Squeeze the throttle progressively to settle the rear tires and produce stable forward drive.',
-      'Monitor the Throttle Balance Dial on your Live Cockpit HUD.'
-    ],
-    hudWidgets: ['Throttle Balance Dial', 'Oversteer / Understeer Balance Index', 'Throttle Squeeze Smoothness Gauge', 'Axle Weight Bias Readout']
-  },
-  {
-    id: 'stint-2-3',
-    tier: 2,
-    tierName: 'Tier 2: Physics',
-    tierShort: 'T2 // DYNAMICS',
-    name: 'The Brake Maestro',
-    subtitle: 'Threshold Deceleration & Peak Grip Maintenance',
-    focus: 'Threshold Braking & Lockup Prevention',
-    targetMetric: 'Deceleration Time: 6.36s (157 mph to 54 mph) / Peak G: >1.25G',
-    prescribedCar: '2020 Chevrolet Corvette Stingray (C8 Mid-Engine)',
-    prescribedTrack: 'Sebring International Raceway',
-    gameType: 'Circuit Race / Solitary Testing',
-    timeOfDay: 'Late Morning (10:00 AM)',
-    weather: 'Clear (Dry Track)',
-    laps: 12,
-    drivatars: 0,
-    quote: '"The goal is to stay at this maximum traction point... at a particular level of pressure on the brake pedal you\'re right there at the peak. We call it the threshold." (Page 30)',
-    briefing: 'Hit the brake pedal with immediate, assertive pressure, then modulate right on the edge of tire scrub before wheel lockup or ABS intervention. Maximize deceleration while maintaining car directional control.',
-    actionPlan: [
-      'Initial brake strike must be instant to transfer load onto the front contact patches.',
-      'Bleed off pressure slightly as aerodynamic downforce decays with slowing speed.',
-      'Watch the Brake Performance Pulse bar on the HUD — avoid the flashing red lockup zone.'
-    ],
-    hudWidgets: ['Brake Performance Pulse', 'Threshold Pressure Efficiency %', 'Deceleration G-Meter', 'Front/Rear Brake Bias Readout']
+    hudWidgets: ['Live Arc Radius (15GR = mph²)', 'Throttle Balance & TTO Risk', '4-Block Threshold Decel Efficiency', 'Composite Dynamics Index']
   },
 
   // --- TIER 3: REAL-WORLD LINE & ADAPTATION ---

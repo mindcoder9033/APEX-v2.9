@@ -130,81 +130,29 @@ export class LiveHudRenderer {
           </div>
         `;
 
-      // --- TIER 2: VEHICLE DYNAMICS ---
-      case 'stint-2-1': // The Line Hunter
+      // --- TIER 2: VEHICLE DYNAMICS (CHAPTER 2: THE THREE BASICS) ---
+      case 'stint-2-1': // The Three Basics: Dynamics
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
               <span class="stat-cell-label">Live Arc Radius (15GR=mph²)</span>
               <span id="hud-arc-radius" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">-- ft</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Sebring T7 Benchmark: 195 ft</span>
+              <span id="hud-arc-subtext" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Sebring T7 Target: 195 ft</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Apex Predictor Status</span>
-              <span id="hud-apex-predictor" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Geometric turn-in forecast</span>
+              <span class="stat-cell-label">Throttle Balance & TTO Risk</span>
+              <span id="hud-throttle-balance" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">STABLE CHASSIS</span>
+              <span id="hud-tto-status" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Weight Transfer Equilibrium</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Radius Expansion Advantage</span>
-              <span id="hud-radius-delta" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Radius gain vs inside arc</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Tire Lateral Grip Limit</span>
-              <span id="hud-lateral-limit" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">-- G</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">15GR cornering capacity</span>
-            </div>
-          </div>
-        `;
-
-      case 'stint-2-2': // The Throttle Squeeze
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Throttle Balance State</span>
-              <span id="hud-throttle-balance" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Weight transfer stability</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">TTO Instability Risk</span>
-              <span id="hud-tto-risk" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Trailing throttle oversteer alert</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Throttle Squeeze Smoothness</span>
-              <span id="hud-throttle-rate" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Pedal modulation rate</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Axle Weight Bias Readout</span>
-              <span id="hud-weight-bias" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Front/rear dynamic load bias</span>
-            </div>
-          </div>
-        `;
-
-      case 'stint-2-3': // The Brake Maestro
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Threshold Pressure Efficiency</span>
+              <span class="stat-cell-label">4-Block Threshold Decel</span>
               <span id="hud-threshold-eff" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">--%</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: >90% deceleration</span>
+              <span id="hud-brake-pulse" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Peak G & Lockup Margin</span>
             </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Brake Performance Pulse</span>
-              <span id="hud-brake-pulse" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">READY</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Lockup boundary monitor</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Peak Deceleration G</span>
-              <span id="hud-decel-g" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">-- G</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Longitudinal deceleration force</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Contact Patch Scrub Index</span>
-              <span id="hud-slip-delta" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Tire scrub boundary</span>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold);">
+              <span class="stat-cell-label">Composite Dynamics Index</span>
+              <span id="hud-dynamics-mastery" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">--%</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">40/30/30 Metric Scoring</span>
             </div>
           </div>
         `;
@@ -883,120 +831,115 @@ export class LiveHudRenderer {
       }
     }
 
-    // 2-1 The Line Hunter
+    // 2-1 The Three Basics: Dynamics (Chapter 2: Line 15GR, Throttle Squeeze & 4-Block Braking)
     else if (stintId === 'stint-2-1') {
+      let radiusScore = 70;
+      let throttleScore = 95;
+      let decelScore = 70;
+
+      // 1. Live Arc Radius (15GR = mph²)
       const elArc = document.getElementById('hud-arc-radius');
+      const elArcSub = document.getElementById('hud-arc-subtext');
       if (elArc) {
         if (currentAbsLatG >= 0.15 && speedMph >= 12) {
           const rFt = Math.round((speedMph * speedMph) / (15 * currentAbsLatG));
           this.telemetryStats.arcRadiusFt = rFt;
           elArc.textContent = `${rFt} ft`;
-          elArc.style.color = (rFt >= 180 && rFt <= 220) ? 'var(--color-success)' : 'var(--color-gold)';
+          if (rFt >= 180 && rFt <= 220) {
+            elArc.style.color = 'var(--color-success)';
+            if (elArcSub) elArcSub.textContent = 'OPTIMAL 195 FT ARC';
+            radiusScore = 100;
+          } else if (rFt < 180) {
+            elArc.style.color = 'var(--color-gold)';
+            if (elArcSub) elArcSub.textContent = 'EARLY APEX PINCH (R < 180)';
+            radiusScore = Math.max(30, Math.round((rFt / 195) * 95));
+          } else {
+            elArc.style.color = 'var(--color-gold)';
+            if (elArcSub) elArcSub.textContent = 'WIDE RADIUS (>220 FT)';
+            radiusScore = 90;
+          }
         } else {
           elArc.textContent = 'STRAIGHT (∞)';
           elArc.style.color = 'var(--color-text-muted)';
+          if (elArcSub) elArcSub.textContent = 'Sebring T7 Target: 195 ft';
         }
       }
-      const elApexPred = document.getElementById('hud-apex-predictor');
-      if (elApexPred) {
-        if (Math.abs(steer) > 0.4 && currentAbsLatG < 0.5 && speedMph > 35) {
-          elApexPred.textContent = 'EARLY TURN-IN (PINCHED)';
-          elApexPred.style.color = 'var(--color-f1-red)';
-        } else if (Math.abs(steer) < 0.25 && currentAbsLatG > 0.75) {
-          elApexPred.textContent = 'LATE APEX (MAX RADIUS)';
-          elApexPred.style.color = 'var(--color-success)';
-        } else {
-          elApexPred.textContent = 'GEOMETRIC ARC';
-          elApexPred.style.color = 'var(--color-gold)';
-        }
-      }
-      const elRadDelta = document.getElementById('hud-radius-delta');
-      if (elRadDelta) {
-        const rCurrent = this.telemetryStats.arcRadiusFt || 195;
-        const gainPct = Math.round(((rCurrent - 103) / 103) * 100);
-        elRadDelta.textContent = `+${Math.max(0, gainPct)}% Radius vs Inside Arc`;
-        elRadDelta.style.color = 'var(--color-gold)';
-      }
-      const elLatLimit = document.getElementById('hud-lateral-limit');
-      if (elLatLimit) {
-        elLatLimit.textContent = `${currentAbsLatG.toFixed(2)} G`;
-        elLatLimit.style.color = currentAbsLatG > 1.2 ? 'var(--color-f1-red)' : 'var(--color-success)';
-      }
-    }
 
-    // 2-2 The Throttle Squeeze
-    else if (stintId === 'stint-2-2') {
+      // 2. Throttle Balance & TTO Risk
       const elThrottleBal = document.getElementById('hud-throttle-balance');
+      const elTtoStatus = document.getElementById('hud-tto-status');
       if (elThrottleBal) {
-        if (throttlePct > 85 && currentAbsLatG > 0.8) {
+        if (throttlePct === 0 && currentAbsLatG > 0.85 && speedMph > 40) {
+          elThrottleBal.textContent = '⚠️ SNAP OVERSTEER (TTO)';
+          elThrottleBal.style.color = 'var(--color-f1-red)';
+          if (elTtoStatus) {
+            elTtoStatus.textContent = 'ABRUPT LIFT UNDER LOAD';
+            elTtoStatus.style.color = 'var(--color-f1-red)';
+          }
+          this.telemetryStats.ttoEvents = (this.telemetryStats.ttoEvents || 0) + 1;
+          throttleScore = 30;
+        } else if (throttlePct > 85 && currentAbsLatG > 0.8) {
           elThrottleBal.textContent = 'POWER OVERSTEER RISK';
           elThrottleBal.style.color = 'var(--color-warning)';
-        } else if (throttlePct === 0 && currentAbsLatG > 0.85 && speedMph > 40) {
-          elThrottleBal.textContent = 'TRAILING THROTTLE OVERSTEER (TTO)';
-          elThrottleBal.style.color = 'var(--color-f1-red)';
-          this.telemetryStats.ttoEvents++;
-        } else if (throttlePct > 20 && throttlePct <= 70 && currentAbsLatG > 0.6) {
+          if (elTtoStatus) {
+            elTtoStatus.textContent = 'REAR WHEELSPIN SLIP';
+            elTtoStatus.style.color = 'var(--color-warning)';
+          }
+          throttleScore = 75;
+        } else if (throttlePct > 20 && throttlePct <= 75 && currentAbsLatG > 0.6) {
           elThrottleBal.textContent = 'BALANCED SQUEEZE';
           elThrottleBal.style.color = '#0099FF';
+          if (elTtoStatus) {
+            elTtoStatus.textContent = 'SMOOTH REAR WEIGHT TRANSFER';
+            elTtoStatus.style.color = 'var(--color-success)';
+          }
+          throttleScore = 100;
         } else {
           elThrottleBal.textContent = 'STABLE CHASSIS';
           elThrottleBal.style.color = 'var(--color-text-muted)';
+          if (elTtoStatus) {
+            elTtoStatus.textContent = 'Weight Transfer Equilibrium';
+            elTtoStatus.style.color = 'var(--color-text-muted)';
+          }
+          throttleScore = 95;
         }
       }
-      const elTtoRisk = document.getElementById('hud-tto-risk');
-      if (elTtoRisk) {
-        elTtoRisk.textContent = (throttlePct === 0 && currentAbsLatG > 0.85) ? '⚠️ SNAP OVERSTEER' : 'ZERO TTO DETECTED';
-        elTtoRisk.style.color = (throttlePct === 0 && currentAbsLatG > 0.85) ? 'var(--color-f1-red)' : 'var(--color-success)';
-      }
-      const elThrotRate = document.getElementById('hud-throttle-rate');
-      if (elThrotRate) {
-        elThrotRate.textContent = `${throttlePct}% APPLIED`;
-        elThrotRate.style.color = 'var(--color-gold)';
-      }
-      const elBias = document.getElementById('hud-weight-bias');
-      if (elBias) {
-        const pitchVal = longGNum;
-        elBias.textContent = pitchVal > 0.2 ? 'REAR SQUAT (ACCEL)' : (pitchVal < -0.2 ? 'FRONT DIVE (BRAKE)' : 'NEUTRAL 50:50');
-        elBias.style.color = '#0099FF';
-      }
-    }
 
-    // 2-3 The Brake Maestro
-    else if (stintId === 'stint-2-3') {
+      // 3. 4-Block Threshold Decel Efficiency
       const elThresh = document.getElementById('hud-threshold-eff');
+      const elPulse = document.getElementById('hud-brake-pulse');
       if (elThresh) {
         if (brakePct > 0) {
           const decelEff = Math.min(100, Math.max(10, Math.round((currentAbsLongG / 1.3) * 100)));
           this.telemetryStats.thresholdEffPct = decelEff;
           elThresh.textContent = `${decelEff}%`;
-          elThresh.style.color = decelEff >= 90 ? 'var(--color-success)' : 'var(--color-gold)';
+          elThresh.style.color = decelEff >= 88 ? 'var(--color-success)' : 'var(--color-gold)';
+          decelScore = Math.max(30, Math.min(100, Math.round((decelEff / 88) * 90)));
+          if (elPulse) {
+            if (brakePct > 95) {
+              elPulse.textContent = `⚠️ LOCKUP RISK (${currentAbsLongG.toFixed(2)}G)`;
+              elPulse.style.color = 'var(--color-f1-red)';
+            } else {
+              elPulse.textContent = `THRESHOLD DECEL (${currentAbsLongG.toFixed(2)}G)`;
+              elPulse.style.color = 'var(--color-success)';
+            }
+          }
         } else {
           elThresh.textContent = '--%';
           elThresh.style.color = 'var(--color-text-muted)';
+          if (elPulse) {
+            elPulse.textContent = 'Peak G & Lockup Margin';
+            elPulse.style.color = 'var(--color-text-muted)';
+          }
         }
       }
-      const elPulse = document.getElementById('hud-brake-pulse');
-      if (elPulse) {
-        if (brakePct > 95) {
-          elPulse.textContent = '⚠️ LOCKUP RISK';
-          elPulse.style.color = 'var(--color-f1-red)';
-        } else if (brakePct > 50) {
-          elPulse.textContent = 'THRESHOLD BRAKING';
-          elPulse.style.color = 'var(--color-success)';
-        } else {
-          elPulse.textContent = 'READY';
-          elPulse.style.color = 'var(--color-text-muted)';
-        }
-      }
-      const elDecelG = document.getElementById('hud-decel-g');
-      if (elDecelG) {
-        elDecelG.textContent = `${currentAbsLongG.toFixed(2)} G`;
-        elDecelG.style.color = currentAbsLongG > 1.2 ? 'var(--color-success)' : 'var(--color-text-primary)';
-      }
-      const elSlip = document.getElementById('hud-slip-delta');
-      if (elSlip) {
-        elSlip.textContent = brakePct > 90 ? 'TIRE SCRUB PEAK' : 'TRACTION OPTIMAL';
-        elSlip.style.color = brakePct > 90 ? 'var(--color-warning)' : 'var(--color-success)';
+
+      // 4. Composite Dynamics Index (40% Radius + 30% Throttle + 30% Decel)
+      const elDynamicsMastery = document.getElementById('hud-dynamics-mastery');
+      if (elDynamicsMastery) {
+        const compositeLive = Math.round((0.40 * radiusScore) + (0.30 * throttleScore) + (0.30 * decelScore));
+        elDynamicsMastery.textContent = `${compositeLive}%`;
+        elDynamicsMastery.style.color = compositeLive >= 85 ? 'var(--color-success)' : 'var(--color-gold)';
       }
     }
 

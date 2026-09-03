@@ -243,81 +243,70 @@ export class StintDiagnostics {
       }
 
       // ==============================================
-      // --- TIER 2: PHYSICS & VEHICLE DYNAMICS ---
+      // --- TIER 2: VEHICLE DYNAMICS (THE 3 BASICS) ---
       // ==============================================
-      case 'stint-2-1': { // The Line Hunter (Late Apex Strategy 15GR)
-        primaryMetricLabel = 'Realized Arc Radius';
+      case 'stint-2-1': { // The Three Basics: Dynamics (Arc Radius 15GR, Chassis Throttle Balance, 4-Block Braking)
+        primaryMetricLabel = 'Composite Dynamics Mastery (Radius / TTO / Decel)';
+        
+        // 1. Pillar 1: Arc Radius 15GR (40% Weight) - Target: ~195 ft Sebring T7 Benchmark
         const avgRadius = turnRadii.length > 0 
           ? Math.round(turnRadii.reduce((a, b) => a + b, 0) / turnRadii.length) 
           : (peakLatG > 0.2 ? Math.round((peakSpeedMph * peakSpeedMph) / (15 * peakLatG)) : 170);
         const arcRadiusFt = Math.max(120, Math.min(225, avgRadius));
-        disciplineScore = Math.max(35, Math.min(100, Math.round((arcRadiusFt / 195) * 92)));
-        primaryMetricValue = `${arcRadiusFt} ft (Target: 195 ft Sebring T7 Benchmark)`;
-        targetAchieved = arcRadiusFt >= 185;
+        const radiusScore = Math.max(30, Math.min(100, Math.round((arcRadiusFt / 195) * 95)));
+        
+        // 2. Pillar 2: Throttle Balance & TTO Stability (30% Weight) - Target: 0 Snaps
+        const ttoPenalty = throttleLiftsMidCorner * 15;
+        const throttleScore = Math.max(30, Math.min(100, 100 - ttoPenalty));
+        
+        // 3. Pillar 3: 4-Block Deceleration Efficiency (30% Weight) - Target: >=88%
+        const decelEff = Math.max(40, Math.min(99, Math.round(
+          Math.min(95, peakLongG * 72) - (harshBrakingEvents * 5)
+        )));
+        const decelScore = Math.max(30, Math.min(100, Math.round((decelEff / 88) * 90)));
+        
+        // Weighted Composite Dynamics Score (40% Arc Radius + 30% Throttle Balance + 30% Braking Decel)
+        const compositeScore = Math.round((0.40 * radiusScore) + (0.30 * throttleScore) + (0.30 * decelScore));
+        disciplineScore = Math.max(30, Math.min(100, compositeScore));
+        
+        primaryMetricValue = `${disciplineScore}% [Radius: ${arcRadiusFt} ft, TTO: ${throttleLiftsMidCorner} Snaps, Decel: ${decelEff}%]`;
+        targetAchieved = arcRadiusFt >= 185 && throttleLiftsMidCorner === 0 && decelEff >= 85;
 
+        // Diagnostic Pillars - Nailed
         if (arcRadiusFt >= 185) {
-          nailed.push(`Realized a sweeping ${arcRadiusFt} ft cornering radius, exploiting mathematical 15GR=mph² grip.`);
-          nailed.push('Patient late-apex turn-in allowed substantially higher mid-corner minimum speed.');
-          nailed.push('Prevented terminal exit understeer through disciplined line positioning.');
+          nailed.push(`Realized a wide ${arcRadiusFt} ft cornering radius (target: 195 ft), exploiting mathematical 15GR=mph² grip without early apexing.`);
         } else {
           nailed.push(`Sustained up to ${peakLatG}G lateral loading through mid-corner apex.`);
         }
 
-        refinement.push('Hold the steering angle constant through the geometric midpoint before initiating the unwind.');
-        refinement.push('Target clipping the apex kerb 10 feet later on Turn 7 to unlock an even straighter exit launch.');
-
-        if (arcRadiusFt < 180) {
-          attention.push('Early turn-in instinct shrank your corner radius, forcing tighter steering corrections and lower apex speed.');
-        }
-        break;
-      }
-
-      case 'stint-2-2': { // The Throttle Squeeze (Dynamic Weight Transfer & TTO)
-        primaryMetricLabel = 'TTO Instability Snap Events';
-        const ttoPenalty = throttleLiftsMidCorner * 15;
-        disciplineScore = Math.max(30, Math.min(100, 95 - ttoPenalty));
-        primaryMetricValue = `${throttleLiftsMidCorner} Snap Events (Target: 0)`;
-        targetAchieved = throttleLiftsMidCorner === 0;
-
         if (throttleLiftsMidCorner === 0) {
-          nailed.push('Zero Trailing Throttle Oversteer (TTO) snap events recorded across all laps.');
-          nailed.push('Progressive throttle squeeze stabilized rear axle weight bias perfectly under acceleration.');
-          nailed.push('Smooth pedal modulation maintained tire contact patch equilibrium.');
+          nailed.push('Zero Trailing Throttle Oversteer (TTO) snap events — progressive throttle squeeze stabilized rear axle weight bias.');
         } else {
-          nailed.push('Good steering counter-action to manage transient yaw rotation.');
+          nailed.push('Demonstrated prompt steering counter-action to manage transient yaw rotation.');
         }
 
-        refinement.push('Focus on maintaining a neutral "maintenance throttle" (15-25%) through long sweeping corners.');
-        refinement.push('Smooth out initial throttle tip-in to eliminate transient drivetrain shock.');
+        if (decelEff >= 85) {
+          nailed.push(`Executed crisp 4-block corner entry with instantaneous initial brake strike hitting ${peakLongG}G peak deceleration.`);
+        }
 
+        // Refinements
+        if (arcRadiusFt < 190) {
+          refinement.push('Overrule early turn-in instinct on Turn 7 to carve a wider arc and raise minimum mid-corner speed.');
+        }
+        refinement.push('Maintain steady maintenance throttle (15-25%) through the mid-corner before unwinding into full power.');
+        if (decelEff < 88) {
+          refinement.push('Bleed brake pedal pressure progressively as aero downforce decays below 60 MPH to avoid ABS lockup scrub.');
+        }
+
+        // Attention
+        if (arcRadiusFt < 180) {
+          attention.push('Early apex pinching detected: turning in too early shrank your radius, forcing sudden tightening corrections.');
+        }
         if (throttleLiftsMidCorner > 0) {
-          attention.push(`Detected ${throttleLiftsMidCorner} abrupt throttle chop(s) near peak lateral load (${peakLatG}G) provoking rear-end lightness and snap slide.`);
+          attention.push(`Detected ${throttleLiftsMidCorner} abrupt mid-corner throttle chop(s) near peak lateral load (${peakLatG}G), provoking rear-end snap oversteer.`);
         }
-        break;
-      }
-
-      case 'stint-2-3': { // The Brake Maestro (Threshold Deceleration)
-        primaryMetricLabel = 'Threshold Decel Efficiency';
-        const thresholdEff = Math.max(40, Math.min(99, Math.round(
-          Math.min(95, peakLongG * 72) - (harshBrakingEvents * 5)
-        )));
-        disciplineScore = thresholdEff;
-        primaryMetricValue = `${thresholdEff}% (Peak: ${peakLongG}G Decel)`;
-        targetAchieved = thresholdEff >= 88 && harshBrakingEvents <= 2;
-
-        if (thresholdEff >= 88) {
-          nailed.push(`Instantaneous initial brake strike loaded front tires to peak ${peakLongG}G deceleration.`);
-          nailed.push('Pedal pressure modulated right on the verge of tire scrub with minimal ABS intervention.');
-          nailed.push('Controlled aerodynamic downforce decay bleed-off throughout the deceleration zone.');
-        } else {
-          nailed.push('Assertive initial brake application into heavy straight-line stopping zones.');
-        }
-
-        refinement.push('Bleed brake pressure 5% earlier as car speed drops below 60 MPH to match fading aero downforce.');
-        refinement.push('Keep brake release smoothly synchronized with turn-in steering rate.');
-
-        if (harshBrakingEvents > 2) {
-          attention.push(`Excessive brake spikes triggered ${harshBrakingEvents} ABS chatter/lockup events, extending stopping distance.`);
+        if (harshBrakingEvents > 1) {
+          attention.push(`Excessive brake pressure spikes triggered ${harshBrakingEvents} ABS chatter/lockup events, extending stopping distance.`);
         }
         break;
       }
