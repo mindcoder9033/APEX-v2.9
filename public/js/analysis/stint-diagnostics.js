@@ -88,8 +88,8 @@ export class StintDiagnostics {
         lineScores.push(lineAdherence);
       }
 
-      // TTO detection: abrupt throttle lift near zero while under high cornering lateral load
-      if (throttle < 0.08 && latG > 0.75 && speedMph > 40) {
+      // TTO detection: abrupt throttle lift near zero while off brakes under high cornering lateral load
+      if (throttle < 0.08 && brake < 0.15 && latG > 0.75 && speedMph > 40) {
         throttleLiftsMidCorner++;
       }
 
@@ -172,94 +172,72 @@ export class StintDiagnostics {
       // ==========================================
       // --- TIER 1: THE 3 BASICS & FUNDAMENTALS ---
       // ==========================================
-      case 'stint-1-1': { // The Pathfinder (Geometric Path & R3 Radius)
-        primaryMetricLabel = 'Geometric Line Adherence';
+      case 'stint-1-1': // The Foundation Stint (Order of Effort: Line, Exit Speed, Entry Braking)
+      case 'stint-1-2':
+      case 'stint-1-3': {
+        primaryMetricLabel = 'Composite Foundation Mastery (Line / Exit / Trail)';
+        
+        // 1. Pillar 1: The Line (40% Weight) - Metric Arc R3
         const lineVal = Math.max(40, Math.min(99, Math.round(avgLineScore - (steeringOscillations * 1.5))));
-        disciplineScore = lineVal;
-        primaryMetricValue = `${lineVal}% (Target: 90%+)`;
-        targetAchieved = lineVal >= 90;
-
-        if (lineVal >= 88) {
-          nailed.push(`Consistently carved the maximum radius arc (R3), maintaining ${lineVal}% trajectory adherence.`);
-          nailed.push('Smooth visual placement from turn-in to track-out with steady steering rates.');
-          nailed.push('Maintained balanced 6/10ths discipline without overdriving tire contact patches.');
-        } else {
-          nailed.push(`Good entry discipline on primary high-speed bends, sustaining up to ${peakLatG}G lateral loading.`);
-        }
-
-        if (steeringOscillations > 2 || lineVal < 92) {
-          refinement.push('Subtle mid-corner steering corrections detected — let the car roll along the arc naturally rather than adjusting lock.');
-          refinement.push('Ensure you track out all the way to the rumble strip edge at corner exit to preserve maximum radius.');
-        } else {
-          refinement.push('Experiment with slightly earlier unwinding of the wheel as the apex is clipped.');
-        }
-
-        if (lineVal < 88) {
-          attention.push('Early apex pinching detected on key corners: turning in prematurely shrinks the radius and requires emergency braking.');
-        }
-        if (steeringOscillations > 5) {
-          attention.push(`Detected ${steeringOscillations} aggressive steering adjustments in loading zones provoking front-axle scrub.`);
-        }
-        break;
-      }
-
-      case 'stint-1-2': { // Exit Speed Expert (Corner Exit Speed & TAP)
-        primaryMetricLabel = 'Apex Exit Speed Delta';
-        const calculatedExitGain = liveStats.exitDeltaMph != null 
-          ? liveStats.exitDeltaMph 
-          : parseFloat((peakLongG * 10 + (avgSpeedMph > 50 ? 1.0 : 0.4)).toFixed(1));
-        const exitDeltaMph = parseFloat(Math.max(0.1, calculatedExitGain).toFixed(1));
-        disciplineScore = Math.max(30, Math.min(100, Math.round((exitDeltaMph / 2.0) * 90)));
-        primaryMetricValue = `+${exitDeltaMph} MPH (+${(exitDeltaMph * 0.08).toFixed(2)}s Straight Gain)`;
-        targetAchieved = exitDeltaMph >= 1.8;
-
-        if (exitDeltaMph >= 1.5) {
-          nailed.push(`Achieved +${exitDeltaMph} MPH velocity gain at the Throttle Application Point (TAP).`);
-          nailed.push('Progressive throttle feed coupled directly to steering wheel unwind.');
-          nailed.push('Compounding straightaway acceleration yielded significant lap time reduction.');
-        } else {
-          nailed.push('Maintained steady throttle pickup through mid-corner exit transitions.');
-        }
-
-        refinement.push('Ensure full 100% wide-open throttle (WOT) is achieved the instant the steering reaches the straight-ahead position.');
-        refinement.push('Practice identifying the TAP visually before committing the chassis into the corner.');
-
-        if (exitDeltaMph < 1.5) {
-          attention.push('Hesitant throttle application post-apex cost substantial exit velocity down the succeeding straight.');
-        }
-        if (throttleLiftsMidCorner > 0) {
-          attention.push('Detected throttle hesitation/pumping during corner exit — commit to a smooth single-squeeze motion.');
-        }
-        break;
-      }
-
-      case 'stint-1-3': { // The Brake & Turn Maestro (Trail Braking Transition)
-        primaryMetricLabel = 'Trail-Brake G-Friction Blending';
+        const lineScore = Math.max(30, Math.min(100, Math.round((lineVal / 90) * 100)));
+        
+        // 2. Pillar 2: Corner Exit Speed in km/h (40% Weight) - Target +3.2 km/h (+2.0 mph)
+        const calculatedExitGainKmh = liveStats.exitDeltaKmh != null
+          ? liveStats.exitDeltaKmh
+          : (liveStats.exitDeltaMph != null 
+              ? parseFloat((liveStats.exitDeltaMph * 1.60934).toFixed(1))
+              : parseFloat((peakLongG * 16.0 + (avgSpeedMph > 50 ? 1.6 : 0.6)).toFixed(1)));
+        const exitDeltaKmh = parseFloat(Math.max(0.2, calculatedExitGainKmh).toFixed(1));
+        const exitScore = Math.max(30, Math.min(100, Math.round((exitDeltaKmh / 3.2) * 100)));
+        
+        // 3. Pillar 3: Trail Braking 80/20 (20% Weight)
         const trailRatio = totalBrakingSamples > 0 
           ? Math.round((trailBrakingSamples / totalBrakingSamples) * 100) 
           : 0;
-        disciplineScore = Math.max(30, Math.min(100, Math.round(trailRatio * 1.15)));
-        const decelPct = Math.min(85, Math.max(50, Math.round(75 + peakLongG * 10)));
-        const latPct = Math.min(40, Math.max(15, 100 - decelPct));
-        primaryMetricValue = `${decelPct}% Decel / ${latPct}% Lateral Grip (${trailRatio}% Overlap)`;
-        targetAchieved = trailRatio >= 70;
+        const trailScore = Math.max(30, Math.min(100, Math.round((trailRatio / 70) * 100)));
+        
+        // Weighted Composite Foundation Score (40% Line + 40% Exit Speed + 20% Trail Braking)
+        const compositeScore = Math.round((0.40 * lineScore) + (0.40 * exitScore) + (0.20 * trailScore));
+        disciplineScore = Math.max(30, Math.min(100, compositeScore));
+        
+        primaryMetricValue = `${disciplineScore}% [Line: ${lineVal}%, Exit: +${exitDeltaKmh} km/h, Trail: ${trailRatio}%]`;
+        targetAchieved = lineVal >= 90 && exitDeltaKmh >= 3.0 && trailRatio >= 65;
 
-        if (trailRatio >= 70) {
-          nailed.push('Seamless transition from straight-line threshold braking into trail-braking entry.');
-          nailed.push('Maintained vehicle pitch stability on entry without unloading front tire grip.');
-          nailed.push(`Tire friction boundary stayed saturated up to ${peakLatG}G without front lockup.`);
+        // Diagnostic Pillars - Nailed
+        if (lineVal >= 88) {
+          nailed.push(`Consistently carved the maximum radius arc (R3), maintaining ${lineVal}% trajectory adherence.`);
         } else {
-          nailed.push('Good straight-line deceleration stability approaching primary braking zones.');
+          nailed.push(`Maintained solid trajectory positioning on primary bends, sustaining up to ${peakLatG}G lateral loading.`);
         }
 
-        refinement.push('Taper off the final 15% of brake pressure slightly more progressively to prevent sudden front-to-rear weight snap.');
-        refinement.push('Align the off-brake moment precisely with the point of maximum steering lock.');
+        if (exitDeltaKmh >= 2.8) {
+          nailed.push(`Achieved +${exitDeltaKmh} km/h exit speed gain at the Throttle Application Point (TAP) while unwinding steering lock.`);
+        }
 
-        if (trailRatio < 60) {
-          attention.push('Separated braking and steering into disconnected phases. Carry light brake pressure past turn-in.');
+        if (trailRatio >= 65) {
+          nailed.push(`Smooth 80/20 trail-braking blend from straight threshold deceleration into corner entry.`);
+        }
+
+        // Refinements
+        if (steeringOscillations > 2 || lineVal < 92) {
+          refinement.push('Smooth out subtle mid-corner steering sawing to let the chassis follow the maximum radius arc (R3) without scrubbing tires.');
+        }
+        if (exitDeltaKmh < 3.2) {
+          refinement.push('Locate the Throttle Application Point (TAP) earlier and squeeze progressive power smoothly across 15-20 meters of corner exit.');
+        }
+        if (trailRatio < 70) {
+          refinement.push('Taper off the final 15% of brake pedal pressure as steering angle increases to keep the friction circle saturated.');
+        }
+
+        // Attention
+        if (lineVal < 85) {
+          attention.push('Early apex pinching detected: turning in prematurely shrinks corner radius and forces emergency mid-corner corrections.');
+        }
+        if (throttleLiftsMidCorner > 0) {
+          attention.push('Hesitant throttle pumping detected on corner exit — commit to a single progressive squeeze.');
         }
         if (harshBrakingEvents > 0) {
-          attention.push('Brake pressure spike occurred while steering angle was increasing, risking front axle scrub.');
+          attention.push('Brake pressure spike occurred while adding steering lock, risking front-axle scrub or lockup.');
         }
         break;
       }
@@ -664,26 +642,21 @@ export class StintDiagnostics {
       (0.20 * paceScore)
     );
 
-    // Apply strict lap completion & validity gates
+    // Apply session validity check
     let gradeScore = rawGradeScore;
     let isCapped = false;
     let capReason = '';
 
-    if (totalLaps < 2 || validFlyingSamples < 40) {
+    if (totalSamples >= 100 && validFlyingSamples < 10) {
       gradeScore = Math.min(58, rawGradeScore); // Automatic F / Incomplete
       isCapped = true;
-      capReason = 'Stint incomplete (< 2 valid flying laps recorded).';
+      capReason = 'Stint incomplete (insufficient valid flying samples recorded).';
       attention.push('Stint aborted early: insufficient flying laps to establish statistically valid technique evaluation.');
-    } else if (avgSpeedMph < 35) {
+    } else if (totalSamples >= 100 && avgSpeedMph < 25) {
       gradeScore = Math.min(65, rawGradeScore); // Capped at D
       isCapped = true;
       capReason = 'Average session speed was below racing pace.';
-      attention.push('Average stint speed was under 35 MPH — drive at competitive racing pace to evaluate high-speed dynamics.');
-    } else if (totalLaps < Math.ceil(prescribedLaps * 0.5)) {
-      gradeScore = Math.min(78, rawGradeScore); // Capped at C+
-      isCapped = true;
-      capReason = `Completed only ${totalLaps} of ${prescribedLaps} prescribed laps.`;
-      refinement.push(`Complete at least 50% of prescribed laps (${Math.ceil(prescribedLaps * 0.5)} laps) to unlock higher grades.`);
+      attention.push('Average stint speed was under 25 MPH — drive at competitive racing pace to evaluate high-speed dynamics.');
     }
 
     // 5. Assign Letter Grade and Mastery Badge

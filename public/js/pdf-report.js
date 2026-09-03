@@ -80,15 +80,18 @@ export class PdfReportGenerator {
       });
 
       // Document Title
+      const isChapter1 = diagnosis.stintId && (diagnosis.stintId === 'stint-1-1' || diagnosis.stintId.startsWith('stint-1'));
       const isChapter5 = diagnosis.stintId && diagnosis.stintId.startsWith('stint-5');
       const isChapter12 = diagnosis.stintId && diagnosis.stintId.startsWith('stint-12');
-      const docTitle = isChapter12
-        ? 'RACING IN THE RAIN // THE WET WEATHER ANALYST'
-        : (isChapter5 ? 'BRAKING AND ENTERING // THE ANALYTICAL BRAKER' : 'STINT PERFORMANCE & COACHING DEBRIEF');
+      const docTitle = isChapter1
+        ? 'A PLAN OF ATTACK // THE FOUNDATION STINT'
+        : (isChapter12
+            ? 'RACING IN THE RAIN // THE WET WEATHER ANALYST'
+            : (isChapter5 ? 'BRAKING AND ENTERING // THE ANALYTICAL BRAKER' : 'STINT PERFORMANCE & COACHING DEBRIEF'));
       page.drawText(docTitle, {
         x: 40,
         y: height - 58,
-        size: (isChapter5 || isChapter12) ? 15 : 17,
+        size: (isChapter1 || isChapter5 || isChapter12) ? 15 : 17,
         font: fontTitle,
         color: rgb(0.06, 0.09, 0.16) // Deep Dark Slate #0F172A
       });
@@ -189,11 +192,12 @@ export class PdfReportGenerator {
       const discPts = sc.discipline ? `${sc.discipline.weightedPoints}/50` : `${diagnosis.gradeScore}%`;
       const smoothPts = sc.smoothness ? `${sc.smoothness.weightedPoints}/30` : '30/30';
       const pacePts = sc.pace ? `${sc.pace.weightedPoints}/20` : '20/20';
+      const peakSpeedMetric = diagnosis.telemetryKPIs.peakSpeedKmh || Math.round((diagnosis.telemetryKPIs.peakSpeedMph || 0) * 1.60934);
 
       const kpis = [
         { label: '1. DISCIPLINE (50%)', val: discPts, sub: diagnosis.primaryMetricLabel || 'Target Metric' },
         { label: '2. SMOOTHNESS (30%)', val: smoothPts, sub: `${sc.smoothness?.ttoEvents || 0} TTO • ${sc.smoothness?.lockupEvents || 0} Lockups` },
-        { label: '3. PACE & LAPS (20%)', val: pacePts, sub: `${diagnosis.telemetryKPIs.totalLaps} Laps • ${diagnosis.telemetryKPIs.peakSpeedMph} MPH Peak` },
+        { label: '3. PACE & LAPS (20%)', val: pacePts, sub: `${diagnosis.telemetryKPIs.totalLaps} Laps • ${peakSpeedMetric} km/h Peak` },
         { label: 'COMPOSITE GRADE', val: `GRADE ${letter}`, sub: `${diagnosis.gradeScore}% Overall Score` }
       ];
 

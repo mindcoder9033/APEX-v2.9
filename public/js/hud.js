@@ -101,81 +101,31 @@ export class LiveHudRenderer {
     const id = stint.id || 'stint-1-1';
 
     switch (id) {
-      // --- TIER 1: FUNDAMENTALS ---
-      case 'stint-1-1': // The Pathfinder
+      // --- TIER 1: FUNDAMENTALS (THE FOUNDATION STINT) ---
+      case 'stint-1-1':
+      case 'stint-1-2':
+      case 'stint-1-3':
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Driving Line Score</span>
+              <span class="stat-cell-label">1. Driving Line Score</span>
               <span id="hud-line-score" class="stat-cell-value accent" style="color: var(--color-text-muted); font-size: 26px;">--%</span>
               <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 90%+ (R3 Arc)</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Trajectory Centerline Offset</span>
-              <span id="hud-path-deviation" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Apex clipping adherence</span>
+              <span class="stat-cell-label">2. Corner Exit Delta</span>
+              <span id="hud-exit-delta-kmh" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">+0.0 km/h</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: +3.2 km/h TAP Gain</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Chassis Balance (6/10ths)</span>
-              <span id="hud-lat-stability" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Steering rate stability</span>
+              <span class="stat-cell-label">3. Brake &amp; Turn Blend</span>
+              <span id="hud-brake-turn-blend" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 24px; margin-top: 2px;">0% / 0%</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 80% / 20% Blend</span>
             </div>
-            <div class="stat-cell chamfer-all-corners">
-              <span class="stat-cell-label">Telemetry Ping Status</span>
-              <span id="hud-ping-status" class="stat-cell-value" style="color: var(--color-warning); font-size: 14px; margin-top: 4px;">📡 AWAITING UDP TELEMETRY</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Geometric arc feedback</span>
-            </div>
-          </div>
-        `;
-
-      case 'stint-1-2': // Exit Speed Expert
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Corner Exit Speed Delta</span>
-              <span id="hud-exit-delta" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">-- MPH/s</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: +2.0 MPH gain</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Throttle Application (TAP)</span>
-              <span id="hud-tap-timing" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Pre-apex throttle feed</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Straightaway Gain Projection</span>
-              <span id="hud-straight-gain" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Compounded straight delta</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Throttle / Unwind Sync</span>
-              <span id="hud-unwind-sync" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Pedal squeeze vs wheel angle</span>
-            </div>
-          </div>
-        `;
-
-      case 'stint-1-3': // The Brake & Turn Maestro
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Brake & Turn Blend Ratio</span>
-              <span id="hud-brake-turn-blend" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">0% / 0%</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 80% / 20% ratio</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Trail-Brake Decay Rate</span>
-              <span id="hud-trail-decay" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Smooth off-brake bleed</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Deceleration Efficiency</span>
-              <span id="hud-decel-eff" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 26px;">READY</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Peak threshold boundary</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-border-bright);">
-              <span class="stat-cell-label">Friction Circle Allocation</span>
-              <span id="hud-friction-alloc" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 4px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Grip vector saturation</span>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold);">
+              <span class="stat-cell-label">Composite Foundation Index</span>
+              <span id="hud-foundation-mastery" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">--%</span>
+              <span id="hud-ping-status" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">40/40/20 Metric Scoring</span>
             </div>
           </div>
         `;
@@ -865,11 +815,12 @@ export class LiveHudRenderer {
     // Update Stint-Specific Live Diagnostic Gauges
     const stintId = this.activeStint.id;
 
-    // 1-1 The Pathfinder
-    if (stintId === 'stint-1-1') {
+    // 1-1 The Foundation Stint (Holistic Fundamentals: Line, Exit Speed, Trail-Braking)
+    if (stintId === 'stint-1-1' || stintId === 'stint-1-2' || stintId === 'stint-1-3') {
+      // 1. Pillar 1: Driving Line Score
+      let lineScoreVal = 100;
       const elLine = document.getElementById('hud-line-score');
       if (elLine) {
-        let lineScoreVal = 100;
         if (timing.normalizedDrivingLine !== undefined) {
           const dev = Math.abs(timing.normalizedDrivingLine);
           lineScoreVal = Math.max(0, Math.min(100, Math.round(100 - (dev / 127) * 100)));
@@ -880,116 +831,55 @@ export class LiveHudRenderer {
         elLine.textContent = `${lineScoreVal}%`;
         elLine.style.color = lineScoreVal >= 90 ? 'var(--color-success)' : (lineScoreVal >= 80 ? 'var(--color-gold)' : 'var(--color-f1-red)');
       }
-      const elDev = document.getElementById('hud-path-deviation');
-      if (elDev) {
-        const dVal = timing.normalizedDrivingLine !== undefined ? timing.normalizedDrivingLine : Math.round(steer * 60);
-        elDev.textContent = Math.abs(dVal) < 10 ? 'ON CENTERLINE (R3)' : (dVal < 0 ? `PINCHING INSIDE (${Math.abs(dVal)})` : `TRACKING WIDE (+${dVal})`);
-        elDev.style.color = Math.abs(dVal) < 15 ? 'var(--color-success)' : (Math.abs(dVal) < 35 ? 'var(--color-gold)' : 'var(--color-f1-red)');
-      }
-      const elStab = document.getElementById('hud-lat-stability');
-      if (elStab) {
-        elStab.textContent = Math.abs(steer) < 0.25 ? 'STABLE 6/10THS ARC' : (Math.abs(steer) < 0.5 ? 'MODERATE CORRECTION' : 'ABRUPT INPUT');
-        elStab.style.color = Math.abs(steer) < 0.25 ? 'var(--color-success)' : (Math.abs(steer) < 0.5 ? 'var(--color-gold)' : 'var(--color-f1-red)');
-      }
-      const elPing = document.getElementById('hud-ping-status');
-      if (elPing) {
-        if (throttlePct > 70 && Math.abs(steer) < 0.15 && speedMph > 35) {
-          elPing.textContent = '🎯 OPTIMAL APEX CLIPPED';
-          elPing.style.color = 'var(--color-success)';
-        } else if (Math.abs(steer) > 0.4 && currentAbsLatG < 0.5 && speedMph > 40) {
-          elPing.textContent = '⚠️ EARLY TURN-IN PINCH';
-          elPing.style.color = 'var(--color-f1-red)';
-        } else if (speedMph < 5) {
-          elPing.textContent = '🅿️ STATIONARY';
-          elPing.style.color = 'var(--color-text-muted)';
-        } else {
-          elPing.textContent = '📡 TRACKING RACING LINE';
-          elPing.style.color = 'var(--color-success)';
-        }
-      }
-    }
 
-    // 1-2 Exit Speed Expert
-    else if (stintId === 'stint-1-2') {
-      const elExitDelta = document.getElementById('hud-exit-delta');
-      if (elExitDelta) {
-        const accelGZ = accelBlock.longitudinalG != null ? accelBlock.longitudinalG : (longGNum || 0);
-        const deltaMphRate = parseFloat((accelGZ * 21.937).toFixed(1));
-        this.telemetryStats.exitDeltaMph = deltaMphRate;
-        elExitDelta.textContent = `${deltaMphRate >= 0 ? '+' : ''}${deltaMphRate} MPH/s`;
-        elExitDelta.style.color = deltaMphRate >= 2.0 ? 'var(--color-success)' : (deltaMphRate >= 0 ? 'var(--color-gold)' : 'var(--color-f1-red)');
+      // 2. Pillar 2: Corner Exit Speed Delta (km/h)
+      const accelGZ = accelBlock.longitudinalG != null ? accelBlock.longitudinalG : (longGNum || 0);
+      const deltaKmhRate = parseFloat((accelGZ * 35.3).toFixed(1));
+      this.telemetryStats.exitDeltaKmh = deltaKmhRate;
+      this.telemetryStats.exitDeltaMph = parseFloat((deltaKmhRate * 0.621371).toFixed(1));
+      
+      const elExitKmh = document.getElementById('hud-exit-delta-kmh') || document.getElementById('hud-exit-delta');
+      if (elExitKmh) {
+        elExitKmh.textContent = `${deltaKmhRate >= 0 ? '+' : ''}${deltaKmhRate} km/h`;
+        elExitKmh.style.color = deltaKmhRate >= 3.2 ? 'var(--color-success)' : (deltaKmhRate >= 0 ? 'var(--color-gold)' : 'var(--color-f1-red)');
       }
-      const elTap = document.getElementById('hud-tap-timing');
-      if (elTap) {
-        if (throttlePct > 50 && currentAbsLatG > 0.7) {
-          elTap.textContent = 'EARLY TAP (IDEAL POWER)';
-          elTap.style.color = 'var(--color-success)';
-        } else if (throttlePct === 0 && currentAbsLatG > 0.7) {
-          elTap.textContent = 'MID-CORNER COASTING';
-          elTap.style.color = 'var(--color-gold)';
-        } else {
-          elTap.textContent = 'LOCATING APEX TAP';
-          elTap.style.color = 'var(--color-text-muted)';
-        }
-      }
-      const elGain = document.getElementById('hud-straight-gain');
-      if (elGain) {
-        const projGain = (Math.max(0, (throttlePct / 100) * 0.22)).toFixed(2);
-        elGain.textContent = `+${projGain}s / 0.5mi Straight`;
-        elGain.style.color = 'var(--color-gold)';
-      }
-      const elSync = document.getElementById('hud-unwind-sync');
-      if (elSync) {
-        if (throttlePct > 60 && Math.abs(steer) < 0.25) {
-          elSync.textContent = 'SYNCHRONIZED UNWIND';
-          elSync.style.color = 'var(--color-success)';
-        } else if (throttlePct > 60 && Math.abs(steer) >= 0.35) {
-          elSync.textContent = 'UNWIND FASTER (PINCHED)';
-          elSync.style.color = 'var(--color-warning)';
-        } else {
-          elSync.textContent = 'TRACKING ACCELERATION';
-          elSync.style.color = 'var(--color-text-muted)';
-        }
-      }
-    }
 
-    // 1-3 The Brake & Turn Maestro
-    else if (stintId === 'stint-1-3') {
+      // 3. Pillar 3: Brake & Turn Blend Ratio (80% / 20%)
+      const steerPct = Math.min(100, Math.round(Math.abs(steer) * 100));
       const elBlend = document.getElementById('hud-brake-turn-blend');
       if (elBlend) {
-        const steerPct = Math.min(100, Math.round(Math.abs(steer) * 100));
         elBlend.textContent = `${brakePct}% / ${steerPct}%`;
         elBlend.style.color = (brakePct > 60 && steerPct > 40) ? 'var(--color-f1-red)' : ((brakePct > 0 && steerPct > 0) ? 'var(--color-gold)' : 'var(--color-text-primary)');
       }
-      const elDecay = document.getElementById('hud-trail-decay');
-      if (elDecay) {
-        if (brakePct > 20 && Math.abs(steer) > 0.2) {
-          elDecay.textContent = 'TRAIL BRAKING ACTIVE';
-          elDecay.style.color = 'var(--color-success)';
-        } else if (brakePct > 80) {
-          elDecay.textContent = 'THRESHOLD ENTRY';
-          elDecay.style.color = 'var(--color-gold)';
-        } else {
-          elDecay.textContent = 'OFF BRAKES';
-          elDecay.style.color = 'var(--color-text-muted)';
-        }
+
+      // 4. Live Foundation Composite Mastery Score
+      const elMastery = document.getElementById('hud-foundation-mastery');
+      if (elMastery) {
+        const lineFactor = Math.min(100, Math.round((lineScoreVal / 90) * 100));
+        const exitFactor = Math.max(30, Math.min(100, Math.round((Math.max(0, deltaKmhRate) / 3.2) * 100)));
+        const trailFactor = (brakePct > 15 && steerPct > 15) ? 100 : (brakePct > 0 ? 70 : 50);
+        const liveComposite = Math.round((0.40 * lineFactor) + (0.40 * exitFactor) + (0.20 * trailFactor));
+        
+        elMastery.textContent = `${liveComposite}%`;
+        elMastery.style.color = liveComposite >= 85 ? 'var(--color-success)' : (liveComposite >= 70 ? 'var(--color-gold)' : 'var(--color-f1-red)');
       }
-      const elDecelEff = document.getElementById('hud-decel-eff');
-      if (elDecelEff) {
-        if (brakePct > 0) {
-          const eff = Math.min(100, Math.max(10, Math.round((currentAbsLongG / 1.3) * 100)));
-          elDecelEff.textContent = `${eff}% EFF (${longGFormatted}G)`;
-          elDecelEff.style.color = eff >= 85 ? 'var(--color-success)' : 'var(--color-gold)';
+
+      // Telemetry Ping / Status
+      const elPing = document.getElementById('hud-ping-status');
+      if (elPing) {
+        if (throttlePct > 70 && Math.abs(steer) < 0.15 && speedKmh > 55) {
+          elPing.textContent = '🎯 OPTIMAL APEX EXIT (TAP)';
+          elPing.style.color = 'var(--color-success)';
+        } else if (brakePct > 40 && Math.abs(steer) > 0.35) {
+          elPing.textContent = '🔄 TRAIL-BRAKE BLEND ACTIVE';
+          elPing.style.color = 'var(--color-gold)';
+        } else if (speedKmh < 10) {
+          elPing.textContent = '🅿️ PIT / STATIONARY';
+          elPing.style.color = 'var(--color-text-muted)';
         } else {
-          elDecelEff.textContent = 'READY (0% LOAD)';
-          elDecelEff.style.color = 'var(--color-text-muted)';
+          elPing.textContent = '📡 TRACKING FOUNDATION';
+          elPing.style.color = 'var(--color-success)';
         }
-      }
-      const elFriction = document.getElementById('hud-friction-alloc');
-      if (elFriction) {
-        const totalG = Math.sqrt(latGNum * latGNum + longGNum * longGNum);
-        elFriction.textContent = totalG > 1.1 ? `FRICTION SATURATED (${totalG.toFixed(2)}G)` : `AVAILABLE GRIP (${totalG.toFixed(2)}G)`;
-        elFriction.style.color = totalG > 1.1 ? 'var(--color-f1-red)' : 'var(--color-success)';
       }
     }
 
