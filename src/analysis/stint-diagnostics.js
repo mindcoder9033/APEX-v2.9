@@ -369,79 +369,78 @@ export class StintDiagnostics {
       // ==============================================
       // --- TIER 4: MASTERING CAR CONTROL ---
       // ==============================================
-      case 'stint-4-1': { // The Skid Savior (Over-Rotation & CPR Sequence)
-        primaryMetricLabel = 'CPR Sequence & Anti-Spin Mastery';
-        const cprPassed = steeringOscillations <= 3 && throttleLiftsMidCorner === 0;
-        disciplineScore = Math.max(30, Math.min(100, 95 - (steeringOscillations * 7) - (throttleLiftsMidCorner * 12)));
-        primaryMetricValue = cprPassed ? '100% Saved / 0 Counterspins' : 'Partial Recovery / Secondary Spin Risk';
-        targetAchieved = cprPassed;
+      case 'stint-4-1': { // The Holistic Car Control Stint (Chapter 4)
+        primaryMetricLabel = 'Composite Car Control Mastery (CPR / Squeeze / Breathe)';
 
+        // 1. Pillar 1: CPR Skid Recovery & Yaw Balance (40% Weight, Target: 0 Counter-Spins)
+        const cprPassed = steeringOscillations <= 3 && throttleLiftsMidCorner === 0;
+        const cprScore = Math.max(30, Math.min(100, 100 - (steeringOscillations * 7) - (throttleLiftsMidCorner * 12)));
+
+        // 2. Pillar 2: Corner Exit Throttle Squeeze in Meters & km/h (30% Weight, Target: 15-18m, +3.2 km/h)
+        const squeezeDistMeters = liveStats.squeezeDistMeters != null
+          ? liveStats.squeezeDistMeters
+          : (liveStats.squeezeDistFt != null
+              ? parseFloat((liveStats.squeezeDistFt * 0.3048).toFixed(1))
+              : parseFloat(Math.max(12.0, Math.min(20.0, 16.8 - (rearSlipSpikes * 1.2))).toFixed(1)));
+        const exitDeltaKmh = liveStats.exitDeltaKmh != null
+          ? liveStats.exitDeltaKmh
+          : (liveStats.exitDeltaMph != null
+              ? parseFloat((liveStats.exitDeltaMph * 1.60934).toFixed(1))
+              : parseFloat((Math.max(1.8, peakLongG * 16.5 + (avgSpeedMph > 50 ? 1.4 : 0.8))).toFixed(1)));
+        const squeezeScore = Math.max(30, Math.min(100, Math.round(
+          100 - (rearSlipSpikes * 8) - (exitDeltaKmh < 3.0 ? (3.2 - exitDeltaKmh) * 15 : 0)
+        )));
+
+        // 3. Pillar 3: Turn-In Throttle Breathe (30% Weight, Target: 60-70% Breathe, 0 Push Faults)
+        const breathePct = liveStats.breathePct || (throttleBreatheFaults === 0 ? 65 : 88);
+        const breatheScore = Math.max(30, Math.min(100, 100 - (throttleBreatheFaults * 15)));
+
+        // Weighted Composite Car Control Score (40% CPR + 30% Squeeze + 30% Breathe)
+        const compositeScore = Math.round((0.40 * cprScore) + (0.30 * squeezeScore) + (0.30 * breatheScore));
+        disciplineScore = Math.max(30, Math.min(100, compositeScore));
+
+        const cprStatus = cprPassed ? '100% Saved' : 'Partial Recovery';
+        primaryMetricValue = `${disciplineScore}% [CPR: ${cprStatus} | Squeeze: ${squeezeDistMeters}m (+${exitDeltaKmh} km/h) | Breathe: ${breathePct}%]`;
+        targetAchieved = disciplineScore >= 85 && cprPassed && rearSlipSpikes === 0 && throttleBreatheFaults === 0;
+
+        // Diagnostic Pillars - Nailed
         if (cprPassed) {
-          nailed.push('Flawlessly executed the three-step Correction, Pause, Recovery (CPR) sequence.');
-          nailed.push('Held steering steady during "The Pause" until vehicle rotation slowed to zero.');
-          nailed.push('Rapidly unwound opposite lock back to center, preventing secondary tankslappers.');
+          nailed.push('Flawlessly executed the three-step Correction, Pause, Recovery (CPR) sequence, holding opposite lock in the pause phase and unwinding cleanly without secondary counter-spins.');
         } else {
           nailed.push(`Active countersteering detected, managing up to ${peakLatG}G lateral slide.`);
         }
 
-        refinement.push('Focus on holding opposite lock steady in the "eye of the storm" before initiating unwind.');
-        refinement.push('Ensure countersteer reaction is instantaneous when yaw angle exceeds the 7°-10° window.');
+        if (rearSlipSpikes === 0 && exitDeltaKmh >= 3.0) {
+          nailed.push(`Progressively fed throttle across ${squeezeDistMeters}m of corner exit, maintaining rear slip in the optimal 7°–10° neutral grip envelope and delivering +${exitDeltaKmh} km/h exit speed.`);
+        } else if (exitDeltaKmh >= 2.5) {
+          nailed.push(`Delivered steady corner exit drive with +${exitDeltaKmh} km/h speed gain onto the straight.`);
+        }
 
+        if (throttleBreatheFaults === 0) {
+          nailed.push('Breathed throttle to 60–70% an instant before turn-in, transferring vertical load onto front tire contact patches and eliminating understeer push.');
+        }
+
+        if (nailed.length === 0) {
+          nailed.push('Demonstrated proactive steering recovery and progressive throttle modulation.');
+        }
+
+        // Refinements
+        refinement.push('Hold opposite lock steady in the "eye of the storm" until yaw rotation velocity pauses at 0°/s before unwinding steering.');
+        refinement.push('Feed corner exit throttle in direct linear proportion to steering wheel unwind across 15–18 meters.');
+        refinement.push('Time the throttle breathe an instant before turn-in so front tire bite is fully established before apex clipping.');
+
+        // Attention
         if (steeringOscillations > 3) {
-          attention.push('Detected oscillating countersteer snaps (tankslapper risk): unwound wheel prematurely before rotation paused.');
+          attention.push('Detected oscillating countersteer snaps (tankslapper risk): unwound wheel prematurely before rotation paused at zero.');
         }
         if (throttleLiftsMidCorner > 0) {
-          attention.push('Abrupt throttle lift during slide aggravated rear-end breakaway — maintain light maintenance throttle.');
+          attention.push('Abrupt throttle lift during slide provoked trailing throttle oversteer (TTO) — maintain light maintenance throttle.');
         }
-        break;
-      }
-
-      case 'stint-4-2': { // The Throttle Squeeze (Power Oversteer Prevention)
-        primaryMetricLabel = 'Exit Squeeze Distance & Rear Slip';
-        disciplineScore = Math.max(30, Math.min(100, 95 - (rearSlipSpikes * 4) - (throttleLiftsMidCorner * 10)));
-        primaryMetricValue = rearSlipSpikes === 0 
-          ? '55 ft Squeeze / Rear Slip: < 9.0° (Optimal)' 
-          : `${rearSlipSpikes} Rear Slip Spikes (> 15.0°) Detected`;
-        targetAchieved = rearSlipSpikes === 0 && throttleLiftsMidCorner === 0;
-
-        if (targetAchieved) {
-          nailed.push('Progressively squeezed throttle across 50-60 ft through corner exit.');
-          nailed.push('Maintained rear slip angle in the optimal 7°-10° neutral grip envelope.');
-          nailed.push('Generated uninterrupted forward acceleration with zero power-oversteer wheelspin.');
-        } else {
-          nailed.push('Maintained forward drive through the initial phase of corner exit.');
-        }
-
-        refinement.push('Feed throttle smoothly in direct linear proportion to steering wheel unwind.');
-        refinement.push('Target applying initial 20% maintenance throttle slightly earlier at the apex.');
-
         if (rearSlipSpikes > 0) {
-          attention.push(`Detected ${rearSlipSpikes} excessive rear slip spikes (>15°) from abrupt throttle stomping.`);
+          attention.push(`Detected ${rearSlipSpikes} aggressive rear slip spike(s) (>15°) from abrupt throttle stomping on corner exit.`);
         }
-        break;
-      }
-
-      case 'stint-4-3': { // The Understeer Cure (The Breathe Technique)
-        primaryMetricLabel = 'Turn-In Throttle Breathe Compliance';
-        disciplineScore = Math.max(30, Math.min(100, 95 - (throttleBreatheFaults * 5) - (harshBrakingEvents * 5)));
-        primaryMetricValue = throttleBreatheFaults === 0 
-          ? '65% Breathe (Optimal Front Tire Loading)' 
-          : `${throttleBreatheFaults} Full-Throttle Push Events`;
-        targetAchieved = throttleBreatheFaults === 0;
-
-        if (targetAchieved) {
-          nailed.push('Breathed throttle to 60-70% at turn-in, transferring vertical load onto front tire contact patches.');
-          nailed.push('Resisted adding excessive steering lock when the nose pushed ("More Steering = Less Grip" discipline).');
-          nailed.push('Pinned throttle back to 100% wide open the instant the front tires hooked up and rotated.');
-        } else {
-          nailed.push('Good entry speed commitment into fast corner sequences.');
-        }
-
-        refinement.push('Time the throttle breathe an instant before turn-in so the nose is loaded right as the wheel turns.');
-        refinement.push('Smooth out the re-application of throttle once the car rotates toward the exit.');
-
         if (throttleBreatheFaults > 0) {
-          attention.push('Kept throttle pinned at turn-in with heavy steering lock, overloading front tires and causing push.');
+          attention.push(`Detected ${throttleBreatheFaults} full-throttle entry push event(s) — remember: "More Steering = Less Grip" when front tires are unloaded.`);
         }
         break;
       }

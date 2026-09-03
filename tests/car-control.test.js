@@ -102,75 +102,47 @@ test('CarControlEngine: Accurately classifies TTO (Trailing Throttle Oversteer) 
   assert.ok(skid.phases.recovery.detected, 'Recovery phase should be detected');
 });
 
-test('StintDiagnostics: Evaluates Tier 4 Stints (4-1 CPR, 4-2 Throttle Squeeze, 4-3 Understeer Breathe)', async () => {
+test('StintDiagnostics: Evaluates Holistic Tier 4 Stint (4-1 Synthesis in Metric Units)', async () => {
   const { StintDiagnostics } = await import('../src/analysis/stint-diagnostics.js');
 
-  // Stint 4-1: The Skid Savior
   const stint41 = {
     id: 'stint-4-1',
     tier: 4,
     tierName: 'Tier 4: Mastering Car Control',
-    name: 'The Skid Savior',
-    targetMetric: 'CPR Recovery Success Rate: 100% / 0 Secondary Spins',
-    prescribedCar: '2016 Dodge Viper ACR (High-Power RWD)',
-    prescribedTrack: 'Sebring International Raceway',
-    actionPlan: ['Step 1: Correction', 'Step 2: Pause', 'Step 3: Recovery']
+    name: 'The Holistic Car Control Stint',
+    targetMetric: 'Composite Car Control Mastery >= 85% [CPR: 100% Saved | Squeeze: 16m / +3.2 km/h | Breathe: 65%]',
+    prescribedCar: '2016 Dodge Viper ACR',
+    prescribedTrack: 'Sebring International Raceway (Full Circuit)',
+    actionPlan: [
+      'CPR Skid Recovery',
+      'Exit Throttle Squeeze',
+      'Turn-In Throttle Breathe'
+    ]
   };
 
   const sampleBuffer = [
     {
-      motion: { speedMph: 85, speedKmh: 136, lateralG: 1.1, longitudinalG: -0.8, yaw: 0.12 },
-      inputs: { throttle: 0.8, brake: 0, steer: 0.1 },
+      motion: { speedMph: 85, speedKmh: 136, lateralG: 1.1, longitudinalG: 0.25, yaw: 0.12 },
+      inputs: { throttle: 0.8, brake: 0, steer: 0.08 },
+      chassis: { tireSlipAngleRearLeft: 0.08, tireSlipAngleRearRight: 0.08 },
       timing: { lapNumber: 1, distanceTraveled: 100 }
     },
     {
-      motion: { speedMph: 90, speedKmh: 144, lateralG: 0.9, longitudinalG: 0.4, yaw: 0.05 },
-      inputs: { throttle: 1.0, brake: 0, steer: 0 },
+      motion: { speedMph: 90, speedKmh: 144, lateralG: 0.9, longitudinalG: 0.35, yaw: 0.05 },
+      inputs: { throttle: 0.95, brake: 0, steer: 0.02 },
+      chassis: { tireSlipAngleRearLeft: 0.07, tireSlipAngleRearRight: 0.07 },
       timing: { lapNumber: 1, distanceTraveled: 200 }
     }
   ];
 
-  const eval41 = StintDiagnostics.evaluate(stint41, sampleBuffer, { currentLap: 1 });
+  const eval41 = StintDiagnostics.evaluate(stint41, sampleBuffer, { currentLap: 1, squeezeDistMeters: 16.5, exitDeltaKmh: 3.4 });
   assert.equal(eval41.hasTelemetry, true);
   assert.equal(eval41.stintId, 'stint-4-1');
   assert.ok(eval41.gradeScore >= 80);
+  assert.equal(eval41.primaryMetricLabel, 'Composite Car Control Mastery (CPR / Squeeze / Breathe)');
+  assert.ok(eval41.primaryMetricValue.includes('m'));
+  assert.ok(eval41.primaryMetricValue.includes('km/h'));
   assert.ok(eval41.nailed.length > 0);
   assert.ok(eval41.refinement.length > 0);
   assert.ok(eval41.attention.length > 0);
-
-  // Stint 4-2: The Throttle Squeeze
-  const stint42 = {
-    id: 'stint-4-2',
-    tier: 4,
-    tierName: 'Tier 4: Mastering Car Control',
-    name: 'The Throttle Squeeze',
-    targetMetric: 'Throttle Squeeze Distance: 50-60 ft / Rear Slip: <10°',
-    prescribedCar: '2016 Dodge Viper ACR (High-Power RWD)',
-    prescribedTrack: 'Sebring International Raceway',
-    actionPlan: ['Squeeze power', 'Neutral grip', 'Sustain drive']
-  };
-
-  const eval42 = StintDiagnostics.evaluate(stint42, sampleBuffer, { currentLap: 1 });
-  assert.equal(eval42.hasTelemetry, true);
-  assert.equal(eval42.stintId, 'stint-4-2');
-  assert.ok(eval42.gradeScore >= 80);
-  assert.ok(eval42.primaryMetricLabel.includes('Squeeze'));
-
-  // Stint 4-3: The Understeer Cure
-  const stint43 = {
-    id: 'stint-4-3',
-    tier: 4,
-    tierName: 'Tier 4: Mastering Car Control',
-    name: 'The Understeer Cure',
-    targetMetric: 'Turn-In Throttle Breathe: 60-70% / 0 Lock Pinches',
-    prescribedCar: '2016 Dodge Viper ACR (High-Power RWD)',
-    prescribedTrack: 'Sebring International Raceway',
-    actionPlan: ['Breathe throttle', 'Resist lock', 'Pin throttle']
-  };
-
-  const eval43 = StintDiagnostics.evaluate(stint43, sampleBuffer, { currentLap: 1 });
-  assert.equal(eval43.hasTelemetry, true);
-  assert.equal(eval43.stintId, 'stint-4-3');
-  assert.ok(eval43.gradeScore >= 80);
-  assert.ok(eval43.primaryMetricLabel.includes('Breathe'));
 });
