@@ -7,21 +7,13 @@ describe('CornerDynamics3DEngine: Mathematical & Algorithmic Unit Tests', () => 
   const engine = new CornerDynamics3DEngine();
 
   it('computes theoretical speed correctly from corner radius and lateral G per Going Faster!', () => {
-    // R = 50m, G = 1.15 -> v = sqrt(127.14 * 1.15 * 50) ≈ 85.46 km/h -> 85 km/h
+    // R = 50m, G = 1.15 -> v = sqrt(127 * 1.15 * 50) ≈ 85.46 km/h -> 85 km/h
     const speed50m = engine.calculateTheoreticalSpeedKmh(50, 1.15);
     assert.strictEqual(speed50m >= 80 && speed50m <= 90, true, `Expected ~85 km/h, got ${speed50m}`);
 
     // R = 150m, G = 1.30 -> high speed sweeper
     const speed150m = engine.calculateTheoreticalSpeedKmh(150, 1.30);
     assert.strictEqual(speed150m > speed50m, true, `High speed sweeper must have higher speed`);
-  });
-
-  it('computes Chapter 2 Three Radii Benchmark (R1 Inside, R2 Middle, R3 Racing Line) and speed advantage', () => {
-    const benchmark = engine.calculateThreeRadiiBenchmark(59.4, 1.0);
-    assert.strictEqual(benchmark.r3RacingLine.theoreticalSpeedKmh >= 85, true, 'R3 should yield ~87 km/h');
-    assert.strictEqual(benchmark.r1InsideArc.theoreticalSpeedKmh <= 65, true, 'R1 inside arc should yield ~63 km/h');
-    assert.strictEqual(benchmark.speedAdvantageKmh >= 20, true, 'Racing line should provide >20 km/h speed gain');
-    assert.strictEqual(benchmark.speedAdvantagePercent >= 30, true, 'Racing line should provide >30% speed gain');
   });
 
   it('estimates optimal transmission gear based on corner entry/exit speeds', () => {

@@ -375,14 +375,8 @@ export class GridLayoutManager {
           <h3 class="pit-card-title">2.5D Real-Time Track Map</h3>
         </div>
         <div class="track-map-3d-controls" style="display: flex; gap: 6px; align-items: center;">
-          <button id="btn-toggle-map-3d-dim" class="btn btn-secondary btn-xs chamfer-all-corners" title="Toggle 2.5D Isometric / 2D Top-Down (3)">
+          <button id="btn-toggle-map-3d-dim" class="btn btn-secondary btn-xs chamfer-all-corners" title="Toggle 2.5D Isometric / 2D Top-Down">
             <span id="btn-map-dim-label">2.5D</span>
-          </button>
-          <button id="btn-toggle-map-3d-ghost" class="btn btn-secondary btn-xs chamfer-all-corners" title="Toggle Ghost PB Reference Lap (G)">
-            <span id="btn-map-ghost-label">GHOST</span>
-          </button>
-          <button id="btn-export-map-3d-pdf" class="btn btn-primary btn-xs chamfer-all-corners" style="background: linear-gradient(135deg, #E10600 0%, #800000 100%);" title="Export 3D Spatial Racecraft Report PDF">
-            <span>📄 PDF</span>
           </button>
           <button id="btn-rotate-map-left" class="btn btn-secondary btn-icon-xs chamfer-all-corners" title="Rotate Left (⟲)">
             <span>⟲</span>

@@ -1,22 +1,13 @@
 /**
- * APEX 2.5D Isometric High-Performance Canvas2D Track Map & Spatial Racecraft Engine
- * Renders real-time circuit geometry with 3D elevation ribbons, 7-phase telemetry color gradients,
- * Ghost reference lap overlay, rotatable isometric/top-down camera, live car blip,
- * dynamic Entry/Late-Apex/Exit holographic coaching markers, high-res PDF snapshot export,
+ * APEX 2.5D Isometric High-Performance Canvas2D Track Map
+ * Renders real-time circuit geometry with 3D elevation ribbons,
+ * rotatable isometric/top-down camera, ghost lap comparison,
+ * live car blip, dynamic Entry/Late-Apex/Exit coaching markers,
  * and active corner HUD banner.
  */
 
 import { CornerDynamics3DEngine, APEX_TYPE, CORNER_PHASE } from '../analysis/corner-dynamics-3d.js';
-
-export const TELEMETRY_PHASE_COLORS = {
-  FULL_THROTTLE: { hex: '#00FF66', label: 'Full Throttle' },
-  THRESHOLD_BRAKE: { hex: '#E10600', label: 'Threshold Braking' },
-  TRAIL_BRAKE: { hex: '#9900FF', label: 'Trail Braking' },
-  NEUTRAL_COAST: { hex: '#3399FF', label: 'Neutral Balance' },
-  APEX_MIN_SPEED: { hex: '#FFCC00', label: 'Apex Min Speed' },
-  POWER_EXIT: { hex: '#00CC66', label: 'Power Exit' },
-  TIRE_SLIP_HAZARD: { hex: '#FF3300', label: 'Tire Slip / Limit' }
-};
+import { DRIVING_STATE, STATE_COLORS } from '../analysis/track-map.js';
 
 export class IsometricTrackMap {
   /**
@@ -25,7 +16,7 @@ export class IsometricTrackMap {
    */
   constructor(canvas, options = {}) {
     this.canvas = canvas;
-    this.ctx = canvas ? canvas.getContext('2d') : null;
+    this.ctx = canvas.getContext('2d');
     this.options = options;
 
     this.dynamicsEngine = new CornerDynamics3DEngine(options.dynamics);
@@ -38,7 +29,6 @@ export class IsometricTrackMap {
     this.panX = 0;
     this.panY = 0;
     this.elevationScale = 1.6; // Visual multiplier for elevation extrusion
-    this.showGhostLap = options.showGhostLap !== undefined ? options.showGhostLap : true;
 
     // State data
     this.liveSamples = [];
@@ -46,7 +36,6 @@ export class IsometricTrackMap {
     this.corners3D = [];
     this.currentSample = null;
     this.activeCornerProgress = null;
-    this.screenMarkers = [];
 
     // Track bounding box & normalization
     this.bounds = { minX: 0, maxX: 100, minY: 0, maxY: 10, minZ: 0, maxZ: 100, centerX: 50, centerY: 5, centerZ: 50, range: 100 };
@@ -64,7 +53,7 @@ export class IsometricTrackMap {
     this.dragStartPitch = 0;
     this.isRightClickDrag = false;
 
-    // Active callbacks
+    // Active marker click callback
     this.onMarkerClick = options.onMarkerClick || null;
     this.onCornerHover = options.onCornerHover || null;
 
@@ -79,7 +68,7 @@ export class IsometricTrackMap {
     if (!this.canvas) return;
 
     // Window resize observer
-    if (typeof window !== 'undefined' && window.ResizeObserver) {
+    if (window.ResizeObserver) {
       this.resizeObserver = new ResizeObserver(() => {
         this.resizeCanvas();
         this.render();
@@ -99,31 +88,29 @@ export class IsometricTrackMap {
       this.isRightClickDrag = (e.button === 2 || e.shiftKey);
     });
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('mousemove', (e) => {
-        if (this.isDragging) {
-          const dx = e.clientX - this.dragStartX;
-          const dy = e.clientY - this.dragStartY;
+    window.addEventListener('mousemove', (e) => {
+      if (this.isDragging) {
+        const dx = e.clientX - this.dragStartX;
+        const dy = e.clientY - this.dragStartY;
 
-          if (this.isRightClickDrag || !this.is3D) {
-            // Pan camera
-            this.panX = this.dragStartPanX + dx;
-            this.panY = this.dragStartPanY + dy;
-          } else {
-            // Orbit yaw & pitch
-            this.yaw = this.dragStartYaw + dx * 0.008;
-            this.pitch = Math.max(0.05, Math.min(Math.PI / 2 - 0.05, this.dragStartPitch - dy * 0.006));
-          }
-          this.render();
+        if (this.isRightClickDrag || !this.is3D) {
+          // Pan camera
+          this.panX = this.dragStartPanX + dx;
+          this.panY = this.dragStartPanY + dy;
         } else {
-          this.handleMouseMove(e);
+          // Orbit yaw & pitch
+          this.yaw = this.dragStartYaw + dx * 0.008;
+          this.pitch = Math.max(0.05, Math.min(Math.PI / 2 - 0.05, this.dragStartPitch - dy * 0.006));
         }
-      });
+        this.render();
+      } else {
+        this.handleMouseMove(e);
+      }
+    });
 
-      window.addEventListener('mouseup', () => {
-        this.isDragging = false;
-      });
-    }
+    window.addEventListener('mouseup', () => {
+      this.isDragging = false;
+    });
 
     // Mouse wheel for Zoom
     this.canvas.addEventListener('wheel', (e) => {
@@ -134,7 +121,7 @@ export class IsometricTrackMap {
     }, { passive: false });
 
     // Click handler for markers
-    this.canvas.addEventListener('click', () => {
+    this.canvas.addEventListener('click', (e) => {
       if (this.hoveredMarker) {
         this.selectedMarker = this.hoveredMarker;
         if (typeof this.onMarkerClick === 'function') {
@@ -158,11 +145,11 @@ export class IsometricTrackMap {
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
 
-    const dpr = typeof window !== 'undefined' ? (window.devicePixelRatio || 1) : 1;
+    const dpr = window.devicePixelRatio || 1;
     this.canvas.width = rect.width * dpr;
     this.canvas.height = rect.height * dpr;
-    this.ctx?.resetTransform?.();
-    this.ctx?.scale(dpr, dpr);
+    this.ctx.resetTransform?.();
+    this.ctx.scale(dpr, dpr);
     this.viewWidth = rect.width;
     this.viewHeight = rect.height;
   }
@@ -192,38 +179,37 @@ export class IsometricTrackMap {
 
     // Real-time corner dynamics evaluation
     if (this.corners3D.length > 0 && sample) {
-      this.activeCornerProgress = this.dynamicsEngine.evaluateLiveProgress(sample, this.liveSamples, this.corners3D);
+      this.activeCornerProgress = this.dynamicsEngine.evaluateLiveProgress(
+        sample,
+        this.liveSamples,
+        this.corners3D
+      );
     }
   }
 
   /**
-   * Sets pre-analyzed corners or triggers 3D corner analysis on given samples
-   * @param {Array<Object>} corners 
+   * Loads reference lap benchmarks and pre-calculated 3D corners
+   * @param {Object} referenceLap 
+   * @param {Array<Object>} corners3D 
    */
-  setCorners(corners) {
-    this.corners3D = Array.isArray(corners) ? corners : [];
-  }
+  setReferenceData(referenceLap, corners3D = null) {
+    this.referenceLap = referenceLap;
+    if (corners3D && corners3D.length > 0) {
+      this.corners3D = corners3D;
+    } else if (referenceLap?.samples) {
+      this.corners3D = this.dynamicsEngine.analyzeCorners3D(referenceLap.samples);
+    }
 
-  /**
-   * Sets the reference / personal best lap for ghost overlay and hybrid benchmarking
-   * @param {Object} lap Lap object with samples array
-   */
-  setReferenceLap(lap) {
-    this.referenceLap = lap;
-    if (lap && lap.samples && lap.samples.length > 30) {
-      this.corners3D = this.dynamicsEngine.analyzeCorners3D(lap.samples, null, lap.vehicleMeta || {});
-      this.computeBoundingBox(lap.samples);
-      if (!this.hasFitted) {
-        this.fitToView();
-        this.hasFitted = true;
-      }
+    if (this.referenceLap?.samples?.length > 10) {
+      this.computeBoundingBox(this.referenceLap.samples);
+      this.fitToView();
+      this.hasFitted = true;
     }
     this.render();
   }
 
   /**
-   * Computes 3D Axis-Aligned Bounding Box (AABB) for track normalization
-   * @param {Array<Object>} samples 
+   * Computes spatial bounding box for coordinate scaling
    */
   computeBoundingBox(samples) {
     if (!samples || samples.length === 0) return;
@@ -232,8 +218,7 @@ export class IsometricTrackMap {
     let minY = Infinity, maxY = -Infinity;
     let minZ = Infinity, maxZ = -Infinity;
 
-    for (let i = 0; i < samples.length; i++) {
-      const s = samples[i];
+    for (const s of samples) {
       const x = s.motion?.position?.x ?? s.positionX ?? s.posX ?? 0;
       const y = s.motion?.position?.y ?? s.positionY ?? s.posY ?? 0;
       const z = s.motion?.position?.z ?? s.positionZ ?? s.posZ ?? 0;
@@ -246,40 +231,39 @@ export class IsometricTrackMap {
       if (z > maxZ) maxZ = z;
     }
 
-    const rangeX = maxX - minX || 1;
-    const rangeY = maxY - minY || 1;
-    const rangeZ = maxZ - minZ || 1;
-    const range = Math.max(rangeX, rangeZ);
+    const rangeX = maxX - minX || 100;
+    const rangeZ = maxZ - minZ || 100;
+    const maxRange = Math.max(rangeX, rangeZ);
 
     this.bounds = {
-      minX, maxX, minY, maxY, minZ, maxZ,
+      minX, maxX,
+      minY, maxY,
+      minZ, maxZ,
       centerX: (minX + maxX) / 2,
       centerY: (minY + maxY) / 2,
       centerZ: (minZ + maxZ) / 2,
-      rangeX, rangeY, rangeZ, range
+      range: maxRange
     };
   }
 
   /**
-   * Centers and scales the track geometry to fit the canvas viewport
+   * Fits and centers the track inside the canvas viewport
    */
   fitToView() {
-    if (!this.viewWidth || !this.viewHeight || !this.bounds.range) return;
-    const padding = 70;
-    const availableW = this.viewWidth - padding * 2;
-    const availableH = this.viewHeight - padding * 2;
-    const maxDim = Math.max(availableW, availableH);
-
-    this.baseScale = (maxDim / (this.bounds.range || 100)) * 0.82;
-    this.panX = this.viewWidth / 2;
-    this.panY = this.viewHeight / 2 + (this.is3D ? 20 : 0);
+    if (!this.viewWidth || !this.viewHeight) {
+      this.resizeCanvas();
+    }
+    const availDim = Math.min(this.viewWidth || 400, this.viewHeight || 300) * 0.75;
+    this.baseScale = availDim / (this.bounds.range || 100);
+    this.panX = (this.viewWidth || 400) / 2;
+    this.panY = (this.viewHeight || 300) / 2;
     this.zoom = 1.0;
   }
 
   /**
    * Resets camera to standard isometric orientation
    */
-  resetCamera() {
+  resetView() {
     this.pitch = this.is3D ? 0.65 : 0;
     this.yaw = 0.45;
     this.fitToView();
@@ -287,45 +271,21 @@ export class IsometricTrackMap {
   }
 
   /**
-   * Alias for resetCamera
-   */
-  resetView() {
-    return this.resetCamera();
-  }
-
-  /**
-   * Toggles Ghost reference line display
-   */
-  toggleGhostLap() {
-    this.showGhostLap = !this.showGhostLap;
-    this.render();
-    return this.showGhostLap;
-  }
-
-  /**
    * Toggles between 2.5D Isometric and 2D Top-Down View
    */
-  toggleDimension() {
+  toggleViewMode() {
     this.is3D = !this.is3D;
     this.pitch = this.is3D ? 0.65 : 0;
-    this.fitToView();
     this.render();
     return this.is3D;
   }
 
   /**
-   * Alias for toggleDimension
-   */
-  toggleViewMode() {
-    return this.toggleDimension();
-  }
-
-  /**
    * 2.5D Isometric World-to-Screen Projection Matrix Math
    * Projects (X, Y, Z) world coordinates to (u, v) 2D canvas coordinates
-   * @param {number} x World X (meters)
-   * @param {number} y World Y (Elevation in meters)
-   * @param {number} z World Z (meters)
+   * @param {number} x World X
+   * @param {number} y World Y (Elevation)
+   * @param {number} z World Z
    * @returns {{u: number, v: number, depth: number}}
    */
   project(x, y, z) {
@@ -346,7 +306,7 @@ export class IsometricTrackMap {
 
     let screenX = rx;
     let screenY = rz * cosP - cy * sinP;
-    const depth = rz * sinP + cy * cosP;
+    const depth = rz * sinP + cy * cosP; // Depth sorting metric
 
     // 4. Scale and Pan
     const scale = (this.baseScale || 1.0) * this.zoom;
@@ -369,17 +329,17 @@ export class IsometricTrackMap {
     // Draw Isometric Floor Grid
     this.drawIsometricGrid();
 
-    // 1. Draw Reference / Ghost Lap Track Ribbon (if enabled)
-    if (this.showGhostLap && this.referenceLap?.samples && this.referenceLap.samples.length > 5) {
+    // 1. Draw Reference / Ghost Lap Track Ribbon (if available)
+    if (this.referenceLap?.samples && this.referenceLap.samples.length > 5) {
       this.drawTrackRibbon(this.referenceLap.samples, {
         isGhost: true,
         ribbonWidth: 6,
-        alpha: 0.45,
-        strokeColor: 'rgba(240, 245, 255, 0.50)'
+        alpha: 0.35,
+        strokeColor: 'rgba(0, 240, 255, 0.4)'
       });
     }
 
-    // 2. Draw Live Lap Extruded Track Ribbon with 7-Phase Color Mapping
+    // 2. Draw Live Lap Extruded Track Ribbon
     if (this.liveSamples && this.liveSamples.length > 2) {
       this.drawTrackRibbon(this.liveSamples, {
         isGhost: false,
@@ -437,13 +397,14 @@ export class IsometricTrackMap {
   }
 
   /**
-   * Draws extruded 3D track ribbon with 7-phase telemetry color gradients
+   * Draws extruded 3D track ribbon with elevation depth shadows & driving state coloring
    */
   drawTrackRibbon(samples, { isGhost = false, ribbonWidth = 8, alpha = 1.0, strokeColor = null }) {
     if (!samples || samples.length < 2) return;
     const ctx = this.ctx;
     const n = samples.length;
 
+    // Projected points
     const points = [];
     const shadows = [];
 
@@ -474,7 +435,7 @@ export class IsometricTrackMap {
       }
       ctx.stroke();
 
-      // Vertical elevation contour struts
+      // Draw vertical elevation contour struts at regular intervals
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
       ctx.lineWidth = 1;
       const strutStep = Math.max(1, Math.floor(n / 40));
@@ -488,9 +449,9 @@ export class IsometricTrackMap {
 
     // B. Draw Main Elevated Track Ribbon
     if (isGhost) {
-      // Ghost / Reference lap: Translucent Silver Dashed Line
+      // Ghost / Reference lap: dashed line
       ctx.beginPath();
-      ctx.strokeStyle = strokeColor || 'rgba(240, 245, 255, 0.50)';
+      ctx.strokeStyle = strokeColor || 'rgba(0, 240, 255, 0.45)';
       ctx.lineWidth = ribbonWidth;
       ctx.setLineDash([6, 6]);
       ctx.lineCap = 'round';
@@ -502,7 +463,7 @@ export class IsometricTrackMap {
       ctx.stroke();
       ctx.setLineDash([]);
     } else {
-      // Live Lap: 7-Phase F1 Pit-Wall Telemetry Gradient
+      // Live Lap: multi-color driving state segments
       ctx.lineWidth = ribbonWidth;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
@@ -511,28 +472,14 @@ export class IsometricTrackMap {
         const s = points[i].sample;
         const throttle = s.inputs?.throttle ?? s.accel ?? 0;
         const brake = s.inputs?.brake ?? s.brake ?? 0;
-        const steer = Math.abs(s.inputs?.steering ?? s.steer ?? 0);
-        const slip = Math.max(
-          s.tires?.fl?.combinedSlip ?? 0,
-          s.tires?.fr?.combinedSlip ?? 0,
-          s.tires?.rl?.combinedSlip ?? 0,
-          s.tires?.rr?.combinedSlip ?? 0
-        );
 
-        let color = TELEMETRY_PHASE_COLORS.NEUTRAL_COAST.hex; // Sky Blue (Coast)
-
-        if (slip > 1.25) {
-          color = TELEMETRY_PHASE_COLORS.TIRE_SLIP_HAZARD.hex; // Hazard Red Pulse
-        } else if (brake > 0.65 && steer < 0.12) {
-          color = TELEMETRY_PHASE_COLORS.THRESHOLD_BRAKE.hex; // F1 Crimson (Straightline brake)
-        } else if (brake > 0.15 && steer >= 0.12) {
-          color = TELEMETRY_PHASE_COLORS.TRAIL_BRAKE.hex; // Electric Purple (Trail-brake blend)
-        } else if (throttle > 0.85 && steer < 0.10) {
-          color = TELEMETRY_PHASE_COLORS.FULL_THROTTLE.hex; // Neon Emerald (Straight)
-        } else if (throttle > 0.35 && steer >= 0.10) {
-          color = TELEMETRY_PHASE_COLORS.POWER_EXIT.hex; // Racing Green (Power exit)
-        } else if (steer > 0.30 && throttle < 0.30 && brake < 0.15) {
-          color = TELEMETRY_PHASE_COLORS.APEX_MIN_SPEED.hex; // Amber Gold (Apex zone)
+        let color = STATE_COLORS.COASTING.hex;
+        if (brake > 0.10) {
+          color = STATE_COLORS.BRAKING.hex; // Red
+        } else if (throttle > 0.80) {
+          color = STATE_COLORS.FULL_THROTTLE.hex; // Green
+        } else if (throttle > 0.05) {
+          color = STATE_COLORS.PARTIAL_THROTTLE.hex; // Amber
         }
 
         ctx.strokeStyle = color;
@@ -547,7 +494,7 @@ export class IsometricTrackMap {
   }
 
   /**
-   * Draws interactive coaching markers: Entry, Geometric Apex, Actual Apex, Exit with 3D Laser Drop Lines
+   * Draws interactive coaching markers: Entry, Geometric Apex, Actual Apex, Exit
    */
   drawCoachingMarkers() {
     if (!this.corners3D || this.corners3D.length === 0) return;
@@ -556,11 +503,8 @@ export class IsometricTrackMap {
     this.screenMarkers = []; // Reset clickable screen marker cache
 
     for (const corner of this.corners3D) {
-      // --- 1. ENTRY MARKER (Blue Holographic Pin) ---
+      // --- 1. ENTRY MARKER (Blue Flag) ---
       const pEntry = this.project(corner.entry.position.x, corner.entry.position.y, corner.entry.position.z);
-      const pEntryGround = this.project(corner.entry.position.x, this.bounds.minY, corner.entry.position.z);
-      this.drawLaserDropLine(pEntry.u, pEntry.v, pEntryGround.u, pEntryGround.v, 'rgba(0, 153, 255, 0.4)');
-
       this.drawPin(pEntry.u, pEntry.v, {
         color: '#0099FF',
         glowColor: 'rgba(0, 153, 255, 0.6)',
@@ -574,14 +518,11 @@ export class IsometricTrackMap {
       const pGeom = this.project(corner.geometricApex.position.x, corner.geometricApex.position.y, corner.geometricApex.position.z);
       this.drawGeometricApexTarget(pGeom.u, pGeom.v, corner);
 
-      // --- 3. ACTUAL LATE APEX (Glowing Amber/Gold Sphere with Halo) ---
+      // --- 3. ACTUAL LATE APEX (Glowing Amber/Orange Sphere) ---
       const pApex = this.project(corner.actualApex.position.x, corner.actualApex.position.y, corner.actualApex.position.z);
-      const pApexGround = this.project(corner.actualApex.position.x, this.bounds.minY, corner.actualApex.position.z);
       const isLate = corner.actualApex.classification === APEX_TYPE.LATE;
-      const apexColor = isLate ? '#FFCC00' : (corner.actualApex.classification === APEX_TYPE.EARLY ? '#E10600' : '#00CC66');
+      const apexColor = isLate ? '#FF9900' : (corner.actualApex.classification === APEX_TYPE.EARLY ? '#E10600' : '#00CC66');
       const apexDeltaText = `${corner.actualApex.lateApexDeltaMeters > 0 ? '+' : ''}${corner.actualApex.lateApexDeltaMeters}m`;
-
-      this.drawLaserDropLine(pApex.u, pApex.v, pApexGround.u, pApexGround.v, `${apexColor}66`);
 
       this.drawPin(pApex.u, pApex.v, {
         color: apexColor,
@@ -594,20 +535,17 @@ export class IsometricTrackMap {
 
       // Connector line between Geometric and Actual Apex
       ctx.save();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.lineWidth = 1.5;
-      ctx.setLineDash([3, 3]);
+      ctx.setLineDash([2, 3]);
       ctx.beginPath();
       ctx.moveTo(pGeom.u, pGeom.v);
       ctx.lineTo(pApex.u, pApex.v);
       ctx.stroke();
       ctx.restore();
 
-      // --- 4. EXIT MARKER (Green Checkered Pin) ---
+      // --- 4. EXIT MARKER (Green Checkered Flag) ---
       const pExit = this.project(corner.exit.position.x, corner.exit.position.y, corner.exit.position.z);
-      const pExitGround = this.project(corner.exit.position.x, this.bounds.minY, corner.exit.position.z);
-      this.drawLaserDropLine(pExit.u, pExit.v, pExitGround.u, pExitGround.v, 'rgba(0, 204, 102, 0.4)');
-
       this.drawPin(pExit.u, pExit.v, {
         color: '#00CC66',
         glowColor: 'rgba(0, 204, 102, 0.6)',
@@ -617,23 +555,6 @@ export class IsometricTrackMap {
         corner
       });
     }
-  }
-
-  /**
-   * Draws a vertical laser drop-line for 3D elevation anchoring
-   */
-  drawLaserDropLine(u1, v1, u2, v2, strokeColor) {
-    if (!this.is3D) return;
-    const ctx = this.ctx;
-    ctx.save();
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 1;
-    ctx.setLineDash([2, 4]);
-    ctx.beginPath();
-    ctx.moveTo(u1, v1);
-    ctx.lineTo(u2, v2);
-    ctx.stroke();
-    ctx.restore();
   }
 
   /**
@@ -667,7 +588,7 @@ export class IsometricTrackMap {
   drawPin(u, v, { color, glowColor, icon, badgeText, type, corner }) {
     const ctx = this.ctx;
     const isHovered = this.hoveredMarker && this.hoveredMarker.corner?.cornerNumber === corner.cornerNumber && this.hoveredMarker.type === type;
-    const radius = isHovered ? 7.5 : 5.5;
+    const radius = isHovered ? 7 : 5.5;
 
     ctx.save();
 
@@ -687,7 +608,7 @@ export class IsometricTrackMap {
     ctx.stroke();
 
     // Badge Pill Box
-    if (this.zoom >= 0.70) {
+    if (this.zoom >= 0.75) {
       ctx.font = '10px "JetBrains Mono", Consolas, monospace';
       const textWidth = ctx.measureText(badgeText).width;
       const boxWidth = textWidth + 10;
@@ -734,7 +655,9 @@ export class IsometricTrackMap {
 
     ctx.save();
 
-    // Projected heading vector
+    // Heading direction indicator
+    const headingLength = 18;
+    // Calculate projected heading vector
     const hx = x + Math.sin(yaw) * 6;
     const hz = z + Math.cos(yaw) * 6;
     const pH = this.project(hx, y, hz);
@@ -805,7 +728,7 @@ export class IsometricTrackMap {
 
     // Corner title & direction
     ctx.font = 'bold 11px "JetBrains Mono", Consolas, monospace';
-    ctx.fillStyle = '#FFCC00';
+    ctx.fillStyle = '#FF9900';
     ctx.textBaseline = 'top';
     ctx.fillText(`TURN ${banner.cornerNumber} (${banner.direction})`, bannerX + 10, bannerY + 6);
 
@@ -825,7 +748,7 @@ export class IsometricTrackMap {
   }
 
   /**
-   * Draws detailed marker tooltip on hover with SI Metric values
+   * Draws detailed marker tooltip on hover
    */
   drawMarkerTooltip(marker) {
     const ctx = this.ctx;
@@ -838,25 +761,25 @@ export class IsometricTrackMap {
 
     if (marker.type === 'ENTRY') {
       line1 = `Target Entry: ${c.entry.targetSpeedKmh} km/h (Gear: ${c.entry.recommendedGear})`;
-      line2 = `Actual: ${c.entry.actualSpeedKmh} km/h · Brake: ${c.entry.thresholdBrakePressure}% (${c.entry.brakingStartedEarly ? 'Early Brake' : 'Trail Ready'})`;
+      line2 = `Actual Entry: ${c.entry.actualSpeedKmh} km/h · ${c.entry.brakingStartedEarly ? 'Braking initiated early' : 'Trail-brake ready'}`;
     } else if (marker.type === 'APEX') {
       line1 = `Apex: ${c.actualApex.classification} (${c.actualApex.lateApexDeltaMeters > 0 ? '+' : ''}${c.actualApex.lateApexDeltaMeters}m delta)`;
-      line2 = `Speed: ${c.actualApex.actualSpeedKmh} km/h · Utilization: ${c.actualApex.radiusUtilizationPercent}% of R3`;
+      line2 = c.actualApex.coachingFeedback;
     } else if (marker.type === 'EXIT') {
       line1 = `Target Exit: ${c.exit.targetSpeedKmh} km/h (Gear: ${c.exit.recommendedGear})`;
-      line2 = `Actual Exit: ${c.exit.actualSpeedKmh} km/h · TAP: ${c.exit.tapDistBeforeApexMeters}m before apex`;
+      line2 = `Actual Exit: ${c.exit.actualSpeedKmh} km/h · Full Throttle Unwind`;
     } else if (marker.type === 'GEOMETRIC_APEX') {
       line1 = `Geometric Corner Midpoint (Conventional Center)`;
-      line2 = `Actual Apex delta: ${c.actualApex.lateApexDeltaMeters}m along track`;
+      line2 = `Actual Apex delta: ${c.actualApex.lateApexDeltaMeters}m`;
     }
 
     ctx.save();
     ctx.font = '11px "Inter", sans-serif';
     const maxW = Math.max(ctx.measureText(title).width, ctx.measureText(line1).width, ctx.measureText(line2).width) + 24;
-    const ttWidth = Math.min(340, maxW);
-    const ttHeight = 62;
+    const ttWidth = Math.min(320, maxW);
+    const ttHeight = 60;
     const ttX = Math.max(10, Math.min(this.viewWidth - ttWidth - 10, (this.hoveredMarker.screenU || 100) + 12));
-    const ttY = Math.max(10, Math.min(this.viewHeight - ttHeight - 10, (this.hoveredMarker.screenV || 100) - 72));
+    const ttY = Math.max(10, Math.min(this.viewHeight - ttHeight - 10, (this.hoveredMarker.screenV || 100) - 70));
 
     ctx.fillStyle = 'rgba(12, 18, 30, 0.95)';
     ctx.strokeStyle = '#00F0FF';
@@ -865,7 +788,7 @@ export class IsometricTrackMap {
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#FFCC00';
+    ctx.fillStyle = '#FF9900';
     ctx.font = 'bold 10px "JetBrains Mono", Consolas, monospace';
     ctx.fillText(title, ttX + 8, ttY + 16);
 
@@ -873,9 +796,9 @@ export class IsometricTrackMap {
     ctx.font = '10px "Inter", sans-serif';
     ctx.fillText(line1, ttX + 8, ttY + 34);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.font = '9px "Inter", sans-serif';
-    ctx.fillText(line2.slice(0, 56) + (line2.length > 56 ? '...' : ''), ttX + 8, ttY + 50);
+    ctx.fillText(line2.slice(0, 52) + (line2.length > 52 ? '...' : ''), ttX + 8, ttY + 49);
 
     ctx.restore();
   }
@@ -900,7 +823,7 @@ export class IsometricTrackMap {
    * Mouse move hit testing for interactive markers
    */
   handleMouseMove(e) {
-    if (!this.screenMarkers || this.screenMarkers.length === 0 || !this.canvas) return;
+    if (!this.screenMarkers || this.screenMarkers.length === 0) return;
     const rect = this.canvas.getBoundingClientRect();
     const mx = e.clientX - rect.left;
     const my = e.clientY - rect.top;
@@ -922,55 +845,5 @@ export class IsometricTrackMap {
         this.onCornerHover(hit);
       }
     }
-  }
-
-  /**
-   * Exports a high-resolution antialiased PNG data URL for pdf-lib report generation
-   * @param {number} targetWidth 
-   * @param {number} targetHeight 
-   * @returns {string} Base64 PNG Data URL
-   */
-  exportHighResSnapshot(targetWidth = 1600, targetHeight = 900) {
-    if (typeof document === 'undefined') return null;
-
-    const offscreen = document.createElement('canvas');
-    offscreen.width = targetWidth;
-    offscreen.height = targetHeight;
-    const offCtx = offscreen.getContext('2d');
-    if (!offCtx) return null;
-
-    // Save current renderer state
-    const prevCtx = this.ctx;
-    const prevW = this.viewWidth;
-    const prevH = this.viewHeight;
-    const prevPanX = this.panX;
-    const prevPanY = this.panY;
-    const prevBaseScale = this.baseScale;
-
-    // Attach offscreen context
-    this.ctx = offCtx;
-    this.viewWidth = targetWidth;
-    this.viewHeight = targetHeight;
-    this.fitToView();
-
-    // Dark Motorsport background
-    offCtx.fillStyle = '#0A0E17';
-    offCtx.fillRect(0, 0, targetWidth, targetHeight);
-
-    // Render high-res frame
-    this.render();
-
-    // Capture PNG Data URL
-    const dataUrl = offscreen.toDataURL('image/png');
-
-    // Restore original state
-    this.ctx = prevCtx;
-    this.viewWidth = prevW;
-    this.viewHeight = prevH;
-    this.panX = prevPanX;
-    this.panY = prevPanY;
-    this.baseScale = prevBaseScale;
-
-    return dataUrl;
   }
 }
