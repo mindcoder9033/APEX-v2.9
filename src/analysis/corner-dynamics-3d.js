@@ -1,10 +1,10 @@
 /**
  * APEX 3D Real-Time Corner Dynamics & Apex Analysis Engine
- * Implements Skip Barber "Going Faster!" racing principles:
- * - Feature 1: Corner Entry point, Braking initiation, Turn-in with Target Speed & Gear
+ * Implements Skip Barber "Going Faster!" Chapter 2 racing principles (SI Metric Standard):
+ * - Feature 1: Corner Entry point, Braking initiation, Turn-in with Target Speed (km/h) & Gear
  * - Feature 2: Geometric Midpoint Apex vs Actual Late Apex detection & delta calculation (meters)
- * - Feature 3: Track-Out Exit spot with Target Speed & Power Gear
- * - Hybrid Benchmark Model: Fastest Clean Lap reference fallback to theoretical v = sqrt(15 * G * R)
+ * - Feature 3: Track-Out Exit spot with Target Speed (km/h) & Power Gear
+ * - Chapter 2 Benchmark: Three Radii (R1 Inside, R2 Middle, R3 Racing Line) calculation with v = sqrt(127.14 * G * R)
  */
 
 export const APEX_TYPE = {
@@ -55,9 +55,9 @@ export class CornerDynamics3DEngine {
   }
 
   /**
-   * Extracts 3D positions and computes cumulative path distance
+   * Extracts 3D positions and computes cumulative path distance in meters
    * @param {Array<Object>} samples Telemetry samples
-   * @returns {Array<{x: number, y: number, z: number, dist: number, speedKmh: number, gear: number, throttle: number, brake: number, steer: number, yaw: number, latG: number, sample: Object}>}
+   * @returns {Array<{index: number, x: number, y: number, z: number, dist: number, speedMps: number, speedKmh: number, gear: number, throttle: number, brake: number, steer: number, yaw: number, latG: number, sample: Object}>}
    */
   extract3DPath(samples) {
     if (!samples || samples.length === 0) return [];
@@ -68,7 +68,7 @@ export class CornerDynamics3DEngine {
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const x = s.motion?.position?.x ?? s.positionX ?? s.posX ?? 0;
-      const y = s.motion?.position?.y ?? s.positionY ?? s.posY ?? 0; // Elevation
+      const y = s.motion?.position?.y ?? s.positionY ?? s.posY ?? 0; // Elevation (meters)
       const z = s.motion?.position?.z ?? s.positionZ ?? s.posZ ?? 0;
 
       const speedMps = s.motion?.speedMps ?? (s.speedMps || (s.speedKmh ? s.speedKmh / 3.6 : (s.speed ? s.speed * 0.44704 : 0)));
@@ -111,7 +111,7 @@ export class CornerDynamics3DEngine {
   }
 
   /**
-   * Calculates local curvature kappa = 1 / R for each point along the 3D trajectory
+   * Calculates local curvature kappa = 1 / R for each point along the 3D trajectory (1/meters)
    * @param {Array<Object>} path Extracted path points
    * @returns {Array<number>} Curvature array (1/meters)
    */
@@ -152,8 +152,8 @@ export class CornerDynamics3DEngine {
   }
 
   /**
-   * Estimates theoretical max speed in km/h based on Going Faster! formula:
-   * v = sqrt(15 * G * R) where R is radius in meters, G is peak grip
+   * Estimates theoretical max speed in km/h based on Going Faster! Chapter 2 formula:
+   * v (km/h) = sqrt(127.1376 * G * R_meters) = 3.6 * sqrt(9.81 * G * R_meters)
    * @param {number} radiusMeters 
    * @param {number} maxG 
    * @returns {number} Speed in km/h
@@ -161,14 +161,38 @@ export class CornerDynamics3DEngine {
   calculateTheoreticalSpeedKmh(radiusMeters, maxG = this.defaultMaxG) {
     if (!radiusMeters || radiusMeters <= 0 || !Number.isFinite(radiusMeters)) return 150;
     const r = Math.min(Math.max(radiusMeters, 5), 800); // Clamped between tight hairpin and high-speed sweeper
-    // Formula: v (km/h) = 3.6 * sqrt(9.81 * G * R) ≈ sqrt(15 * G * R * 8.64) -> In standard Going Faster!:
-    // V_mph = sqrt(15 * G * R_feet), converted to metric: V_kmh = Math.sqrt(127 * G * R_meters)
-    const speedKmh = Math.sqrt(127 * maxG * r);
+    // Metric Formula: v (km/h) = 3.6 * sqrt(9.81 * G * R) = sqrt(127.1376 * G * R)
+    const speedKmh = Math.sqrt(127.1376 * maxG * r);
     return Math.round(speedKmh);
   }
 
   /**
-   * Estimates ideal gear for a given corner speed based on typical sports car transmission ratios
+   * Computes the Chapter 2 Three Radii Benchmark comparison:
+   * R1 (Inside Arc ~53% of R3), R2 (Middle Arc ~77% of R3), R3 (Racing Line)
+   * @param {number} cornerRadiusMeters 
+   * @param {number} maxG 
+   * @returns {Object} Three radii comparison and speed deltas
+   */
+  calculateThreeRadiiBenchmark(cornerRadiusMeters, maxG = this.defaultMaxG) {
+    const r3 = Math.max(10, cornerRadiusMeters);
+    const r2 = Math.round(r3 * 0.77 * 10) / 10;
+    const r1 = Math.round(r3 * 0.53 * 10) / 10;
+
+    const v3 = this.calculateTheoreticalSpeedKmh(r3, maxG);
+    const v2 = this.calculateTheoreticalSpeedKmh(r2, maxG);
+    const v1 = this.calculateTheoreticalSpeedKmh(r1, maxG);
+
+    return {
+      r1InsideArc: { radiusMeters: r1, theoreticalSpeedKmh: v1 },
+      r2MiddleArc: { radiusMeters: r2, theoreticalSpeedKmh: v2 },
+      r3RacingLine: { radiusMeters: r3, theoreticalSpeedKmh: v3 },
+      speedAdvantageKmh: v3 - v1,
+      speedAdvantagePercent: Math.round(((v3 - v1) / (v1 || 1)) * 100)
+    };
+  }
+
+  /**
+   * Estimates ideal gear for a given corner speed in km/h
    * @param {number} speedKmh 
    * @param {Object} vehicleMeta 
    * @returns {number} Suggested gear (1-6)
@@ -182,7 +206,7 @@ export class CornerDynamics3DEngine {
   }
 
   /**
-   * Detects 3D corners and computes complete Entry, Apex, and Exit benchmarks
+   * Detects 3D corners and computes complete Entry, Apex, and Exit benchmarks in SI Metric units
    * @param {Array<Object>} samples Telemetry samples for a lap
    * @param {Object} referenceLap Optional reference best lap
    * @param {Object} vehicleMeta Optional vehicle metadata
@@ -307,6 +331,16 @@ export class CornerDynamics3DEngine {
       }
       const actualApexP = path[minSpeedIdx];
 
+      // Throttle Application Point (TAP) detection
+      let tapIndex = actualApexP.index;
+      for (let i = actualApexP.index; i <= exitIndex; i++) {
+        if (path[i].throttle > 0.15) {
+          tapIndex = i;
+          break;
+        }
+      }
+      const tapDistBeforeApex = Math.round((actualApexP.dist - path[tapIndex].dist) * 10) / 10;
+
       // Calculate Late-Apex distance delta along track (meters)
       const lateApexDeltaMeters = actualApexP.dist - geomApexP.dist;
       let apexClassification = APEX_TYPE.GEOMETRIC;
@@ -345,7 +379,10 @@ export class CornerDynamics3DEngine {
         }
       }
 
-      // Determine corner direction (Left vs Right) from average steering / cross-product
+      // Three Radii Benchmark per Chapter 2
+      const threeRadii = this.calculateThreeRadiiBenchmark(cornerRadiusMeters, vehicleMeta.lateralG || this.defaultMaxG);
+
+      // Determine corner direction (Left vs Right) from average steering
       let steerSum = 0;
       for (let i = span.start; i <= span.end; i++) {
         steerSum += path[i].steer;
@@ -356,35 +393,39 @@ export class CornerDynamics3DEngine {
         cornerNumber: cIdx + 1,
         direction,
         radiusMeters: Math.round(cornerRadiusMeters),
-        startDistance: startP.dist,
-        endDistance: endP.dist,
+        startDistance: Math.round(startP.dist),
+        endDistance: Math.round(endP.dist),
         lengthMeters: Math.round(endP.dist - startP.dist),
+        elevationDeltaMeters: Math.round((endP.y - startP.y) * 10) / 10,
+        threeRadiiBenchmark: threeRadii,
         // Feature 1: Entry
         entry: {
           index: entryPointIndex,
           position: { x: entryP.x, y: entryP.y, z: entryP.z },
-          distance: entryP.dist,
+          distance: Math.round(entryP.dist),
           actualSpeedKmh: Math.round(entryP.speedKmh),
           actualGear: entryP.gear,
           targetSpeedKmh: targetEntrySpeed,
           recommendedGear: recommendedEntryGear,
-          brakingStartedEarly: brakeStartIndex < turnInIndex - 10
+          brakingStartedEarly: brakeStartIndex < turnInIndex - 10,
+          thresholdBrakePressure: Math.round(entryP.brake * 100)
         },
         // Feature 2: Apex (Geometric & Actual)
         geometricApex: {
           index: geomApexIdx,
           position: { x: geomApexP.x, y: geomApexP.y, z: geomApexP.z },
-          distance: geomApexP.dist,
+          distance: Math.round(geomApexP.dist),
           curvature: maxCurvVal
         },
         actualApex: {
           index: minSpeedIdx,
           position: { x: actualApexP.x, y: actualApexP.y, z: actualApexP.z },
-          distance: actualApexP.dist,
+          distance: Math.round(actualApexP.dist),
           actualSpeedKmh: Math.round(actualApexP.speedKmh),
           actualGear: actualApexP.gear,
           targetApexSpeedKmh: theoreticalApexSpeed,
           lateApexDeltaMeters: Math.round(lateApexDeltaMeters * 10) / 10,
+          radiusUtilizationPercent: Math.min(100, Math.round((cornerRadiusMeters / (threeRadii.r3RacingLine.radiusMeters || 1)) * 100)),
           classification: apexClassification,
           coachingFeedback: apexRationale
         },
@@ -392,11 +433,12 @@ export class CornerDynamics3DEngine {
         exit: {
           index: exitIndex,
           position: { x: exitP.x, y: exitP.y, z: exitP.z },
-          distance: exitP.dist,
+          distance: Math.round(exitP.dist),
           actualSpeedKmh: Math.round(exitP.speedKmh),
           actualGear: exitP.gear,
           targetSpeedKmh: targetExitSpeed,
-          recommendedGear: recommendedExitGear
+          recommendedGear: recommendedExitGear,
+          tapDistBeforeApexMeters: tapDistBeforeApex
         }
       });
     }

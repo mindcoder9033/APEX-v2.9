@@ -12,6 +12,7 @@ import { weatherProfileStore } from './weather-profile-store.js';
 import { WeatherSimulator } from './analysis/weather-simulator.js';
 import { StintsManager } from './stints.js';
 import { IsometricTrackMap } from './components/isometric-track-map.js';
+import { TrackMap3DPdfBuilder } from './track-map-3d-pdf-builder.js';
 import { LoopbackModal } from './components/loopback-modal.js';
 import { driverProfileStore } from './driver-profile-store.js';
 import { DriverDossierModal } from './components/driver-dossier-modal.js';
@@ -458,6 +459,18 @@ class ApexApp {
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         this.toggleFullscreen();
+      } else if (e.key === '3') {
+        e.preventDefault();
+        const activeMap = this.isMapModalOpen ? this.modalTrackMap3D : this.trackMap3D;
+        const is3D = activeMap?.toggleViewMode();
+        const lbl = document.getElementById(this.isMapModalOpen ? 'btn-modal-map-dim-label' : 'btn-map-dim-label');
+        if (lbl) lbl.textContent = is3D ? '2.5D' : '2D';
+      } else if (e.key === 'g' || e.key === 'G') {
+        e.preventDefault();
+        const activeMap = this.isMapModalOpen ? this.modalTrackMap3D : this.trackMap3D;
+        const isGhost = activeMap?.toggleGhostLap();
+        const lbl = document.getElementById(this.isMapModalOpen ? 'btn-modal-map-ghost-label' : 'btn-map-ghost-label');
+        if (lbl) lbl.textContent = isGhost ? (this.isMapModalOpen ? 'GHOST: ON' : 'GHOST') : (this.isMapModalOpen ? 'GHOST: OFF' : 'LIVE');
       } else if (e.key === 'Escape') {
         this.closeSettings();
         this.closeUdpGuide();
@@ -572,6 +585,23 @@ class ApexApp {
         };
       }
 
+      const btnGhost = document.getElementById('btn-toggle-map-3d-ghost');
+      const lblGhost = document.getElementById('btn-map-ghost-label');
+      if (btnGhost) {
+        btnGhost.onclick = () => {
+          const isGhostOn = this.trackMap3D.toggleGhostLap();
+          if (lblGhost) lblGhost.textContent = isGhostOn ? 'GHOST' : 'LIVE';
+          btnGhost.style.opacity = isGhostOn ? '1' : '0.6';
+        };
+      }
+
+      const btnExportPdf = document.getElementById('btn-export-map-3d-pdf');
+      if (btnExportPdf) {
+        btnExportPdf.onclick = () => {
+          this.exportTrackMap3DPdf(this.trackMap3D);
+        };
+      }
+
       const btnRotateLeft = document.getElementById('btn-rotate-map-left');
       if (btnRotateLeft) {
         btnRotateLeft.onclick = () => {
@@ -629,10 +659,63 @@ class ApexApp {
         };
       }
 
+      const btnModalGhost = document.getElementById('btn-modal-map-ghost');
+      const lblModalGhost = document.getElementById('btn-modal-map-ghost-label');
+      if (btnModalGhost) {
+        btnModalGhost.onclick = () => {
+          const isGhostOn = this.modalTrackMap3D.toggleGhostLap();
+          if (lblModalGhost) lblModalGhost.textContent = isGhostOn ? 'GHOST: ON' : 'GHOST: OFF';
+        };
+      }
+
+      const btnModalExportPdf = document.getElementById('btn-modal-map-export-pdf');
+      if (btnModalExportPdf) {
+        btnModalExportPdf.onclick = () => {
+          this.exportTrackMap3DPdf(this.modalTrackMap3D);
+        };
+      }
+
       const btnModalReset = document.getElementById('btn-modal-map-reset');
       if (btnModalReset) {
         btnModalReset.onclick = () => this.modalTrackMap3D.resetView();
       }
+    }
+  }
+
+  async exportTrackMap3DPdf(mapInstance = this.trackMap3D) {
+    try {
+      const activeMap = mapInstance || this.trackMap3D;
+      if (!activeMap) return;
+
+      const mapImageBase64 = activeMap.exportHighResSnapshot(1600, 900);
+      const pdfBuilder = new TrackMap3DPdfBuilder();
+      
+      const trackProfile = this.trackLibrary?.currentTrack || { trackName: 'Circuit Telemetry' };
+      const sessionData = {
+        trackName: trackProfile.trackName || 'Forza Motorsport Circuit',
+        lapDistanceM: activeMap.bounds?.range || 4100,
+        maxG: this.session?.maxG || 1.25
+      };
+
+      const pdfBytes = await pdfBuilder.generate({
+        mapImageBase64,
+        corners3D: activeMap.corners3D || [],
+        sessionData,
+        trackProfile
+      });
+
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const safeName = (trackProfile.trackName || 'Track').replace(/\s+/g, '-');
+      a.download = `APEX-3D-Spatial-Report-${safeName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export 3D track map PDF:', err);
     }
   }
 
