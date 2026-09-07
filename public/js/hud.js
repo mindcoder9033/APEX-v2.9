@@ -39,6 +39,7 @@ export class LiveHudRenderer {
     this.sessionSamples = [];
     this.lapsCompleted = 0;
     this.stintStartTime = Date.now();
+    this.smoothedArcRadius = null;
 
     this.telemetryStats = {
       samplesCount: 0,
@@ -727,24 +728,35 @@ export class LiveHudRenderer {
       const elArc = document.getElementById('hud-arc-radius');
       const elArcSub = document.getElementById('hud-arc-subtext');
       if (elArc) {
-        if (currentAbsLatG >= 0.15 && speedMph >= 12) {
-          const rFt = Math.round((speedMph * speedMph) / (15 * currentAbsLatG));
+        if (currentAbsLatG >= 0.40 && speedMph >= 25) {
+          const rawRadius = (speedMph * speedMph) / (15 * currentAbsLatG);
+          const clampedRadius = Math.max(60, Math.min(500, rawRadius));
+
+          if (this.smoothedArcRadius == null) {
+            this.smoothedArcRadius = clampedRadius;
+          } else {
+            this.smoothedArcRadius = (0.25 * clampedRadius) + (0.75 * this.smoothedArcRadius);
+          }
+
+          const rFt = Math.round(this.smoothedArcRadius);
           this.telemetryStats.arcRadiusFt = rFt;
           elArc.textContent = `${rFt} ft`;
+
           if (rFt >= 180 && rFt <= 220) {
             elArc.style.color = 'var(--color-success)';
             if (elArcSub) elArcSub.textContent = 'OPTIMAL 195 FT ARC';
             radiusScore = 100;
           } else if (rFt < 180) {
             elArc.style.color = 'var(--color-gold)';
-            if (elArcSub) elArcSub.textContent = 'EARLY APEX PINCH (R < 180)';
+            if (elArcSub) elArcSub.textContent = 'PINCHED ARC (R < 180 FT)';
             radiusScore = Math.max(30, Math.round((rFt / 195) * 95));
           } else {
-            elArc.style.color = 'var(--color-gold)';
-            if (elArcSub) elArcSub.textContent = 'WIDE RADIUS (>220 FT)';
+            elArc.style.color = 'var(--color-cyan)';
+            if (elArcSub) elArcSub.textContent = 'WIDE SWEEPER (>220 FT)';
             radiusScore = 90;
           }
         } else {
+          this.smoothedArcRadius = null;
           elArc.textContent = 'STRAIGHT (∞)';
           elArc.style.color = 'var(--color-text-muted)';
           if (elArcSub) elArcSub.textContent = 'Sebring T7 Target: 195 ft';

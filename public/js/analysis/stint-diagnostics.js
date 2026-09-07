@@ -115,9 +115,9 @@ export class StintDiagnostics {
       }
 
       // Real-time corner arc radius calculation (15GR = v^2 => R = v^2 / 15G)
-      if (latG > 0.35 && speedMph > 30) {
+      if (latG >= 0.40 && speedMph >= 25) {
         const radius = Math.round((speedMph * speedMph) / (15 * latG));
-        if (radius >= 50 && radius <= 600) {
+        if (radius >= 60 && radius <= 500) {
           turnRadii.push(radius);
         }
       }
@@ -260,9 +260,16 @@ export class StintDiagnostics {
         // 1. Pillar 1: Arc Radius 15GR (40% Weight) - Target: ~195 ft Sebring T7 Benchmark
         const avgRadius = turnRadii.length > 0 
           ? Math.round(turnRadii.reduce((a, b) => a + b, 0) / turnRadii.length) 
-          : (peakLatG > 0.2 ? Math.round((peakSpeedMph * peakSpeedMph) / (15 * peakLatG)) : 170);
-        const arcRadiusFt = Math.max(120, Math.min(225, avgRadius));
-        const radiusScore = Math.max(30, Math.min(100, Math.round((arcRadiusFt / 195) * 95)));
+          : (peakLatG >= 0.40 ? Math.round((peakSpeedMph * peakSpeedMph) / (15 * peakLatG)) : 195);
+        const arcRadiusFt = Math.max(60, Math.min(500, avgRadius));
+        let radiusScore = 85;
+        if (arcRadiusFt >= 180 && arcRadiusFt <= 220) {
+          radiusScore = 100;
+        } else if (arcRadiusFt < 180) {
+          radiusScore = Math.max(30, Math.round((arcRadiusFt / 195) * 95));
+        } else {
+          radiusScore = 90;
+        }
         
         // 2. Pillar 2: Throttle Balance & TTO Stability (30% Weight) - Target: 0 Snaps
         const ttoPenalty = throttleLiftsMidCorner * 15;
