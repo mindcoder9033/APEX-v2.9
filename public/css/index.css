@@ -3084,6 +3084,41 @@ body.layout-edit-active .widget-resize-handle {
   gap: var(--space-md);
 }
 
+.stint-lap-stepper {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stint-lap-stepper:hover,
+.stint-lap-stepper:focus-within {
+  border-color: var(--color-gold) !important;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.2);
+}
+
+.stint-lap-btn {
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.stint-lap-btn:hover {
+  background: rgba(255, 215, 0, 0.2) !important;
+  border-color: var(--color-gold) !important;
+  color: var(--color-gold) !important;
+}
+
+.stint-lap-btn:active {
+  transform: scale(0.92);
+}
+
+/* Hide spin buttons on number inputs for clean motorsport HUD aesthetic */
+#input-stint-laps::-webkit-outer-spin-button,
+#input-stint-laps::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#input-stint-laps[type=number] {
+  -moz-appearance: textfield;
+}
+
 .stint-active-hud-stage {
   background: #080808;
   border: 1px solid var(--color-f1-red);

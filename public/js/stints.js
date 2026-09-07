@@ -300,6 +300,7 @@ export class StintsManager {
     this.lastStintEvaluation = null;
     this.lastStintRef = null;
     this.lastStintSamples = [];
+    this.customLaps = {};
 
     this.init();
   }
@@ -396,13 +397,14 @@ export class StintsManager {
 
     filtered.forEach(stint => {
       const isSelected = stint.id === this.selectedStintId;
+      const effectiveLaps = this.customLaps[stint.id] || stint.laps || 10;
       const card = document.createElement('div');
       card.className = `stint-card-item chamfer-all-corners ${isSelected ? 'active' : ''}`;
       
       card.innerHTML = `
         <div class="stint-card-top">
           <span class="stint-tier-tag tier-tag-${stint.tier}">${stint.tierShort}</span>
-          <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted);">${stint.laps} LAPS</span>
+          <span id="stint-card-laps-${stint.id}" style="font-family: var(--font-mono); font-size: 10px; color: ${this.customLaps[stint.id] ? 'var(--color-gold)' : 'var(--color-text-muted)'}; font-weight: ${this.customLaps[stint.id] ? '700' : '400'};">${effectiveLaps} LAPS</span>
         </div>
         <div style="font-family: var(--font-display); font-size: 14px; font-weight: 700; color: ${isSelected ? 'var(--color-gold)' : 'var(--color-text-primary)'}; margin-bottom: 3px;">
           ${stint.name}
@@ -435,6 +437,8 @@ export class StintsManager {
       this.stintActiveHudStage.style.display = 'flex';
       return;
     }
+
+    const targetLaps = this.customLaps[stint.id] || stint.laps || 10;
 
     this.stintBriefingStage.style.display = 'flex';
     this.stintActiveHudStage.style.display = 'none';
@@ -478,9 +482,20 @@ export class StintsManager {
           <span class="stat-cell-label">Circuit / Layout</span>
           <span class="stat-cell-value" style="font-size: 12px; color: var(--color-text-primary);">${stint.prescribedTrack}</span>
         </div>
-        <div class="stat-cell chamfer-all-corners">
-          <span class="stat-cell-label">Session Format</span>
-          <span class="stat-cell-value" style="font-size: 12px;">${stint.gameType} (${stint.laps} Laps)</span>
+        <div class="stat-cell chamfer-all-corners" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="stat-cell-label">Session Format</span>
+            <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-gold); font-weight: 700; letter-spacing: 0.5px;">CUSTOMIZABLE</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px;">
+            <span class="stat-cell-value" style="font-size: 11px; color: var(--color-text-secondary);">${stint.gameType}</span>
+            <div class="stint-lap-stepper" style="display: inline-flex; align-items: center; gap: 4px; background: #0A0A0A; padding: 2px 6px; border: 1px solid var(--color-border); border-radius: 4px;">
+              <button id="btn-lap-dec" type="button" class="stint-lap-btn" title="Decrease Laps (-1)" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary); width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">-</button>
+              <input id="input-stint-laps" type="number" min="1" max="50" value="${targetLaps}" style="width: 38px; height: 22px; text-align: center; background: transparent; border: none; color: var(--color-gold); font-family: var(--font-mono); font-weight: 700; font-size: 13px; padding: 0; outline: none;" />
+              <button id="btn-lap-inc" type="button" class="stint-lap-btn" title="Increase Laps (+1)" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary); width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">+</button>
+              <span style="font-size: 10px; color: var(--color-text-muted); font-family: var(--font-mono); font-weight: 600; margin-left: 2px;">LAPS</span>
+            </div>
+          </div>
         </div>
         <div class="stat-cell chamfer-all-corners">
           <span class="stat-cell-label">Weather & Time of Day</span>
@@ -521,6 +536,56 @@ export class StintsManager {
       </div>
     `;
 
+    const inputLaps = document.getElementById('input-stint-laps');
+    const btnDec = document.getElementById('btn-lap-dec');
+    const btnInc = document.getElementById('btn-lap-inc');
+
+    const updateLaps = (val) => {
+      let num = parseInt(val, 10);
+      if (isNaN(num)) num = stint.laps || 10;
+      num = Math.max(1, Math.min(50, num));
+      this.customLaps[stint.id] = num;
+      if (inputLaps) inputLaps.value = num;
+
+      // Update badge on the stint card in sidebar list
+      const cardBadge = document.getElementById(`stint-card-laps-${stint.id}`);
+      if (cardBadge) {
+        cardBadge.textContent = `${num} LAPS`;
+        cardBadge.style.color = 'var(--color-gold)';
+        cardBadge.style.fontWeight = '700';
+      }
+    };
+
+    if (btnDec) {
+      btnDec.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cur = parseInt(inputLaps ? inputLaps.value : targetLaps, 10) || stint.laps || 10;
+        updateLaps(cur - 1);
+      });
+    }
+
+    if (btnInc) {
+      btnInc.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cur = parseInt(inputLaps ? inputLaps.value : targetLaps, 10) || stint.laps || 10;
+        updateLaps(cur + 1);
+      });
+    }
+
+    if (inputLaps) {
+      inputLaps.addEventListener('change', (e) => {
+        updateLaps(e.target.value);
+      });
+      inputLaps.addEventListener('blur', (e) => {
+        updateLaps(e.target.value);
+      });
+      inputLaps.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          updateLaps(e.target.value);
+        }
+      });
+    }
+
     const btnLaunch = document.getElementById('btn-launch-stint');
     if (btnLaunch) {
       btnLaunch.addEventListener('click', () => {
@@ -539,11 +604,18 @@ export class StintsManager {
     const stint = this.getSelectedStint();
     if (!stint) return;
 
+    const chosenLaps = this.customLaps[stint.id] || stint.laps || 10;
+    const stintWithCustomLaps = {
+      ...stint,
+      laps: chosenLaps,
+      customLaps: chosenLaps
+    };
+
     this.isStintActive = true;
     this.stintBriefingStage.style.display = 'none';
     this.stintActiveHudStage.style.display = 'flex';
 
-    this.liveHud.startStint(stint, (evaluation, stintRef, samples) => {
+    this.liveHud.startStint(stintWithCustomLaps, (evaluation, stintRef, samples) => {
       this.handleStintComplete(evaluation, stintRef, samples);
     });
   }

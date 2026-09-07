@@ -42,7 +42,7 @@ export class StintDiagnostics {
     let rearSlipSpikes = 0;
     let throttleBreatheFaults = 0;
     let totalLaps = liveStats.currentLap || 1;
-    const prescribedLaps = stintData.laps || 10;
+    const prescribedLaps = stintData.customLaps || stintData.laps || liveStats.targetLaps || 10;
 
     for (let i = 0; i < totalSamples; i++) {
       const s = samples[i];
@@ -149,7 +149,16 @@ export class StintDiagnostics {
     // Pace & Lap Completion Score (0 - 100)
     const lapRatio = Math.min(1.0, totalLaps / prescribedLaps);
     let paceScore = 100;
-    if (totalLaps < 2 || validFlyingSamples < 40) {
+    if (prescribedLaps === 1) {
+      // Single-lap sprint: award 100% pace if at least 1 lap and >= 20 flying samples recorded
+      if (validFlyingSamples < 20 || totalLaps < 1) {
+        paceScore = Math.max(30, Math.round((validFlyingSamples / 20) * 80));
+      } else if (avgSpeedMph < 35) {
+        paceScore = 40;
+      } else {
+        paceScore = 100;
+      }
+    } else if (totalLaps < 2 || validFlyingSamples < 40) {
       paceScore = Math.max(20, Math.round(lapRatio * 50));
     } else if (avgSpeedMph < 35) {
       paceScore = 40; // Driving at cruising or pit speed

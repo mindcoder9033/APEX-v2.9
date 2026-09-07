@@ -167,7 +167,8 @@ export class PdfReportGenerator {
       page.drawText(`CAR: ${diagnosis.prescribedCar.toUpperCase()}`, { x: 215, y: metaY + 34, size: 8.5, font: fontBodyBold, color: rgb(0.1, 0.15, 0.22) });
       page.drawText(`CIRCUIT: ${diagnosis.prescribedTrack.toUpperCase()}`, { x: 215, y: metaY + 16, size: 8, font: fontBody, color: rgb(0.4, 0.45, 0.55) });
 
-      page.drawText(`LAPS: ${diagnosis.telemetryKPIs.totalLaps} COMPLETED`, { x: 420, y: metaY + 34, size: 8.5, font: fontBodyBold, color: rgb(0.1, 0.15, 0.22) });
+      const targetLapsDisplay = sc.pace?.prescribedLaps || diagnosis.telemetryKPIs.totalLaps;
+      page.drawText(`LAPS: ${diagnosis.telemetryKPIs.totalLaps}/${targetLapsDisplay} ATTEMPTED`, { x: 420, y: metaY + 34, size: 8.5, font: fontBodyBold, color: rgb(0.1, 0.15, 0.22) });
       page.drawText(`STATUS: ${diagnosis.targetAchieved ? 'TARGET COMPLETED' : 'PRACTICE LOGGED'}`, {
         x: 420,
         y: metaY + 16,
@@ -188,7 +189,6 @@ export class PdfReportGenerator {
       curY -= 6;
 
       const kpiCardWidth = (width - 80 - 24) / 4;
-      const sc = diagnosis.scorecard || {};
       const discPts = sc.discipline ? `${sc.discipline.weightedPoints}/50` : `${diagnosis.gradeScore}%`;
       const smoothPts = sc.smoothness ? `${sc.smoothness.weightedPoints}/30` : '30/30';
       const pacePts = sc.pace ? `${sc.pace.weightedPoints}/20` : '20/20';
@@ -197,7 +197,7 @@ export class PdfReportGenerator {
       const kpis = [
         { label: '1. DISCIPLINE (50%)', val: discPts, sub: diagnosis.primaryMetricLabel || 'Target Metric' },
         { label: '2. SMOOTHNESS (30%)', val: smoothPts, sub: `${sc.smoothness?.ttoEvents || 0} TTO • ${sc.smoothness?.lockupEvents || 0} Lockups` },
-        { label: '3. PACE & LAPS (20%)', val: pacePts, sub: `${diagnosis.telemetryKPIs.totalLaps} Laps • ${peakSpeedMetric} km/h Peak` },
+        { label: '3. PACE & LAPS (20%)', val: pacePts, sub: `${diagnosis.telemetryKPIs.totalLaps}/${targetLapsDisplay} Laps • ${peakSpeedMetric} km/h Peak` },
         { label: 'COMPOSITE GRADE', val: `GRADE ${letter}`, sub: `${diagnosis.gradeScore}% Overall Score` }
       ];
 

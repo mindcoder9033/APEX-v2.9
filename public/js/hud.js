@@ -43,6 +43,7 @@ export class LiveHudRenderer {
     this.telemetryStats = {
       samplesCount: 0,
       currentLap: 1,
+      targetLaps: stint.customLaps || stint.laps || 10,
       peakSpeedKmh: 0,
       peakSpeedMph: 0,
       avgSpeedMph: 0,
@@ -475,6 +476,7 @@ export class LiveHudRenderer {
     this.container.style.display = 'flex';
 
     const stint = this.activeStint;
+    const targetLaps = stint.customLaps || stint.laps || 10;
     const stintWidgetsHtml = this.getStintWidgetsHtml(stint);
 
     this.container.innerHTML = `
@@ -487,7 +489,7 @@ export class LiveHudRenderer {
               LIVE STINT HUD // ${stint.name.toUpperCase()}
             </div>
             <div style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted);">
-              ${stint.prescribedCar} · ${stint.prescribedTrack} · Target: ${stint.laps} Laps · <span id="hud-live-status-text" style="color: var(--color-warning);">${this.sessionSamples.length > 0 ? `LIVE STREAMING (${this.sessionSamples.length} SAMPLES)` : 'AWAITING UDP TELEMETRY'}</span>
+              ${stint.prescribedCar} · ${stint.prescribedTrack} · Target: ${targetLaps} Laps · <span id="hud-live-status-text" style="color: var(--color-warning);">${this.sessionSamples.length > 0 ? `LIVE STREAMING (${this.sessionSamples.length} SAMPLES)` : 'AWAITING UDP TELEMETRY'}</span>
             </div>
           </div>
         </div>
@@ -495,7 +497,7 @@ export class LiveHudRenderer {
         <div style="display: flex; align-items: center; gap: 12px;">
           <div style="text-align: right; font-family: var(--font-mono); font-size: 11px;">
             <span style="color: var(--color-text-muted); display: block; font-size: 9px;">PROGRESS</span>
-            <strong id="hud-lap-progress" style="color: var(--color-text-primary); font-size: 14px;">LAP ${this.lapsCompleted || 1} / ${stint.laps}</strong>
+            <strong id="hud-lap-progress" style="color: var(--color-text-primary); font-size: 14px;">LAP ${this.lapsCompleted || 1} / ${targetLaps}</strong>
           </div>
 
           <button id="btn-stop-active-stint" class="btn btn-primary chamfer-br" style="height: 42px; font-size: 12px; font-weight: 700;">
@@ -631,13 +633,14 @@ export class LiveHudRenderer {
 
     // Lap progress
     const currentLapNum = timing.lapNumber != null ? timing.lapNumber : (sample.lapNumber != null ? sample.lapNumber : 1);
+    const targetLaps = this.activeStint.customLaps || this.activeStint.laps || 10;
     if (currentLapNum && currentLapNum > this.lapsCompleted) {
       this.lapsCompleted = currentLapNum;
       this.telemetryStats.currentLap = this.lapsCompleted;
       const elLap = document.getElementById('hud-lap-progress');
-      if (elLap) elLap.textContent = `LAP ${this.lapsCompleted} / ${this.activeStint.laps}`;
+      if (elLap) elLap.textContent = `LAP ${this.lapsCompleted} / ${targetLaps}`;
 
-      if (this.lapsCompleted >= this.activeStint.laps) {
+      if (this.lapsCompleted >= targetLaps) {
         this.stopStint();
         return;
       }
