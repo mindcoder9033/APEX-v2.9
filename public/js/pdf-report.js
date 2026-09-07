@@ -147,6 +147,7 @@ export class PdfReportGenerator {
       });
 
       // 4. Driver & Session Metadata Card
+      const sc = diagnosis.scorecard || {};
       const metaY = height - 146;
       page.drawRectangle({
         x: 40,
