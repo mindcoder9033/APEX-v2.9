@@ -122,10 +122,10 @@ export const STINTS_DATABASE = [
     tier: 5,
     tierName: 'Tier 5: Braking & Entering',
     tierShort: 'T5 // BRAKING',
-    name: 'The Threshold Hunter',
-    subtitle: 'Block 2: Straight-Line Deceleration & Ankle Modulation',
-    focus: 'Threshold Modulation & Lockup Recovery',
-    targetMetric: 'Modulation Pressure Drop: 30-40 lbs (140 -> 100 lbs) / 0 Panic Lifts',
+    name: 'The Analytical Braker: Braking & Entering',
+    subtitle: '4-Block Corner Entry, Threshold Modulation (140->100 lbs), Friction Circle Blending & "The Procedure"',
+    focus: 'Synthesis of Straight-Line Decel, Brake-Turn Traction Circle Blending & Jeremy Dale\'s 3-Ft Progression',
+    targetMetric: 'Composite Braking Mastery >= 85% [Modulation: 30-40 lbs Drop (0 Panic Lifts) | Trail: >75% Grip | Procedure: ±3 ft / +2.5+ km/h]',
     prescribedCar: '2014 BAC Mono',
     prescribedTrack: 'Sebring International Raceway (Full Circuit)',
     gameType: 'Circuit Race / Solitary Testing',
@@ -133,64 +133,14 @@ export const STINTS_DATABASE = [
     weather: 'Clear (Dry Asphalt)',
     laps: 15,
     drivatars: 0,
-    quote: '"A lot of drivers forget that you are not locked into one level of pressure on the brake pedal... you can always pull back five per cent on the pedal and kind of float the entry speed." — Jeremy Dale (Page 79)',
-    briefing: 'On the high-speed approach to Sebring\'s heavy braking zones, practice squeezing the brakes hard to find the threshold lockup point. When a lockup occurs, do not panic-lift to 0 lbs (which rebounds the chassis and destroys deceleration). Train subtle ankle and lower leg muscle tension to release just 30-40 lbs (from 140 down to 100 lbs) to keep the tires rolling at peak grip.',
+    quote: '"It is amazing how many drivers... think that the brakes are for slowing the car down... To unlock a locked tire, the brake pedal pressure needs to be released from approximately 140 lbs down to 100 lbs. The foot motion required is barely perceptible to the naked eye." — Mario Andretti & Skip Barber (Page 74, 76)',
+    briefing: 'Execute a comprehensive 15-lap braking masterclass synthesizing the three core corner-entry disciplines from Chapter 5: 1) Block 1 & 2 (Threshold Modulation): Squeeze the brake pedal hard in <0.35s to establish 125–140 lbs threshold force; if a lockup occurs, relax ankle muscle tension by 30–40 lbs without panic-lifting to 0 lbs. 2) Block 3 (Trail-Braking & Traction Circle): Carry braking past turn-in, bleeding off ~20 lbs per 0.10s to keep tire grip on the outer boundary of the top-right Brake-Turn quadrant. 3) Block 4 ("The Procedure" & TAP Exit Speed): Methodically advance your braking point 3 feet closer each lap until the entry speed delays your Throttle Application Point (TAP) or drops exit speed (+2.5+ km/h).',
     actionPlan: [
-      'Execute a hard, instantaneous squeeze into the braking zone (transition in <0.35s) to load the front tires.',
-      'Sustain pressure in the green Threshold Zone (125-140 lbs) right on the threshold of tire scrub.',
-      'If lockup occurs, make a micro-modulation drop of 30-40 lbs via ankle tension rather than dumping pressure to 0 lbs.'
+      'Threshold Modulation (Block 1 & 2): Squeeze into the braking zone in <0.35s to hit the 125–140 lbs threshold band; modulate lower leg/ankle tension to release 30–40 lbs upon lockup rather than dumping pedal pressure to 0 lbs.',
+      'Trail-Braking & Traction Circle (Block 3): Uniformly bleed off brake pressure in direct proportion to steering lock (~20 lbs per 0.10s decay), riding the outer boundary of Mark Donohue\'s Friction Circle.',
+      'The Procedure & Exit Speed (Block 4): Step brake markers 3 feet closer each lap; verify that braking deeper does not compromise corner exit speed (+2.5+ km/h) or delay throttle pick-up through "The Pause".'
     ],
-    hudWidgets: ['Brake Pressure & Modulation Gauge (0-140 lbs)', 'Threshold Zone Indicator (125-140 lbs)', 'Lockup & Recovery Delta (lbs)', 'Throttle-Brake Transition Timer (<0.35s)']
-  },
-  {
-    id: 'stint-5-2',
-    tier: 5,
-    tierName: 'Tier 5: Braking & Entering',
-    tierShort: 'T5 // BRAKING',
-    name: 'The Trail-Braker',
-    subtitle: 'Block 3: Brake-Turning & Friction Circle Grip Blending',
-    focus: 'Trail-Braking & Traction Circle Quadrant',
-    targetMetric: 'Brake-Turn Quadrant Grip Utilization: >75% / Smooth Decay',
-    prescribedCar: '2014 BAC Mono',
-    prescribedTrack: 'Sebring International Raceway (Full Circuit)',
-    gameType: 'Circuit Race / Solitary Testing',
-    timeOfDay: 'Late Morning (10:00 AM)',
-    weather: 'Clear (Dry Asphalt)',
-    laps: 15,
-    drivatars: 0,
-    quote: '"In a uniform brake modulation, you would release 20 lbs. of pressure each tenth of a second, going from 140 lbs. to 0 lbs. in a steady progression." — Skip Barber (Page 83)',
-    briefing: 'Move beyond straight-line deceleration. Carry brake pressure past the turn-in point and blend braking force into cornering lateral grip. Use the Live 2D Friction Circle HUD to keep your tire grip trace traveling smoothly along the outer boundary of the top-right Brake-Turn quadrant, releasing ~20 lbs per tenth of a second until throttle pick-up.',
-    actionPlan: [
-      'Begin turn-in while maintaining trail-brake pressure rather than releasing the pedal in a straight line.',
-      'Progressively bleed off brake pressure in direct proportion to steering angle increase (release 20 lbs per 0.10s).',
-      'Keep the 2D Friction Circle trace on the outer grip envelope and manage "The Pause" before applying throttle.'
-    ],
-    hudWidgets: ['2D Live Friction Circle (Brake-Turn Trace)', 'Brake & Steering Blend Ratio', 'Trail-Brake Uniform Decay Rate', 'Brake-to-Throttle Pause Counter']
-  },
-  {
-    id: 'stint-5-3',
-    tier: 5,
-    tierName: 'Tier 5: Braking & Entering',
-    tierShort: 'T5 // BRAKING',
-    name: 'The Procedure Driller',
-    subtitle: 'Brake Point Precision & Jeremy Dale\'s 3-Ft Progression',
-    focus: 'The Procedure & Brake Point vs Exit Speed',
-    targetMetric: 'Brake Point Precision: ±3 ft Increments / 0 Delayed Throttle (TAP) Exits',
-    prescribedCar: '2014 BAC Mono',
-    prescribedTrack: 'Sebring International Raceway (Full Circuit)',
-    gameType: 'Circuit Race / Solitary Testing',
-    timeOfDay: 'Late Morning (10:00 AM)',
-    weather: 'Clear (Dry Asphalt)',
-    laps: 15,
-    drivatars: 0,
-    quote: '"The Procedure... 1) Identify the level of threshold braking... 2) Move the brake point down toward the corner in small increments (three feet at a time)... 3) If entry speed gets so high that... the throttle-application is delayed, move the brake point back." — Jeremy Dale (Page 76)',
-    briefing: 'Master Jeremy Dale\'s "The Procedure". Begin with a safe, conservative brake point (50 ft early). Using threshold braking, move your brake point 3 feet closer each lap. Correlate your braking point with corner exit speed and throttle application timing (TAP). The moment braking deeper delays your throttle application and drops exit speed, you have discovered your car\'s true optimal brake point.',
-    actionPlan: [
-      'Establish a solid, repeatable visual reference marker (brake board/curb) on Lap 1.',
-      'Advance the brake application point 3 feet closer each subsequent lap.',
-      'Monitor Exit Speed Delta: if exit speed drops due to delayed throttle application, move the brake point back 3 feet.'
-    ],
-    hudWidgets: ['Brake Point Delta Meter (ft)', 'Exit Speed vs Baseline Correlator', '3-Ft Procedure Progression Tracker', 'Throttle Application Timing (TAP)']
+    hudWidgets: ['Calibrated Pedal Pressure Gauge (0-140 lbs)', '2D Live Friction Circle Trace', 'Brake Point Delta & TAP Exit Speed (+km/h)', 'Composite Braking Mastery Index']
   },
 
   // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---

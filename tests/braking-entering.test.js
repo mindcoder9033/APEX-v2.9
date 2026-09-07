@@ -4,97 +4,90 @@ import { STINTS_DATABASE } from '../public/js/stints.js';
 import { StintDiagnostics } from '../src/analysis/stint-diagnostics.js';
 import { StintDiagnostics as BrowserStintDiagnostics } from '../public/js/analysis/stint-diagnostics.js';
 
-test('Tier 5 Database Integrity: Stints 5-1, 5-2, 5-3 are properly configured', () => {
-  const stint51 = STINTS_DATABASE.find(s => s.id === 'stint-5-1');
-  const stint52 = STINTS_DATABASE.find(s => s.id === 'stint-5-2');
-  const stint53 = STINTS_DATABASE.find(s => s.id === 'stint-5-3');
+test('Tier 5 Database Integrity: Unified Stint 5-1 is properly configured', () => {
+  const tier5Stints = STINTS_DATABASE.filter(s => s.tier === 5);
+  assert.equal(tier5Stints.length, 1, 'Tier 5 should contain exactly 1 holistic stint replacing the 3 old stints');
 
-  assert.ok(stint51, 'stint-5-1 should exist in STINTS_DATABASE');
-  assert.equal(stint51.tier, 5);
-  assert.equal(stint51.name, 'The Threshold Hunter');
+  const stint51 = tier5Stints[0];
+  assert.equal(stint51.id, 'stint-5-1');
+  assert.equal(stint51.name, 'The Analytical Braker: Braking & Entering');
   assert.equal(stint51.prescribedCar, '2014 BAC Mono');
   assert.equal(stint51.prescribedTrack, 'Sebring International Raceway (Full Circuit)');
+  assert.equal(stint51.gameType, 'Circuit Race / Solitary Testing');
+  assert.equal(stint51.timeOfDay, 'Late Morning (10:00 AM)');
+  assert.equal(stint51.weather, 'Clear (Dry Asphalt)');
   assert.equal(stint51.laps, 15);
-  assert.ok(stint51.quote.includes('Jeremy Dale'));
-  assert.ok(stint51.hudWidgets.length >= 4);
-
-  assert.ok(stint52, 'stint-5-2 should exist in STINTS_DATABASE');
-  assert.equal(stint52.tier, 5);
-  assert.equal(stint52.name, 'The Trail-Braker');
-  assert.equal(stint52.prescribedCar, '2014 BAC Mono');
-  assert.ok(stint52.quote.includes('Skip Barber'));
-  assert.ok(stint52.hudWidgets.some(w => w.includes('Friction Circle')));
-
-  assert.ok(stint53, 'stint-5-3 should exist in STINTS_DATABASE');
-  assert.equal(stint53.tier, 5);
-  assert.equal(stint53.name, 'The Procedure Driller');
-  assert.equal(stint53.prescribedCar, '2014 BAC Mono');
-  assert.ok(stint53.quote.includes('The Procedure'));
-  assert.ok(stint53.actionPlan.length >= 3);
+  assert.equal(stint51.drivatars, 0);
+  assert.ok(stint51.quote.includes('Mario Andretti') || stint51.quote.includes('Skip Barber'));
+  assert.equal(stint51.actionPlan.length, 3);
+  assert.equal(stint51.hudWidgets.length, 4);
+  assert.ok(stint51.targetMetric.includes('km/h'), 'Target metric must include metric km/h');
+  assert.ok(stint51.targetMetric.includes('140->100 lbs') || stint51.targetMetric.includes('30-40 lbs'));
 });
 
-test('StintDiagnostics: Evaluates stint-5-1 (The Threshold Hunter) with subtle ankle modulation vs panic lift', () => {
+test('StintDiagnostics: Evaluates Holistic Tier 5 Stint 5-1 with 40/30/30 Composite Scoring (Node & Browser Parity)', () => {
+  const stint51 = STINTS_DATABASE.find(s => s.id === 'stint-5-1');
+  assert.ok(stint51, 'stint-5-1 must exist');
+
+  // Simulated clean threshold braking + trail-braking samples (>75% quadrant grip)
+  const samples = [];
+  for (let i = 0; i < 120; i++) {
+    const isBraking = i % 40 < 25;
+    const isTurning = i % 40 >= 5 && i % 40 < 35; // 20 overlapping samples out of 25 braking = 80% trail usage
+    samples.push({
+      motion: {
+        speedMph: 85 - (i % 40) * 1.5,
+        speedKmh: 136 - (i % 40) * 2.4,
+        lateralG: isTurning ? 1.15 : 0.05,
+        longitudinalG: isBraking ? -1.25 : 0.2,
+        acceleration: { lateralG: isTurning ? 1.15 : 0.05, longitudinalG: isBraking ? -1.25 : 0.2 }
+      },
+      inputs: {
+        throttle: isBraking ? 0 : 0.9,
+        brake: isBraking ? (isTurning ? 0.45 : 0.92) : 0, // 0.92 = ~129 lbs threshold, 0.45 = trail-braking blend
+        steering: isTurning ? 0.35 : 0.0
+      },
+      timing: {
+        lapNumber: Math.floor(i / 30) + 1,
+        distanceTraveled: (i * 40) % 5000
+      }
+    });
+  }
+
+  // Node engine evaluation
+  const nodeReport = StintDiagnostics.evaluate(stint51, samples, { currentLap: 4, exitDeltaKmh: 2.8 });
+  assert.equal(nodeReport.stintId, 'stint-5-1');
+  assert.equal(nodeReport.primaryMetricLabel, 'Composite Braking Mastery (Modulation / Trail-Braking / The Procedure)');
+  assert.ok(nodeReport.gradeScore >= 85, 'Overall grade score should achieve target');
+  assert.equal(nodeReport.targetAchieved, true);
+  assert.ok(nodeReport.primaryMetricValue.includes('lbs') || nodeReport.primaryMetricValue.includes('Modulation'));
+  assert.ok(nodeReport.primaryMetricValue.includes('km/h'));
+  assert.ok(nodeReport.nailed.length >= 2, 'Should provide nailed diagnostic points');
+  assert.ok(nodeReport.refinement.length >= 2, 'Should provide refinement coaching points');
+
+  // Browser engine parity evaluation
+  const browserReport = BrowserStintDiagnostics.evaluate(stint51, samples, { currentLap: 4, exitDeltaKmh: 2.8 });
+  assert.equal(browserReport.stintId, 'stint-5-1');
+  assert.equal(browserReport.gradeScore, nodeReport.gradeScore, 'Browser and Node diagnostics must be identical');
+  assert.equal(browserReport.targetAchieved, nodeReport.targetAchieved);
+  assert.equal(browserReport.primaryMetricValue, nodeReport.primaryMetricValue);
+});
+
+test('StintDiagnostics: Detects excessive harsh lockup/panic lift penalties on Tier 5 Stint 5-1', () => {
   const stint51 = STINTS_DATABASE.find(s => s.id === 'stint-5-1');
 
-  // Simulated clean threshold braking samples with subtle modulation
-  const cleanSamples = [];
+  // Simulated harsh lockup panic-lift samples
+  const harshSamples = [];
   for (let i = 0; i < 60; i++) {
-    cleanSamples.push({
-      motion: { speedMph: 90 - i * 0.8, acceleration: { lateralG: 0.1, longitudinalG: -1.2 } },
-      inputs: { throttle: 0, brake: 0.92, steering: 0 },
+    harshSamples.push({
+      motion: { speedMph: 90 - i * 1.2, acceleration: { lateralG: 0.1, longitudinalG: -1.45 } },
+      inputs: { throttle: 0, brake: i % 10 === 0 ? 1.0 : (i % 10 === 1 ? 0.0 : 0.95), steering: 0 },
       timing: { lapNumber: 1 }
     });
   }
 
-  const evalClean = StintDiagnostics.evaluate(stint51, cleanSamples, { currentLap: 5 });
-  assert.equal(evalClean.stintId, 'stint-5-1');
-  assert.equal(evalClean.targetAchieved, true);
-  assert.ok(evalClean.gradeScore >= 90);
-  assert.ok(evalClean.primaryMetricLabel.includes('Threshold Force'));
-  assert.ok(evalClean.nailed.some(n => n.includes('125-140 lbs')));
-
-  // Browser copy test
-  const browserEvalClean = BrowserStintDiagnostics.evaluate(stint51, cleanSamples, { currentLap: 5 });
-  assert.equal(browserEvalClean.gradeScore, evalClean.gradeScore);
-});
-
-test('StintDiagnostics: Evaluates stint-5-2 (The Trail-Braker) Donohue Friction Circle Quadrant Blending', () => {
-  const stint52 = STINTS_DATABASE.find(s => s.id === 'stint-5-2');
-
-  const trailSamples = [];
-  for (let i = 0; i < 50; i++) {
-    // Blended braking and cornering (Grip boundary in top-right quadrant)
-    trailSamples.push({
-      motion: { speedMph: 60 - i * 0.5, acceleration: { lateralG: 0.9, longitudinalG: -0.8 } },
-      inputs: { throttle: 0, brake: 0.60 - i * 0.01, steering: 0.4 },
-      timing: { lapNumber: 3 }
-    });
-  }
-
-  const evalTrail = StintDiagnostics.evaluate(stint52, trailSamples, { currentLap: 3 });
-  assert.equal(evalTrail.stintId, 'stint-5-2');
-  assert.equal(evalTrail.targetAchieved, true);
-  assert.ok(evalTrail.gradeScore >= 90);
-  assert.ok(evalTrail.primaryMetricLabel.includes('Friction Circle'));
-  assert.ok(evalTrail.nailed.some(n => n.includes('Donohue Friction Circle')));
-});
-
-test('StintDiagnostics: Evaluates stint-5-3 (The Procedure Driller) 3-foot increment progression', () => {
-  const stint53 = STINTS_DATABASE.find(s => s.id === 'stint-5-3');
-
-  const procSamples = [];
-  for (let i = 0; i < 50; i++) {
-    procSamples.push({
-      motion: { speedMph: 75 - i * 0.5, acceleration: { lateralG: 0.7, longitudinalG: -1.1 } },
-      inputs: { throttle: i > 30 ? 0.9 : 0, brake: i <= 25 ? 0.85 : 0, steering: 0.3 },
-      timing: { lapNumber: 5 }
-    });
-  }
-
-  const evalProc = StintDiagnostics.evaluate(stint53, procSamples, { currentLap: 5, exitDeltaMph: 1.5 });
-  assert.equal(evalProc.stintId, 'stint-5-3');
-  assert.equal(evalProc.targetAchieved, true);
-  assert.ok(evalProc.gradeScore >= 90);
-  assert.ok(evalProc.primaryMetricLabel.includes('Procedure Precision'));
-  assert.ok(evalProc.nailed.some(n => n.includes('Jeremy Dale')));
+  const report = StintDiagnostics.evaluate(stint51, harshSamples, { currentLap: 1, harshBrakingEvents: 5, exitDeltaKmh: 0.5 });
+  assert.equal(report.stintId, 'stint-5-1');
+  assert.equal(report.targetAchieved, false, 'Target should fail with 5 harsh lockups and low exit speed');
+  assert.ok(report.attention.some(a => a.includes('harsh lockup') || a.includes('panic-lift') || a.includes('30–40 lbs')));
 });

@@ -242,116 +242,91 @@ export class LiveHudRenderer {
         `;
 
       // --- TIER 5: BRAKING & ENTERING (THE ANALYTICAL BRAKER) ---
-      case 'stint-5-1': // The Threshold Hunter (Block 2 & Modulation)
+      case 'stint-5-1': // The Analytical Braker: Braking & Entering (Chapter 5 Holistic)
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Calibrated Brake Pressure</span>
-              <span id="hud-brake-lbs-val" class="stat-cell-value" style="color: #FF6B00; font-size: 26px;">0 lbs</span>
-              <span id="hud-brake-pct-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">0% / 140 lbs Scale</span>
+              <span class="stat-cell-label">1. Threshold Modulation</span>
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span id="hud-t5-lbs-val" class="stat-cell-value" style="color: #FF6B00; font-size: 26px;">0 lbs</span>
+                <span id="hud-t5-mod-badge" class="stat-cell-value" style="color: var(--color-success); font-size: 14px;">NO LOCKUP</span>
+              </div>
+              <span id="hud-t5-mod-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 125-140 lbs (30-40 lbs ankle drop)</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Threshold Zone State</span>
-              <span id="hud-threshold-status" class="stat-cell-value" style="color: var(--color-text-muted); font-size: 18px; margin-top: 2px;">OFF BRAKES</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 125-140 lbs (Green Zone)</span>
+              <span class="stat-cell-label">2. Friction Circle Grip</span>
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span id="hud-t5-trail-val" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">0%</span>
+                <span id="hud-t5-blend-sub" class="stat-cell-value" style="color: var(--color-cyan); font-size: 14px;">0% / 0%</span>
+              </div>
+              <span id="hud-t5-trail-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &gt;75% Brake-Turn Quadrant</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Lockup & Modulation Drop</span>
-              <span id="hud-lockup-drop" class="stat-cell-value" style="color: var(--color-success); font-size: 20px; margin-top: 2px;">NO LOCKUP</span>
-              <span id="hud-lockup-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 30-40 lbs ankle drop</span>
+              <span class="stat-cell-label">3. The Procedure &amp; TAP</span>
+              <div style="display: flex; align-items: baseline; gap: 6px;">
+                <span id="hud-t5-proc-delta" class="stat-cell-value" style="color: var(--color-cyan); font-size: 24px;">0 ft</span>
+                <span id="hud-t5-exit-gain" class="stat-cell-value" style="color: var(--color-success); font-size: 16px;">+0.0 km/h</span>
+              </div>
+              <span id="hud-t5-proc-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: ±3 ft / No delayed TAP exits</span>
             </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Throttle ➔ Brake Transition</span>
-              <span id="hud-transition-timer" class="stat-cell-value" style="color: var(--color-text-primary); font-size: 24px;">0.00s</span>
-              <span id="hud-transition-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &lt; 0.35s squeeze</span>
+            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold);">
+              <span class="stat-cell-label">Composite Braking Mastery</span>
+              <span id="hud-t5-mastery-val" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">--%</span>
+              <span id="hud-t5-mastery-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">40/30/30 Metric Scoring</span>
             </div>
           </div>
-          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px;">
-            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary); margin-bottom: 4px;">
-              <span>PEDAL PRESSURE GAUGE (0 - 140 LBS)</span>
-              <span id="hud-pedal-gauge-status" style="color: var(--color-success);">THRESHOLD ZONE: 125 - 140 LBS</span>
-            </div>
-            <div style="position: relative; height: 14px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-              <div style="position: absolute; left: 88%; width: 12%; height: 100%; background: rgba(0, 204, 102, 0.25); border-left: 1px dashed var(--color-success);"></div>
-              <div id="hud-brake-pressure-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #FF6B00, #00FFCC); transition: width 0.04s ease-out;"></div>
-            </div>
-          </div>
-        `;
 
-      case 'stint-5-2': // The Trail-Braker (Block 3 & Friction Circle)
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Brake-Turn Quadrant Usage</span>
-              <span id="hud-friction-quadrant-val" class="stat-cell-value" style="color: #FF6B00; font-size: 26px;">0%</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &gt;75% Blended Grip</span>
+          <!-- Dual Telemetry Visualizers: Pedal Pressure Gauge & Friction Circle -->
+          <div style="display: grid; grid-template-columns: 1fr 140px; gap: 10px; margin-top: 8px;">
+            <div style="background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px;">
+              <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary); margin-bottom: 4px;">
+                <span>CALIBRATED PEDAL GAUGE (0 - 140 LBS)</span>
+                <span id="hud-t5-threshold-status" style="color: var(--color-success);">THRESHOLD ZONE: 125 - 140 LBS</span>
+              </div>
+              <div style="position: relative; height: 14px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+                <div style="position: absolute; left: 88%; width: 12%; height: 100%; background: rgba(0, 204, 102, 0.25); border-left: 1px dashed var(--color-success);"></div>
+                <div id="hud-t5-brake-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #FF6B00, #00FFCC); transition: width 0.04s ease-out;"></div>
+              </div>
+              <div style="display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">
+                <span>Transition Squeeze: <strong id="hud-t5-trans-timer" style="color: var(--color-text-primary);">0.00s</strong> (&lt;0.35s target)</span>
+                <span>The Pause: <strong id="hud-t5-pause-timer" style="color: var(--color-cyan);">0.00s</strong></span>
+              </div>
             </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Brake & Steer Ratio</span>
-              <span id="hud-trail-blend-ratio" class="stat-cell-value" style="color: var(--color-gold); font-size: 22px;">0% / 0%</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Brake % / Steering %</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Trail-Brake Decay Rate</span>
-              <span id="hud-decay-rate-val" class="stat-cell-value" style="color: var(--color-text-primary); font-size: 20px; margin-top: 2px;">--</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 20 lbs / 0.10s steady</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Brake ➔ Throttle Pause</span>
-              <span id="hud-pause-timer-val" class="stat-cell-value" style="color: var(--color-cyan); font-size: 22px;">0.00s</span>
-              <span id="hud-pause-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Trailing throttle rotation pause</span>
-            </div>
-          </div>
-          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px; display: flex; gap: 14px; align-items: center;">
-            <div style="position: relative; width: 120px; height: 120px; background: #0c0c0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 50%; overflow: hidden; flex-shrink: 0;">
-              <div style="position: absolute; top: 10%; left: 10%; width: 80%; height: 80%; border: 1px dashed rgba(255,255,255,0.15); border-radius: 50%;"></div>
-              <div style="position: absolute; top: 25%; left: 25%; width: 50%; height: 50%; border: 1px dashed rgba(255,255,255,0.1); border-radius: 50%;"></div>
-              <div style="position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(255,255,255,0.15);"></div>
-              <div style="position: absolute; top: 0; left: 50%; width: 1px; height: 100%; background: rgba(255,255,255,0.15);"></div>
-              <div style="position: absolute; top: 0; right: 0; width: 50%; height: 50%; background: rgba(255, 107, 0, 0.15); border-left: 1px solid rgba(255, 107, 0, 0.35); border-bottom: 1px solid rgba(255, 107, 0, 0.35);"></div>
-              <div id="hud-friction-dot" style="position: absolute; width: 8px; height: 8px; background: #00FFCC; border-radius: 50%; top: calc(50% - 4px); left: calc(50% - 4px); box-shadow: 0 0 8px #00FFCC; transition: top 0.05s ease-out, left 0.05s ease-out;"></div>
-            </div>
-            <div style="flex: 1; font-family: var(--font-mono); font-size: 10px; line-height: 1.5; color: var(--color-text-secondary);">
-              <div style="color: #FF6B00; font-weight: 700; font-size: 11px; margin-bottom: 3px;">DONOHUE FRICTION CIRCLE (LIVE)</div>
-              <div>Top-Right Quadrant: <strong style="color: #FFD700;">BRAKE-TURN BLEND</strong></div>
-              <div>G-Load: <span id="hud-live-g-breakdown" style="color: var(--color-text-primary);">Lat: 0.00G | Long: 0.00G</span></div>
-              <div id="hud-friction-coach-tip" style="color: var(--color-success); margin-top: 4px;">Approach corner &amp; trail off brake into apex</div>
-            </div>
-          </div>
-        `;
 
-      case 'stint-5-3': // The Procedure Driller (Brake Point Precision)
-        return `
-          <div class="stints-hud-kpi-grid">
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Brake Point Delta (Feet)</span>
-              <span id="hud-brakepoint-delta-val" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">-- ft</span>
-              <span id="hud-brakepoint-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Baseline reference</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Exit Speed vs Baseline</span>
-              <span id="hud-proc-exit-speed" class="stat-cell-value" style="color: var(--color-success); font-size: 24px;">-- MPH</span>
-              <span id="hud-proc-exit-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Corner exit velocity</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Jeremy Dale Procedure Step</span>
-              <span id="hud-proc-step-status" class="stat-cell-value" style="color: #FF6B00; font-size: 16px; margin-top: 4px;">CALIBRATING</span>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">3-ft progressive advance</span>
-            </div>
-            <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #FF6B00;">
-              <span class="stat-cell-label">Throttle Application Point (TAP)</span>
-              <span id="hud-tap-status" class="stat-cell-value" style="color: var(--color-text-primary); font-size: 18px; margin-top: 4px;">NORMAL</span>
-              <span id="hud-tap-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Delayed throttle detector</span>
+            <div style="position: relative; width: 140px; height: 80px; background: #0c0c0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+              <div style="position: absolute; top: 8px; right: 8px; width: 44px; height: 44px; background: rgba(255, 107, 0, 0.15); border-left: 1px solid rgba(255, 107, 0, 0.35); border-bottom: 1px solid rgba(255, 107, 0, 0.35);"></div>
+              <div style="position: absolute; top: 30px; left: 20px; right: 20px; height: 1px; background: rgba(255,255,255,0.12);"></div>
+              <div style="position: absolute; top: 10px; bottom: 10px; left: 50%; width: 1px; background: rgba(255,255,255,0.12);"></div>
+              <div id="hud-t5-friction-dot" style="position: absolute; width: 8px; height: 8px; background: #00FFCC; border-radius: 50%; top: calc(50% - 4px); left: calc(50% - 4px); box-shadow: 0 0 8px #00FFCC; transition: top 0.05s ease-out, left 0.05s ease-out;"></div>
+              <span style="position: absolute; bottom: 3px; font-family: var(--font-mono); font-size: 7.5px; color: var(--color-text-muted);">FRICTION CIRCLE</span>
             </div>
           </div>
-          <div style="margin-top: 8px; background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px;">
-            <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary);">
-              <span>THE PROCEDURE PROGRESSION (3 FT INCREMENTS)</span>
-              <span id="hud-proc-current-lap-delta">LAP PROGRESSION: READY</span>
+
+          <!-- 4-Block Corner Entry Step Tracker -->
+          <div class="entry-block-tracker-container chamfer-all-corners" style="margin-top: 8px;">
+            <div id="t5-block-1" class="entry-block-step-item">
+              <span class="entry-block-step-label">Block 1</span>
+              <span class="entry-block-step-name">1. HARD SQUEEZE</span>
             </div>
-            <div id="hud-proc-guidance-box" style="margin-top: 5px; font-size: 11px; font-family: var(--font-mono); color: var(--color-success); line-height: 1.4;">
-              🎯 Lap 1: Establishing safe reference braking point. Focus on clean corner exit speed.
+            <span class="cpr-arrow">➔</span>
+            <div id="t5-block-2" class="entry-block-step-item">
+              <span class="entry-block-step-label">Block 2</span>
+              <span class="entry-block-step-name">2. STRAIGHT DECEL</span>
             </div>
+            <span class="cpr-arrow">➔</span>
+            <div id="t5-block-3" class="entry-block-step-item">
+              <span class="entry-block-step-label">Block 3</span>
+              <span class="entry-block-step-name">3. TRAIL-TURN BLEND</span>
+            </div>
+            <span class="cpr-arrow">➔</span>
+            <div id="t5-block-4" class="entry-block-step-item">
+              <span class="entry-block-step-label">Block 4</span>
+              <span class="entry-block-step-name">4. THE PAUSE &amp; TAP</span>
+            </div>
+          </div>
+
+          <div id="hud-t5-alert" class="hud-less-grip-alert" style="display: none; margin-top: 6px;">
+            ⚠️ PANIC LIFT DETECTED! RELAX ANKLE TENSION 30-40 LBS (140 -> 100 LBS) TO PRESERVE DECELERATION
           </div>
         `;
 
@@ -1117,20 +1092,24 @@ export class LiveHudRenderer {
       }
     }
 
-    // --- TIER 5: BRAKING & ENTERING (THE ANALYTICAL BRAKER) ---
-    // 5-1 The Threshold Hunter (Block 2: Straight-Line Deceleration & Modulation)
+    // --- TIER 5: BRAKING & ENTERING (THE ANALYTICAL BRAKER - CHAPTER 5 HOLISTIC) ---
     else if (stintId === 'stint-5-1') {
       const brakeLbs = Math.round(brake * 140);
-      const elBrakeLbs = document.getElementById('hud-brake-lbs-val');
+      const steerPct = Math.min(100, Math.round(Math.abs(steer) * 100));
+      const latGVal = motion.acceleration?.lateralG != null ? motion.acceleration.lateralG : (motion.lateralG || motion.gLat || sample.gLat || 0);
+      const longGVal = motion.acceleration?.longitudinalG != null ? motion.acceleration.longitudinalG : (motion.longitudinalG || motion.gLong || sample.gLong || 0);
+
+      // 1. Pillar 1: Calibrated Pedal Force & Threshold Modulation
+      const elBrakeLbs = document.getElementById('hud-t5-lbs-val');
       if (elBrakeLbs) {
         elBrakeLbs.textContent = `${brakeLbs} lbs`;
         elBrakeLbs.style.color = brakeLbs >= 125 ? 'var(--color-success)' : (brakeLbs >= 70 ? 'var(--color-gold)' : '#FF6B00');
       }
 
-      const elBrakePct = document.getElementById('hud-brake-pct-sub');
-      if (elBrakePct) elBrakePct.textContent = `${brakePct}% / 140 lbs Scale`;
+      const elFill = document.getElementById('hud-t5-brake-fill');
+      if (elFill) elFill.style.width = `${brakePct}%`;
 
-      const elThreshold = document.getElementById('hud-threshold-status');
+      const elThreshold = document.getElementById('hud-t5-threshold-status');
       if (elThreshold) {
         if (brakeLbs >= 125) {
           elThreshold.textContent = '🎯 THRESHOLD ZONE (125-140 LBS)';
@@ -1147,10 +1126,7 @@ export class LiveHudRenderer {
         }
       }
 
-      const elFill = document.getElementById('hud-brake-pressure-fill');
-      if (elFill) elFill.style.width = `${brakePct}%`;
-
-      // Throttle-to-Brake Transition Timer
+      // Transition Squeeze Timer (<0.35s target)
       if (throttlePct < 5 && (this.t5PrevThrottlePct || 0) > 40) {
         this.t5ThrottleLiftTime = Date.now();
       }
@@ -1158,74 +1134,54 @@ export class LiveHudRenderer {
         const transTime = (Date.now() - this.t5ThrottleLiftTime) / 1000;
         this.t5ThrottleLiftTime = 0;
         this.t5LastTransitionTime = transTime;
-        const elTrans = document.getElementById('hud-transition-timer');
+        const elTrans = document.getElementById('hud-t5-trans-timer');
         if (elTrans) {
           elTrans.textContent = `${transTime.toFixed(2)}s`;
           elTrans.style.color = transTime <= 0.35 ? 'var(--color-success)' : 'var(--color-warning)';
         }
-        const elTransSub = document.getElementById('hud-transition-sub');
-        if (elTransSub) {
-          elTransSub.textContent = transTime <= 0.35 ? '🎯 Fast Hard Squeeze (<0.35s)' : '⚠️ Squeeze Faster (<0.35s target)';
-          elTransSub.style.color = transTime <= 0.35 ? 'var(--color-success)' : 'var(--color-warning)';
-        }
       }
       this.t5PrevThrottlePct = throttlePct;
 
-      // Lockup Recovery & Modulation Drop
-      const elLockDrop = document.getElementById('hud-lockup-drop');
-      const elLockSub = document.getElementById('hud-lockup-sub');
+      // Lockup & Subtle Ankle Modulation Drop
+      const elModBadge = document.getElementById('hud-t5-mod-badge');
+      const elAlert = document.getElementById('hud-t5-alert');
       if (brakeLbs >= 130 && speedMph > 35) {
         this.t5LastLockupPressure = brakeLbs;
       }
       if (this.t5LastLockupPressure > 120 && brakeLbs < this.t5LastLockupPressure) {
         const drop = this.t5LastLockupPressure - brakeLbs;
-        if (elLockDrop && elLockSub) {
+        if (elModBadge) {
           if (brakeLbs <= 20) {
-            elLockDrop.textContent = '⚠️ PANIC LIFT (0 LBS)';
-            elLockDrop.style.color = 'var(--color-f1-red)';
-            elLockSub.textContent = 'Chassis rebound! Use subtle ankle drop';
-            elLockSub.style.color = 'var(--color-f1-red)';
+            elModBadge.textContent = '⚠️ PANIC LIFT (0 LBS)';
+            elModBadge.style.color = 'var(--color-f1-red)';
+            this.t5PanicLifts = (this.t5PanicLifts || 0) + 1;
+            if (elAlert) elAlert.style.display = 'block';
           } else if (drop >= 25 && drop <= 45) {
-            elLockDrop.textContent = `🎯 -${drop} LBS ANKLE DROP`;
-            elLockDrop.style.color = 'var(--color-success)';
-            elLockSub.textContent = 'Perfect modulation (140 -> 100 lbs)';
-            elLockSub.style.color = 'var(--color-success)';
+            elModBadge.textContent = `🎯 -${drop} LBS ANKLE DROP`;
+            elModBadge.style.color = 'var(--color-success)';
+            if (elAlert) elAlert.style.display = 'none';
           } else {
-            elLockDrop.textContent = `MODULATING (-${drop} LBS)`;
-            elLockDrop.style.color = 'var(--color-gold)';
-            elLockSub.textContent = 'Target: 30-40 lbs subtle drop';
-            elLockSub.style.color = 'var(--color-text-muted)';
+            elModBadge.textContent = `MODULATING (-${drop} LBS)`;
+            elModBadge.style.color = 'var(--color-gold)';
+            if (elAlert) elAlert.style.display = 'none';
           }
         }
-      } else if (brakeLbs === 0 && elLockDrop) {
-        elLockDrop.textContent = 'NO LOCKUP';
-        elLockDrop.style.color = 'var(--color-success)';
+      } else if (brakeLbs === 0 && elModBadge) {
+        elModBadge.textContent = 'NO LOCKUP';
+        elModBadge.style.color = 'var(--color-success)';
+        if (elAlert) elAlert.style.display = 'none';
       }
-    }
 
-    // 5-2 The Trail-Braker (Block 3: Brake-Turning & Friction Circle Grip Blending)
-    else if (stintId === 'stint-5-2') {
-      // 1. Friction Circle 2D Position
-      const latGVal = motion.acceleration?.lateralG != null ? motion.acceleration.lateralG : (motion.lateralG || motion.gLat || sample.gLat || 0);
-      const longGVal = motion.acceleration?.longitudinalG != null ? motion.acceleration.longitudinalG : (motion.longitudinalG || motion.gLong || sample.gLong || 0);
-
-      // Decel is negative longG in standard telemetry (or positive in forward G)
+      // 2. Pillar 2: Trail-Braking & Donohue Friction Circle
       const latPos = Math.max(10, Math.min(90, 50 + (latGVal / 1.5) * 40));
       const longPos = Math.max(10, Math.min(90, 50 - (longGVal / 1.5) * 40));
-
-      const elDot = document.getElementById('hud-friction-dot');
+      const elDot = document.getElementById('hud-t5-friction-dot');
       if (elDot) {
         elDot.style.left = `calc(${latPos}% - 4px)`;
         elDot.style.top = `calc(${longPos}% - 4px)`;
         elDot.style.background = (brake > 0.1 && Math.abs(steer) > 0.1) ? '#FF6B00' : '#00FFCC';
       }
 
-      const elGBreakdown = document.getElementById('hud-live-g-breakdown');
-      if (elGBreakdown) {
-        elGBreakdown.textContent = `Lat: ${Math.abs(latGVal).toFixed(2)}G | Long: ${longGVal.toFixed(2)}G`;
-      }
-
-      // 2. Brake-Turn Quadrant Tracking & Blend Ratio
       if (brake > 0.08) {
         this.t5BrakeSamplesCount = (this.t5BrakeSamplesCount || 0) + 1;
         if (Math.abs(steer) > 0.08) {
@@ -1236,100 +1192,79 @@ export class LiveHudRenderer {
         ? Math.min(100, Math.round((this.t5BrakeTurnSamplesCount / this.t5BrakeSamplesCount) * 100))
         : 80;
 
-      const elQuadrant = document.getElementById('hud-friction-quadrant-val');
-      if (elQuadrant) {
-        elQuadrant.textContent = `${blendUsagePct}%`;
-        elQuadrant.style.color = blendUsagePct >= 75 ? 'var(--color-success)' : (blendUsagePct >= 50 ? 'var(--color-gold)' : '#FF6B00');
+      const elTrailVal = document.getElementById('hud-t5-trail-val');
+      if (elTrailVal) {
+        elTrailVal.textContent = `${blendUsagePct}%`;
+        elTrailVal.style.color = blendUsagePct >= 75 ? 'var(--color-success)' : (blendUsagePct >= 50 ? 'var(--color-gold)' : '#FF6B00');
       }
 
-      const elRatio = document.getElementById('hud-trail-blend-ratio');
-      if (elRatio) {
-        elRatio.textContent = `${brakePct}% / ${Math.round(Math.abs(steer) * 100)}%`;
-      }
+      const elBlendSub = document.getElementById('hud-t5-blend-sub');
+      if (elBlendSub) elBlendSub.textContent = `${brakePct}% / ${steerPct}%`;
 
-      // 3. Trail-Brake Decay Rate
-      const elDecay = document.getElementById('hud-decay-rate-val');
-      if (elDecay) {
-        if (brake < (this.t5PrevBrake || 0) && brake > 0.05) {
-          const decayLbs = Math.round(((this.t5PrevBrake - brake) * 140) * 10);
-          elDecay.textContent = `${decayLbs} lbs/0.1s`;
-          elDecay.style.color = (decayLbs >= 15 && decayLbs <= 25) ? 'var(--color-success)' : 'var(--color-gold)';
-        } else if (brake === 0) {
-          elDecay.textContent = 'READY';
-          elDecay.style.color = 'var(--color-text-muted)';
-        }
-      }
-      this.t5PrevBrake = brake;
-
-      // 4. Brake-to-Throttle Pause Counter
+      // The Pause between Brake Release and Throttle Application
       if (brake < 0.02 && (this.t5PrevBrakeWasActive || false)) {
         this.t5BrakeReleaseTs = Date.now();
       }
       this.t5PrevBrakeWasActive = brake > 0.1;
-
       if (throttlePct > 8 && this.t5BrakeReleaseTs > 0) {
         const pauseTime = (Date.now() - this.t5BrakeReleaseTs) / 1000;
         this.t5BrakeReleaseTs = 0;
-        const elPause = document.getElementById('hud-pause-timer-val');
+        const elPause = document.getElementById('hud-t5-pause-timer');
         if (elPause) {
           elPause.textContent = `${pauseTime.toFixed(2)}s`;
           elPause.style.color = (pauseTime >= 0.15 && pauseTime <= 0.45) ? 'var(--color-success)' : 'var(--color-cyan)';
         }
       }
-    }
 
-    // 5-3 The Procedure Driller (Brake Point Precision & Jeremy Dale's 3-Ft Progression)
-    else if (stintId === 'stint-5-3') {
+      // 3. Pillar 3: Jeremy Dale's "The Procedure" & Exit Speed Delta (+km/h)
       const lapNum = currentLap || 1;
       const targetDeltaFt = (lapNum - 1) * 3;
-
-      const elDelta = document.getElementById('hud-brakepoint-delta-val');
-      if (elDelta) {
-        elDelta.textContent = lapNum === 1 ? 'BASELINE (0 ft)' : `-${targetDeltaFt} ft`;
-        elDelta.style.color = lapNum === 1 ? 'var(--color-text-primary)' : 'var(--color-gold)';
+      const elProcDelta = document.getElementById('hud-t5-proc-delta');
+      if (elProcDelta) {
+        elProcDelta.textContent = lapNum === 1 ? '0 ft' : `-${targetDeltaFt} ft`;
+        elProcDelta.style.color = lapNum === 1 ? 'var(--color-text-primary)' : 'var(--color-cyan)';
       }
 
-      const elExitSpeed = document.getElementById('hud-proc-exit-speed');
-      if (elExitSpeed) {
-        elExitSpeed.textContent = `${speedMph > 20 ? speedMph : '--'} MPH`;
+      const exitDeltaKmh = parseFloat(Math.max(0.0, (longGNum || 0) * 26.5).toFixed(1));
+      const elExitGain = document.getElementById('hud-t5-exit-gain');
+      if (elExitGain) {
+        elExitGain.textContent = `+${exitDeltaKmh.toFixed(1)} km/h`;
+        elExitGain.style.color = exitDeltaKmh >= 2.5 ? 'var(--color-success)' : 'var(--color-gold)';
       }
 
-      const elProcStep = document.getElementById('hud-proc-step-status');
-      if (elProcStep) {
-        if (lapNum === 1) {
-          elProcStep.textContent = 'BASELINE CALIBRATION';
-          elProcStep.style.color = 'var(--color-cyan)';
-        } else if (lapNum <= 5) {
-          elProcStep.textContent = `STEP ${lapNum}: -${targetDeltaFt} FT CLOSER`;
-          elProcStep.style.color = 'var(--color-gold)';
-        } else if (lapNum <= 10) {
-          elProcStep.textContent = `DEEPENING: -${targetDeltaFt} FT`;
-          elProcStep.style.color = 'var(--color-warning)';
-        } else {
-          elProcStep.textContent = 'OPTIMAL LIMIT CHECK';
-          elProcStep.style.color = 'var(--color-success)';
+      // 4. 4-Block Corner Entry Step Tracker Animation
+      const b1 = document.getElementById('t5-block-1');
+      const b2 = document.getElementById('t5-block-2');
+      const b3 = document.getElementById('t5-block-3');
+      const b4 = document.getElementById('t5-block-4');
+      if (b1 && b2 && b3 && b4) {
+        b1.classList.remove('active-squeeze');
+        b2.classList.remove('active-threshold');
+        b3.classList.remove('active-trail');
+        b4.classList.remove('active-pause');
+
+        if (brakeLbs >= 120 && steerPct < 15) {
+          b2.classList.add('active-threshold');
+        } else if (brakeLbs > 20 && steerPct >= 15) {
+          b3.classList.add('active-trail');
+        } else if (brakeLbs < 20 && (throttlePct > 15 || this.t5BrakeReleaseTs > 0)) {
+          b4.classList.add('active-pause');
+        } else if (brakeLbs > 15) {
+          b1.classList.add('active-squeeze');
         }
       }
 
-      const elTap = document.getElementById('hud-tap-status');
-      const elTapSub = document.getElementById('hud-tap-sub');
-      if (elTap) {
-        if (brake > 0.8 && speedMph > 50) {
-          this.t5DeepBrakeActive = true;
-        }
-        if (this.t5DeepBrakeActive && speedMph < 45 && throttlePct === 0) {
-          elTap.textContent = 'WAITING FOR APEX (TAP)';
-          elTap.style.color = 'var(--color-gold)';
-        } else if (throttlePct > 40 && speedMph > 45) {
-          this.t5DeepBrakeActive = false;
-          elTap.textContent = 'CLEAN EXIT DRIVE';
-          elTap.style.color = 'var(--color-success)';
-          if (elTapSub) elTapSub.textContent = 'No delayed throttle penalty';
-        }
-      }
+      // 5. Composite Braking Mastery Index (40/30/30 Metric Scoring)
+      const modSubScore = Math.max(30, Math.min(100, 100 - ((this.t5PanicLifts || 0) * 15)));
+      const trailSubScore = Math.max(30, Math.min(100, blendUsagePct >= 75 ? 95 : Math.round(blendUsagePct * 1.1)));
+      const procSubScore = Math.max(30, Math.min(100, Math.round(85 + Math.min(15, lapNum * 2.5) + (exitDeltaKmh >= 2.5 ? 5 : 0))));
+      const liveMastery = Math.round((0.40 * modSubScore) + (0.30 * trailSubScore) + (0.30 * procSubScore));
 
-      const elProgText = document.getElementById('hud-proc-current-lap-delta');
-      if (elProgText) elProgText.textContent = `LAP ${lapNum} // ADVANCE: ${targetDeltaFt} FT`;
+      const elMastery = document.getElementById('hud-t5-mastery-val');
+      if (elMastery) {
+        elMastery.textContent = `${liveMastery}%`;
+        elMastery.style.color = liveMastery >= 85 ? 'var(--color-gold)' : (liveMastery >= 70 ? 'var(--color-success)' : 'var(--color-warning)');
+      }
     }
 
     // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---
