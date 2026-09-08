@@ -717,8 +717,11 @@ export class LiveHudRenderer {
     // 2. Pedals
     const rawThrottle = inputs.throttle != null ? inputs.throttle : (sample.accel != null ? sample.accel / 255 : (sample.throttle != null ? sample.throttle : 0));
     const rawBrake = inputs.brake != null ? inputs.brake : (sample.brake != null ? sample.brake / 255 : 0);
-    const throttlePct = Math.min(100, Math.max(0, Math.round(rawThrottle <= 1.0 ? rawThrottle * 100 : rawThrottle)));
-    const brakePct = Math.min(100, Math.max(0, Math.round(rawBrake <= 1.0 ? rawBrake * 100 : rawBrake)));
+    const throttle = rawThrottle <= 1.0 ? rawThrottle : rawThrottle / 100;
+    const brake = rawBrake <= 1.0 ? rawBrake : rawBrake / 100;
+    const throttlePct = Math.min(100, Math.max(0, Math.round(throttle * 100)));
+    const brakePct = Math.min(100, Math.max(0, Math.round(brake * 100)));
+    const currentLap = timing.lapNumber != null ? timing.lapNumber : (sample.lapNumber != null ? sample.lapNumber : 1);
 
     // 3. Steer
     const steer = inputs.steering != null ? inputs.steering : (inputs.steer != null ? inputs.steer : (sample.steer != null ? sample.steer / 127 : 0));
@@ -1426,9 +1429,17 @@ export class LiveHudRenderer {
     // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST - PADDLE SHIFTER MODE) ---
     else if (stintId === 'stint-6-1') {
       const brakeLbs = Math.round(brake * 140);
-      const currentRpm = Math.round(sample.engine?.currentEngineRpm != null 
-        ? sample.engine.currentEngineRpm 
-        : (sample.currentRpm != null ? sample.currentRpm : (sample.currentEngineRpm != null ? sample.currentEngineRpm : (sample.rpm || 0))));
+      const currentRpm = Math.round(
+        sample.engine?.currentRpm != null 
+          ? sample.engine.currentRpm 
+          : (sample.engine?.currentEngineRpm != null 
+              ? sample.engine.currentEngineRpm 
+              : (sample.currentEngineRpm != null 
+                  ? sample.currentEngineRpm 
+                  : (sample.currentRpm != null 
+                      ? sample.currentRpm 
+                      : (sample.rpm || sample.CurrentEngineRpm || 0))))
+      );
 
       // Update 2-Pedal Bars (Throttle & Brake)
       const elPedalT = document.getElementById('hud-t6-pedal-throttle');
@@ -1442,9 +1453,12 @@ export class LiveHudRenderer {
       if (elFillB) elFillB.style.width = `${brakePct}%`;
 
       // Live Tachometer Display & Powerband Shift Lights (Peak at ~6,800 RPM in M2 CS / M3)
-      const maxPowerbandRpm = 7000;
+      const maxPowerbandRpm = Math.round(sample.engine?.maxRpm || sample.maxRpm || sample.maxEngineRpm || sample.EngineMaxRpm || 7000);
       const elLiveRpm = document.getElementById('hud-t6-live-rpm');
       if (elLiveRpm) elLiveRpm.textContent = currentRpm > 0 ? `${currentRpm.toLocaleString()} RPM` : '-- RPM';
+
+      const elTargetRpm = document.getElementById('hud-t6-target-rpm');
+      if (elTargetRpm) elTargetRpm.textContent = `${Math.round(maxPowerbandRpm * 0.95).toLocaleString()} RPM`;
 
       const powerbandPct = Math.min(100, Math.max(10, Math.round((currentRpm / maxPowerbandRpm) * 100)));
       const elStressFill = document.getElementById('hud-t6-stress-fill');
@@ -1464,20 +1478,28 @@ export class LiveHudRenderer {
       }
 
       // Shift State Machine & Sequence Tracker
-      const currentGearVal = inputs.gear != null ? inputs.gear : sample.gear;
+      const currentGearVal = inputs.gear != null ? inputs.gear : (sample.gear != null ? sample.gear : (sample.Gear != null ? sample.Gear : 0));
       const prevGearVal = this.t6PrevGear != null ? this.t6PrevGear : currentGearVal;
       const isDownshifting = currentGearVal != null && prevGearVal != null && currentGearVal < prevGearVal && currentGearVal > 0;
       const isUpshifting = currentGearVal != null && prevGearVal != null && currentGearVal > prevGearVal && prevGearVal >= 1;
 
+      if (isDownshifting) {
+        this.t6LastShiftAction = `▼ PADDLE DOWN (${currentGearVal})`;
+        this.t6LastShiftColor = '#00E5FF';
+        this.t6LastShiftUntil = Date.now() + 600;
+        this.t6DownshiftHoldUntil = Date.now() + 600;
+      } else if (isUpshifting) {
+        this.t6LastShiftAction = `▲ PADDLE UP (${currentGearVal})`;
+        this.t6LastShiftColor = 'var(--color-gold)';
+        this.t6LastShiftUntil = Date.now() + 600;
+      }
+
       // Gearbox Pulse Indicator
       const elShiftPulse = document.getElementById('hud-t6-shift-pulse');
       if (elShiftPulse) {
-        if (isDownshifting) {
-          elShiftPulse.textContent = `▼ PADDLE DOWN (${currentGearVal})`;
-          elShiftPulse.style.color = '#00E5FF';
-        } else if (isUpshifting) {
-          elShiftPulse.textContent = `▲ PADDLE UP (${currentGearVal})`;
-          elShiftPulse.style.color = 'var(--color-gold)';
+        if (this.t6LastShiftUntil && Date.now() < this.t6LastShiftUntil) {
+          elShiftPulse.textContent = this.t6LastShiftAction;
+          elShiftPulse.style.color = this.t6LastShiftColor;
         } else {
           elShiftPulse.textContent = `GEAR [${gear}] ENGAGED`;
           elShiftPulse.style.color = 'var(--color-success)';
@@ -1489,7 +1511,7 @@ export class LiveHudRenderer {
       if (isDownshifting) {
         // Safe downshift window: downshift pulled when current RPM after shift will not spike into rev limiter
         const projectedNextGearRpm = Math.round(currentRpm * 1.35);
-        const overRevSpike = projectedNextGearRpm > 7200;
+        const overRevSpike = projectedNextGearRpm > (maxPowerbandRpm * 1.03);
         if (overRevSpike) {
           this.t6OverRevSpikes = (this.t6OverRevSpikes || 0) + 1;
           this.telemetryStats.severeGrinds = this.t6OverRevSpikes;
@@ -1590,7 +1612,7 @@ export class LiveHudRenderer {
       let activeStageIdx = -1;
       if (brakeLbs >= 80 && Math.abs(steer) < 0.15 && !isDownshifting) {
         activeStageIdx = 0; // Stage 1: Straight Threshold Brake
-      } else if (brakeLbs > 40 && isDownshifting) {
+      } else if ((brakeLbs > 30 && isDownshifting) || (this.t6DownshiftHoldUntil && Date.now() < this.t6DownshiftHoldUntil)) {
         activeStageIdx = 1; // Stage 2: Safe Paddle Pull inside Window
       } else if (brakeLbs > 15 && Math.abs(steer) >= 0.15) {
         activeStageIdx = 2; // Stage 3: Trail / Turn-In
