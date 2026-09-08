@@ -330,148 +330,123 @@ export class LiveHudRenderer {
           </div>
         `;
 
-      // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST) ---
-      case 'stint-6-1': // The Gearbox Analyst (Chapter 6 Holistic)
+      // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST - PADDLE SHIFTER MODE) ---
+      case 'stint-6-1': // The Gearbox Analyst (Paddle Shifting & Downshift Windows)
         return `
           <div class="stints-hud-kpi-grid">
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00E5FF;">
-              <span class="stat-cell-label">1. RPM Sync Delta</span>
+              <span class="stat-cell-label">1. Downshift Window (A➔B)</span>
               <div style="display: flex; align-items: baseline; gap: 6px;">
-                <span id="hud-t6-rpm-delta" class="stat-cell-value" style="color: #00E5FF; font-size: 26px;">±0 RPM</span>
-                <span id="hud-t6-rpm-status" class="stat-cell-value" style="color: var(--color-success); font-size: 13px;">PERFECT SYNC</span>
+                <span id="hud-t6-rpm-delta" class="stat-cell-value" style="color: #00E5FF; font-size: 26px;">SAFE WINDOW</span>
+                <span id="hud-t6-rpm-status" class="stat-cell-value" style="color: var(--color-success); font-size: 13px;">0 OVER-REVS</span>
               </div>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &lt;100 RPM Delta (0 Grinds)</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Point A (Earliest) ➔ Point B (TAP Exit)</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00E5FF;">
-              <span class="stat-cell-label">2. Heel-Toe Brake Drop</span>
+              <span class="stat-cell-label">2. Straight-Line Decel Cadence</span>
               <div style="display: flex; align-items: baseline; gap: 6px;">
                 <span id="hud-t6-brake-drop" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">-0 lbs</span>
-                <span id="hud-t6-drop-sub" class="stat-cell-value" style="color: var(--color-success); font-size: 13px;">FLAT TRACE</span>
+                <span id="hud-t6-drop-sub" class="stat-cell-value" style="color: var(--color-success); font-size: 13px;">STEADY THRESHOLD</span>
               </div>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &lt;10 lbs drop during blip</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &lt;10 lbs drop during paddle pulls</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid #00E5FF;">
-              <span class="stat-cell-label">3. Upshift Transition</span>
+              <span class="stat-cell-label">3. Powerband Upshift Timing</span>
               <div style="display: flex; align-items: baseline; gap: 6px;">
-                <span id="hud-t6-upshift-timer" class="stat-cell-value" style="color: var(--color-cyan); font-size: 24px;">0.00s</span>
-                <span id="hud-t6-upshift-status" class="stat-cell-value" style="color: var(--color-success); font-size: 13px;">FINGERTIP SPEED</span>
+                <span id="hud-t6-upshift-timer" class="stat-cell-value" style="color: var(--color-cyan); font-size: 24px;">95% RPM</span>
+                <span id="hud-t6-upshift-status" class="stat-cell-value" style="color: var(--color-success); font-size: 13px;">OPTIMAL SHIFT</span>
               </div>
-              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: &lt;0.25s lift-to-power / No power-shifts</span>
+              <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">Target: 92-98% Powerband / 0 Limiter Bounces</span>
             </div>
             <div class="stat-cell chamfer-all-corners" style="border-left: 3px solid var(--color-gold);">
-              <span class="stat-cell-label">Composite Shifting Mastery</span>
+              <span class="stat-cell-label">Composite Paddle Mastery</span>
               <span id="hud-t6-mastery-val" class="stat-cell-value" style="color: var(--color-gold); font-size: 26px;">--%</span>
               <span id="hud-t6-mastery-sub" style="font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">40/30/30 Metric Scoring</span>
             </div>
           </div>
 
-          <!-- Dual Telemetry Visualizers: Live 3-Pedal Overlay & Dynamic Tachometer / Stress Meter -->
-          <div style="display: grid; grid-template-columns: 1fr 180px; gap: 10px; margin-top: 8px;">
-            <!-- Live 3-Pedal Heel-Toe Graphic -->
+          <!-- Dual Telemetry Visualizers: 2-Pedal Live Overlay & Powerband Shift Tachometer -->
+          <div style="display: grid; grid-template-columns: 1fr 220px; gap: 10px; margin-top: 8px;">
+            <!-- Live 2-Pedal High-Precision Overlay (Throttle & Calibrated Brake Pressure) -->
             <div style="background: #111114; border: 1px solid var(--color-border); padding: 10px; border-radius: 2px;">
               <div style="display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-secondary); margin-bottom: 6px;">
-                <span>3-PEDAL HEEL-TOE OVERLAY &amp; PEDAL DISCIPLINE</span>
-                <button id="btn-t6-metronome-toggle" class="btn btn-xs" style="background: #1e1e24; border: 1px solid rgba(255,255,255,0.15); color: #00E5FF; font-size: 8.5px; padding: 2px 8px; cursor: pointer;">🔊 SAMBA METRONOME: OFF</button>
+                <span>2-PEDAL LIVE OVERLAY (PADDLE SHIFTER MODE)</span>
+                <span id="hud-t6-shift-pulse" style="color: var(--color-success); font-weight: 700;">GEAR ENGAGED</span>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-family: var(--font-mono); font-size: 8.5px;">
-                <!-- Throttle Blip -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-family: var(--font-mono); font-size: 9px;">
+                <!-- Throttle -->
                 <div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #00FFCC;">THROTTLE (BLIP)</span>
-                    <span id="hud-t6-pedal-throttle" style="color: #00FFCC;">0%</span>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                    <span style="color: #00FFCC;">THROTTLE DRIVE</span>
+                    <span id="hud-t6-pedal-throttle" style="color: #00FFCC; font-weight: 700;">0%</span>
                   </div>
-                  <div style="height: 10px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="height: 12px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
                     <div id="hud-t6-fill-throttle" style="height: 100%; width: 0%; background: #00FFCC; transition: width 0.04s ease-out;"></div>
                   </div>
                 </div>
-                <!-- Brake Pressure -->
+                <!-- Brake Pressure (lbs) -->
                 <div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #FF6B00;">BRAKE (LBS)</span>
-                    <span id="hud-t6-pedal-brake" style="color: #FF6B00;">0 lbs</span>
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+                    <span style="color: #FF6B00;">BRAKE PRESSURE</span>
+                    <span id="hud-t6-pedal-brake" style="color: #FF6B00; font-weight: 700;">0 lbs</span>
                   </div>
-                  <div style="height: 10px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+                  <div style="height: 12px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
                     <div id="hud-t6-fill-brake" style="height: 100%; width: 0%; background: #FF6B00; transition: width 0.04s ease-out;"></div>
-                  </div>
-                </div>
-                <!-- Clutch -->
-                <div>
-                  <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                    <span style="color: #0099FF;">CLUTCH</span>
-                    <span id="hud-t6-pedal-clutch" style="color: #0099FF;">0%</span>
-                  </div>
-                  <div style="height: 10px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-                    <div id="hud-t6-fill-clutch" style="height: 100%; width: 0%; background: #0099FF; transition: width 0.04s ease-out;"></div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Dynamic Tachometer & Gearbox Stress Meter -->
+            <!-- Dynamic Powerband Tachometer & Shift Lights -->
             <div style="background: #0c0c0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 2px; padding: 8px 10px; display: flex; flex-direction: column; justify-content: space-between;">
               <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 8px; color: var(--color-text-muted);">
-                <span>GEARBOX STRESS</span>
-                <span id="hud-t6-stress-label" style="color: var(--color-success);">SMOOTH (0.0G)</span>
+                <span>POWERBAND SHIFT LIGHTS</span>
+                <span id="hud-t6-powerband-status" style="color: var(--color-success);">OPTIMAL</span>
               </div>
               <div style="display: flex; align-items: center; justify-content: space-between; margin: 2px 0;">
                 <div>
-                  <div style="font-family: var(--font-mono); font-size: 7.5px; color: var(--color-text-muted);">ENG RPM</div>
-                  <div id="hud-t6-live-rpm" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #00E5FF;">0</div>
+                  <div style="font-family: var(--font-mono); font-size: 7.5px; color: var(--color-text-muted);">CURRENT RPM</div>
+                  <div id="hud-t6-live-rpm" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: #00E5FF;">0 RPM</div>
                 </div>
                 <div style="text-align: right;">
-                  <div style="font-family: var(--font-mono); font-size: 7.5px; color: var(--color-text-muted);">TARGET SYNC</div>
-                  <div id="hud-t6-target-rpm" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--color-gold);">0</div>
+                  <div style="font-family: var(--font-mono); font-size: 7.5px; color: var(--color-text-muted);">POWERBAND PEAK</div>
+                  <div id="hud-t6-target-rpm" style="font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--color-gold);">6,800 RPM</div>
                 </div>
               </div>
-              <div style="position: relative; height: 8px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-                <div id="hud-t6-stress-fill" style="height: 100%; width: 10%; background: linear-gradient(90deg, #00FFCC 0%, #FFD700 60%, #FF3366 100%); transition: width 0.06s ease-out;"></div>
+              <div style="position: relative; height: 10px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+                <div id="hud-t6-stress-fill" style="height: 100%; width: 10%; background: linear-gradient(90deg, #00FFCC 0%, #FFD700 75%, #FF3366 100%); transition: width 0.05s ease-out;"></div>
               </div>
             </div>
           </div>
 
-          <!-- Dorsey Schroeder 7-Step Downshift Jingle Tracker -->
-          <div class="jingle-tracker-container chamfer-all-corners" style="margin-top: 8px;">
-            <div id="t6-step-1" class="jingle-step-item">
-              <span class="jingle-step-label">Step 1</span>
-              <span class="jingle-step-name">1. CLUTCH-IN</span>
+          <!-- Skip Barber 4-Stage Downshift Window & Shift Cadence Tracker -->
+          <div class="downshift-window-tracker-container chamfer-all-corners" style="margin-top: 8px;">
+            <div id="t6-stage-1" class="downshift-window-step-item">
+              <span class="downshift-window-step-label">Stage 1</span>
+              <span class="downshift-window-step-name">1. THRESHOLD BRAKE</span>
             </div>
-            <span class="jingle-arrow">➔</span>
-            <div id="t6-step-2" class="jingle-step-item">
-              <span class="jingle-step-label">Step 2</span>
-              <span class="jingle-step-name">2. NEUTRAL</span>
+            <span class="cpr-arrow">➔</span>
+            <div id="t6-stage-2" class="downshift-window-step-item">
+              <span class="downshift-window-step-label">Stage 2 (Point A➔B)</span>
+              <span class="downshift-window-step-name">2. SAFE PADDLE PULL</span>
             </div>
-            <span class="jingle-arrow">➔</span>
-            <div id="t6-step-3" class="jingle-step-item">
-              <span class="jingle-step-label">Step 3</span>
-              <span class="jingle-step-name">3. CLUTCH-OUT</span>
+            <span class="cpr-arrow">➔</span>
+            <div id="t6-stage-3" class="downshift-window-step-item">
+              <span class="downshift-window-step-label">Stage 3</span>
+              <span class="downshift-window-step-name">3. TRAIL / TURN-IN</span>
             </div>
-            <span class="jingle-arrow">➔</span>
-            <div id="t6-step-4" class="jingle-step-item">
-              <span class="jingle-step-label">Step 4</span>
-              <span class="jingle-step-name">4. BLIP THROTTLE</span>
-            </div>
-            <span class="jingle-arrow">➔</span>
-            <div id="t6-step-5" class="jingle-step-item">
-              <span class="jingle-step-label">Step 5</span>
-              <span class="jingle-step-name">5. CLUTCH-IN</span>
-            </div>
-            <span class="jingle-arrow">➔</span>
-            <div id="t6-step-6" class="jingle-step-item">
-              <span class="jingle-step-label">Step 6</span>
-              <span class="jingle-step-name">6. NEXT GEAR</span>
-            </div>
-            <span class="jingle-arrow">➔</span>
-            <div id="t6-step-7" class="jingle-step-item">
-              <span class="jingle-step-label">Step 7</span>
-              <span class="jingle-step-name">7. CLUTCH-OUT</span>
+            <span class="cpr-arrow">➔</span>
+            <div id="t6-stage-4" class="downshift-window-step-item">
+              <span class="downshift-window-step-label">Stage 4</span>
+              <span class="downshift-window-step-name">4. TAP EXIT ACCEL</span>
             </div>
           </div>
 
           <div id="hud-t6-grind-alert" class="hud-less-grip-alert" style="display: none; margin-top: 6px;">
-            ⚠️ GEAR GRIND RISK! RPM MISMATCH &gt; 400 RPM — BLIP TO TARGET RPM BEFORE CLUTCH RELEASE
+            ⚠️ EARLY DOWNSHIFT OVER-REV (BEFORE POINT A)! BRAKE HARDER TO SCRUB SPEED BEFORE PULLING PADDLE
           </div>
           <div id="hud-t6-power-alert" class="hud-less-grip-alert" style="display: none; margin-top: 6px;">
-            ⚠️ POWER SHIFT DETECTED! LIFT THROTTLE ON UPSHIFT TO CUSHION GEARBOX
+            ⚠️ REV LIMITER BOUNCE DETECTED! PULL UPSHIFT PADDLE IN OPTIMAL 92-98% POWERBAND
           </div>
         `;
 
@@ -1448,16 +1423,14 @@ export class LiveHudRenderer {
       }
     }
 
-    // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST) ---
+    // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST - PADDLE SHIFTER MODE) ---
     else if (stintId === 'stint-6-1') {
-      const rawClutch = inputs.clutch != null ? inputs.clutch : (sample.clutch != null ? sample.clutch : (sample.rawClutch != null ? sample.rawClutch / 255 : 0));
-      const clutchPct = Math.min(100, Math.max(0, Math.round(rawClutch <= 1.0 ? rawClutch * 100 : rawClutch)));
       const brakeLbs = Math.round(brake * 140);
       const currentRpm = Math.round(sample.engine?.currentEngineRpm != null 
         ? sample.engine.currentEngineRpm 
         : (sample.currentRpm != null ? sample.currentRpm : (sample.currentEngineRpm != null ? sample.currentEngineRpm : (sample.rpm || 0))));
 
-      // Update 3-Pedal Bars
+      // Update 2-Pedal Bars (Throttle & Brake)
       const elPedalT = document.getElementById('hud-t6-pedal-throttle');
       const elFillT = document.getElementById('hud-t6-fill-throttle');
       if (elPedalT) elPedalT.textContent = `${throttlePct}%`;
@@ -1468,47 +1441,96 @@ export class LiveHudRenderer {
       if (elPedalB) elPedalB.textContent = `${brakeLbs} lbs`;
       if (elFillB) elFillB.style.width = `${brakePct}%`;
 
-      const elPedalC = document.getElementById('hud-t6-pedal-clutch');
-      const elFillC = document.getElementById('hud-t6-fill-clutch');
-      if (elPedalC) elPedalC.textContent = `${clutchPct}%`;
-      if (elFillC) elFillC.style.width = `${clutchPct}%`;
-
-      // Live Tachometer Display
+      // Live Tachometer Display & Powerband Shift Lights (Peak at ~6,800 RPM in M2 CS / M3)
+      const maxPowerbandRpm = 7000;
       const elLiveRpm = document.getElementById('hud-t6-live-rpm');
-      if (elLiveRpm) elLiveRpm.textContent = currentRpm > 0 ? `${currentRpm} RPM` : '--';
+      if (elLiveRpm) elLiveRpm.textContent = currentRpm > 0 ? `${currentRpm.toLocaleString()} RPM` : '-- RPM';
 
-      const gearNum = (typeof gear === 'number') ? gear : parseInt(gear, 10) || 1;
-      const targetRpm = Math.min(8200, Math.max(1200, Math.round(currentRpm * (gearNum > 1 ? 1.32 : 1.0))));
-      const elTargetRpm = document.getElementById('hud-t6-target-rpm');
-      if (elTargetRpm) elTargetRpm.textContent = `${targetRpm} RPM`;
+      const powerbandPct = Math.min(100, Math.max(10, Math.round((currentRpm / maxPowerbandRpm) * 100)));
+      const elStressFill = document.getElementById('hud-t6-stress-fill');
+      const elPowerbandStatus = document.getElementById('hud-t6-powerband-status');
+      if (elStressFill) elStressFill.style.width = `${powerbandPct}%`;
+      if (elPowerbandStatus) {
+        if (powerbandPct >= 92 && powerbandPct <= 98) {
+          elPowerbandStatus.textContent = '🎯 SHIFT NOW (95%)';
+          elPowerbandStatus.style.color = 'var(--color-success)';
+        } else if (powerbandPct > 98) {
+          elPowerbandStatus.textContent = '⚠️ REV LIMITER';
+          elPowerbandStatus.style.color = 'var(--color-f1-red)';
+        } else {
+          elPowerbandStatus.textContent = 'BUILDING REVS';
+          elPowerbandStatus.style.color = 'var(--color-cyan)';
+        }
+      }
 
       // Shift State Machine & Sequence Tracker
       const currentGearVal = inputs.gear != null ? inputs.gear : sample.gear;
       const prevGearVal = this.t6PrevGear != null ? this.t6PrevGear : currentGearVal;
+      const isDownshifting = currentGearVal != null && prevGearVal != null && currentGearVal < prevGearVal && currentGearVal > 0;
+      const isUpshifting = currentGearVal != null && prevGearVal != null && currentGearVal > prevGearVal && prevGearVal >= 1;
 
-      // Heel-Toe Brake Drop Tracking during Throttle Blip
+      // Gearbox Pulse Indicator
+      const elShiftPulse = document.getElementById('hud-t6-shift-pulse');
+      if (elShiftPulse) {
+        if (isDownshifting) {
+          elShiftPulse.textContent = `▼ PADDLE DOWN (${currentGearVal})`;
+          elShiftPulse.style.color = '#00E5FF';
+        } else if (isUpshifting) {
+          elShiftPulse.textContent = `▲ PADDLE UP (${currentGearVal})`;
+          elShiftPulse.style.color = 'var(--color-gold)';
+        } else {
+          elShiftPulse.textContent = `GEAR [${gear}] ENGAGED`;
+          elShiftPulse.style.color = 'var(--color-success)';
+        }
+      }
+
+      // Downshift Window (Point A to Point B) & Over-Rev Protection
+      const elGrindAlert = document.getElementById('hud-t6-grind-alert');
+      if (isDownshifting) {
+        // Safe downshift window: downshift pulled when current RPM after shift will not spike into rev limiter
+        const projectedNextGearRpm = Math.round(currentRpm * 1.35);
+        const overRevSpike = projectedNextGearRpm > 7200;
+        if (overRevSpike) {
+          this.t6OverRevSpikes = (this.t6OverRevSpikes || 0) + 1;
+          this.telemetryStats.severeGrinds = this.t6OverRevSpikes;
+          if (elGrindAlert) elGrindAlert.style.display = 'block';
+        } else {
+          if (elGrindAlert) elGrindAlert.style.display = 'none';
+        }
+        this.t6LastRpmDelta = overRevSpike ? 420 : 45;
+        this.telemetryStats.rpmDelta = this.t6LastRpmDelta;
+      }
+
+      const elRpmDelta = document.getElementById('hud-t6-rpm-delta');
+      const elRpmStatus = document.getElementById('hud-t6-rpm-status');
+      const overRevsCount = this.t6OverRevSpikes || 0;
+      if (elRpmDelta) {
+        elRpmDelta.textContent = overRevsCount === 0 ? 'SAFE WINDOW' : `OVER-REV (${overRevsCount})`;
+        elRpmDelta.style.color = overRevsCount === 0 ? 'var(--color-success)' : 'var(--color-f1-red)';
+      }
+      if (elRpmStatus) {
+        elRpmStatus.textContent = overRevsCount === 0 ? '0 OVER-REVS' : `⚠️ ${overRevsCount} EARLY SHIFTS`;
+        elRpmStatus.style.color = overRevsCount === 0 ? 'var(--color-success)' : 'var(--color-f1-red)';
+      }
+
+      // Straight-Line Decel Cadence (Brake Drop Tracking during Downshifts)
       if (brakeLbs >= 80 && !this.t6BrakingActive) {
         this.t6BrakingActive = true;
         this.t6BrakingInitialLbs = brakeLbs;
-        this.t6BrakingMinLbsDuringBlip = brakeLbs;
+        this.t6BrakingMinLbsDuringDownshift = brakeLbs;
       }
       if (this.t6BrakingActive) {
-        if (throttlePct > 20) {
-          // Throttle blip occurred
-          this.t6BlipActive = true;
-          if (brakeLbs < this.t6BrakingMinLbsDuringBlip) {
-            this.t6BrakingMinLbsDuringBlip = brakeLbs;
+        if (isDownshifting) {
+          if (brakeLbs < this.t6BrakingMinLbsDuringDownshift) {
+            this.t6BrakingMinLbsDuringDownshift = brakeLbs;
           }
         }
         if (brakeLbs < 15) {
-          if (this.t6BlipActive) {
-            const drop = Math.max(0, this.t6BrakingInitialLbs - this.t6BrakingMinLbsDuringBlip);
-            this.t6LastBrakeDropLbs = drop;
-            if (drop > 10) this.t6BrakeDropFaults = (this.t6BrakeDropFaults || 0) + 1;
-            this.telemetryStats.brakeDropLbs = drop;
-          }
+          const drop = Math.max(0, this.t6BrakingInitialLbs - this.t6BrakingMinLbsDuringDownshift);
+          this.t6LastBrakeDropLbs = drop;
+          if (drop > 10) this.t6BrakeDropFaults = (this.t6BrakeDropFaults || 0) + 1;
+          this.telemetryStats.brakeDropLbs = drop;
           this.t6BrakingActive = false;
-          this.t6BlipActive = false;
         }
       }
 
@@ -1520,161 +1542,76 @@ export class LiveHudRenderer {
         elBrakeDrop.style.color = brakeDropVal <= 10 ? 'var(--color-success)' : (brakeDropVal <= 20 ? 'var(--color-gold)' : 'var(--color-f1-red)');
       }
       if (elDropSub) {
-        if (brakeDropVal <= 10) {
-          elDropSub.textContent = 'FLAT TRACE';
-          elDropSub.style.color = 'var(--color-success)';
-        } else if (brakeDropVal <= 20) {
-          elDropSub.textContent = 'MODERATE DROP';
-          elDropSub.style.color = 'var(--color-gold)';
-        } else {
-          elDropSub.textContent = '⚠️ HEEL LIFTED';
-          elDropSub.style.color = 'var(--color-f1-red)';
-        }
+        elDropSub.textContent = brakeDropVal <= 10 ? 'STEADY THRESHOLD' : (brakeDropVal <= 20 ? 'MODERATE DROP' : '⚠️ TWITCH / LIFT');
+        elDropSub.style.color = brakeDropVal <= 10 ? 'var(--color-success)' : (brakeDropVal <= 20 ? 'var(--color-gold)' : 'var(--color-f1-red)');
       }
 
-      // Downshift Event & RPM Delta Calculation
-      const isDownshifting = currentGearVal != null && prevGearVal != null && currentGearVal < prevGearVal && currentGearVal > 0;
-      if (isDownshifting) {
-        const delta = Math.abs(currentRpm - targetRpm);
-        const normalizedDelta = Math.min(1200, Math.max(25, Math.round(delta * 0.22)));
-        this.t6LastRpmDelta = normalizedDelta;
-        this.telemetryStats.rpmDelta = normalizedDelta;
-        if (normalizedDelta > 800) {
-          this.t6GrindCount = (this.t6GrindCount || 0) + 1;
-          this.telemetryStats.severeGrinds = this.t6GrindCount;
-        }
-      }
-
-      const rpmDeltaVal = this.t6LastRpmDelta != null ? this.t6LastRpmDelta : 45;
-      const elRpmDelta = document.getElementById('hud-t6-rpm-delta');
-      const elRpmStatus = document.getElementById('hud-t6-rpm-status');
-      const elGrindAlert = document.getElementById('hud-t6-grind-alert');
-      if (elRpmDelta) {
-        elRpmDelta.textContent = `±${rpmDeltaVal} RPM`;
-        elRpmDelta.style.color = rpmDeltaVal <= 100 ? 'var(--color-success)' : (rpmDeltaVal <= 300 ? 'var(--color-gold)' : 'var(--color-f1-red)');
-      }
-      if (elRpmStatus) {
-        if (rpmDeltaVal <= 100) {
-          elRpmStatus.textContent = 'PERFECT SYNC';
-          elRpmStatus.style.color = 'var(--color-success)';
-          if (elGrindAlert) elGrindAlert.style.display = 'none';
-        } else if (rpmDeltaVal <= 400) {
-          elRpmStatus.textContent = 'ACCEPTABLE MATCH';
-          elRpmStatus.style.color = 'var(--color-gold)';
-          if (elGrindAlert) elGrindAlert.style.display = 'none';
-        } else {
-          elRpmStatus.textContent = '⚠️ OVER-REV / GRIND';
-          elRpmStatus.style.color = 'var(--color-f1-red)';
-          if (elGrindAlert) elGrindAlert.style.display = 'block';
-        }
-      }
-
-      // Upshift Transition & Power Shift Detection
+      // Powerband Upshift Timing & Rev Limiter Guard
       const elPowerAlert = document.getElementById('hud-t6-power-alert');
-      if (currentGearVal != null && prevGearVal != null && currentGearVal === prevGearVal && throttlePct < 20 && (this.t6PrevThrottlePct || 0) > 60) {
-        this.t6UpshiftStartTs = Date.now();
-      }
-      if (currentGearVal != null && prevGearVal != null && currentGearVal > prevGearVal && prevGearVal >= 1) {
-        // Power Shift check: throttle held > 85% with 0 clutch
-        if (throttlePct > 85 && (this.t6PrevThrottlePct || 0) > 85 && clutchPct < 10) {
-          this.t6PowerShiftCount = (this.t6PowerShiftCount || 0) + 1;
-          this.telemetryStats.powerShifts = this.t6PowerShiftCount;
+      if (isUpshifting) {
+        const wasInPowerband = powerbandPct >= 90 && powerbandPct <= 98;
+        const hitLimiter = powerbandPct > 98.5;
+        if (hitLimiter) {
+          this.t6LimiterHits = (this.t6LimiterHits || 0) + 1;
+          this.telemetryStats.powerShifts = this.t6LimiterHits;
           if (elPowerAlert) elPowerAlert.style.display = 'block';
         } else {
           if (elPowerAlert) elPowerAlert.style.display = 'none';
         }
-
-        if (this.t6UpshiftStartTs > 0) {
-          const upshiftDur = (Date.now() - this.t6UpshiftStartTs) / 1000;
-          this.t6UpshiftStartTs = 0;
-          this.t6LastUpshiftSec = parseFloat(upshiftDur.toFixed(2));
-          this.telemetryStats.upshiftTimeSec = this.t6LastUpshiftSec;
-        } else {
-          this.t6LastUpshiftSec = 0.22;
-          this.telemetryStats.upshiftTimeSec = 0.22;
-        }
       }
 
-      const upshiftDurVal = this.t6LastUpshiftSec != null ? this.t6LastUpshiftSec : 0.22;
       const elUpshiftTimer = document.getElementById('hud-t6-upshift-timer');
       const elUpshiftStatus = document.getElementById('hud-t6-upshift-status');
       if (elUpshiftTimer) {
-        elUpshiftTimer.textContent = `${upshiftDurVal.toFixed(2)}s`;
-        elUpshiftTimer.style.color = upshiftDurVal <= 0.25 ? 'var(--color-success)' : (upshiftDurVal <= 0.35 ? 'var(--color-gold)' : 'var(--color-f1-red)');
+        elUpshiftTimer.textContent = `${powerbandPct}% RPM`;
+        elUpshiftTimer.style.color = (powerbandPct >= 92 && powerbandPct <= 98) ? 'var(--color-success)' : (powerbandPct < 90 ? 'var(--color-gold)' : 'var(--color-f1-red)');
       }
       if (elUpshiftStatus) {
-        if (upshiftDurVal <= 0.25) {
-          elUpshiftStatus.textContent = 'FINGERTIP SPEED';
+        if (powerbandPct >= 92 && powerbandPct <= 98) {
+          elUpshiftStatus.textContent = 'OPTIMAL SHIFT';
           elUpshiftStatus.style.color = 'var(--color-success)';
-        } else {
-          elUpshiftStatus.textContent = 'SLOW TRANSITION';
+        } else if (powerbandPct < 90) {
+          elUpshiftStatus.textContent = 'SHORT SHIFT';
           elUpshiftStatus.style.color = 'var(--color-gold)';
-        }
-      }
-
-      // Gearbox Stress Meter Fill (0-100%)
-      const elStressFill = document.getElementById('hud-t6-stress-fill');
-      const elStressLabel = document.getElementById('hud-t6-stress-label');
-      const stressPct = Math.min(100, Math.max(5, Math.round((rpmDeltaVal / 800) * 100)));
-      if (elStressFill) elStressFill.style.width = `${stressPct}%`;
-      if (elStressLabel) {
-        if (stressPct < 25) {
-          elStressLabel.textContent = 'SMOOTH (0.0G SHOCK)';
-          elStressLabel.style.color = 'var(--color-success)';
-        } else if (stressPct < 60) {
-          elStressLabel.textContent = 'MODERATE LOAD';
-          elStressLabel.style.color = 'var(--color-gold)';
         } else {
-          elStressLabel.textContent = '⚠️ SEVERE GRIND';
-          elStressLabel.style.color = 'var(--color-f1-red)';
+          elUpshiftStatus.textContent = '⚠️ ON LIMITER';
+          elUpshiftStatus.style.color = 'var(--color-f1-red)';
         }
       }
 
-      // Dorsey Schroeder 7-Step Jingle Step Illumination
-      const s1 = document.getElementById('t6-step-1');
-      const s2 = document.getElementById('t6-step-2');
-      const s3 = document.getElementById('t6-step-3');
-      const s4 = document.getElementById('t6-step-4');
-      const s5 = document.getElementById('t6-step-5');
-      const s6 = document.getElementById('t6-step-6');
-      const s7 = document.getElementById('t6-step-7');
-      const allSteps = [s1, s2, s3, s4, s5, s6, s7];
-      allSteps.forEach(st => st?.classList.remove('active-jingle'));
+      // Skip Barber 4-Stage Downshift Window Tracker Illumination
+      const st1 = document.getElementById('t6-stage-1');
+      const st2 = document.getElementById('t6-stage-2');
+      const st3 = document.getElementById('t6-stage-3');
+      const st4 = document.getElementById('t6-stage-4');
+      const stages = [st1, st2, st3, st4];
+      stages.forEach(s => s?.classList.remove('active-stage-1', 'active-stage-2', 'active-stage-3', 'active-stage-4'));
 
-      let activeStepIdx = -1;
-      if (brakeLbs > 40) {
-        if (clutchPct > 60 && gearNum === 0) {
-          activeStepIdx = 1; // Step 2: Neutral
-        } else if (clutchPct > 60 && throttlePct < 15) {
-          activeStepIdx = 0; // Step 1: Clutch-In
-        } else if (clutchPct < 20 && throttlePct > 25) {
-          activeStepIdx = 3; // Step 4: Blip Throttle
-        } else if (clutchPct < 20 && gearNum === 0) {
-          activeStepIdx = 2; // Step 3: Clutch-Out
-        } else if (clutchPct > 60 && throttlePct > 10) {
-          activeStepIdx = 4; // Step 5: Clutch-In
-        } else if (isDownshifting) {
-          activeStepIdx = 5; // Step 6: Next Gear
-        } else {
-          activeStepIdx = 6; // Step 7: Clutch-Out
-        }
+      let activeStageIdx = -1;
+      if (brakeLbs >= 80 && Math.abs(steer) < 0.15 && !isDownshifting) {
+        activeStageIdx = 0; // Stage 1: Straight Threshold Brake
+      } else if (brakeLbs > 40 && isDownshifting) {
+        activeStageIdx = 1; // Stage 2: Safe Paddle Pull inside Window
+      } else if (brakeLbs > 15 && Math.abs(steer) >= 0.15) {
+        activeStageIdx = 2; // Stage 3: Trail / Turn-In
+      } else if (throttlePct > 40 && Math.abs(steer) < 0.25) {
+        activeStageIdx = 3; // Stage 4: TAP Exit Accel
       }
 
-      if (activeStepIdx >= 0 && allSteps[activeStepIdx]) {
-        allSteps[activeStepIdx].classList.add('active-jingle');
-        if (this.t6PrevActiveStepIdx !== activeStepIdx) {
-          this.playMetronomeTick(activeStepIdx === 3); // High pitch on blip
+      if (activeStageIdx >= 0 && stages[activeStageIdx]) {
+        stages[activeStageIdx].classList.add(`active-stage-${activeStageIdx + 1}`);
+        if (this.t6PrevActiveStageIdx !== activeStageIdx) {
+          this.playMetronomeTick(activeStageIdx === 1);
         }
       }
-      this.t6PrevActiveStepIdx = activeStepIdx;
+      this.t6PrevActiveStageIdx = activeStageIdx;
       this.t6PrevGear = currentGearVal;
-      this.t6PrevThrottlePct = throttlePct;
 
-      // Composite Shifting Mastery Score (40% RPM Sync + 30% Heel-Toe Stability + 30% Upshift Speed)
-      const rpmSubScore = Math.max(30, Math.min(100, Math.round(100 - (rpmDeltaVal > 100 ? (rpmDeltaVal - 100) * 0.15 : 0))));
-      const heelToeSubScore = Math.max(30, Math.min(100, Math.round(100 - (brakeDropVal > 10 ? (brakeDropVal - 10) * 3 : 0))));
-      const upshiftSubScore = Math.max(30, Math.min(100, Math.round(100 - (upshiftDurVal > 0.25 ? (upshiftDurVal - 0.25) * 150 : 0))));
-      const liveMastery = Math.round((0.40 * rpmSubScore) + (0.30 * heelToeSubScore) + (0.30 * upshiftSubScore));
+      // Composite Shifting Mastery Score (40% Downshift Window + 30% Brake Cadence + 30% Powerband Upshift)
+      const windowSubScore = overRevsCount === 0 ? 100 : Math.max(30, 100 - (overRevsCount * 25));
+      const cadenceSubScore = Math.max(30, Math.min(100, Math.round(100 - (brakeDropVal > 10 ? (brakeDropVal - 10) * 3 : 0))));
+      const upshiftSubScore = (this.t6LimiterHits || 0) === 0 ? 98 : Math.max(30, 100 - ((this.t6LimiterHits || 0) * 20));
+      const liveMastery = Math.round((0.40 * windowSubScore) + (0.30 * cadenceSubScore) + (0.30 * upshiftSubScore));
 
       const elMastery = document.getElementById('hud-t6-mastery-val');
       if (elMastery) {

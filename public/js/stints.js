@@ -149,25 +149,25 @@ export const STINTS_DATABASE = [
     tier: 6,
     tierName: 'Tier 6: Shifting & Synchronization',
     tierShort: 'T6 // SHIFTING',
-    name: 'The Gearbox Analyst: Shifting & Synchronization',
-    subtitle: 'Dorsey Schroeder\'s 7-Step Jingle, Heel-Toe Brake Stability & Fast Upshifts',
-    focus: 'Synthesis of Double-Clutch RPM Sync (<100 RPM Delta), Steady Heel-Toe Brake Pressure (<10 lbs Drop) & Rapid Fingertip Upshifts (<0.25s)',
-    targetMetric: 'Composite Shifting Mastery >= 85% [RPM Match: <100 RPM Delta | Brake Drop: <10 lbs | Upshift: <0.25s (0 Power Shifts)]',
-    prescribedCar: '1997 BMW M3',
+    name: 'The Gearbox Analyst: Paddle Shifting & Downshift Windows',
+    subtitle: 'Where to Downshift (Point A ➔ Point B), Straight-Line Cadence & Powerband Shift Points',
+    focus: 'Synthesis of Safe Downshift Window Timing (No Over-Rev), Threshold Brake Cadence (<10 lbs Drop) & Peak Powerband Upshifts (92-98% RPM)',
+    targetMetric: 'Composite Shifting Mastery >= 85% [Downshift Window: Point A➔B (0 Over-Revs) | Brake Drop: <10 lbs | Upshift: 92-98% Powerband]',
+    prescribedCar: '2020 BMW M2 CS',
     prescribedTrack: 'Lime Rock Park (Full Circuit)',
     gameType: 'Circuit Race / Solitary Testing',
     timeOfDay: 'Morning (8:00 AM)',
     weather: 'Clear (Dry Asphalt)',
     laps: 15,
     drivatars: 0,
-    quote: '"Dorsey Schroeder invented the downshift jingle... \'clutch in, neutral, clutch out, blip, clutch in, next gear, clutch out.\'... You downshift to get the car in the proper gear to exit the corner." — Dorsey Schroeder & Skip Barber (Page 94, 96)',
-    briefing: 'Execute a comprehensive 15-lap shifting masterclass synthesizing the three core gearbox disciplines from Chapter 6: 1) Double-Clutch RPM Synchronization: Execute Dorsey Schroeder\'s 7-step downshift rhythm to match input and output shaft speeds within <100 RPM delta, completely avoiding gear grinding. 2) Heel-Toe Brake Stability: Maintain a dead-steady 120–140 lbs threshold brake pedal pressure with the ball of your foot while smoothly rolling your ankle/heel to blip the throttle without letting brake pressure drop by >10 lbs. 3) Upshift Speed & Precision: Execute crisp upshifts with light fingertips (<0.25s elapsed transition) while using the clutch to cushion drivetrain shock without power shifting with throttle pinned.',
+    quote: '"Where to downshift... anywhere between point A and point B is acceptable... You downshift to get the car in the proper gear to exit the corner, not to slow it down. If you have the choice, downshift while the car is going straight." — Skip Barber (Page 94-95)',
+    briefing: 'Execute a comprehensive 15-lap paddle-shifting masterclass synthesizing the three core gearbox disciplines from Chapter 6 adapted for 2-pedal / paddle shifter setups: 1) Downshift Window (Point A ➔ Point B): Time your paddle downshifts in the safe window after threshold braking scrubs vehicle speed, avoiding early downshifts (Point A) that over-rev the engine or trigger rear axle hop. 2) Straight-Line Braking Cadence: Pull downshift paddles rhythmically while maintaining stable 120–140 lbs threshold brake pedal pressure (<10 lbs drop) in a straight line before turning in. 3) Powerband Upshift Timing: Pull upshift paddles at peak engine powerband (92%–98% RPM) without bouncing off the rev limiter or short-shifting.',
     actionPlan: [
-      'Double-Clutch Rhythm (Pillar 1): Internalize the 7-step Samba jingle ("Clutch-in / Neutral / Clutch-out / Blip / Clutch-in / Gear / Clutch-out") to match engine revs within <100 RPM delta before clutch re-engagement.',
-      'Heel-Toe Stability (Pillar 2): Anchor the ball of your right foot firmly on the brake pedal; roll the foot independently to tap the throttle blip without dropping brake pressure by >10 lbs.',
-      'Fingertip Upshifts (Pillar 3): Hold the gear lever lightly with two fingertips and move hand swiftly at redline (<0.25s lift-to-power recovery) — never power-shift with the throttle pinned.'
+      'Downshift Window (Pillar 1): Brake hard first, then pull downshift paddles between Point A and Point B when road speed drops into safe target RPM range — never downshift early into the rev limiter.',
+      'Braking Cadence (Pillar 2): Keep your right foot dead steady on the brake pedal during paddle downshifts (<10 lbs drop); complete all downshifts while braking in a straight line before turn-in.',
+      'Powerband Upshift Timing (Pillar 3): Squeeze full throttle on exit and pull the upshift paddle at 92%–98% peak powerband — avoid hitting the rev limiter or shifting prematurely.'
     ],
-    hudWidgets: ['RPM Sync Delta & Target Gauge', '3-Pedal Heel-Toe Overlay & Brake Stability', 'Upshift Stopwatch & Power Shift Guard', 'Dorsey Schroeder 7-Step Jingle Tracker', 'Composite Shifting Mastery Index']
+    hudWidgets: ['Downshift Window & Over-Rev Gauge', '2-Pedal Live Overlay & Brake Cadence', 'Powerband Shift Lights & Timing Meter', 'Skip Barber 4-Stage Downshift Tracker', 'Composite Shifting Mastery Index']
   },
 
   // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---

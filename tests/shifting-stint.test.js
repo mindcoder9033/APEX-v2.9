@@ -10,27 +10,27 @@ test('Tier 6 Database Integrity: Unified Stint 6-1 is properly configured', () =
 
   const stint61 = tier6Stints[0];
   assert.equal(stint61.id, 'stint-6-1');
-  assert.equal(stint61.name, 'The Gearbox Analyst: Shifting & Synchronization');
-  assert.equal(stint61.prescribedCar, '1997 BMW M3');
+  assert.equal(stint61.name, 'The Gearbox Analyst: Paddle Shifting & Downshift Windows');
+  assert.equal(stint61.prescribedCar, '2020 BMW M2 CS');
   assert.equal(stint61.prescribedTrack, 'Lime Rock Park (Full Circuit)');
   assert.equal(stint61.gameType, 'Circuit Race / Solitary Testing');
   assert.equal(stint61.timeOfDay, 'Morning (8:00 AM)');
   assert.equal(stint61.weather, 'Clear (Dry Asphalt)');
   assert.equal(stint61.laps, 15);
   assert.equal(stint61.drivatars, 0);
-  assert.ok(stint61.quote.includes('Dorsey Schroeder') || stint61.quote.includes('Skip Barber'));
+  assert.ok(stint61.quote.includes('Skip Barber'));
   assert.equal(stint61.actionPlan.length, 3);
   assert.equal(stint61.hudWidgets.length, 5);
-  assert.ok(stint61.targetMetric.includes('RPM Match: <100 RPM Delta'));
+  assert.ok(stint61.targetMetric.includes('Downshift Window: Point A➔B'));
   assert.ok(stint61.targetMetric.includes('Brake Drop: <10 lbs'));
-  assert.ok(stint61.targetMetric.includes('Upshift: <0.25s'));
+  assert.ok(stint61.targetMetric.includes('Upshift: 92-98% Powerband'));
 });
 
 test('StintDiagnostics: Evaluates Holistic Tier 6 Stint 6-1 with 40/30/30 Composite Scoring (Node & Browser Parity)', () => {
   const stint61 = STINTS_DATABASE.find(s => s.id === 'stint-6-1');
   assert.ok(stint61, 'stint-6-1 must exist');
 
-  // Simulated clean rev-matching, steady heel-toe braking, and crisp upshifts
+  // Simulated clean paddle downshifts within safe window, steady threshold braking, and powerband upshifts
   const samples = [];
   for (let i = 0; i < 150; i++) {
     const isBraking = i % 50 < 20;
@@ -47,14 +47,14 @@ test('StintDiagnostics: Evaluates Holistic Tier 6 Stint 6-1 with 40/30/30 Compos
         acceleration: { lateralG: isBraking ? 0.2 : 0.85, longitudinalG: isBraking ? -1.15 : 0.45 }
       },
       inputs: {
-        throttle: isDownshift ? 0.65 : (isBraking ? 0 : 0.95), // Blip during downshift
+        throttle: isBraking ? 0 : 0.95,
         brake: isBraking ? 0.85 : 0, // Steady 120 lbs threshold brake
-        clutch: (isDownshift || isUpshift) ? 0.8 : 0,
+        clutch: 0, // 2-pedal setup, no clutch pedal
         steering: isBraking ? 0.05 : 0.35,
         gear: currentGear
       },
       engine: {
-        currentEngineRpm: isDownshift ? 4800 : (isBraking ? 3600 : 6200)
+        currentEngineRpm: isDownshift ? 4800 : (isBraking ? 3600 : 6400)
       },
       timing: {
         lapNumber: Math.floor(i / 50) + 1,
@@ -68,18 +68,18 @@ test('StintDiagnostics: Evaluates Holistic Tier 6 Stint 6-1 with 40/30/30 Compos
     currentLap: 3,
     rpmDelta: 65,
     brakeDropLbs: 6,
-    upshiftTimeSec: 0.21,
+    upshiftTimeSec: 0.18,
     severeGrinds: 0,
     powerShifts: 0
   });
 
   assert.equal(nodeReport.stintId, 'stint-6-1');
-  assert.equal(nodeReport.primaryMetricLabel, 'Composite Shifting Mastery (RPM Sync / Heel-Toe / Upshift Speed)');
+  assert.equal(nodeReport.primaryMetricLabel, 'Composite Paddle-Shift Mastery (Downshift Window / Brake Cadence / Powerband Upshift)');
   assert.ok(nodeReport.gradeScore >= 85, 'Overall grade score should achieve target >= 85%');
   assert.equal(nodeReport.targetAchieved, true);
-  assert.ok(nodeReport.primaryMetricValue.includes('RPM Sync: ±65 RPM'));
+  assert.ok(nodeReport.primaryMetricValue.includes('Window: Point A➔B (±65 RPM)'));
   assert.ok(nodeReport.primaryMetricValue.includes('Brake Drop: -6 lbs'));
-  assert.ok(nodeReport.primaryMetricValue.includes('Upshift: 0.21s'));
+  assert.ok(nodeReport.primaryMetricValue.includes('Upshift: 0.18s (95% Powerband)'));
   assert.ok(nodeReport.nailed.length >= 2, 'Should provide nailed diagnostic points');
   assert.ok(nodeReport.refinement.length >= 1, 'Should provide refinement coaching points');
 
@@ -88,7 +88,7 @@ test('StintDiagnostics: Evaluates Holistic Tier 6 Stint 6-1 with 40/30/30 Compos
     currentLap: 3,
     rpmDelta: 65,
     brakeDropLbs: 6,
-    upshiftTimeSec: 0.21,
+    upshiftTimeSec: 0.18,
     severeGrinds: 0,
     powerShifts: 0
   });
@@ -99,7 +99,7 @@ test('StintDiagnostics: Evaluates Holistic Tier 6 Stint 6-1 with 40/30/30 Compos
   assert.equal(browserReport.primaryMetricValue, nodeReport.primaryMetricValue);
 });
 
-test('StintDiagnostics: Detects severe RPM mismatch, heel-toe brake drops, and power shifts on Stint 6-1', () => {
+test('StintDiagnostics: Detects severe early over-revs, brake drops during shifts, and limiter bounces on Stint 6-1', () => {
   const stint61 = STINTS_DATABASE.find(s => s.id === 'stint-6-1');
 
   // Simulated sloppy shifting
@@ -108,7 +108,7 @@ test('StintDiagnostics: Detects severe RPM mismatch, heel-toe brake drops, and p
     sloppySamples.push({
       motion: { speedMph: 75, acceleration: { lateralG: 0.2, longitudinalG: -0.8 } },
       inputs: { throttle: 0.9, brake: 0.4, clutch: 0, steering: 0, gear: i < 30 ? 3 : 4 },
-      engine: { currentEngineRpm: 4500 },
+      engine: { currentEngineRpm: 6900 },
       timing: { lapNumber: 1 }
     });
   }
@@ -123,8 +123,8 @@ test('StintDiagnostics: Detects severe RPM mismatch, heel-toe brake drops, and p
   });
 
   assert.equal(report.stintId, 'stint-6-1');
-  assert.equal(report.targetAchieved, false, 'Target should fail with high mismatch, brake drops, and power shifts');
-  assert.ok(report.attention.some(a => a.includes('gear grind') || a.includes('RPM mismatch')));
-  assert.ok(report.attention.some(a => a.includes('brake pressure drop') || a.includes('lifting the heel')));
-  assert.ok(report.attention.some(a => a.includes('power-shift')));
+  assert.equal(report.targetAchieved, false, 'Target should fail with high mismatch, brake drops, and limiter bounces');
+  assert.ok(report.attention.some(a => a.includes('over-rev') || a.includes('Point A')));
+  assert.ok(report.attention.some(a => a.includes('brake pressure drop') || a.includes('straight-line')));
+  assert.ok(report.attention.some(a => a.includes('rev limiter')));
 });

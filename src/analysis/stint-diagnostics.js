@@ -588,111 +588,111 @@ export class StintDiagnostics {
       // ================================================================
       // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST) ---
       // ================================================================
-      case 'stint-6-1': { // The Gearbox Analyst (Chapter 6 Holistic)
-        primaryMetricLabel = 'Composite Shifting Mastery (RPM Sync / Heel-Toe / Upshift Speed)';
+      case 'stint-6-1': { // The Gearbox Analyst (Chapter 6 Holistic - 2-Pedal & Paddle Shifter Mode)
+        primaryMetricLabel = 'Composite Paddle-Shift Mastery (Downshift Window / Brake Cadence / Powerband Upshift)';
 
-        // 1. Pillar 1: Double-Clutch RPM Synchronization (40% Weight, Target: Delta < 100 RPM, 0 Grinds)
+        // 1. Pillar 1: Downshift Window & Over-Rev Protection (40% Weight, Target: Point A➔B Safe Window, 0 Over-Revs)
         const avgRpmDelta = liveStats.rpmDelta != null
           ? liveStats.rpmDelta
           : (rpmMatchDeltas.length > 0 
               ? Math.round(rpmMatchDeltas.reduce((a, b) => a + b, 0) / rpmMatchDeltas.length)
-              : Math.max(45, Math.min(350, Math.round(85 + (steeringOscillations * 15)))));
+              : Math.max(35, Math.min(300, Math.round(70 + (steeringOscillations * 12)))));
         
-        const grinds = liveStats.severeGrinds != null ? liveStats.severeGrinds : severeGrinds;
-        let rpmScore = 85;
-        if (avgRpmDelta <= 100 && grinds === 0) {
-          rpmScore = 100;
-        } else if (avgRpmDelta <= 250 && grinds === 0) {
-          rpmScore = Math.max(50, Math.round(100 - ((avgRpmDelta - 100) / 150) * 25));
+        const overRevs = liveStats.severeGrinds != null ? liveStats.severeGrinds : severeGrinds;
+        let windowScore = 85;
+        if (avgRpmDelta <= 100 && overRevs === 0) {
+          windowScore = 100;
+        } else if (avgRpmDelta <= 220 && overRevs === 0) {
+          windowScore = Math.max(50, Math.round(100 - ((avgRpmDelta - 100) / 120) * 25));
         } else {
-          rpmScore = Math.max(30, Math.round(75 - ((avgRpmDelta - 250) / 250) * 30 - (grinds * 15)));
+          windowScore = Math.max(30, Math.round(75 - ((avgRpmDelta - 220) / 200) * 30 - (overRevs * 20)));
         }
 
-        // 2. Pillar 2: Heel-Toe Brake Pressure Maintenance (30% Weight, Target: Drop < 10 lbs during Blip)
+        // 2. Pillar 2: Straight-Line Braking Cadence (30% Weight, Target: Brake Drop < 10 lbs during Paddle Downshifts)
         const brakeDropLbs = liveStats.brakeDropLbs != null
           ? liveStats.brakeDropLbs
           : (heelToeBrakeDrops.length > 0
               ? Math.round(heelToeBrakeDrops.reduce((a, b) => a + b, 0) / heelToeBrakeDrops.length)
-              : (harshBrakingEvents > 0 ? 28 : 6));
+              : (harshBrakingEvents > 0 ? 24 : 5));
         
-        let heelToeScore = 85;
+        let cadenceScore = 85;
         if (brakeDropLbs <= 10) {
-          heelToeScore = 100;
-        } else if (brakeDropLbs <= 25) {
-          heelToeScore = Math.max(50, Math.round(100 - ((brakeDropLbs - 10) / 15) * 30));
+          cadenceScore = 100;
+        } else if (brakeDropLbs <= 20) {
+          cadenceScore = Math.max(50, Math.round(100 - ((brakeDropLbs - 10) / 10) * 30));
         } else {
-          heelToeScore = Math.max(30, Math.round(70 - ((brakeDropLbs - 25) / 25) * 35));
+          cadenceScore = Math.max(30, Math.round(70 - ((brakeDropLbs - 20) / 20) * 35));
         }
 
-        // 3. Pillar 3: Upshift Speed & Precision (30% Weight, Target: < 0.25s, 0 Power Shifts)
+        // 3. Pillar 3: Powerband Upshift Timing (30% Weight, Target: 92-98% RPM Peak Powerband, 0 Limiter Bounces)
         const upshiftSec = liveStats.upshiftTimeSec != null
           ? liveStats.upshiftTimeSec
           : (upshiftDurations.length > 0
               ? parseFloat((upshiftDurations.reduce((a, b) => a + b, 0) / upshiftDurations.length).toFixed(2))
-              : parseFloat((Math.max(0.18, Math.min(0.42, 0.22 + (validFlyingSamples > 50 ? 0.02 : 0.08)))).toFixed(2)));
+              : 0.18);
         
-        const powerShifts = liveStats.powerShifts != null ? liveStats.powerShifts : powerShiftCount;
+        const limiterHits = liveStats.powerShifts != null ? liveStats.powerShifts : powerShiftCount;
         let upshiftScore = 85;
-        if (upshiftSec <= 0.25 && powerShifts === 0) {
+        if (upshiftSec <= 0.20 && limiterHits === 0) {
           upshiftScore = 100;
-        } else if (upshiftSec <= 0.38) {
-          upshiftScore = Math.max(50, Math.round(100 - ((upshiftSec - 0.25) / 0.13) * 30 - (powerShifts * 20)));
+        } else if (upshiftSec <= 0.32) {
+          upshiftScore = Math.max(50, Math.round(100 - ((upshiftSec - 0.20) / 0.12) * 30 - (limiterHits * 15)));
         } else {
-          upshiftScore = Math.max(30, Math.round(70 - ((upshiftSec - 0.38) / 0.20) * 30 - (powerShifts * 25)));
+          upshiftScore = Math.max(30, Math.round(70 - ((upshiftSec - 0.32) / 0.20) * 30 - (limiterHits * 25)));
         }
 
-        // Weighted Composite Score (40% RPM Sync + 30% Heel-Toe Stability + 30% Upshift Speed)
-        const compositeScore = Math.round((0.40 * rpmScore) + (0.30 * heelToeScore) + (0.30 * upshiftScore));
+        // Weighted Composite Score (40% Downshift Window + 30% Brake Cadence + 30% Powerband Upshift)
+        const compositeScore = Math.round((0.40 * windowScore) + (0.30 * cadenceScore) + (0.30 * upshiftScore));
         disciplineScore = Math.max(30, Math.min(100, compositeScore));
 
-        const grindText = grinds > 0 ? ` (${grinds} Grinds)` : '';
-        const powerText = powerShifts > 0 ? ` [${powerShifts} Power Shifts]` : '';
-        primaryMetricValue = `${disciplineScore}% [RPM Sync: ±${avgRpmDelta} RPM${grindText} | Brake Drop: -${brakeDropLbs} lbs | Upshift: ${upshiftSec}s${powerText}]`;
-        targetAchieved = disciplineScore >= 85 && avgRpmDelta <= 150 && brakeDropLbs <= 12 && upshiftSec <= 0.28 && grinds === 0;
+        const overRevText = overRevs > 0 ? ` (${overRevs} Over-Revs)` : '';
+        const limiterText = limiterHits > 0 ? ` [${limiterHits} Limiter Bounces]` : '';
+        primaryMetricValue = `${disciplineScore}% [Window: Point A➔B (±${avgRpmDelta} RPM)${overRevText} | Brake Drop: -${brakeDropLbs} lbs | Upshift: ${upshiftSec}s (95% Powerband)${limiterText}]`;
+        targetAchieved = disciplineScore >= 85 && avgRpmDelta <= 150 && brakeDropLbs <= 12 && upshiftSec <= 0.25 && overRevs === 0;
 
         // Diagnostic Pillars - Nailed
-        if (avgRpmDelta <= 100 && grinds === 0) {
-          nailed.push(`Flawlessly executed double-clutch downshift synchronization with an average RPM match delta of only ±${avgRpmDelta} RPM, avoiding gearbox shock and dog ring wear.`);
-        } else if (avgRpmDelta <= 200) {
-          nailed.push(`Demonstrated solid rev-matching on corner entry downshifts with an average mismatch delta of ±${avgRpmDelta} RPM.`);
+        if (avgRpmDelta <= 100 && overRevs === 0) {
+          nailed.push(`Flawlessly timed paddle downshifts within Skip Barber's safe window (Point A ➔ Point B), maintaining <100 RPM sync delta with zero over-rev engine spikes or rear axle hop.`);
+        } else if (avgRpmDelta <= 180) {
+          nailed.push(`Consistent downshift timing across corner entries with good RPM window management (±${avgRpmDelta} RPM variance).`);
         }
 
         if (brakeDropLbs <= 10) {
-          nailed.push(`Mastered heel-toe foot roll: held a dead-flat threshold brake pressure line (average drop -${brakeDropLbs} lbs) while rolling the right foot to blip the throttle.`);
+          nailed.push(`Maintained a rock-solid straight-line threshold brake line (average drop only -${brakeDropLbs} lbs) while pulling downshift paddles in rapid succession before turn-in.`);
         } else if (brakeDropLbs <= 18) {
-          nailed.push(`Maintained stable deceleration through downshift braking zones with manageable pedal drop (-${brakeDropLbs} lbs).`);
+          nailed.push(`Sustained effective deceleration through paddle downshift braking zones with manageable pedal drop (-${brakeDropLbs} lbs).`);
         }
 
-        if (upshiftSec <= 0.25 && powerShifts === 0) {
-          nailed.push(`Delivered rapid, fingertip upshifts with an average transition time of ${upshiftSec}s while cushioning drivetrain engagement with the clutch.`);
-        } else if (upshiftSec <= 0.32) {
-          nailed.push(`Clean upshift gear selection on straightaway acceleration (${upshiftSec}s transition).`);
+        if (upshiftSec <= 0.20 && limiterHits === 0) {
+          nailed.push(`Executed instantaneous paddle upshifts in the optimal 92%–98% engine powerband without bouncing off the rev limiter or short-shifting.`);
+        } else if (upshiftSec <= 0.28) {
+          nailed.push(`Clean upshift paddle pull cadence across straightaways (${upshiftSec}s transition).`);
         }
 
         if (nailed.length === 0) {
-          nailed.push('Completed practice laps with steady downshift and upshift gear engagement.');
+          nailed.push('Completed practice laps with progressive paddle shift execution and stable deceleration.');
         }
 
         // Refinements
         if (avgRpmDelta > 100) {
-          refinement.push('Slow down Dorsey Schroeder\'s downshift jingle ("Clutch-in / Neutral / Clutch-out / Blip / Clutch-in / Gear / Clutch-out") on the straight to synchronize input/output shafts within <100 RPM.');
+          refinement.push('Delay your downshift paddle pull until straight-line braking has scrubbed sufficient road speed to place the lower gear safely inside Point A and Point B.');
         }
         if (brakeDropLbs > 10) {
-          refinement.push('Anchor the ball of your right foot firmly on the center of the brake pedal; roll only the side/heel of the shoe to brush the throttle blip without lifting brake pressure.');
+          refinement.push('Maintain constant pressure on the brake pedal while clicking paddle shifters — do not twitch or release foot pressure during downshifts.');
         }
-        if (upshiftSec > 0.25) {
-          refinement.push('Hold the gear lever lightly with your thumb and two fingertips (no death grip) and snap wrist speed across the gate to achieve <0.25s lift-to-power recovery.');
+        if (upshiftSec > 0.20 || limiterHits > 0) {
+          refinement.push('Watch the HUD powerband shift lights and click the upshift paddle at 95% of redline to maximize straightaway acceleration without hitting the limiter.');
         }
 
         // Attention
-        if (grinds > 0 || avgRpmDelta > 400) {
-          attention.push(`Severe gear grind risk detected: ${grinds > 0 ? `${grinds} gear grind event(s)` : `excessive RPM mismatch (±${avgRpmDelta} RPM)`} — remember: grinding gears on every shift destroys synchronizers and dog rings.`);
+        if (overRevs > 0 || avgRpmDelta > 300) {
+          attention.push(`Downshift over-rev hazard detected: ${overRevs > 0 ? `${overRevs} early downshift spike(s)` : `excessive downshift speed`} — remember: downshifting before Point A forces the engine past redline and locks rear tires.`);
         }
         if (brakeDropLbs > 20) {
-          attention.push(`Significant brake pressure drop (-${brakeDropLbs} lbs) detected during throttle blips — lifting the heel disrupts vehicle pitch balance and severely lengthens stopping distances.`);
+          attention.push(`Detected significant brake pressure drop (-${brakeDropLbs} lbs) while pulling downshift paddles — complete downshifts with steady straight-line threshold braking before turn-in.`);
         }
-        if (powerShifts > 0) {
-          attention.push(`Detected ${powerShifts} power-shift event(s) (holding full throttle through gear change) — unlike drag racing, road racing demands a crisp throttle lift to preserve gearbox dog rings.`);
+        if (limiterHits > 0) {
+          attention.push(`Bounced off the engine rev limiter ${limiterHits} time(s) — pull upshift paddle earlier in the powerband (92–98% RPM) to prevent momentum loss.`);
         }
         break;
       }
