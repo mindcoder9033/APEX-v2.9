@@ -143,6 +143,33 @@ export const STINTS_DATABASE = [
     hudWidgets: ['Calibrated Pedal Pressure Gauge (0-140 lbs)', '2D Live Friction Circle Trace', 'Brake Point Delta & TAP Exit Speed (+km/h)', 'Composite Braking Mastery Index']
   },
 
+  // --- TIER 6: SHIFTING & SYNCHRONIZATION (THE GEARBOX ANALYST) ---
+  {
+    id: 'stint-6-1',
+    tier: 6,
+    tierName: 'Tier 6: Shifting & Synchronization',
+    tierShort: 'T6 // SHIFTING',
+    name: 'The Gearbox Analyst: Shifting & Synchronization',
+    subtitle: 'Dorsey Schroeder\'s 7-Step Jingle, Heel-Toe Brake Stability & Fast Upshifts',
+    focus: 'Synthesis of Double-Clutch RPM Sync (<100 RPM Delta), Steady Heel-Toe Brake Pressure (<10 lbs Drop) & Rapid Fingertip Upshifts (<0.25s)',
+    targetMetric: 'Composite Shifting Mastery >= 85% [RPM Match: <100 RPM Delta | Brake Drop: <10 lbs | Upshift: <0.25s (0 Power Shifts)]',
+    prescribedCar: '1997 BMW M3',
+    prescribedTrack: 'Lime Rock Park (Full Circuit)',
+    gameType: 'Circuit Race / Solitary Testing',
+    timeOfDay: 'Morning (8:00 AM)',
+    weather: 'Clear (Dry Asphalt)',
+    laps: 15,
+    drivatars: 0,
+    quote: '"Dorsey Schroeder invented the downshift jingle... \'clutch in, neutral, clutch out, blip, clutch in, next gear, clutch out.\'... You downshift to get the car in the proper gear to exit the corner." — Dorsey Schroeder & Skip Barber (Page 94, 96)',
+    briefing: 'Execute a comprehensive 15-lap shifting masterclass synthesizing the three core gearbox disciplines from Chapter 6: 1) Double-Clutch RPM Synchronization: Execute Dorsey Schroeder\'s 7-step downshift rhythm to match input and output shaft speeds within <100 RPM delta, completely avoiding gear grinding. 2) Heel-Toe Brake Stability: Maintain a dead-steady 120–140 lbs threshold brake pedal pressure with the ball of your foot while smoothly rolling your ankle/heel to blip the throttle without letting brake pressure drop by >10 lbs. 3) Upshift Speed & Precision: Execute crisp upshifts with light fingertips (<0.25s elapsed transition) while using the clutch to cushion drivetrain shock without power shifting with throttle pinned.',
+    actionPlan: [
+      'Double-Clutch Rhythm (Pillar 1): Internalize the 7-step Samba jingle ("Clutch-in / Neutral / Clutch-out / Blip / Clutch-in / Gear / Clutch-out") to match engine revs within <100 RPM delta before clutch re-engagement.',
+      'Heel-Toe Stability (Pillar 2): Anchor the ball of your right foot firmly on the brake pedal; roll the foot independently to tap the throttle blip without dropping brake pressure by >10 lbs.',
+      'Fingertip Upshifts (Pillar 3): Hold the gear lever lightly with two fingertips and move hand swiftly at redline (<0.25s lift-to-power recovery) — never power-shift with the throttle pinned.'
+    ],
+    hudWidgets: ['RPM Sync Delta & Target Gauge', '3-Pedal Heel-Toe Overlay & Brake Stability', 'Upshift Stopwatch & Power Shift Guard', 'Dorsey Schroeder 7-Step Jingle Tracker', 'Composite Shifting Mastery Index']
+  },
+
   // --- TIER 12: RACING IN THE RAIN (THE WET WEATHER ANALYST) ---
   {
     id: 'stint-12-1',

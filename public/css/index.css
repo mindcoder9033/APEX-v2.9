@@ -3295,6 +3295,68 @@ body.layout-edit-active .widget-resize-handle {
   color: var(--color-cyan);
 }
 
+/* --- TIER 6: DORSEY SCHROEDER 7-STEP DOWNSHIFT JINGLE TRACKER --- */
+.jingle-tracker-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #111114;
+  border: 1px solid var(--color-border);
+  padding: 8px 8px;
+  overflow-x: auto;
+}
+
+.jingle-step-item {
+  flex: 1;
+  min-width: 72px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 3px;
+  background: #18181c;
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.jingle-step-label {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.jingle-step-name {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.jingle-arrow {
+  color: var(--color-text-muted);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.jingle-step-item.active-jingle {
+  background: rgba(0, 229, 255, 0.25);
+  border-color: #00E5FF;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.45);
+  transform: translateY(-1px);
+}
+.jingle-step-item.active-jingle .jingle-step-name {
+  color: #00E5FF;
+}
+.jingle-step-item.active-jingle .jingle-step-label {
+  color: #ffffff;
+}
+
 
 .slip-balance-track {
   width: 100%;
