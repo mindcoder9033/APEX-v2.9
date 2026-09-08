@@ -16,6 +16,8 @@ export class LiveHudRenderer {
     this.sessionSamples = [];
     this.lapsCompleted = 0;
     this.stintStartTime = 0;
+    this.t6AudioEnabled = true;
+    this.audioCtx = null;
 
     this.telemetryStats = {
       samplesCount: 0,
@@ -33,6 +35,22 @@ export class LiveHudRenderer {
     };
   }
 
+  ensureAudioUnlocked() {
+    try {
+      if (!this.audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          this.audioCtx = new AudioContextClass();
+        }
+      }
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
+    } catch (e) {
+      // Audio context may be restricted by browser policy until user interaction
+    }
+  }
+
   startStint(stint, onFinishCallback) {
     this.activeStint = stint;
     this.onFinishCallback = onFinishCallback;
@@ -40,6 +58,8 @@ export class LiveHudRenderer {
     this.lapsCompleted = 0;
     this.stintStartTime = Date.now();
     this.smoothedArcRadius = null;
+    this.t6AudioEnabled = true;
+    this.ensureAudioUnlocked();
 
     this.telemetryStats = {
       samplesCount: 0,
@@ -591,6 +611,11 @@ export class LiveHudRenderer {
         </div>
 
         <div style="display: flex; align-items: center; gap: 12px;">
+          ${stint.tier === 6 ? `
+            <button id="btn-t6-audio-toggle" class="btn chamfer-br" style="height: 38px; font-size: 11px; font-weight: 700; background: #18181c; border: 1px solid var(--color-border); color: var(--color-success); padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+              <span id="t6-audio-toggle-icon">🔊</span> <span id="t6-audio-toggle-text">AUDIO CUES: ON</span>
+            </button>
+          ` : ''}
           <div style="text-align: right; font-family: var(--font-mono); font-size: 11px;">
             <span style="color: var(--color-text-muted); display: block; font-size: 9px;">PROGRESS</span>
             <strong id="hud-lap-progress" style="color: var(--color-text-primary); font-size: 14px;">LAP ${this.lapsCompleted || 1} / ${targetLaps}</strong>
@@ -648,40 +673,109 @@ export class LiveHudRenderer {
       });
     }
 
-    const btnMetronome = document.getElementById('btn-t6-metronome-toggle');
-    if (btnMetronome) {
-      btnMetronome.addEventListener('click', () => {
-        this.t6MetronomeAudioEnabled = !this.t6MetronomeAudioEnabled;
-        btnMetronome.textContent = this.t6MetronomeAudioEnabled ? '🔊 SAMBA METRONOME: ON' : '🔈 SAMBA METRONOME: OFF';
-        btnMetronome.style.color = this.t6MetronomeAudioEnabled ? 'var(--color-success)' : '#00E5FF';
-        if (this.t6MetronomeAudioEnabled) {
-          this.playMetronomeTick(true);
+    const btnAudio = document.getElementById('btn-t6-audio-toggle');
+    if (btnAudio) {
+      btnAudio.addEventListener('click', () => {
+        this.ensureAudioUnlocked();
+        this.t6AudioEnabled = !this.t6AudioEnabled;
+        const elIcon = document.getElementById('t6-audio-toggle-icon');
+        const elText = document.getElementById('t6-audio-toggle-text');
+        if (elIcon) elIcon.textContent = this.t6AudioEnabled ? '🔊' : '🔇';
+        if (elText) elText.textContent = this.t6AudioEnabled ? 'AUDIO CUES: ON' : 'AUDIO CUES: OFF';
+        btnAudio.style.color = this.t6AudioEnabled ? 'var(--color-success)' : 'var(--color-text-muted)';
+        if (this.t6AudioEnabled) {
+          this.playDownshiftBeep();
         }
       });
     }
   }
 
-  playMetronomeTick(highPitch = false) {
-    if (!this.t6MetronomeAudioEnabled) return;
+  playShiftTone() {
+    if (!this.t6AudioEnabled) return;
+    const now = Date.now();
+    if (this.t6LastShiftToneTime && (now - this.t6LastShiftToneTime < 750)) return;
+    this.t6LastShiftToneTime = now;
+
     try {
-      if (!this.audioCtx) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
-      }
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(highPitch ? 880 : 440, this.audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-      osc.start();
-      osc.stop(this.audioCtx.currentTime + 0.08);
+      this.ensureAudioUnlocked();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      const t = ctx.currentTime;
+
+      // Beep 1 (1050 Hz)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(1050, t);
+      gain1.gain.setValueAtTime(0.18, t);
+      gain1.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(t);
+      osc1.stop(t + 0.05);
+
+      // Beep 2 (1300 Hz)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1300, t + 0.06);
+      gain2.gain.setValueAtTime(0.20, t + 0.06);
+      gain2.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(t + 0.06);
+      osc2.stop(t + 0.12);
     } catch (e) {
-      // Audio context may be restricted by browser policy
+      // Audio context may be restricted
+    }
+  }
+
+  playDownshiftBeep() {
+    if (!this.t6AudioEnabled) return;
+    try {
+      this.ensureAudioUnlocked();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(660, t);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.08);
+    } catch (e) {
+      // Audio context may be restricted
+    }
+  }
+
+  playOverRevBuzz() {
+    if (!this.t6AudioEnabled) return;
+    const now = Date.now();
+    if (this.t6LastOverRevBuzzTime && (now - this.t6LastOverRevBuzzTime < 500)) return;
+    this.t6LastOverRevBuzzTime = now;
+
+    try {
+      this.ensureAudioUnlocked();
+      if (!this.audioCtx) return;
+      const ctx = this.audioCtx;
+      const t = ctx.currentTime;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.linearRampToValueAtTime(140, t + 0.14);
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.14);
+    } catch (e) {
+      // Audio context may be restricted
     }
   }
 
@@ -1468,9 +1562,15 @@ export class LiveHudRenderer {
         if (powerbandPct >= 92 && powerbandPct <= 98) {
           elPowerbandStatus.textContent = '🎯 SHIFT NOW (95%)';
           elPowerbandStatus.style.color = 'var(--color-success)';
+          if (throttlePct > 50) {
+            this.playShiftTone();
+          }
         } else if (powerbandPct > 98) {
           elPowerbandStatus.textContent = '⚠️ REV LIMITER';
           elPowerbandStatus.style.color = 'var(--color-f1-red)';
+          if (throttlePct > 80) {
+            this.playOverRevBuzz();
+          }
         } else {
           elPowerbandStatus.textContent = 'BUILDING REVS';
           elPowerbandStatus.style.color = 'var(--color-cyan)';
@@ -1516,8 +1616,10 @@ export class LiveHudRenderer {
           this.t6OverRevSpikes = (this.t6OverRevSpikes || 0) + 1;
           this.telemetryStats.severeGrinds = this.t6OverRevSpikes;
           if (elGrindAlert) elGrindAlert.style.display = 'block';
+          this.playOverRevBuzz();
         } else {
           if (elGrindAlert) elGrindAlert.style.display = 'none';
+          this.playDownshiftBeep();
         }
         this.t6LastRpmDelta = overRevSpike ? 420 : 45;
         this.telemetryStats.rpmDelta = this.t6LastRpmDelta;
@@ -1577,8 +1679,12 @@ export class LiveHudRenderer {
           this.t6LimiterHits = (this.t6LimiterHits || 0) + 1;
           this.telemetryStats.powerShifts = this.t6LimiterHits;
           if (elPowerAlert) elPowerAlert.style.display = 'block';
+          this.playOverRevBuzz();
         } else {
           if (elPowerAlert) elPowerAlert.style.display = 'none';
+          if (wasInPowerband) {
+            this.playDownshiftBeep();
+          }
         }
       }
 
