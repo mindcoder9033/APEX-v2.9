@@ -1,6 +1,6 @@
 /**
  * APEX Track Study View Controller
- * Manages the interactive 5-Phase Track Study tab & pre-stint briefing workflow.
+ * Manages the interactive 5-Phase Track Study tab & sequential pre-stint briefing workflow.
  * Rooted in "Going Faster! Mastering the Art of Race Driving"
  */
 
@@ -20,7 +20,8 @@ export class TrackStudyView {
     this.studyData = null;
     this.liveTelemetryActive = false;
     this.hasNotifiedLiveSync = false;
-    this.reviewedPhases = new Set([1]);
+    this.unlockedPhases = new Set([1]);
+    this.completedDebriefings = new Set();
     this.hasCompletedBriefing = false;
 
     this.container = null;
@@ -39,25 +40,16 @@ export class TrackStudyView {
   }
 
   _bindEvents() {
-    // Stepper buttons
+    // Stepper buttons (enforces sequential progression)
     const stepBtns = this.container.querySelectorAll('.study-step-btn');
     stepBtns.forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', () => {
         const step = parseInt(btn.dataset.step, 10);
         if (step >= 1 && step <= 5) {
           this.setPhase(step);
         }
       });
     });
-
-    // Track Profile Dropdown Selector
-    const trackSelect = this.container.querySelector('#study-track-selector');
-    if (trackSelect) {
-      trackSelect.addEventListener('change', (e) => {
-        const trackId = e.target.value;
-        this.loadTrackById(trackId);
-      });
-    }
 
     // PDF Export Button
     const btnExport = this.container.querySelector('#btn-study-export-pdf');
@@ -73,7 +65,7 @@ export class TrackStudyView {
       btnRefresh.addEventListener('click', () => {
         this._loadInitialTrack();
         if (window.PitToast) {
-          window.PitToast.info('Track Study profiles reloaded from library', 'CIRCUIT SYNC');
+          window.PitToast.info('Track Study profile reloaded', 'CIRCUIT SYNC');
         }
       });
     }
@@ -81,18 +73,8 @@ export class TrackStudyView {
 
   _loadInitialTrack() {
     const tracks = trackLibraryStore.getAllTracks();
-    const trackSelect = this.container?.querySelector('#study-track-selector');
-    
-    if (trackSelect && tracks.length > 0) {
-      trackSelect.innerHTML = '';
-      tracks.forEach((t, i) => {
-        const opt = document.createElement('option');
-        opt.value = t.id;
-        opt.textContent = `${t.trackName || t.name} (${t.layoutName || t.layout || 'Full'})`;
-        if (i === 0) opt.selected = true;
-        trackSelect.appendChild(opt);
-      });
-      this.loadTrackById(tracks[0].id, false);
+    if (tracks && tracks.length > 0) {
+      this.setTrackProfile(tracks[0], [], false);
     } else {
       // Fallback synthetic track (e.g. Sebring Grand Prix)
       const fallbackProfile = {
@@ -139,45 +121,67 @@ export class TrackStudyView {
     }
   }
 
+  completeDebriefing(phaseNum) {
+    this.completedDebriefings.add(phaseNum);
+    const nextPhase = phaseNum + 1;
+
+    if (nextPhase <= 5) {
+      this.unlockedPhases.add(nextPhase);
+      this.setPhase(nextPhase);
+      if (window.PitToast) {
+        window.PitToast.success(`Stage ${phaseNum} Debriefing signed off. Unlocked Stage ${nextPhase}.`, `STAGE ${phaseNum} COMPLETE`);
+      }
+    } else {
+      this.hasCompletedBriefing = true;
+      this.updateReadinessMeter();
+      if (window.PitToast) {
+        window.PitToast.success('All 5 Study Stages signed off! Pre-Stint Briefing Certified.', 'STUDY COMPLETE');
+      }
+      this.render();
+    }
+  }
+
   updateReadinessMeter() {
     if (!this.container) return;
-    const reviewedCount = this.reviewedPhases.size;
-    const pct = Math.round((reviewedCount / 5) * 100);
+    const completedCount = this.completedDebriefings.size;
+    const pct = Math.round((completedCount / 5) * 100);
 
     const badge = this.container.querySelector('#study-readiness-badge');
-    if (badge) badge.textContent = `${pct}% (${reviewedCount}/5)`;
+    if (badge) badge.textContent = `${pct}% (${completedCount}/5 STAGES)`;
 
     const fill = this.container.querySelector('#study-readiness-fill');
     if (fill) fill.style.width = `${pct}%`;
 
-    // Update checkmark state on stepper buttons
+    // Update locked & reviewed states on stepper buttons
     const stepBtns = this.container.querySelectorAll('.study-step-btn');
     stepBtns.forEach(btn => {
       const step = parseInt(btn.dataset.step, 10);
-      btn.classList.toggle('reviewed', this.reviewedPhases.has(step));
-    });
+      const isUnlocked = this.unlockedPhases.has(step);
+      const isCompleted = this.completedDebriefings.has(step);
+      const isActive = step === this.currentPhase;
 
-    // Notify upon 100% completion
-    if (pct === 100 && !this.hasCompletedBriefing) {
-      this.hasCompletedBriefing = true;
-      if (window.PitToast) {
-        window.PitToast.success('All 5 Study Phases Reviewed // Pre-Stint Preparation Complete!', 'BRIEFING READY');
+      btn.classList.toggle('active', isActive);
+      btn.classList.toggle('locked', !isUnlocked);
+      btn.classList.toggle('reviewed', isCompleted);
+      btn.disabled = !isUnlocked;
+      
+      if (!isUnlocked) {
+        btn.setAttribute('title', `Complete Stage ${step - 1} Debriefing to Unlock`);
+      } else {
+        btn.setAttribute('title', `Stage ${step}`);
       }
-    }
+    });
   }
 
   setPhase(stepNumber) {
-    this.currentPhase = stepNumber;
-    this.reviewedPhases.add(stepNumber);
-    
-    // Update Stepper active state & checkmarks
-    const stepBtns = this.container.querySelectorAll('.study-step-btn');
-    stepBtns.forEach(btn => {
-      const step = parseInt(btn.dataset.step, 10);
-      btn.classList.toggle('active', step === this.currentPhase);
-      btn.classList.toggle('reviewed', this.reviewedPhases.has(step));
-    });
+    if (!this.unlockedPhases.has(stepNumber)) {
+      if (window.PitToast) {
+        window.PitToast.warning(`Stage ${stepNumber} is locked. Complete Stage ${stepNumber - 1} debriefing first.`, 'STAGE LOCKED');
+      }
+      return;
+    }
 
+    this.currentPhase = stepNumber;
     this.updateReadinessMeter();
     this.render();
   }
@@ -230,6 +234,55 @@ export class TrackStudyView {
   }
 
   // ---------------------------------------------------------------------------
+  // DEBRIEFING CARD COMPONENT GENERATOR
+  // ---------------------------------------------------------------------------
+  _renderDebriefingCard(phaseNum, title, items, advanceLabel, isFinal = false) {
+    const isCompleted = this.completedDebriefings.has(phaseNum);
+
+    const itemsHtml = items.map((item, idx) => `
+      <label class="debrief-check-item">
+        <input type="checkbox" class="debrief-checkbox" data-phase="${phaseNum}" data-idx="${idx}" ${isCompleted ? 'checked disabled' : ''} />
+        <span class="debrief-check-text">${item}</span>
+      </label>
+    `).join('');
+
+    return `
+      <div class="phase-card phase-debriefing-card chamfer-br">
+        <div class="debrief-header-row">
+          <div class="debrief-title-wrap">
+            <span class="debrief-badge">STAGE ${phaseNum} DEBRIEFING</span>
+            <span class="font-bold text-white">${title}</span>
+          </div>
+          <span class="debrief-status-tag ${isCompleted ? 'completed' : ''}">
+            ${isCompleted ? 'STAGE DEBRIEFED & SIGNED OFF ✓' : 'MANDATORY DEBRIEFING REQUIRED'}
+          </span>
+        </div>
+        <div class="debrief-questions-list">
+          ${itemsHtml}
+        </div>
+        <div class="debrief-actions-bar">
+          ${!isCompleted ? `
+            <button id="btn-complete-debrief-${phaseNum}" class="btn btn-debrief-advance chamfer-br">
+              <span>${advanceLabel}</span> ➔
+            </button>
+          ` : `
+            <span class="text-green text-xs font-mono font-bold">✓ STAGE ${phaseNum} COMPLETED — ADVANCED</span>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  _bindDebriefingAction(container, phaseNum) {
+    const btn = container.querySelector(`#btn-complete-debrief-${phaseNum}`);
+    if (!btn) return;
+
+    btn.addEventListener('click', () => {
+      this.completeDebriefing(phaseNum);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // PHASE 1: MACRO CORNER GRADING
   // ---------------------------------------------------------------------------
   _renderPhase1(container) {
@@ -248,6 +301,16 @@ export class TrackStudyView {
         <td class="text-secondary text-sm">${c.disciplineAdvice}</td>
       </tr>
     `).join('');
+
+    const debriefCard = this._renderDebriefingCard(
+      1,
+      'Macro Priorities & Exit Speed Commitment',
+      [
+        `I have analyzed the priority ranking and identified Turn ${macro.longestStraight.fromCorner} (leading onto the ${macro.longestStraight.distanceMeters}m straight) as the highest time-leverage corner.`,
+        'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway launch speed (+1 mph = 1.46 ft/sec compounding advantage).'
+      ],
+      'COMPLETE STAGE 1 DEBRIEFING & UNLOCK STAGE 2'
+    );
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -298,10 +361,13 @@ export class TrackStudyView {
             </table>
           </div>
         </div>
+
+        ${debriefCard}
       </div>
     `;
 
     this._bindRowSelection(container);
+    this._bindDebriefingAction(container, 1);
   }
 
   // ---------------------------------------------------------------------------
@@ -341,6 +407,16 @@ export class TrackStudyView {
       </div>
     `).join('');
 
+    const debriefCard = this._renderDebriefingCard(
+      2,
+      'Surface Reconnaissance & Camber Safety Sign-Off',
+      [
+        `I have audited the ${surface.surfaceHazardCount} surface hazards, negative camber sections, and crest compressions where lateral grip is compromised.`,
+        'I have identified aggressive curb threats and will avoid curb strikes that upset chassis balance during cornering.'
+      ],
+      'COMPLETE STAGE 2 DEBRIEFING & UNLOCK STAGE 3'
+    );
+
     container.innerHTML = `
       <div class="phase-grid-layout">
         <div class="phase-card lead-banner chamfer-br">
@@ -354,8 +430,12 @@ export class TrackStudyView {
         <div class="surface-cards-grid">
           ${cardsHtml}
         </div>
+
+        ${debriefCard}
       </div>
     `;
+
+    this._bindDebriefingAction(container, 2);
   }
 
   // ---------------------------------------------------------------------------
@@ -365,7 +445,7 @@ export class TrackStudyView {
     const ref = this.studyData.phase3_reference;
 
     let rowsHtml = ref.corners.map(r => `
-      <tr class="study-table-row">
+      <tr class="study-table-row" data-turn="${r.number}">
         <td class="font-bold text-accent">Turn ${r.number}</td>
         <td>
           <span class="font-bold ${r.brakePoint.isThresholdBraking ? 'text-red' : 'text-cyan'}">${r.brakePoint.distanceBeforeTurnInM}m (${r.brakePoint.distanceBeforeTurnInFt}ft)</span>
@@ -389,6 +469,16 @@ export class TrackStudyView {
         </td>
       </tr>
     `).join('');
+
+    const debriefCard = this._renderDebriefingCard(
+      3,
+      'Visual Reference Points & Sight Pictures Sign-Off',
+      [
+        `I have memorized concrete braking point markers, turn-in visual anchors, and apex attitudes for all ${this.studyData.circuit.turnsCount} corners.`,
+        'I know my blind track-out reference targets and will actively look ahead to the next visual anchor before reaching each apex.'
+      ],
+      'COMPLETE STAGE 3 DEBRIEFING & UNLOCK STAGE 4'
+    );
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -421,8 +511,12 @@ export class TrackStudyView {
             </table>
           </div>
         </div>
+
+        ${debriefCard}
       </div>
     `;
+
+    this._bindDebriefingAction(container, 3);
   }
 
   // ---------------------------------------------------------------------------
@@ -432,7 +526,7 @@ export class TrackStudyView {
     const ooe = this.studyData.phase4_orderOfEffort;
 
     let rowsHtml = ooe.corners.map(c => `
-      <tr class="study-table-row">
+      <tr class="study-table-row" data-turn="${c.number}">
         <td class="font-bold text-accent">Turn ${c.number}</td>
         <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
         <td>
@@ -449,6 +543,17 @@ export class TrackStudyView {
         </td>
       </tr>
     `).join('');
+
+    const debriefCard = this._renderDebriefingCard(
+      4,
+      'Order of Effort (Line → TAP Throttle → Braking Optimization)',
+      [
+        'Step 1 (Line): I will master line consistency and late apex discipline first. I will not early-apex.',
+        'Step 2 (TAP): I will locate the Throttle Application Point (TAP) and squeeze progressively before apex as steering unwinds.',
+        'Step 3 (Braking): I will establish threshold braking pressure first, only advancing brake depth in gradual 3–5 ft bites.'
+      ],
+      'COMPLETE STAGE 4 DEBRIEFING & UNLOCK STAGE 5'
+    );
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -496,8 +601,12 @@ export class TrackStudyView {
             </table>
           </div>
         </div>
+
+        ${debriefCard}
       </div>
     `;
+
+    this._bindDebriefingAction(container, 4);
   }
 
   // ---------------------------------------------------------------------------
@@ -514,6 +623,17 @@ export class TrackStudyView {
         <td class="text-secondary">${g.shiftNote}</td>
       </tr>
     `).join('');
+
+    const debriefCard = this._renderDebriefingCard(
+      5,
+      'Hardware, Tire Thermals & Racecraft Final Certification',
+      [
+        `I will manage tire operating window (${hw.tireThermalManagement.operatingWindowF}) during warm-up out-laps before pushing limit slip angles.`,
+        `I have verified the ${hw.brakeSystemManagement.baselineBias} mechanical brake bias and understand the race start accordion effect.`
+      ],
+      'CERTIFY 5-PHASE TRACK STUDY & COMPLETE BRIEFING 🏁',
+      true
+    );
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -598,8 +718,12 @@ export class TrackStudyView {
             <p><strong>Seeing Independently:</strong> <span class="text-red">${hw.trafficAndAccordionTactics.seeingIndependently}</span></p>
           </div>
         </div>
+
+        ${debriefCard}
       </div>
     `;
+
+    this._bindDebriefingAction(container, 5);
   }
 
   _bindRowSelection(container) {

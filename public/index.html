@@ -1374,15 +1374,7 @@
             </div>
           </div>
 
-          <!-- Track Profile Selector -->
-          <div class="study-track-select-wrap">
-            <label class="study-select-lbl" for="study-track-selector">CIRCUIT:</label>
-            <select id="study-track-selector" class="form-input chamfer-all-corners study-select">
-              <!-- Dynamically populated from trackLibraryStore -->
-            </select>
-          </div>
-
-          <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Track Profile">
+          <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Active Track Study">
             <span>⟲</span>
           </button>
 
@@ -1392,47 +1384,52 @@
         </div>
       </div>
 
-      <!-- 5-Phase Stepper Navigation Bar -->
+      <!-- 5-Phase Stepper Navigation Bar (Sequential Progression) -->
       <nav class="study-stepper-bar chamfer-br" aria-label="Track Study Phases">
-        <button class="study-step-btn active" data-step="1">
+        <button class="study-step-btn active" data-step="1" title="Phase 1: Macro Map & Priority">
           <span class="step-num">01</span>
           <div class="step-text-wrap">
             <span class="step-lbl">PHASE 1</span>
             <span class="step-name">Macro Map & Priority</span>
           </div>
-          <span class="step-check-mark" title="Phase Reviewed">✓</span>
+          <span class="step-check-mark" title="Phase Debriefed">✓</span>
+          <span class="step-lock-icon" title="Phase Locked">🔒</span>
         </button>
-        <button class="study-step-btn" data-step="2">
+        <button class="study-step-btn locked" data-step="2" disabled title="Complete Phase 1 Debriefing to Unlock Phase 2">
           <span class="step-num">02</span>
           <div class="step-text-wrap">
             <span class="step-lbl">PHASE 2</span>
             <span class="step-name">Surface Recon & Camber</span>
           </div>
-          <span class="step-check-mark" title="Phase Reviewed">✓</span>
+          <span class="step-check-mark" title="Phase Debriefed">✓</span>
+          <span class="step-lock-icon" title="Phase Locked">🔒</span>
         </button>
-        <button class="study-step-btn" data-step="3">
+        <button class="study-step-btn locked" data-step="3" disabled title="Complete Phase 2 Debriefing to Unlock Phase 3">
           <span class="step-num">03</span>
           <div class="step-text-wrap">
             <span class="step-lbl">PHASE 3</span>
             <span class="step-name">Visual Reference Points</span>
           </div>
-          <span class="step-check-mark" title="Phase Reviewed">✓</span>
+          <span class="step-check-mark" title="Phase Debriefed">✓</span>
+          <span class="step-lock-icon" title="Phase Locked">🔒</span>
         </button>
-        <button class="study-step-btn" data-step="4">
+        <button class="study-step-btn locked" data-step="4" disabled title="Complete Phase 3 Debriefing to Unlock Phase 4">
           <span class="step-num">04</span>
           <div class="step-text-wrap">
             <span class="step-lbl">PHASE 4</span>
             <span class="step-name">Order of Effort</span>
           </div>
-          <span class="step-check-mark" title="Phase Reviewed">✓</span>
+          <span class="step-check-mark" title="Phase Debriefed">✓</span>
+          <span class="step-lock-icon" title="Phase Locked">🔒</span>
         </button>
-        <button class="study-step-btn" data-step="5">
+        <button class="study-step-btn locked" data-step="5" disabled title="Complete Phase 4 Debriefing to Unlock Phase 5">
           <span class="step-num">05</span>
           <div class="step-text-wrap">
             <span class="step-lbl">PHASE 5</span>
             <span class="step-name">Hardware & Stint Prep</span>
           </div>
-          <span class="step-check-mark" title="Phase Reviewed">✓</span>
+          <span class="step-check-mark" title="Phase Debriefed">✓</span>
+          <span class="step-lock-icon" title="Phase Locked">🔒</span>
         </button>
       </nav>
 
