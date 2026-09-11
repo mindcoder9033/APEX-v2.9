@@ -83,3 +83,56 @@ test('TrackStudyPdfBuilder: Compiles a valid 5-page PDF document', async () => {
   const header = String.fromCharCode(...pdfBytes.slice(0, 5));
   assert.equal(header, '%PDF-', 'Valid PDF file header signature');
 });
+
+import { TrackStudyLibrary } from '../src/analysis/track-study-library.js';
+
+test('TrackStudyLibrary: Catalog extraction and independent per-track profile synthesis', () => {
+  const library = new TrackStudyLibrary('test_study_store');
+  const catalog = library.getAllCatalogTracks();
+
+  // 1. Catalog extraction from FM23 Tracks
+  assert.ok(catalog.length >= 71, 'Should contain all 71+ FM23 track layouts');
+  const realCount = catalog.filter(t => t.type === 'Real').length;
+  const fictionalCount = catalog.filter(t => t.type !== 'Real').length;
+  assert.ok(realCount > 30, 'Should categorize Real circuits');
+  assert.ok(fictionalCount > 10, 'Should categorize Fictional circuits');
+
+  // 2. Hand-tuned preset profile test (Sebring)
+  const sebringProfile = library.getTrackStudyProfile('sebring-international-raceway--full-circuit');
+  assert.ok(sebringProfile, 'Sebring profile should exist');
+  assert.equal(sebringProfile.turnsCount, 17);
+  assert.equal(sebringProfile.corners[0].name, 'Turn 1 (Fast Left Sweeper)');
+  assert.equal(sebringProfile.corners[sebringProfile.corners.length - 1].name, 'Turn 17 (Sunset Bend)');
+
+  // 3. Procedural synthesized profile test (e.g. Hakone Circuit)
+  const hakone = catalog.find(t => t.trackName.includes('Hakone'));
+  assert.ok(hakone, 'Hakone circuit should be found in catalog');
+  const hakoneProfile = library.getTrackStudyProfile(hakone.trackId);
+  assert.ok(hakoneProfile, 'Hakone synthesized profile should exist');
+  assert.ok(hakoneProfile.corners.length > 0, 'Synthesized corners should exist');
+  assert.ok(hakoneProfile.corners[0].radius > 0);
+  assert.ok(hakoneProfile.corners[0].brakingDistanceM >= 0);
+
+  // 4. Per-track state persistence test
+  const testTrackId = 'test-track-circuit';
+  const initialState = library.getTrackStudyState(testTrackId);
+  assert.deepEqual(initialState.unlockedPhases, [1]);
+  assert.deepEqual(initialState.completedDebriefings, []);
+
+  library.saveTrackStudyState(testTrackId, {
+    unlockedPhases: [1, 2, 3],
+    completedDebriefings: [1, 2],
+    lastPhase: 3
+  });
+
+  const modifiedState = library.getTrackStudyState(testTrackId);
+  assert.deepEqual(modifiedState.unlockedPhases, [1, 2, 3]);
+  assert.deepEqual(modifiedState.completedDebriefings, [1, 2]);
+  assert.equal(modifiedState.lastPhase, 3);
+
+  library.resetTrackStudyState(testTrackId);
+  const resetState = library.getTrackStudyState(testTrackId);
+  assert.deepEqual(resetState.unlockedPhases, [1]);
+  assert.deepEqual(resetState.completedDebriefings, []);
+});
+

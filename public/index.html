@@ -1350,6 +1350,14 @@
             <span id="study-circuit-sub" class="track-study-subheading">5-Phase Skip Barber Racecraft Preparation & Telemetry Dossier</span>
           </div>
 
+          <!-- Independent Track Study Circuit Selector -->
+          <div class="study-track-select-wrap">
+            <label for="study-track-selector" class="study-select-lbl">STUDY CIRCUIT // LAYOUT</label>
+            <select id="study-track-selector" class="study-select chamfer-all-corners" aria-label="Select Circuit to Study">
+              <!-- Populated dynamically with all FM23 layouts -->
+            </select>
+          </div>
+
           <!-- 5-Phase Preparation Readiness Meter -->
           <div class="study-readiness-meter" title="Driver Pre-Stint Preparation Progress">
             <div class="study-readiness-label-row">
@@ -1373,6 +1381,10 @@
               <span id="study-live-speed-pill" class="metric-pill"><b id="study-live-speed-val">0</b> MPH</span>
             </div>
           </div>
+
+          <button id="btn-study-reset" class="btn btn-study-reset chamfer-br" title="Reset Study Progress for Selected Circuit">
+            <span>↺</span> RESET STUDY
+          </button>
 
           <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Active Track Study">
             <span>⟲</span>

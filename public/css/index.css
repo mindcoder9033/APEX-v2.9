@@ -4953,10 +4953,108 @@ select,
   letter-spacing: 0.5px;
 }
 
+.study-header-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.study-title-cluster {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Track Study Circuit Selector & Reset Controls */
+.study-track-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.study-select-lbl {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--color-text-secondary);
+}
+
+.study-select {
+  background: #09090B;
+  color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 250px;
+  max-width: 380px;
+  height: 36px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+}
+
+.study-select:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.study-select:focus {
+  border-color: var(--color-accent, #ff1801);
+  box-shadow: 0 0 0 1px var(--color-accent, #ff1801);
+}
+
+.study-select optgroup {
+  background: #111114;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.study-select option {
+  background: #18181b;
+  color: #FFFFFF;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 8px;
+}
+
+.btn-study-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.btn-study-reset:hover {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.btn-study-reset:active {
+  transform: translateY(0);
+}
+
 .study-header-right {
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* 5-Phase Preparation Readiness Meter */

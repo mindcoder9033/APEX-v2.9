@@ -6,7 +6,7 @@
 
 import { TrackStudyEngine } from './analysis/track-study-engine.js';
 import { TrackStudyPdfBuilder } from './track-study-pdf-builder.js';
-import { trackLibraryStore } from './track-library-store.js';
+import { trackStudyLibrary } from './analysis/track-study-library.js';
 
 export class TrackStudyView {
   constructor() {
@@ -16,6 +16,7 @@ export class TrackStudyView {
     this.currentPhase = 1; // 1 to 5
     this.selectedCornerNumber = 1;
     this.activeCornerNumber = null;
+    this.selectedTrackId = 'sebring-international-raceway--full-circuit';
     this.currentTrackProfile = null;
     this.studyData = null;
     this.liveTelemetryActive = false;
@@ -28,18 +29,71 @@ export class TrackStudyView {
   }
 
   /**
-   * Initializes DOM bindings, track selector, stepper tabs, and PDF export
+   * Initializes DOM bindings, track selector dropdown, stepper tabs, and PDF export
    */
   init() {
     this.container = document.getElementById('view-track-study');
     if (!this.container) return;
 
+    this._populateTrackDropdown();
     this._bindEvents();
-    this._loadInitialTrack();
+    this._loadTrackFromLibrary(this.selectedTrackId, false);
     this.updateReadinessMeter();
   }
 
+  _populateTrackDropdown() {
+    const trackSelect = this.container.querySelector('#study-track-selector');
+    if (!trackSelect) return;
+
+    const tracks = trackStudyLibrary.getAllCatalogTracks();
+    const realTracks = tracks.filter(t => t.type === 'Real');
+    const fictionalTracks = tracks.filter(t => t.type !== 'Real');
+
+    let html = '';
+    if (realTracks.length > 0) {
+      html += `<optgroup label="── Real World Circuits ──">`;
+      realTracks.forEach(t => {
+        html += `<option value="${t.trackId}">${t.displayName}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+    if (fictionalTracks.length > 0) {
+      html += `<optgroup label="── Fictional / Fantasy Circuits ──">`;
+      fictionalTracks.forEach(t => {
+        html += `<option value="${t.trackId}">${t.displayName}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+
+    trackSelect.innerHTML = html;
+    if (tracks.some(t => t.trackId === this.selectedTrackId)) {
+      trackSelect.value = this.selectedTrackId;
+    } else if (tracks.length > 0) {
+      this.selectedTrackId = tracks[0].trackId;
+      trackSelect.value = this.selectedTrackId;
+    }
+  }
+
   _bindEvents() {
+    // Track Dropdown Selector
+    const trackSelect = this.container.querySelector('#study-track-selector');
+    if (trackSelect) {
+      trackSelect.addEventListener('change', (e) => {
+        const newTrackId = e.target.value;
+        if (newTrackId) {
+          this.switchTrack(newTrackId);
+        }
+      });
+    }
+
+    // Reset Study Progress Button
+    const btnReset = this.container.querySelector('#btn-study-reset');
+    if (btnReset) {
+      btnReset.addEventListener('click', () => {
+        this.resetCurrentTrackStudy();
+      });
+    }
+
     // Stepper buttons (enforces sequential progression)
     const stepBtns = this.container.querySelectorAll('.study-step-btn');
     stepBtns.forEach(btn => {
@@ -63,7 +117,7 @@ export class TrackStudyView {
     const btnRefresh = this.container.querySelector('#btn-study-refresh');
     if (btnRefresh) {
       btnRefresh.addEventListener('click', () => {
-        this._loadInitialTrack();
+        this._loadTrackFromLibrary(this.selectedTrackId, true);
         if (window.PitToast) {
           window.PitToast.info('Track Study profile reloaded', 'CIRCUIT SYNC');
         }
@@ -71,38 +125,36 @@ export class TrackStudyView {
     }
   }
 
-  _loadInitialTrack() {
-    const tracks = trackLibraryStore.getAllTracks();
-    if (tracks && tracks.length > 0) {
-      this.setTrackProfile(tracks[0], [], false);
-    } else {
-      // Fallback synthetic track (e.g. Sebring Grand Prix)
-      const fallbackProfile = {
-        id: 'sebring-test-circuit',
-        trackName: 'Sebring International Raceway',
-        layoutName: '12-Hour Course',
-        officialLength: '6.019 km',
-        lengthMeters: 6019,
-        turnsCount: 17,
-        corners: [
-          { number: 1, name: 'Turn 1 (Fast Sweeper)', radius: 190, angleDeg: 55, entrySpeedMps: 42, minSpeedMps: 38, exitSpeedMps: 45, gear: 4, followingStraightMeters: 450, camberDeg: 1.0, elevationChangeM: 0, brakingDistanceM: 40 },
-          { number: 2, name: 'Turn 2', radius: 140, angleDeg: 40, entrySpeedMps: 40, minSpeedMps: 37, exitSpeedMps: 43, gear: 4, followingStraightMeters: 180, camberDeg: 3.5, elevationChangeM: 0, brakingDistanceM: 20 },
-          { number: 3, name: 'Turn 3 (Hairpin Right)', radius: 45, angleDeg: 100, entrySpeedMps: 32, minSpeedMps: 18, exitSpeedMps: 28, gear: 2, followingStraightMeters: 400, camberDeg: 0.5, elevationChangeM: 0, brakingDistanceM: 70 },
-          { number: 7, name: 'Turn 7 (90-deg Right)', radius: 60, angleDeg: 90, entrySpeedMps: 35, minSpeedMps: 22, exitSpeedMps: 30, gear: 2, followingStraightMeters: 160, camberDeg: 1.5, elevationChangeM: 0, brakingDistanceM: 55 },
-          { number: 8, name: 'Turn 8 (Compromise Right)', radius: 75, angleDeg: 45, entrySpeedMps: 36, minSpeedMps: 32, exitSpeedMps: 35, gear: 3, followingStraightMeters: 60, camberDeg: 0.0, elevationChangeM: 0, brakingDistanceM: 15 },
-          { number: 9, name: 'Turn 9 (The Carousel)', radius: 130, angleDeg: 110, entrySpeedMps: 38, minSpeedMps: 27, exitSpeedMps: 36, gear: 3, followingStraightMeters: 680, camberDeg: 2.0, elevationChangeM: 0, brakingDistanceM: 45 },
-          { number: 10, name: 'Turn 10 (Hairpin)', radius: 35, angleDeg: 140, entrySpeedMps: 48, minSpeedMps: 15, exitSpeedMps: 24, gear: 2, followingStraightMeters: 550, camberDeg: 0.0, elevationChangeM: 0, brakingDistanceM: 95 }
-        ]
-      };
-      this.setTrackProfile(fallbackProfile, [], false);
+  switchTrack(trackId, notify = true) {
+    this.selectedTrackId = trackId;
+    const trackSelect = this.container.querySelector('#study-track-selector');
+    if (trackSelect && trackSelect.value !== trackId) {
+      trackSelect.value = trackId;
     }
+    this._loadTrackFromLibrary(trackId, notify);
+  }
+
+  _loadTrackFromLibrary(trackId, notify = true) {
+    const profile = trackStudyLibrary.getTrackStudyProfile(trackId);
+    if (!profile) return;
+
+    // Load independent persistent study progression for this specific track
+    const savedState = trackStudyLibrary.getTrackStudyState(trackId);
+    this.unlockedPhases = new Set(savedState.unlockedPhases || [1]);
+    this.completedDebriefings = new Set(savedState.completedDebriefings || []);
+    this.hasCompletedBriefing = this.completedDebriefings.size >= 5;
+
+    const targetPhase = savedState.lastPhase && this.unlockedPhases.has(savedState.lastPhase)
+      ? savedState.lastPhase
+      : Math.max(...Array.from(this.unlockedPhases));
+
+    this.currentPhase = targetPhase || 1;
+    this.setTrackProfile(profile, [], notify);
+    this.updateReadinessMeter();
   }
 
   loadTrackById(trackId, notify = true) {
-    const track = trackLibraryStore.getTrackById(trackId);
-    if (track) {
-      this.setTrackProfile(track, [], notify);
-    }
+    this.switchTrack(trackId, notify);
   }
 
   setTrackProfile(trackProfile, telemetrySamples = [], notify = true) {
@@ -127,17 +179,47 @@ export class TrackStudyView {
 
     if (nextPhase <= 5) {
       this.unlockedPhases.add(nextPhase);
-      this.setPhase(nextPhase);
+      this.currentPhase = nextPhase;
       if (window.PitToast) {
         window.PitToast.success(`Stage ${phaseNum} Debriefing signed off. Unlocked Stage ${nextPhase}.`, `STAGE ${phaseNum} COMPLETE`);
       }
     } else {
       this.hasCompletedBriefing = true;
-      this.updateReadinessMeter();
       if (window.PitToast) {
         window.PitToast.success('All 5 Study Stages signed off! Pre-Stint Briefing Certified.', 'STUDY COMPLETE');
       }
-      this.render();
+    }
+
+    // Persist per-track study state in independent library store
+    trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
+      unlockedPhases: Array.from(this.unlockedPhases),
+      completedDebriefings: Array.from(this.completedDebriefings),
+      lastPhase: this.currentPhase
+    });
+
+    this.updateReadinessMeter();
+    this.render();
+  }
+
+  resetCurrentTrackStudy() {
+    trackStudyLibrary.resetTrackStudyState(this.selectedTrackId);
+    this.unlockedPhases = new Set([1]);
+    this.completedDebriefings = new Set();
+    this.hasCompletedBriefing = false;
+    this.currentPhase = 1;
+
+    trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
+      unlockedPhases: [1],
+      completedDebriefings: [],
+      lastPhase: 1
+    });
+
+    this.updateReadinessMeter();
+    this.render();
+
+    if (window.PitToast) {
+      const trackName = this.studyData?.circuit?.name || 'Circuit';
+      window.PitToast.info(`Study progress for ${trackName} reset to Stage 1.`, 'STUDY RESET');
     }
   }
 
@@ -182,6 +264,11 @@ export class TrackStudyView {
     }
 
     this.currentPhase = stepNumber;
+    trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
+      unlockedPhases: Array.from(this.unlockedPhases),
+      completedDebriefings: Array.from(this.completedDebriefings),
+      lastPhase: this.currentPhase
+    });
     this.updateReadinessMeter();
     this.render();
   }
