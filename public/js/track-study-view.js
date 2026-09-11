@@ -19,6 +19,7 @@ export class TrackStudyView {
     this.selectedTrackId = 'sebring-international-raceway--full-circuit';
     this.currentTrackProfile = null;
     this.studyData = null;
+    this.telemetrySamples = [];
     this.liveTelemetryActive = false;
     this.hasNotifiedLiveSync = false;
     this.unlockedPhases = new Set([1]);
@@ -202,24 +203,66 @@ export class TrackStudyView {
   }
 
   resetCurrentTrackStudy() {
+    // 1. Clear independent storage for this circuit
     trackStudyLibrary.resetTrackStudyState(this.selectedTrackId);
+
+    // 2. Purge all collected telemetry data and live tracking state
+    this.telemetrySamples = [];
+    this.liveTelemetryActive = false;
+    this.hasNotifiedLiveSync = false;
+    this.activeCornerNumber = null;
+    this.selectedCornerNumber = 1;
+
+    // 3. Reset 5-stage sequential progression & debriefing sign-offs
     this.unlockedPhases = new Set([1]);
     this.completedDebriefings = new Set();
     this.hasCompletedBriefing = false;
     this.currentPhase = 1;
 
+    // 4. Reset UI header live indicators & metrics strip to standby empty state
+    if (this.container) {
+      const statusPill = this.container.querySelector('#study-live-status-pill');
+      const statusDot = this.container.querySelector('#study-live-status-dot');
+      const statusTxt = this.container.querySelector('#study-live-status-text');
+      const metricsStrip = this.container.querySelector('#study-live-metrics-strip');
+      const lapVal = this.container.querySelector('#study-live-lap-val');
+      const speedVal = this.container.querySelector('#study-live-speed-val');
+      const turnVal = this.container.querySelector('#study-live-turn-val');
+
+      if (statusPill) statusPill.classList.remove('live-active');
+      if (statusDot) statusDot.className = 'status-dot';
+      if (statusTxt) statusTxt.textContent = 'STANDBY // READY';
+      if (metricsStrip) metricsStrip.style.display = 'none';
+      if (lapVal) lapVal.textContent = '-';
+      if (speedVal) speedVal.textContent = '0';
+      if (turnVal) turnVal.textContent = '-';
+
+      // Clear any active on-track corner spotlights
+      this._highlightActiveCorner(null);
+    }
+
+    // 5. Re-generate pristine baseline study from catalog profile with zero telemetry
+    const profile = trackStudyLibrary.getTrackStudyProfile(this.selectedTrackId);
+    if (profile) {
+      this.currentTrackProfile = profile;
+      this.studyData = this.engine.generateStudy(profile, []);
+    }
+
+    // 6. Save pristine empty state in store
     trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
       unlockedPhases: [1],
       completedDebriefings: [],
       lastPhase: 1
     });
 
+    // 7. Update readiness meter (0%) and re-render Phase 1
     this.updateReadinessMeter();
     this.render();
 
+    // 8. Notify user via PitToast
     if (window.PitToast) {
       const trackName = this.studyData?.circuit?.name || 'Circuit';
-      window.PitToast.info(`Study progress for ${trackName} reset to Stage 1.`, 'STUDY RESET');
+      window.PitToast.info(`Collected data & study progress for ${trackName} reset to initial empty state.`, 'STUDY RESET');
     }
   }
 
@@ -876,6 +919,9 @@ export class TrackStudyView {
   onTelemetrySample(sample) {
     if (!sample || !this.container) return;
     this.liveTelemetryActive = true;
+    if (this.telemetrySamples.length < 5000) {
+      this.telemetrySamples.push(sample);
+    }
 
     // Update status pill & dot
     const statusPill = this.container.querySelector('#study-live-status-pill');
