@@ -1284,32 +1284,27 @@
           </button>
           <div class="stints-title-group">
             <h1 class="stints-heading">MOTORSPORT PRACTICE STINTS // SKILL ACQUISITION HUB</h1>
-            <span class="stints-subheading">Skip Barber "Going Faster!" Stepping Stones · Real-World Racecraft Diagnostics · Live Cockpit HUD & Coaching Reports</span>
+            <span class="stints-subheading">Skip Barber "Going Faster!" Stepping Stones · Real-World Racecraft Diagnostics · Live Cockpit HUD</span>
           </div>
         </div>
       </div>
 
-      <!-- Main Stints Layout Grid -->
-      <div class="stints-grid">
+      <!-- Main Stints 3-Pane Grid -->
+      <div class="stints-3pane-grid">
         
-        <!-- LEFT SIDEBAR: Stepping Stones Directory -->
-        <aside class="stints-sidebar-panel chamfer-tl-br">
-          <div class="sidebar-header">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span class="sidebar-title">PRACTICE STINTS</span>
+        <!-- PANE 1: Stint Explorer Directory with Real-Time Search -->
+        <aside class="stints-explorer-pane chamfer-tl-br">
+          <div class="explorer-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <span class="explorer-title">PRACTICE MODULES</span>
               <span id="stints-count-badge" class="badge badge-accent">18 MODULES</span>
             </div>
 
-            <!-- Filter Pills -->
-            <div class="stint-filter-pills-row" style="margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap;">
-              <button class="stint-filter-pill active" data-filter="all">ALL TIERS</button>
-              <button class="stint-filter-pill" data-filter="1">TIER 1</button>
-              <button class="stint-filter-pill" data-filter="2">TIER 2</button>
-              <button class="stint-filter-pill" data-filter="3">TIER 3</button>
-              <button class="stint-filter-pill" data-filter="4">TIER 4</button>
-              <button class="stint-filter-pill" data-filter="5">TIER 5</button>
-              <button class="stint-filter-pill" data-filter="6">TIER 6</button>
-              <button class="stint-filter-pill" data-filter="12">TIER 12</button>
+            <!-- Instant Search Input -->
+            <div class="stints-search-box">
+              <span class="stints-search-icon">🔍</span>
+              <input type="text" id="stints-search-input" class="stints-search-input chamfer-all-corners" placeholder="Search stints, tracks, cars, skills..." autocomplete="off" />
+              <button id="btn-clear-stints-search" class="stints-search-clear" style="display: none;" title="Clear search">✕</button>
             </div>
           </div>
 
@@ -1319,20 +1314,28 @@
           </div>
         </aside>
 
-        <!-- MAIN STAGE: Selected Stint Briefing & Cockpit Live HUD -->
-        <main class="stints-main-stage">
+        <!-- STINTS STAGE (Briefing Mode: Center + Right Split / In-Stint: Full Cockpit HUD) -->
+        <div class="stints-stage-wrapper">
           
-          <!-- Stint Dossier / Briefing Stage -->
-          <div id="stint-briefing-stage" class="stint-stage-panel chamfer-tl-br">
-            <!-- Dynamically rendered detailed briefing card -->
+          <!-- BRIEFING STAGE: Center Tactical Briefing & Right Session Parameters -->
+          <div id="stint-briefing-stage" class="stints-briefing-split">
+            <!-- PANE 2: Center Tactical Briefing & Skip Barber Principle -->
+            <main id="stint-briefing-center" class="stints-briefing-pane chamfer-tl-br">
+              <!-- Dynamically rendered detailed briefing card -->
+            </main>
+
+            <!-- PANE 3: Right Session Parameters, Lap Stepper & Cockpit Launcher -->
+            <aside id="stint-session-right" class="stints-session-pane chamfer-tl-br">
+              <!-- Dynamically rendered session parameters, KPI gauge, and launch button -->
+            </aside>
           </div>
 
-          <!-- Live Cockpit HUD Overlay (Visible while stint is actively running) -->
+          <!-- LIVE COCKPIT HUD OVERLAY (Visible while stint is actively running) -->
           <div id="stint-active-hud-stage" class="stint-active-hud-stage chamfer-tl-br" style="display: none;">
             <!-- Dynamically populated Live HUD with Tier-Specific widgets -->
           </div>
 
-        </main>
+        </div>
       </div>
     </div> <!-- /#view-stints -->
 

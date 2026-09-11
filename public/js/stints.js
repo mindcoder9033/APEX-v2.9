@@ -252,7 +252,7 @@ export class StintsManager {
   constructor() {
     this.stints = STINTS_DATABASE;
     this.selectedStintId = 'stint-1-1';
-    this.activeFilter = 'all'; // 'all' | '1' | '2' | '3'
+    this.searchQuery = '';
     this.isStintActive = false;
 
     this.liveHud = new LiveHudRenderer('stint-active-hud-stage');
@@ -263,10 +263,14 @@ export class StintsManager {
     this.btnReturnPitwall = document.getElementById('btn-return-pitwall-from-stints');
 
     this.stintsListContainer = document.getElementById('stints-list-container');
-    this.stintBriefingStage = document.getElementById('stint-briefing-stage');
-    this.stintActiveHudStage = document.getElementById('stint-active-hud-stage');
+    this.stintsSearchInput = document.getElementById('stints-search-input');
+    this.btnClearSearch = document.getElementById('btn-clear-stints-search');
     this.stintsCountBadge = document.getElementById('stints-count-badge');
-    this.filterPills = document.querySelectorAll('.stint-filter-pill');
+
+    this.stintBriefingStage = document.getElementById('stint-briefing-stage');
+    this.stintBriefingCenter = document.getElementById('stint-briefing-center');
+    this.stintSessionRight = document.getElementById('stint-session-right');
+    this.stintActiveHudStage = document.getElementById('stint-active-hud-stage');
 
     // Debrief Modal Elements
     this.debriefModal = document.getElementById('stint-debrief-modal');
@@ -298,15 +302,35 @@ export class StintsManager {
       });
     }
 
-    // Filter pills
-    if (this.filterPills) {
-      this.filterPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-          this.filterPills.forEach(p => p.classList.remove('active'));
-          pill.classList.add('active');
-          this.activeFilter = pill.dataset.filter || 'all';
+    // Instant Real-Time Search
+    if (this.stintsSearchInput) {
+      this.stintsSearchInput.addEventListener('input', (e) => {
+        this.searchQuery = (e.target.value || '').trim().toLowerCase();
+        if (this.btnClearSearch) {
+          this.btnClearSearch.style.display = this.searchQuery ? 'block' : 'none';
+        }
+        this.renderStintList();
+      });
+
+      this.stintsSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          this.stintsSearchInput.value = '';
+          this.searchQuery = '';
+          if (this.btnClearSearch) this.btnClearSearch.style.display = 'none';
           this.renderStintList();
-        });
+        }
+      });
+    }
+
+    if (this.btnClearSearch) {
+      this.btnClearSearch.addEventListener('click', () => {
+        if (this.stintsSearchInput) {
+          this.stintsSearchInput.value = '';
+          this.stintsSearchInput.focus();
+        }
+        this.searchQuery = '';
+        this.btnClearSearch.style.display = 'none';
+        this.renderStintList();
       });
     }
 
@@ -363,13 +387,25 @@ export class StintsManager {
     if (!this.stintsListContainer) return;
     this.stintsListContainer.innerHTML = '';
 
-    const filtered = this.stints.filter(s => {
-      if (this.activeFilter === 'all') return true;
-      return s.tier.toString() === this.activeFilter;
-    });
+    const query = this.searchQuery;
+    const filtered = query
+      ? this.stints.filter(s => {
+          const matchText = `${s.name} ${s.subtitle} ${s.focus} ${s.tierName} ${s.tierShort} ${s.prescribedCar} ${s.prescribedTrack} ${s.briefing}`.toLowerCase();
+          return matchText.includes(query);
+        })
+      : this.stints;
 
     if (this.stintsCountBadge) {
       this.stintsCountBadge.textContent = `${filtered.length} MODULE${filtered.length === 1 ? '' : 'S'}`;
+    }
+
+    if (filtered.length === 0) {
+      this.stintsListContainer.innerHTML = `
+        <div style="padding: 24px 12px; text-align: center; color: var(--color-text-muted); font-size: 11.5px; font-family: var(--font-mono);">
+          <span>🔍 No practice modules found matching "${query}"</span>
+        </div>
+      `;
+      return;
     }
 
     filtered.forEach(stint => {
@@ -381,17 +417,17 @@ export class StintsManager {
       card.innerHTML = `
         <div class="stint-card-top">
           <span class="stint-tier-tag tier-tag-${stint.tier}">${stint.tierShort}</span>
-          <span id="stint-card-laps-${stint.id}" style="font-family: var(--font-mono); font-size: 10px; color: ${this.customLaps[stint.id] ? 'var(--color-gold)' : 'var(--color-text-muted)'}; font-weight: ${this.customLaps[stint.id] ? '700' : '400'};">${effectiveLaps} LAPS</span>
+          <span id="stint-card-laps-${stint.id}" style="font-family: var(--font-mono); font-size: 9.5px; color: ${this.customLaps[stint.id] ? 'var(--color-gold)' : 'var(--color-text-muted)'}; font-weight: ${this.customLaps[stint.id] ? '700' : '400'};">${effectiveLaps} LAPS</span>
         </div>
-        <div style="font-family: var(--font-display); font-size: 14px; font-weight: 700; color: ${isSelected ? 'var(--color-gold)' : 'var(--color-text-primary)'}; margin-bottom: 3px;">
+        <div style="font-family: var(--font-display); font-size: 13.5px; font-weight: 700; color: ${isSelected ? 'var(--color-gold)' : 'var(--color-text-primary)'}; margin-bottom: 3px; letter-spacing: 0.5px;">
           ${stint.name}
         </div>
-        <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.3; margin-bottom: 6px;">
+        <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.3; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
           ${stint.focus}
         </div>
-        <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
-          <span>🏎️ ${stint.prescribedCar.split(' ')[1] || 'Car'}</span>
-          <span>📍 ${stint.prescribedTrack.split(' ')[0] || 'Track'}</span>
+        <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
+          <span>🏎️ ${stint.prescribedCar.split(' ')[1] || stint.prescribedCar}</span>
+          <span>📍 ${stint.prescribedTrack.split(' ')[0] || stint.prescribedTrack}</span>
         </div>
       `;
 
@@ -411,163 +447,193 @@ export class StintsManager {
     // If stint is actively running, show HUD stage; otherwise show Briefing stage
     if (this.isStintActive) {
       this.stintBriefingStage.style.display = 'none';
-      this.stintActiveHudStage.style.display = 'flex';
+      if (this.stintActiveHudStage) this.stintActiveHudStage.style.display = 'flex';
       return;
     }
 
     const targetLaps = this.customLaps[stint.id] || stint.laps || 10;
 
-    this.stintBriefingStage.style.display = 'flex';
-    this.stintActiveHudStage.style.display = 'none';
+    this.stintBriefingStage.style.display = 'grid';
+    if (this.stintActiveHudStage) this.stintActiveHudStage.style.display = 'none';
 
-    this.stintBriefingStage.innerHTML = `
-      <div class="pit-card-header" style="margin-bottom: 4px;">
-        <div class="pit-card-title-group">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+    // 1. RENDER CENTER BRIEFING PANE
+    if (this.stintBriefingCenter) {
+      this.stintBriefingCenter.innerHTML = `
+        <div class="stint-hero-header">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
             <span class="stint-tier-tag tier-tag-${stint.tier}">${stint.tierName}</span>
-            <span class="badge" style="background: rgba(255,215,0,0.1); border: 1px solid var(--color-gold); color: var(--color-gold); font-family: var(--font-mono); font-size: 10px;">${stint.targetMetric}</span>
+            <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-gold); letter-spacing: 0.5px;">// SKIP BARBER RACECRAFT</span>
           </div>
-          <h2 class="pit-card-title" style="font-size: 22px; color: var(--color-text-primary); letter-spacing: 1px;">
-            ${stint.name} // <span style="color: var(--color-gold);">${stint.subtitle}</span>
+          <h2 class="stint-hero-title">
+            ${stint.name}
           </h2>
-          <span class="pit-card-subtitle" style="font-size: 12px; margin-top: 4px;">Core Skill Discipline: <strong>${stint.focus}</strong></span>
-        </div>
-      </div>
-
-      <!-- Coach Directive & Quote -->
-      <div class="guide-step-card chamfer-all-corners" style="background: #111111; border-left: 3px solid var(--color-gold); padding: 14px 16px;">
-        <div style="font-size: 10px; font-weight: 700; color: var(--color-gold); text-transform: uppercase; margin-bottom: 4px; letter-spacing: 1px;">
-          📖 Skip Barber "Going Faster!" Master Racecraft Principle
-        </div>
-        <div style="font-family: var(--font-mono); font-size: 11.5px; color: var(--color-text-primary); line-height: 1.5; font-style: italic;">
-          ${stint.quote}
-        </div>
-      </div>
-
-      <!-- Session Parameters Grid (Enforced Prescribed Settings) -->
-      <div class="pit-card-header" style="margin-top: 10px; margin-bottom: 4px;">
-        <h3 class="pit-card-title" style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-secondary);">
-          🔒 Prescribed Xbox Forza Motorsport Session Configuration
-        </h3>
-      </div>
-      <div class="delta-summary-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--space-sm); margin-bottom: var(--space-sm);">
-        <div class="stat-cell chamfer-all-corners">
-          <span class="stat-cell-label">Prescribed Vehicle</span>
-          <span class="stat-cell-value" style="font-size: 12px; color: var(--color-gold);">${stint.prescribedCar}</span>
-        </div>
-        <div class="stat-cell chamfer-all-corners">
-          <span class="stat-cell-label">Circuit / Layout</span>
-          <span class="stat-cell-value" style="font-size: 12px; color: var(--color-text-primary);">${stint.prescribedTrack}</span>
-        </div>
-        <div class="stat-cell chamfer-all-corners" style="display: flex; flex-direction: column; justify-content: space-between;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span class="stat-cell-label">Session Format</span>
-            <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-gold); font-weight: 700; letter-spacing: 0.5px;">CUSTOMIZABLE</span>
+          <div style="font-family: var(--font-display); font-size: 13.5px; font-weight: 600; color: var(--color-gold); letter-spacing: 0.5px; margin-top: 2px;">
+            ${stint.subtitle}
           </div>
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px;">
-            <span class="stat-cell-value" style="font-size: 11px; color: var(--color-text-secondary);">${stint.gameType}</span>
-            <div class="stint-lap-stepper" style="display: inline-flex; align-items: center; gap: 4px; background: #0A0A0A; padding: 2px 6px; border: 1px solid var(--color-border); border-radius: 4px;">
-              <button id="btn-lap-dec" type="button" class="stint-lap-btn" title="Decrease Laps (-1)" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary); width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">-</button>
-              <input id="input-stint-laps" type="number" min="1" max="50" value="${targetLaps}" style="width: 38px; height: 22px; text-align: center; background: transparent; border: none; color: var(--color-gold); font-family: var(--font-mono); font-weight: 700; font-size: 13px; padding: 0; outline: none;" />
-              <button id="btn-lap-inc" type="button" class="stint-lap-btn" title="Increase Laps (+1)" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary); width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">+</button>
-              <span style="font-size: 10px; color: var(--color-text-muted); font-family: var(--font-mono); font-weight: 600; margin-left: 2px;">LAPS</span>
+          <div style="font-size: 11.5px; color: var(--color-text-secondary); margin-top: 6px;">
+            Core Skill Focus: <strong style="color: var(--color-text-primary);">${stint.focus}</strong>
+          </div>
+        </div>
+
+        <!-- Skip Barber Master Principle Card -->
+        <div class="stint-quote-card chamfer-all-corners">
+          <div class="stint-quote-label">
+            <span>📖</span> Skip Barber "Going Faster!" Master Racecraft Principle
+          </div>
+          <div class="stint-quote-text">
+            ${stint.quote}
+          </div>
+        </div>
+
+        <!-- Tactical Briefing & Stepping Stones -->
+        <div>
+          <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
+            🎯 Tactical Briefing & Stepping Stone Objectives
+          </div>
+          <p style="font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.6; margin: 0 0 12px 0;">
+            ${stint.briefing}
+          </p>
+        </div>
+
+        <!-- 3-Step Action Plan -->
+        <div>
+          <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+            📋 Driver Directives & Execution Plan
+          </div>
+          <ul class="stint-action-plan-list">
+            ${stint.actionPlan.map((step, idx) => `
+              <li class="stint-action-plan-item chamfer-all-corners">
+                <span class="stint-action-step-badge">STEP 0${idx + 1}</span>
+                <span>${step}</span>
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    // 2. RENDER RIGHT SESSION PARAMETERS & LAUNCHER PANE
+    if (this.stintSessionRight) {
+      this.stintSessionRight.innerHTML = `
+        <!-- Target Mastery KPI Card -->
+        <div class="stint-kpi-target-card chamfer-all-corners">
+          <div class="stint-kpi-target-label">
+            🏆 Target Mastery Benchmark
+          </div>
+          <div class="stint-kpi-target-value">
+            ${stint.targetMetric}
+          </div>
+        </div>
+
+        <!-- Prescribed Session Parameters -->
+        <div>
+          <div style="font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+            🔒 Prescribed Session Config
+          </div>
+          <div class="stint-params-grid">
+            <div class="stint-param-row chamfer-all-corners">
+              <span class="stint-param-label">Car</span>
+              <span class="stint-param-val" style="color: var(--color-gold);">${stint.prescribedCar}</span>
+            </div>
+            <div class="stint-param-row chamfer-all-corners">
+              <span class="stint-param-label">Track</span>
+              <span class="stint-param-val">${stint.prescribedTrack}</span>
+            </div>
+            <div class="stint-param-row chamfer-all-corners">
+              <span class="stint-param-label">Condition</span>
+              <span class="stint-param-val">${stint.weather} · ${stint.timeOfDay}</span>
+            </div>
+            <div class="stint-param-row chamfer-all-corners">
+              <span class="stint-param-label">Traffic</span>
+              <span class="stint-param-val" style="color: var(--color-success);">${stint.drivatars} AI Drivatars</span>
+            </div>
+            
+            <!-- Customizable Lap Stepper Row -->
+            <div class="stint-param-row chamfer-all-corners" style="border-color: rgba(255, 215, 0, 0.2);">
+              <span class="stint-param-label">Laps Target</span>
+              <div class="stint-lap-stepper" style="display: inline-flex; align-items: center; gap: 4px; background: #0A0A0E; padding: 2px 6px; border: 1px solid var(--color-border); border-radius: 4px;">
+                <button id="btn-lap-dec" type="button" class="stint-lap-btn" title="Decrease Laps (-1)" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary); width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">-</button>
+                <input id="input-stint-laps" type="number" min="1" max="50" value="${targetLaps}" style="width: 36px; height: 22px; text-align: center; background: transparent; border: none; color: var(--color-gold); font-family: var(--font-mono); font-weight: 700; font-size: 13px; padding: 0; outline: none;" />
+                <button id="btn-lap-inc" type="button" class="stint-lap-btn" title="Increase Laps (+1)" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-primary); width: 22px; height: 22px; border-radius: 3px; cursor: pointer; font-family: var(--font-mono); font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; line-height: 1;">+</button>
+                <span style="font-size: 9.5px; color: var(--color-text-muted); font-family: var(--font-mono); font-weight: 600; margin-left: 2px;">LAPS</span>
+              </div>
             </div>
           </div>
         </div>
-        <div class="stat-cell chamfer-all-corners">
-          <span class="stat-cell-label">Weather & Time of Day</span>
-          <span class="stat-cell-value" style="font-size: 12px;">${stint.weather} · ${stint.timeOfDay}</span>
-        </div>
-        <div class="stat-cell chamfer-all-corners">
-          <span class="stat-cell-label">Drivatar Traffic</span>
-          <span class="stat-cell-value" style="font-size: 12px; color: var(--color-success);">${stint.drivatars} AI (Solitary Learning)</span>
-        </div>
-      </div>
 
-      <!-- Detailed Practice Briefing -->
-      <div class="pit-card-header" style="margin-top: 10px; margin-bottom: 4px;">
-        <h3 class="pit-card-title" style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-text-secondary);">
-          🎯 Tactical Briefing & Stepping Stone Objectives
-        </h3>
-      </div>
-      <p style="font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.6; margin: 0;">
-        ${stint.briefing}
-      </p>
-
-      <ul style="margin: 6px 0 12px 18px; padding: 0; font-size: 12px; color: var(--color-text-muted); line-height: 1.7;">
-        ${stint.actionPlan.map(item => `<li>${item}</li>`).join('')}
-      </ul>
-
-      <!-- HUD Widgets Breakdown -->
-      <div style="background: #0D0D0D; border: 1px solid var(--color-border); padding: 12px 14px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <!-- Active Cockpit HUD Widgets Preview -->
         <div>
-          <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; display: block; margin-bottom: 3px;">Active Live HUD Cockpit Widgets (Tier ${stint.tier}):</span>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            ${stint.hudWidgets.map(w => `<span class="badge" style="background: rgba(255,255,255,0.05); color: var(--color-text-secondary); font-size: 10px;">${w}</span>`).join('')}
+          <span style="font-family: var(--font-mono); font-size: 9.5px; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+            Live Cockpit Gauges:
+          </span>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            ${stint.hudWidgets.map(w => `<span class="badge" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--color-text-secondary); font-size: 9.5px; padding: 2px 6px;">${w}</span>`).join('')}
           </div>
         </div>
 
-        <button id="btn-launch-stint" class="btn btn-primary chamfer-br" style="height: 46px; padding: 0 24px; font-size: 13px; font-weight: 700;">
+        <!-- Launch Button -->
+        <button id="btn-launch-stint" class="btn btn-primary stint-launch-cta-btn chamfer-br">
           <span>🚀</span> LAUNCH LIVE COCKPIT HUD
         </button>
-      </div>
-    `;
+      `;
 
-    const inputLaps = document.getElementById('input-stint-laps');
-    const btnDec = document.getElementById('btn-lap-dec');
-    const btnInc = document.getElementById('btn-lap-inc');
+      // Bind Lap Stepper Logic
+      const inputLaps = document.getElementById('input-stint-laps');
+      const btnDec = document.getElementById('btn-lap-dec');
+      const btnInc = document.getElementById('btn-lap-inc');
 
-    const updateLaps = (val) => {
-      let num = parseInt(val, 10);
-      if (isNaN(num)) num = stint.laps || 10;
-      num = Math.max(1, Math.min(50, num));
-      this.customLaps[stint.id] = num;
-      if (inputLaps) inputLaps.value = num;
+      const updateLaps = (val) => {
+        let num = parseInt(val, 10);
+        if (isNaN(num)) num = stint.laps || 10;
+        num = Math.max(1, Math.min(50, num));
+        this.customLaps[stint.id] = num;
+        if (inputLaps) inputLaps.value = num;
 
-      // Update badge on the stint card in sidebar list
-      const cardBadge = document.getElementById(`stint-card-laps-${stint.id}`);
-      if (cardBadge) {
-        cardBadge.textContent = `${num} LAPS`;
-        cardBadge.style.color = 'var(--color-gold)';
-        cardBadge.style.fontWeight = '700';
-      }
-    };
-
-    if (btnDec) {
-      btnDec.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const cur = parseInt(inputLaps ? inputLaps.value : targetLaps, 10) || stint.laps || 10;
-        updateLaps(cur - 1);
-      });
-    }
-
-    if (btnInc) {
-      btnInc.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const cur = parseInt(inputLaps ? inputLaps.value : targetLaps, 10) || stint.laps || 10;
-        updateLaps(cur + 1);
-      });
-    }
-
-    if (inputLaps) {
-      inputLaps.addEventListener('change', (e) => {
-        updateLaps(e.target.value);
-      });
-      inputLaps.addEventListener('blur', (e) => {
-        updateLaps(e.target.value);
-      });
-      inputLaps.addEventListener('keyup', (e) => {
-        if (e.key === 'Enter') {
-          updateLaps(e.target.value);
+        // Update badge on the stint card in sidebar list
+        const cardBadge = document.getElementById(`stint-card-laps-${stint.id}`);
+        if (cardBadge) {
+          cardBadge.textContent = `${num} LAPS`;
+          cardBadge.style.color = 'var(--color-gold)';
+          cardBadge.style.fontWeight = '700';
         }
-      });
-    }
+      };
 
-    const btnLaunch = document.getElementById('btn-launch-stint');
-    if (btnLaunch) {
-      btnLaunch.addEventListener('click', () => {
-        this.startStint();
-      });
+      if (btnDec) {
+        btnDec.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cur = parseInt(inputLaps ? inputLaps.value : targetLaps, 10) || stint.laps || 10;
+          updateLaps(cur - 1);
+        });
+      }
+
+      if (btnInc) {
+        btnInc.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const cur = parseInt(inputLaps ? inputLaps.value : targetLaps, 10) || stint.laps || 10;
+          updateLaps(cur + 1);
+        });
+      }
+
+      if (inputLaps) {
+        inputLaps.addEventListener('change', (e) => {
+          updateLaps(e.target.value);
+        });
+        inputLaps.addEventListener('blur', (e) => {
+          updateLaps(e.target.value);
+        });
+        inputLaps.addEventListener('keyup', (e) => {
+          if (e.key === 'Enter') {
+            updateLaps(e.target.value);
+          }
+        });
+      }
+
+      const btnLaunch = document.getElementById('btn-launch-stint');
+      if (btnLaunch) {
+        btnLaunch.addEventListener('click', () => {
+          this.startStint();
+        });
+      }
     }
   }
 
@@ -589,8 +655,8 @@ export class StintsManager {
     };
 
     this.isStintActive = true;
-    this.stintBriefingStage.style.display = 'none';
-    this.stintActiveHudStage.style.display = 'flex';
+    if (this.stintBriefingStage) this.stintBriefingStage.style.display = 'none';
+    if (this.stintActiveHudStage) this.stintActiveHudStage.style.display = 'flex';
 
     this.liveHud.startStint(stintWithCustomLaps, (evaluation, stintRef, samples) => {
       this.handleStintComplete(evaluation, stintRef, samples);
