@@ -99,15 +99,19 @@ export class TrackStudyLibrary {
   getTrackStudyState(trackId) {
     try {
       if (typeof window === 'undefined' || !window.localStorage) {
-        return this.inMemoryStore?.[trackId] || { unlockedPhases: [1], completedDebriefings: [], lastPhase: 1, corners: [] };
+        return this.inMemoryStore?.[trackId] || { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [] };
       }
       const raw = window.localStorage.getItem(`${this.storageKey}_${trackId}`);
       if (!raw) {
-        return { unlockedPhases: [1], completedDebriefings: [], lastPhase: 1, corners: [] };
+        return { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [] };
       }
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed.lapsCompleted === undefined) {
+        parsed.lapsCompleted = Array.isArray(parsed.completedDebriefings) ? parsed.completedDebriefings.length : 0;
+      }
+      return parsed;
     } catch (e) {
-      return { unlockedPhases: [1], completedDebriefings: [], lastPhase: 1, corners: [] };
+      return { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [] };
     }
   }
 

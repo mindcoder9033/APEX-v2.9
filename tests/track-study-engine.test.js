@@ -194,24 +194,58 @@ test('TrackStudyLibrary: Catalog extraction and independent per-track profile wi
   const testTrackId = 'test-track-circuit';
   const initialState = library.getTrackStudyState(testTrackId);
   assert.deepEqual(initialState.unlockedPhases, [1]);
-  assert.deepEqual(initialState.completedDebriefings, []);
+  assert.equal(initialState.lapsCompleted, 0);
   assert.deepEqual(initialState.corners, []);
 
   library.saveTrackStudyState(testTrackId, {
     unlockedPhases: [1, 2, 3],
-    completedDebriefings: [1, 2],
+    lapsCompleted: 2,
     lastPhase: 3,
     corners: [{ number: 1, name: 'Turn 1', apexSpeedMph: 45 }]
   });
 
   const modifiedState = library.getTrackStudyState(testTrackId);
   assert.deepEqual(modifiedState.unlockedPhases, [1, 2, 3]);
-  assert.deepEqual(modifiedState.completedDebriefings, [1, 2]);
+  assert.equal(modifiedState.lapsCompleted, 2);
   assert.equal(modifiedState.lastPhase, 3);
   assert.equal(modifiedState.corners.length, 1);
 
   library.resetTrackStudyState(testTrackId);
   const resetState = library.getTrackStudyState(testTrackId);
   assert.deepEqual(resetState.unlockedPhases, [1]);
-  assert.deepEqual(resetState.completedDebriefings, []);
+  assert.equal(resetState.lapsCompleted, 0);
 });
+
+test('TrackStudy: Lap-based stage unlock progression (1-5 laps required)', () => {
+  const computeUnlocked = (laps) => {
+    const unlocked = new Set([1]);
+    for (let s = 1; s <= Math.min(4, laps); s++) {
+      unlocked.add(s + 1);
+    }
+    return unlocked;
+  };
+
+  // 0 laps: only Stage 1
+  assert.deepEqual(Array.from(computeUnlocked(0)), [1]);
+
+  // 1 lap: unlocks Stage 2
+  assert.deepEqual(Array.from(computeUnlocked(1)), [1, 2]);
+
+  // 2 laps: unlocks Stage 3
+  assert.deepEqual(Array.from(computeUnlocked(2)), [1, 2, 3]);
+
+  // 3 laps: unlocks Stage 4
+  assert.deepEqual(Array.from(computeUnlocked(3)), [1, 2, 3, 4]);
+
+  // 4 laps: unlocks Stage 5
+  assert.deepEqual(Array.from(computeUnlocked(4)), [1, 2, 3, 4, 5]);
+
+  // 5 laps: all 5 stages unlocked & certified
+  assert.deepEqual(Array.from(computeUnlocked(5)), [1, 2, 3, 4, 5]);
+  const readinessPct = (laps) => Math.min(100, Math.round((Math.min(5, laps) / 5) * 100));
+  assert.equal(readinessPct(0), 0);
+  assert.equal(readinessPct(1), 20);
+  assert.equal(readinessPct(3), 60);
+  assert.equal(readinessPct(5), 100);
+});
+

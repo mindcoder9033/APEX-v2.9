@@ -22,8 +22,8 @@ export class TrackStudyView {
     this.telemetrySamples = [];
     this.liveTelemetryActive = false;
     this.hasNotifiedLiveSync = false;
+    this.lapsCompleted = 0;
     this.unlockedPhases = new Set([1]);
-    this.completedDebriefings = new Set();
     this.hasCompletedBriefing = false;
 
     this.container = null;
@@ -101,7 +101,7 @@ export class TrackStudyView {
       });
     }
 
-    // Stepper buttons (enforces sequential progression)
+    // Stepper buttons (enforces sequential progression based on laps completed)
     const stepBtns = this.container.querySelectorAll('.study-step-btn');
     stepBtns.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -147,9 +147,15 @@ export class TrackStudyView {
 
     // Load independent persistent study progression for this specific track
     const savedState = trackStudyLibrary.getTrackStudyState(trackId);
-    this.unlockedPhases = new Set(savedState.unlockedPhases || [1]);
-    this.completedDebriefings = new Set(savedState.completedDebriefings || []);
-    this.hasCompletedBriefing = this.completedDebriefings.size >= 5;
+    this.lapsCompleted = savedState.lapsCompleted || 0;
+
+    // Compute unlocked phases from laps completed (Stage 1 is always unlocked; Stage k+1 unlocked if lapsCompleted >= k)
+    const unlocked = new Set([1]);
+    for (let s = 1; s <= Math.min(4, this.lapsCompleted); s++) {
+      unlocked.add(s + 1);
+    }
+    this.unlockedPhases = unlocked;
+    this.hasCompletedBriefing = this.lapsCompleted >= 5;
 
     const targetPhase = savedState.lastPhase && this.unlockedPhases.has(savedState.lastPhase)
       ? savedState.lastPhase
@@ -168,6 +174,30 @@ export class TrackStudyView {
     this.currentTrackProfile = trackProfile;
     try {
       this.studyData = this.engine.generateStudy(trackProfile, telemetrySamples);
+      
+      // If telemetry samples are provided, derive completed laps count
+      if (Array.isArray(telemetrySamples) && telemetrySamples.length > 0) {
+        const maxSampleLap = telemetrySamples.reduce((max, s) => {
+          const lap = s.lapNumber !== undefined ? s.lapNumber : (s.currentLap !== undefined ? s.currentLap : 0);
+          return Math.max(max, lap);
+        }, 0);
+        if (maxSampleLap > this.lapsCompleted) {
+          this.lapsCompleted = maxSampleLap;
+          for (let s = 1; s <= Math.min(4, this.lapsCompleted); s++) {
+            this.unlockedPhases.add(s + 1);
+          }
+          if (this.lapsCompleted >= 5) {
+            this.hasCompletedBriefing = true;
+          }
+          trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
+            unlockedPhases: Array.from(this.unlockedPhases),
+            lapsCompleted: this.lapsCompleted,
+            lastPhase: this.currentPhase
+          });
+          this.updateReadinessMeter();
+        }
+      }
+
       this.render();
 
       if (notify && window.PitToast) {
@@ -178,34 +208,6 @@ export class TrackStudyView {
     } catch (err) {
       console.error('[TrackStudyView] Error generating study data:', err);
     }
-  }
-
-  completeDebriefing(phaseNum) {
-    this.completedDebriefings.add(phaseNum);
-    const nextPhase = phaseNum + 1;
-
-    if (nextPhase <= 5) {
-      this.unlockedPhases.add(nextPhase);
-      this.currentPhase = nextPhase;
-      if (window.PitToast) {
-        window.PitToast.success(`Stage ${phaseNum} Debriefing signed off. Unlocked Stage ${nextPhase}.`, `STAGE ${phaseNum} COMPLETE`);
-      }
-    } else {
-      this.hasCompletedBriefing = true;
-      if (window.PitToast) {
-        window.PitToast.success('All 5 Study Stages signed off! Pre-Stint Briefing Certified.', 'STUDY COMPLETE');
-      }
-    }
-
-    // Persist per-track study state in independent library store
-    trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
-      unlockedPhases: Array.from(this.unlockedPhases),
-      completedDebriefings: Array.from(this.completedDebriefings),
-      lastPhase: this.currentPhase
-    });
-
-    this.updateReadinessMeter();
-    this.render();
   }
 
   resetCurrentTrackStudy() {
@@ -219,9 +221,9 @@ export class TrackStudyView {
     this.activeCornerNumber = null;
     this.selectedCornerNumber = 1;
 
-    // 3. Reset 5-stage sequential progression & debriefing sign-offs
+    // 3. Reset 5-stage sequential progression & laps completed
+    this.lapsCompleted = 0;
     this.unlockedPhases = new Set([1]);
-    this.completedDebriefings = new Set();
     this.hasCompletedBriefing = false;
     this.currentPhase = 1;
 
@@ -257,7 +259,7 @@ export class TrackStudyView {
     // 6. Save pristine empty state in store
     trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
       unlockedPhases: [1],
-      completedDebriefings: [],
+      lapsCompleted: 0,
       lastPhase: 1
     });
 
@@ -274,11 +276,11 @@ export class TrackStudyView {
 
   updateReadinessMeter() {
     if (!this.container) return;
-    const completedCount = this.completedDebriefings.size;
-    const pct = Math.round((completedCount / 5) * 100);
+    const completedStages = Math.min(5, this.lapsCompleted);
+    const pct = Math.min(100, Math.round((completedStages / 5) * 100));
 
     const badge = this.container.querySelector('#study-readiness-badge');
-    if (badge) badge.textContent = `${pct}% (${completedCount}/5 STAGES)`;
+    if (badge) badge.textContent = `${pct}% (${completedStages}/5 LAPS COMPLETED)`;
 
     const fill = this.container.querySelector('#study-readiness-fill');
     if (fill) fill.style.width = `${pct}%`;
@@ -288,7 +290,7 @@ export class TrackStudyView {
     stepBtns.forEach(btn => {
       const step = parseInt(btn.dataset.step, 10);
       const isUnlocked = this.unlockedPhases.has(step);
-      const isCompleted = this.completedDebriefings.has(step);
+      const isCompleted = this.lapsCompleted >= step;
       const isActive = step === this.currentPhase;
 
       btn.classList.toggle('active', isActive);
@@ -297,9 +299,9 @@ export class TrackStudyView {
       btn.disabled = !isUnlocked;
       
       if (!isUnlocked) {
-        btn.setAttribute('title', `Complete Stage ${step - 1} Debriefing to Unlock`);
+        btn.setAttribute('title', `Complete ${step - 1} Lap${step - 1 > 1 ? 's' : ''} on-track to Unlock Stage ${step}`);
       } else {
-        btn.setAttribute('title', `Stage ${step}`);
+        btn.setAttribute('title', isCompleted ? `Stage ${step} Passed (${this.lapsCompleted}/5 Laps)` : `Stage ${step} (Drive ${step} Lap${step > 1 ? 's' : ''} to Pass)`);
       }
     });
   }
@@ -307,7 +309,7 @@ export class TrackStudyView {
   setPhase(stepNumber) {
     if (!this.unlockedPhases.has(stepNumber)) {
       if (window.PitToast) {
-        window.PitToast.warning(`Stage ${stepNumber} is locked. Complete Stage ${stepNumber - 1} debriefing first.`, 'STAGE LOCKED');
+        window.PitToast.warning(`Stage ${stepNumber} is locked. Complete ${stepNumber - 1} lap${stepNumber - 1 > 1 ? 's' : ''} on-track first.`, 'STAGE LOCKED');
       }
       return;
     }
@@ -315,7 +317,7 @@ export class TrackStudyView {
     this.currentPhase = stepNumber;
     trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
       unlockedPhases: Array.from(this.unlockedPhases),
-      completedDebriefings: Array.from(this.completedDebriefings),
+      lapsCompleted: this.lapsCompleted,
       lastPhase: this.currentPhase
     });
     this.updateReadinessMeter();
@@ -397,52 +399,63 @@ export class TrackStudyView {
   }
 
   // ---------------------------------------------------------------------------
-  // DEBRIEFING CARD COMPONENT GENERATOR
+  // ON-TRACK TELEMETRY LAP GATE CARD COMPONENT
   // ---------------------------------------------------------------------------
-  _renderDebriefingCard(phaseNum, title, items, advanceLabel, isFinal = false) {
-    const isCompleted = this.completedDebriefings.has(phaseNum);
+  _renderLapGateCard(phaseNum, title) {
+    const isStagePassed = this.lapsCompleted >= phaseNum;
+    const lapsRemaining = Math.max(0, phaseNum - this.lapsCompleted);
 
-    const itemsHtml = items.map((item, idx) => `
-      <label class="debrief-check-item">
-        <input type="checkbox" class="debrief-checkbox" data-phase="${phaseNum}" data-idx="${idx}" ${isCompleted ? 'checked disabled' : ''} />
-        <span class="debrief-check-text">${item}</span>
-      </label>
-    `).join('');
+    let lapNodesHtml = '';
+    for (let i = 1; i <= 5; i++) {
+      let nodeClass = 'locked';
+      let nodeStatus = 'LOCKED';
+      if (this.lapsCompleted >= i) {
+        nodeClass = 'passed';
+        nodeStatus = 'PASSED ✓';
+      } else if (this.lapsCompleted === i - 1) {
+        nodeClass = 'active';
+        nodeStatus = 'IN PROGRESS';
+      }
+
+      lapNodesHtml += `
+        <div class="lap-node-item ${nodeClass}">
+          <span class="lap-node-title">LAP ${i}</span>
+          <span class="lap-node-status">${nodeStatus}</span>
+        </div>
+      `;
+    }
+
+    const progressPct = Math.min(100, Math.round((Math.min(this.lapsCompleted, phaseNum) / phaseNum) * 100));
 
     return `
-      <div class="phase-card phase-debriefing-card chamfer-br">
-        <div class="debrief-header-row">
-          <div class="debrief-title-wrap">
-            <span class="debrief-badge">STAGE ${phaseNum} DEBRIEFING</span>
-            <span class="font-bold text-white">${title}</span>
+      <div class="phase-card phase-lap-gate-card chamfer-br ${isStagePassed ? 'passed' : 'pending'}">
+        <div class="lap-gate-header-row">
+          <div class="lap-gate-title-wrap">
+            <span class="lap-gate-badge ${isStagePassed ? 'passed' : ''}">STAGE ${phaseNum} TELEMETRY GATE</span>
+            <span class="font-bold text-white">${phaseNum} LAP${phaseNum > 1 ? 'S' : ''} ON-TRACK REQUIRED // ${title.toUpperCase()}</span>
           </div>
-          <span class="debrief-status-tag ${isCompleted ? 'completed' : ''}">
-            ${isCompleted ? 'STAGE DEBRIEFED & SIGNED OFF ✓' : 'MANDATORY DEBRIEFING REQUIRED'}
+          <span class="lap-gate-status-tag ${isStagePassed ? 'completed' : ''}">
+            ${isStagePassed ? `STAGE ${phaseNum} PASSED (${this.lapsCompleted} LAPS LOGGED) ✓` : `PENDING // ${lapsRemaining} MORE LAP${lapsRemaining > 1 ? 'S' : ''} REQUIRED`}
           </span>
         </div>
-        <div class="debrief-questions-list">
-          ${itemsHtml}
+        <div class="lap-gate-progress-wrap">
+          <div class="lap-gate-progress-bar-bg">
+            <div class="lap-gate-progress-bar-fill" style="width: ${progressPct}%"></div>
+          </div>
+          <div class="lap-nodes-row">
+            ${lapNodesHtml}
+          </div>
         </div>
-        <div class="debrief-actions-bar">
-          ${!isCompleted ? `
-            <button id="btn-complete-debrief-${phaseNum}" class="btn btn-debrief-advance chamfer-br">
-              <span>${advanceLabel}</span> ➔
-            </button>
-          ` : `
-            <span class="text-green text-xs font-mono font-bold">✓ STAGE ${phaseNum} COMPLETED — ADVANCED</span>
-          `}
+        <div class="lap-gate-footer">
+          <span class="lap-gate-desc text-secondary text-xs font-mono">
+            ${isStagePassed 
+              ? (phaseNum < 5 ? `✓ Stage ${phaseNum} requirement met with ${this.lapsCompleted} recorded laps. Stage ${phaseNum + 1} unlocked.` : `✓ All 5 stages certified! Full track dossier ready for export.`)
+              : `Drive on-track in Forza Motorsport / Live UDP mode or upload a stint to record lap data and unlock Stage ${phaseNum < 5 ? phaseNum + 1 : 'Certification'}.`
+            }
+          </span>
         </div>
       </div>
     `;
-  }
-
-  _bindDebriefingAction(container, phaseNum) {
-    const btn = container.querySelector(`#btn-complete-debrief-${phaseNum}`);
-    if (!btn) return;
-
-    btn.addEventListener('click', () => {
-      this.completeDebriefing(phaseNum);
-    });
   }
 
   // ---------------------------------------------------------------------------
@@ -477,20 +490,7 @@ export class TrackStudyView {
       `;
     }
 
-    const debriefQuestions = hasCorners ? [
-      `I have analyzed the priority ranking and identified Turn ${macro.longestStraight.fromCorner} (leading onto the ${macro.longestStraight.distanceMeters}m straight) as the highest time-leverage corner.`,
-      'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway launch speed (+1 km/h = +0.28 m/s compounding advantage).'
-    ] : [
-      'I understand that track turns, apex speeds, and exit straights will be automatically parsed from vehicle telemetry.',
-      'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway exit speed.'
-    ];
-
-    const debriefCard = this._renderDebriefingCard(
-      1,
-      'Macro Priorities & Exit Speed Commitment',
-      debriefQuestions,
-      'COMPLETE STAGE 1 DEBRIEFING & UNLOCK STAGE 2'
-    );
+    const lapGateCard = this._renderLapGateCard(1, 'Macro Priorities & Exit Speed Commitment');
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -542,12 +542,11 @@ export class TrackStudyView {
           </div>
         </div>
 
-        ${debriefCard}
+        ${lapGateCard}
       </div>
     `;
 
     this._bindRowSelection(container);
-    this._bindDebriefingAction(container, 1);
   }
 
   // ---------------------------------------------------------------------------
@@ -597,20 +596,7 @@ export class TrackStudyView {
       `;
     }
 
-    const debriefQuestions = hasCorners ? [
-      `I have audited the ${surface.surfaceHazardCount} surface hazards, negative camber sections, and crest compressions where lateral grip is compromised.`,
-      'I have identified aggressive curb threats and will avoid curb strikes that upset chassis balance during cornering.'
-    ] : [
-      'I understand the impact of positive banking (+3% grip/deg) and off-camber fall-offs on mechanical grip.',
-      'I will look for pavement seams, drainage crowns, and kerb geometry as on-track telemetry is ingested.'
-    ];
-
-    const debriefCard = this._renderDebriefingCard(
-      2,
-      'Surface Reconnaissance & Camber Safety Sign-Off',
-      debriefQuestions,
-      'COMPLETE STAGE 2 DEBRIEFING & UNLOCK STAGE 3'
-    );
+    const lapGateCard = this._renderLapGateCard(2, 'Surface Reconnaissance & Camber Intelligence');
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -626,11 +612,9 @@ export class TrackStudyView {
           ${cardsHtml}
         </div>
 
-        ${debriefCard}
+        ${lapGateCard}
       </div>
     `;
-
-    this._bindDebriefingAction(container, 2);
   }
 
   // ---------------------------------------------------------------------------
@@ -677,20 +661,7 @@ export class TrackStudyView {
       `;
     }
 
-    const debriefQuestions = hasCorners ? [
-      `I have memorized concrete braking point markers, turn-in visual anchors, and apex attitudes for all ${this.studyData.circuit.turnsCount} corners.`,
-      'I know my blind track-out reference targets and will actively look ahead to the next visual anchor before reaching each apex.'
-    ] : [
-      'I commit to identifying concrete, unchanging physical visual markers (brake boards, curbing ends, flag stands) for every turn.',
-      'I will actively look ahead to the next visual target before reaching each apex.'
-    ];
-
-    const debriefCard = this._renderDebriefingCard(
-      3,
-      'Visual Reference Points & Sight Pictures Sign-Off',
-      debriefQuestions,
-      'COMPLETE STAGE 3 DEBRIEFING & UNLOCK STAGE 4'
-    );
+    const lapGateCard = this._renderLapGateCard(3, 'Visual Reference Points & Sight Pictures');
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -725,11 +696,9 @@ export class TrackStudyView {
           </div>
         </div>
 
-        ${debriefCard}
+        ${lapGateCard}
       </div>
     `;
-
-    this._bindDebriefingAction(container, 3);
   }
 
   // ---------------------------------------------------------------------------
@@ -769,16 +738,7 @@ export class TrackStudyView {
       `;
     }
 
-    const debriefCard = this._renderDebriefingCard(
-      4,
-      'Order of Effort (Line → TAP Throttle → Braking Optimization)',
-      [
-        'Step 1 (Line): I will master line consistency and late apex discipline first. I will not early-apex.',
-        'Step 2 (TAP): I will locate the Throttle Application Point (TAP) and squeeze progressively before apex as steering unwinds.',
-        'Step 3 (Braking): I will establish threshold braking pressure first, only advancing brake depth in gradual 1.0m bites.'
-      ],
-      'COMPLETE STAGE 4 DEBRIEFING & UNLOCK STAGE 5'
-    );
+    const lapGateCard = this._renderLapGateCard(4, 'Planning the Order of Effort');
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -828,11 +788,9 @@ export class TrackStudyView {
           </div>
         </div>
 
-        ${debriefCard}
+        ${lapGateCard}
       </div>
     `;
-
-    this._bindDebriefingAction(container, 4);
   }
 
   // ---------------------------------------------------------------------------
@@ -862,16 +820,7 @@ export class TrackStudyView {
       `;
     }
 
-    const debriefCard = this._renderDebriefingCard(
-      5,
-      'Hardware, Tire Thermals & Racecraft Final Certification',
-      [
-        `I will manage tire operating window (${hw.tireThermalManagement.operatingWindowC || '90°C – 115°C'}) during warm-up out-laps before pushing limit slip angles.`,
-        `I have verified the ${hw.brakeSystemManagement.baselineBias} mechanical brake bias and understand the race start accordion effect.`
-      ],
-      'CERTIFY 5-PHASE TRACK STUDY & COMPLETE BRIEFING 🏁',
-      true
-    );
+    const lapGateCard = this._renderLapGateCard(5, 'Hardware, Tire Thermals & Racecraft Final Certification');
 
     container.innerHTML = `
       <div class="phase-grid-layout">
@@ -957,11 +906,9 @@ export class TrackStudyView {
           </div>
         </div>
 
-        ${debriefCard}
+        ${lapGateCard}
       </div>
     `;
-
-    this._bindDebriefingAction(container, 5);
   }
 
   _bindRowSelection(container) {
@@ -1096,6 +1043,35 @@ export class TrackStudyView {
 
     if (lapVal && lapVal.textContent !== String(lapNumber)) lapVal.textContent = lapNumber;
     if (speedVal && speedVal.textContent !== String(speedKmh)) speedVal.textContent = speedKmh;
+
+    // Detect on-track lap progress and unlock stages (1-5 laps requirement)
+    if (lapNumber > this.lapsCompleted) {
+      const prevLaps = this.lapsCompleted;
+      this.lapsCompleted = lapNumber;
+      for (let s = 1; s <= Math.min(4, this.lapsCompleted); s++) {
+        this.unlockedPhases.add(s + 1);
+      }
+      if (this.lapsCompleted >= 5) {
+        this.hasCompletedBriefing = true;
+      }
+      trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
+        unlockedPhases: Array.from(this.unlockedPhases),
+        lapsCompleted: this.lapsCompleted,
+        lastPhase: this.currentPhase
+      });
+      this.updateReadinessMeter();
+      if (this.container && this.container.style.display !== 'none') {
+        this.render();
+      }
+      if (window.PitToast && this.lapsCompleted > prevLaps) {
+        const newlyPassedStage = Math.min(5, this.lapsCompleted);
+        const nextStage = newlyPassedStage < 5 ? newlyPassedStage + 1 : null;
+        window.PitToast.success(
+          `Lap ${this.lapsCompleted} completed! Stage ${newlyPassedStage} passed${nextStage ? ` — Stage ${nextStage} Unlocked` : ' — Track Study Certified'}!`,
+          'STAGE REQUIREMENT MET'
+        );
+      }
+    }
 
     // Detect and highlight current on-track corner
     const cornerNum = this._detectCurrentCorner(sample);

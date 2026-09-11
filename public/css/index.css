@@ -5339,17 +5339,27 @@ select,
   letter-spacing: 0.5px;
 }
 
-/* Phase Debriefing Card & Lock Protocol */
-.phase-debriefing-card {
-  background: linear-gradient(180deg, #161A22 0%, #0E1015 100%) !important;
-  border: 1px solid var(--color-gold) !important;
-  box-shadow: 0 0 20px rgba(255, 184, 0, 0.12), inset 0 0 16px rgba(255, 184, 0, 0.04);
-  padding: 18px 20px;
+/* Phase On-Track Telemetry Lap Gate & Stage Unlock Protocol */
+.phase-lap-gate-card {
+  background: linear-gradient(180deg, #14171F 0%, #0D0F14 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 16px 20px;
   margin-top: var(--space-md);
   position: relative;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.debrief-header-row {
+.phase-lap-gate-card.passed {
+  border-color: rgba(0, 230, 118, 0.4) !important;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.08), inset 0 0 16px rgba(0, 230, 118, 0.02);
+}
+
+.phase-lap-gate-card.pending {
+  border-color: rgba(255, 184, 0, 0.4) !important;
+  box-shadow: 0 0 20px rgba(255, 184, 0, 0.08), inset 0 0 16px rgba(255, 184, 0, 0.02);
+}
+
+.lap-gate-header-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -5358,13 +5368,13 @@ select,
   padding-bottom: 10px;
 }
 
-.debrief-title-wrap {
+.lap-gate-title-wrap {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.debrief-badge {
+.lap-gate-badge {
   font-family: var(--font-mono);
   font-size: 9.5px;
   font-weight: 800;
@@ -5376,98 +5386,113 @@ select,
   letter-spacing: 0.5px;
 }
 
-.debrief-status-tag {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.05);
-  padding: 2px 8px;
-  border-radius: 2px;
-}
-
-.debrief-status-tag.completed {
+.lap-gate-badge.passed {
   color: var(--color-success);
   background: rgba(0, 230, 118, 0.15);
-  border: 1px solid var(--color-success);
+  border-color: var(--color-success);
 }
 
-.debrief-questions-list {
+.lap-gate-status-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--color-gold);
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.3);
+  padding: 3px 10px;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
+}
+
+.lap-gate-status-tag.completed {
+  color: var(--color-success);
+  background: rgba(0, 230, 118, 0.15);
+  border-color: var(--color-success);
+}
+
+.lap-gate-progress-wrap {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
-.debrief-check-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 10px 12px;
+.lap-gate-progress-bar-bg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
-  font-size: 11.5px;
-  color: var(--color-text-primary);
-  line-height: 1.4;
-  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+}
+
+.lap-gate-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-cyan) 0%, var(--color-green) 100%);
+  border-radius: 3px;
+  transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lap-nodes-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.lap-node-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 6px;
+  border-radius: 3px;
+  text-align: center;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
-.debrief-check-item:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 184, 0, 0.4);
+.lap-node-item.passed {
+  border-color: rgba(0, 230, 118, 0.35);
+  background: rgba(0, 230, 118, 0.06);
 }
 
-.debrief-check-item input[type="checkbox"] {
-  accent-color: var(--color-gold);
-  margin-top: 2px;
-  cursor: pointer;
-  width: 15px;
-  height: 15px;
+.lap-node-item.active {
+  border-color: rgba(255, 184, 0, 0.5);
+  background: rgba(255, 184, 0, 0.08);
 }
 
-.debrief-actions-bar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 12px;
+.lap-node-item.locked {
+  opacity: 0.5;
 }
 
-.btn-debrief-advance {
-  background: var(--color-gold);
-  color: #000000;
+.lap-node-title {
   font-family: var(--font-display);
-  font-size: 12.5px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  padding: 10px 22px;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.lap-node-status {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.lap-node-item.passed .lap-node-status {
+  color: var(--color-success);
+}
+
+.lap-node-item.active .lap-node-status {
+  color: var(--color-gold);
+}
+
+.lap-gate-footer {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  transition: transform var(--dur-press) var(--ease-out), background-color 140ms ease, box-shadow 140ms ease;
-  box-shadow: 0 4px 15px rgba(255, 184, 0, 0.3);
-}
-
-.btn-debrief-advance:hover {
-  background: #FFCA28;
-  box-shadow: 0 6px 20px rgba(255, 184, 0, 0.5);
-  transform: translateY(-1px);
-}
-
-.btn-debrief-advance:active {
-  transform: scale(0.97);
-}
-
-.btn-debrief-advance:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 /* Phase Grid & Panels */
