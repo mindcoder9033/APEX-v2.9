@@ -36,6 +36,12 @@ export class TrackStudyView {
     this.container = document.getElementById('view-track-study');
     if (!this.container) return;
 
+    if (this._initialized) {
+      this.render();
+      return;
+    }
+    this._initialized = true;
+
     this._populateTrackDropdown();
     this._bindEvents();
     this._loadTrackFromLibrary(this.selectedTrackId, false);
@@ -408,7 +414,11 @@ export class TrackStudyView {
     if (!btn) return;
 
     btn.addEventListener('click', () => {
-      this.completeDebriefing(  // ---------------------------------------------------------------------------
+      this.completeDebriefing(phaseNum);
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // PHASE 1: MACRO CORNER GRADING
   // ---------------------------------------------------------------------------
   _renderPhase1(container) {
@@ -988,14 +998,17 @@ export class TrackStudyView {
   }
 
   onTelemetrySample(sample) {
-    if (!sample || !this.container) return;
+    if (!sample) return;
     this.liveTelemetryActive = true;
-    if (this.telemetrySamples.length < 5000) {
+    if (this.telemetrySamples.length < 3000) {
       this.telemetrySamples.push(sample);
     }
 
-    // Dynamic Telemetry Ingestion: When telemetry samples accumulate, parse real track corners
-    if (this.currentTrackProfile && (this.telemetrySamples.length === 25 || this.telemetrySamples.length % 75 === 0)) {
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+    // Throttled Dynamic Telemetry Ingestion (at most once every 4 seconds)
+    if (this.currentTrackProfile && this.telemetrySamples.length >= 30 && (!this._lastAnalysisTime || (now - this._lastAnalysisTime > 4000))) {
+      this._lastAnalysisTime = now;
       try {
         const updatedStudy = this.engine.generateStudy(this.currentTrackProfile, this.telemetrySamples);
         const prevTurnCount = this.studyData?.phase1_macro?.corners?.length || 0;
@@ -1006,18 +1019,22 @@ export class TrackStudyView {
           this.currentTrackProfile.corners = updatedStudy.phase1_macro.corners;
           this.currentTrackProfile.turnsCount = newTurnCount;
           trackStudyLibrary.updateTrackProfile(this.selectedTrackId, this.currentTrackProfile);
-          this.render();
+          if (this.container && this.container.style.display !== 'none') {
+            this.render();
+          }
           if (window.PitToast) {
             window.PitToast.info(`Telemetry parsed: ${newTurnCount} corners mapped for ${this.studyData.circuit.name}`, 'TRACK MAPPED');
           }
-        } else if (newTurnCount > 0 && !this.studyData) {
-          this.studyData = updatedStudy;
-          this.render();
         }
       } catch (err) {
         console.warn('[TrackStudyView] Dynamic telemetry parsing error:', err);
       }
     }
+
+    // Throttle UI updates to 10Hz and skip DOM queries if container is hidden or absent
+    if (!this.container || this.container.style.display === 'none') return;
+    if (this._lastUiUpdateTime && (now - this._lastUiUpdateTime < 100)) return;
+    this._lastUiUpdateTime = now;
 
     // Update status pill & dot
     const statusPill = this.container.querySelector('#study-live-status-pill');
@@ -1025,10 +1042,10 @@ export class TrackStudyView {
     const statusTxt = this.container.querySelector('#study-live-status-text');
     const metricsStrip = this.container.querySelector('#study-live-metrics-strip');
 
-    if (statusPill) statusPill.classList.add('live-active');
-    if (statusDot) statusDot.className = 'status-dot live';
-    if (statusTxt) statusTxt.textContent = 'TELEMETRY SYNC ACTIVE';
-    if (metricsStrip) metricsStrip.style.display = 'inline-flex';
+    if (statusPill && !statusPill.classList.contains('live-active')) statusPill.classList.add('live-active');
+    if (statusDot && statusDot.className !== 'status-dot live') statusDot.className = 'status-dot live';
+    if (statusTxt && statusTxt.textContent !== 'TELEMETRY SYNC ACTIVE') statusTxt.textContent = 'TELEMETRY SYNC ACTIVE';
+    if (metricsStrip && metricsStrip.style.display !== 'inline-flex') metricsStrip.style.display = 'inline-flex';
 
     // Update Lap & Speed metrics
     const lapVal = this.container.querySelector('#study-live-lap-val');
@@ -1038,16 +1055,16 @@ export class TrackStudyView {
     const lapNumber = sample.lapNumber !== undefined ? sample.lapNumber : (sample.currentLap || 1);
     const speedMph = Math.round(sample.speedMph || (sample.speedKmh ? sample.speedKmh * 0.621371 : (sample.speedMps ? sample.speedMps * 2.23694 : 0)));
 
-    if (lapVal) lapVal.textContent = lapNumber;
-    if (speedVal) speedVal.textContent = speedMph;
+    if (lapVal && lapVal.textContent !== String(lapNumber)) lapVal.textContent = lapNumber;
+    if (speedVal && speedVal.textContent !== String(speedMph)) speedVal.textContent = speedMph;
 
     // Detect and highlight current on-track corner
     const cornerNum = this._detectCurrentCorner(sample);
     if (cornerNum) {
-      if (turnVal) turnVal.textContent = `T${cornerNum}`;
+      if (turnVal && turnVal.textContent !== `T${cornerNum}`) turnVal.textContent = `T${cornerNum}`;
       this._highlightActiveCorner(cornerNum);
     } else {
-      if (turnVal) turnVal.textContent = 'STR';
+      if (turnVal && turnVal.textContent !== 'STR') turnVal.textContent = 'STR';
       this._highlightActiveCorner(null);
     }
 
@@ -1066,7 +1083,6 @@ export class TrackStudyView {
     const corners = this.studyData.phase1_macro.corners;
     if (corners.length === 0) return null;
 
-    // 1. If sample explicitly carries corner index / active turn
     if (sample.activeCorner !== undefined && sample.activeCorner !== null) {
       return sample.activeCorner;
     }
@@ -1074,8 +1090,7 @@ export class TrackStudyView {
       return corners[sample.cornerIndex % corners.length]?.number || null;
     }
 
-    // 2. Derive from lap distance progression
-    const totalDist = this.currentTrackProfile?.lengthMeters || this.studyData.circuit.lengthMeters || 5000;
+    const totalDist = this.currentTrackProfile?.lengthMeters || this.studyData.circuit?.lengthMeters || 5000;
     let lapDist = sample.lapDistanceMeters !== undefined ? sample.lapDistanceMeters : (sample.distanceMeters !== undefined ? sample.distanceMeters % totalDist : null);
 
     if (lapDist === null && sample.normalizedLapPosition !== undefined) {
@@ -1083,20 +1098,19 @@ export class TrackStudyView {
     }
 
     if (lapDist !== null && corners.length > 0) {
-      // Approximate corner index by segmenting lap distance
       const segmentSize = totalDist / corners.length;
       const cornerIdx = Math.floor(lapDist / segmentSize);
       const safeIdx = Math.min(Math.max(cornerIdx, 0), corners.length - 1);
       return corners[safeIdx].number;
     }
 
-    // Default to first corner if driving
     return corners[0].number;
   }
 
   _highlightActiveCorner(cornerNumber) {
+    if (this.activeCornerNumber === cornerNumber) return;
     this.activeCornerNumber = cornerNumber;
-    if (!this.container) return;
+    if (!this.container || this.container.style.display === 'none') return;
 
     // 1. Clear previous on-track highlights and badges
     const existingActive = this.container.querySelectorAll('.active-on-track');
