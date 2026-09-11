@@ -49,12 +49,14 @@ export class TrackStudyEngine {
   _extractCircuitMeta(trackProfile, samples, corners = []) {
     if (trackProfile) {
       const turns = corners.length > 0 ? corners.length : (trackProfile.turnsCount || (Array.isArray(trackProfile.corners) ? trackProfile.corners.length : 0));
+      const lengthM = trackProfile.lengthMeters || trackProfile.lapDistanceMeters || 3800;
       return {
         id: trackProfile.id || trackProfile.trackId || 'custom-circuit',
         name: trackProfile.name || trackProfile.trackName || 'Grand Prix Circuit',
         layout: trackProfile.layout || trackProfile.layoutName || 'Full Course',
-        lengthMeters: trackProfile.lengthMeters || trackProfile.lapDistanceMeters || 3800,
-        lengthMiles: ((trackProfile.lengthMeters || trackProfile.lapDistanceMeters || 3800) / 1609.34).toFixed(2),
+        lengthMeters: lengthM,
+        lengthKm: (lengthM / 1000).toFixed(2),
+        lengthMiles: (lengthM / 1609.34).toFixed(2),
         turnsCount: turns,
         direction: trackProfile.direction || 'Clockwise',
         country: trackProfile.country || 'International'
@@ -68,6 +70,7 @@ export class TrackStudyEngine {
       name: 'Active Circuit Session',
       layout: 'Grand Prix Layout',
       lengthMeters: Math.round(maxDist),
+      lengthKm: (maxDist / 1000).toFixed(2),
       lengthMiles: (maxDist / 1609.34).toFixed(2),
       turnsCount: corners.length,
       direction: 'Clockwise',
@@ -96,6 +99,10 @@ export class TrackStudyEngine {
         direction: c.direction || (c.radius < 0 || c.steer < 0 ? 'Left' : 'Right'),
         radius: Math.abs(c.radius || 60),
         angleDeg: Math.abs(c.angleDeg || c.arcAngle || 90),
+        entrySpeedMps: c.entrySpeedMps || c.minSpeedMps || 25,
+        entrySpeedKmh: Math.round((c.entrySpeedMps || c.minSpeedMps || (c.entrySpeedMph ? c.entrySpeedMph / 2.23694 : 25)) * 3.6),
+        apexSpeedKmh: Math.round((c.minSpeedMps || c.apexSpeedMps || (c.apexSpeedMph ? c.apexSpeedMph / 2.23694 : 20)) * 3.6),
+        exitSpeedKmh: Math.round((c.exitSpeedMps || (c.exitSpeedMph ? c.exitSpeedMph / 2.23694 : 30)) * 3.6),
         entrySpeedMph: Math.round((c.entrySpeedMps || c.minSpeedMps || 25) * 2.23694),
         apexSpeedMph: Math.round((c.minSpeedMps || c.apexSpeedMps || 20) * 2.23694),
         exitSpeedMph: Math.round((c.exitSpeedMps || 30) * 2.23694),
@@ -246,6 +253,10 @@ export class TrackStudyEngine {
         direction,
         radius: Math.max(20, Math.min(300, radiusM)),
         angleDeg: isHairpin ? 135 : (isSweeper ? 50 : 90),
+        entrySpeedMps: entrySpeedMps,
+        entrySpeedKmh: Math.round(entrySpeedMps * 3.6),
+        apexSpeedKmh: Math.round(apexSpeedMps * 3.6),
+        exitSpeedKmh: Math.round(exitSpeedMps * 3.6),
         entrySpeedMph: Math.round(entrySpeedMps * 2.23694),
         apexSpeedMph: Math.round(apexSpeedMps * 2.23694),
         exitSpeedMph: Math.round(exitSpeedMps * 2.23694),
@@ -283,16 +294,18 @@ export class TrackStudyEngine {
     } : max, { fromCorner: 1, toCorner: 2, distanceMeters: 0, distanceFt: 0 });
 
     const scoredCorners = corners.map((c, idx) => {
-      const straightFt = c.followingStraightMeters * 3.28084;
-      const avgStraightSpeedMps = ((c.exitSpeedMph + 120) / 2) * 0.44704;
-      const straightDurationSec = avgStraightSpeedMps > 0 ? (c.followingStraightMeters / avgStraightSpeedMps) : 4.0;
-      const compoundLeverageSec = Number((straightDurationSec * 0.08).toFixed(3));
+      const straightM = c.followingStraightMeters;
+      const straightFt = straightM * 3.28084;
+      const exitSpeedKmh = c.exitSpeedKmh || Math.round(c.exitSpeedMph * 1.60934);
+      const avgStraightSpeedMps = ((exitSpeedKmh + 190) / 2) / 3.6;
+      const straightDurationSec = avgStraightSpeedMps > 0 ? (straightM / avgStraightSpeedMps) : 4.0;
+      const compoundLeverageSec = Number((straightDurationSec * 0.05).toFixed(3));
 
       // Classify Type I, II, III
       let type = 'Type I';
       let typeLabel = 'Lead-on Straight (Maximum Exit Priority)';
       let typeDescription = 'Directly preceeds significant full-throttle acceleration zone. Exit speed compounding dominates lap time.';
-      let priorityScore = straightFt * 1.5;
+      let priorityScore = straightM * 2.0;
 
       const nextCorner = corners[(idx + 1) % corners.length];
       const isShortConnectingToNext = c.followingStraightMeters < 90 && nextCorner;
@@ -306,10 +319,10 @@ export class TrackStudyEngine {
         type = 'Type II';
         typeLabel = 'End of Straight (Threshold Braking Focus)';
         typeDescription = 'Sharp deceleration following high-speed run. Lap time is won on late straight-line threshold braking and trail-in.';
-        priorityScore = 800 + c.brakingDistanceM * 2;
+        priorityScore = 800 + c.brakingDistanceM * 4;
       }
 
-      if (c.apexSpeedMph > 80) {
+      if ((c.apexSpeedKmh || c.apexSpeedMph * 1.60934) > 130) {
         priorityScore += 450;
       }
 
@@ -318,6 +331,7 @@ export class TrackStudyEngine {
         type,
         typeLabel,
         typeDescription,
+        followingStraightMeters: straightM,
         followingStraightFt: Math.round(straightFt),
         compoundLeverageSec,
         priorityScore: Math.round(priorityScore),
@@ -338,7 +352,7 @@ export class TrackStudyEngine {
       longestStraight,
       totalStraightMeters: totalStraightLength,
       straightsCoveragePct: Math.round((totalStraightLength / (circuitMeta.lengthMeters || 4000)) * 100) || 72,
-      strategySummary: `Prioritize Turns ${sorted.slice(0, 3).map(c => `T${c.number}`).join(', ')} as top leverage sectors. These lead into ${(longestStraight.distanceMeters)}m+ acceleration zones where +1 mph yields over ${(longestStraight.distanceFt * 0.01).toFixed(1)}s cumulative delta.`
+      strategySummary: `Prioritize Turns ${sorted.slice(0, 3).map(c => `T${c.number}`).join(', ')} as top leverage sectors. These lead into ${(longestStraight.distanceMeters)}m acceleration zones where +1 km/h exit speed yields over ${(longestStraight.distanceMeters * 0.003).toFixed(2)}s cumulative delta.`
     };
   }
 
@@ -379,7 +393,7 @@ export class TrackStudyEngine {
       const isConcrete = c.number % 3 === 0;
       const surfaceMaterial = isConcrete ? 'Porous Concrete (High Cold Grip)' : (c.camberDeg < 0 ? 'Polished Asphalt (Slippery Offline)' : 'Coarse Asphalt (Progressive Grip)');
       const bumpSeverity = c.camberDeg < -0.5 ? 'Moderate' : 'Smooth';
-      const curbThreat = c.radius < 50 ? 'Severe Drop-Off (Avoid Clouting Inside)' : (c.apexSpeedMph > 85 ? 'Flat FIA Strip (Safe Track-Out Width)' : 'Standard Chamfered Kerb');
+      const curbThreat = c.radius < 50 ? 'Severe Drop-Off (Avoid Clouting Inside)' : ((c.apexSpeedKmh || c.apexSpeedMph * 1.6) > 135 ? 'Flat FIA Strip (Safe Track-Out Width)' : 'Standard Chamfered Kerb');
 
       return {
         number: c.number,
@@ -394,7 +408,7 @@ export class TrackStudyEngine {
         curbThreat,
         reconNote: c.camberDeg < -0.5 
           ? `Off-camber exit will skate wide. Tighten initial entry radius to avoid dropping outside tires into raw dirt.`
-          : (c.camberDeg > 2.0 ? `Banked surface allows 2-3 mph higher apex entry. Roll off brakes smoothly.` : `Consistent grip profile. Use all painted curb at track-out.`)
+          : (c.camberDeg > 2.0 ? `Banked surface allows 3-5 km/h higher apex entry. Roll off brakes smoothly.` : `Consistent grip profile. Use all painted curb at track-out.`)
       };
     });
 
@@ -420,7 +434,10 @@ export class TrackStudyEngine {
     return {
       corners: corners.map((c) => {
         const brakeDistM = c.brakingDistanceM || 45;
-        const isThreshold = c.entrySpeedMph - c.apexSpeedMph > 20;
+        const entryKmh = c.entrySpeedKmh || Math.round(c.entrySpeedMph * 1.60934);
+        const apexKmh = c.apexSpeedKmh || Math.round(c.apexSpeedMph * 1.60934);
+        const exitKmh = c.exitSpeedKmh || Math.round(c.exitSpeedMph * 1.60934);
+        const isThreshold = entryKmh - apexKmh > 30;
         
         return {
           number: c.number,
@@ -433,11 +450,13 @@ export class TrackStudyEngine {
             action: isThreshold ? '100% Threshold Squeeze (Straight Line)' : 'Progressive Light Brake-Turn'
           },
           turnIn: {
+            targetKmh: entryKmh,
             targetMph: c.entrySpeedMph,
             visualAnchor: `End of Entry Curb // Painted Verge Line`,
             technique: 'Turn steering wheel with smooth, constant pressure. Look ahead past apex.'
           },
           apex: {
+            targetKmh: apexKmh,
             targetMph: c.apexSpeedMph,
             visualTarget: `Center of Red/White Apex Striping`,
             yawAngleTargetDeg: (c.radius < 50 ? 8 : 4),
@@ -446,11 +465,13 @@ export class TrackStudyEngine {
           },
           waypoint: {
             needed: c.angleDeg > 110 || c.radius > 120,
-            landmark: c.angleDeg > 110 ? 'Intermediate Concrete Seam 50ft before apex' : 'None required (Direct line-of-sight)'
+            landmark: c.angleDeg > 110 ? 'Intermediate Concrete Seam 15m before apex' : 'None required (Direct line-of-sight)'
           },
           trackOut: {
+            targetKmh: exitKmh,
             targetMph: c.exitSpeedMph,
             visualTarget: `Outer Curb Boundary // End of Exit Rumble Strip`,
+            marginSafetyM: 0.5,
             marginSafetyFt: 1.5,
             note: 'Unwind wheel completely as throttle reaches 100% floorboard.'
           }
@@ -467,7 +488,7 @@ export class TrackStudyEngine {
     const methodology = [
       { step: 1, name: 'Master the Racing Line', rule: 'Start with a safe Late Apex. Never early-apex. Use every inch of available pavement.' },
       { step: 2, name: 'Maximize Corner Exit Speed', rule: 'Find the Throttle Application Point (TAP). Squeeze power progressively before apex and unwind steering.' },
-      { step: 3, name: 'Optimize Braking & Entry', rule: 'Apply "The Procedure": Lock down maximum threshold force first, then move brake points inward in 3-5 ft increments.' }
+      { step: 3, name: 'Optimize Braking & Entry', rule: 'Apply "The Procedure": Lock down maximum threshold force first, then move brake points inward in 1.0m increments.' }
     ];
 
     if (!macroCorners || macroCorners.length === 0) {
@@ -480,7 +501,10 @@ export class TrackStudyEngine {
     return {
       methodology,
       corners: macroCorners.map(c => {
-        const isHighSpeedLoss = c.entrySpeedMph - c.apexSpeedMph > 20;
+        const entryKmh = c.entrySpeedKmh || Math.round(c.entrySpeedMph * 1.60934);
+        const apexKmh = c.apexSpeedKmh || Math.round(c.apexSpeedMph * 1.60934);
+        const exitKmh = c.exitSpeedKmh || Math.round(c.exitSpeedMph * 1.60934);
+        const isHighSpeedLoss = entryKmh - apexKmh > 30;
         const tapDistanceBeforeApexM = c.type === 'Type I' ? 15 : (c.type === 'Type III' ? 5 : 8);
         const trailBrakeDurationSec = isHighSpeedLoss ? (c.angleDeg > 100 ? 1.1 : 0.6) : 0.3;
 
@@ -490,6 +514,7 @@ export class TrackStudyEngine {
           type: c.type,
           step1_lineStrategy: {
             approach: 'Late Apex Bias',
+            safetyMarginM: 0.5,
             safetyMarginFt: 2.0,
             earlyApexConsequence: 'Skates wide onto dirty verge; forces mid-corner throttle lift.'
           },
@@ -497,13 +522,15 @@ export class TrackStudyEngine {
             tapDistanceBeforeApexM,
             tapDistanceBeforeApexFt: Math.round(tapDistanceBeforeApexM * 3.28084),
             squeezeRateText: c.gear <= 2 ? 'Delicate Progressive Squeeze (Avoid wheelspin)' : 'Aggressive Linear Ramp to 100%',
+            exitSpeedTargetKmh: exitKmh,
             exitSpeedTargetMph: c.exitSpeedMph
           },
           step3_brakingProcedure: {
+            thresholdPressureKg: isHighSpeedLoss ? 60 : 30,
             thresholdPressureLbs: isHighSpeedLoss ? 130 : 65,
             trailBrakingSec: trailBrakeDurationSec,
             brakeStyle: c.angleDeg > 110 ? 'Constant-Level Brake-Turn' : (isHighSpeedLoss ? 'Bleed-Off Trail Braking' : 'Light Throttle Breathe'),
-            incrementalRule: 'Advance brake point 3ft per lap once threshold force is proven.'
+            incrementalRule: 'Advance brake point 1.0m per lap once threshold force is proven.'
           }
         };
       })
@@ -517,13 +544,16 @@ export class TrackStudyEngine {
     const gearList = (corners || []).map(c => ({
       turn: `T${c.number}`,
       gear: c.gear || 3,
+      minSpeedKmh: c.apexSpeedKmh || Math.round((c.apexSpeedMph || 50) * 1.60934),
       minSpeedMph: c.apexSpeedMph,
       shiftNote: c.gear <= 2 ? 'Heel-and-toe downshift in straight line; blip cleanly to avoid rear chirp' : 'Maintain gear; throttle modulate on exit'
     }));
 
     return {
       tireThermalManagement: {
+        operatingWindowC: '90°C – 115°C (Slicks) // 70°C – 90°C (Street Radials)',
         operatingWindowF: '200°F – 240°F (Slicks) // 160°F – 190°F (Street Radials)',
+        coldToHotTargetPressureGainBar: '0.30 bar (30 kPa)',
         coldToHotTargetPressureGainPsi: 4.5,
         paceLapWarmupTactic: 'Weave in long continuous arcs + drag brakes with left foot against engine to build core rim & carcass heat.',
         slipAngleWindow: '5.0° – 6.5° optimal (Slicks have narrow peak; avoid over-sliding which overheats rear compound).'
@@ -535,7 +565,7 @@ export class TrackStudyEngine {
       },
       gearingMatrix: gearList,
       trafficAndAccordionTactics: {
-        gridStartPreparation: 'In multi-car train, brake 100ft earlier for Turn 1 — the accordion effect compresses spacing violently.',
+        gridStartPreparation: 'In multi-car train, brake 30m earlier for Turn 1 — the accordion effect compresses spacing violently.',
         draftingPlan: 'Leave 2–3 car lengths at corner exit to build closing momentum; pull out smoothly without abrupt steering jolt.',
         seeingIndependently: 'Look past the car ahead to your own visual reference marks; never copy a competitor’s brake point.'
       }

@@ -335,7 +335,10 @@ export class TrackStudyView {
     if (titleEl) titleEl.textContent = this.studyData.circuit.name.toUpperCase();
 
     const subEl = this.container.querySelector('#study-circuit-sub');
-    if (subEl) subEl.textContent = `${this.studyData.circuit.layout} // ${this.studyData.circuit.lengthMiles} MILES // ${this.studyData.circuit.turnsCount} CORNERS`;
+    if (subEl) {
+      const km = this.studyData.circuit.lengthKm || (this.studyData.circuit.lengthMeters / 1000).toFixed(2);
+      subEl.textContent = `${this.studyData.circuit.layout} // ${km} KM (${this.studyData.circuit.lengthMeters}M) // ${this.studyData.circuit.turnsCount} CORNERS`;
+    }
 
     // Render Active Phase View
     const phaseContent = this.container.querySelector('#study-phase-container');
@@ -458,8 +461,8 @@ export class TrackStudyView {
           <td class="font-bold text-accent">Turn ${c.number}</td>
           <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
           <td>${c.radius}m</td>
-          <td>${c.apexSpeedMph} mph</td>
-          <td class="font-mono ${c.followingStraightFt > 1000 ? 'text-green' : ''}">${c.followingStraightFt} ft</td>
+          <td>${c.apexSpeedKmh || Math.round(c.apexSpeedMph * 1.60934)} km/h</td>
+          <td class="font-mono ${c.followingStraightMeters > 300 ? 'text-green' : ''}">${c.followingStraightMeters} m</td>
           <td class="font-bold text-cyan">+${c.compoundLeverageSec}s</td>
           <td class="text-secondary text-sm">${c.disciplineAdvice}</td>
         </tr>
@@ -476,7 +479,7 @@ export class TrackStudyView {
 
     const debriefQuestions = hasCorners ? [
       `I have analyzed the priority ranking and identified Turn ${macro.longestStraight.fromCorner} (leading onto the ${macro.longestStraight.distanceMeters}m straight) as the highest time-leverage corner.`,
-      'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway launch speed (+1 mph = 1.46 ft/sec compounding advantage).'
+      'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway launch speed (+1 km/h = +0.28 m/s compounding advantage).'
     ] : [
       'I understand that track turns, apex speeds, and exit straights will be automatically parsed from vehicle telemetry.',
       'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway exit speed.'
@@ -500,7 +503,7 @@ export class TrackStudyView {
           <div class="kpi-mini-grid">
             <div class="kpi-item">
               <span class="kpi-label">LONGEST ACCELERATION</span>
-              <span class="kpi-val text-gold">${hasCorners ? `T${macro.longestStraight.fromCorner} → T${macro.longestStraight.toCorner} (${macro.longestStraight.distanceMeters}m / ${macro.longestStraight.distanceFt}ft)` : 'Awaiting Telemetry'}</span>
+              <span class="kpi-val text-gold">${hasCorners ? `T${macro.longestStraight.fromCorner} → T${macro.longestStraight.toCorner} (${macro.longestStraight.distanceMeters} m)` : 'Awaiting Telemetry'}</span>
             </div>
             <div class="kpi-item">
               <span class="kpi-label">TOTAL FULL THROTTLE DISTANCE</span>
@@ -508,7 +511,7 @@ export class TrackStudyView {
             </div>
             <div class="kpi-item">
               <span class="kpi-label">SKIP BARBER TIME RULE</span>
-              <span class="kpi-val text-cyan">+1 mph Exit = 1.46 ft/sec compounding advantage</span>
+              <span class="kpi-val text-cyan">+1 km/h Exit = +0.28 m/s compounding advantage</span>
             </div>
           </div>
         </div>
@@ -526,7 +529,7 @@ export class TrackStudyView {
                   <th>TURN</th>
                   <th>CLASSIFICATION</th>
                   <th>RADIUS</th>
-                  <th>APEX MPH</th>
+                  <th>APEX KM/H</th>
                   <th>FOLLOWING STRAIGHT</th>
                   <th>LEVERAGE DELTA</th>
                   <th>DISCIPLINE STRATEGY</th>
@@ -643,15 +646,15 @@ export class TrackStudyView {
         <tr class="study-table-row" data-turn="${r.number}">
           <td class="font-bold text-accent">Turn ${r.number}</td>
           <td>
-            <span class="font-bold ${r.brakePoint.isThresholdBraking ? 'text-red' : 'text-cyan'}">${r.brakePoint.distanceBeforeTurnInM}m (${r.brakePoint.distanceBeforeTurnInFt}ft)</span>
+            <span class="font-bold ${r.brakePoint.isThresholdBraking ? 'text-red' : 'text-cyan'}">${r.brakePoint.distanceBeforeTurnInM}m</span>
             <div class="sub-text text-muted">${r.brakePoint.markerText}</div>
           </td>
           <td>
-            <span class="font-bold text-cyan">${r.turnIn.targetMph} mph</span>
+            <span class="font-bold text-cyan">${r.turnIn.targetKmh || Math.round(r.turnIn.targetMph * 1.60934)} km/h</span>
             <div class="sub-text text-muted">${r.turnIn.visualAnchor}</div>
           </td>
           <td>
-            <span class="font-bold text-green">${r.apex.targetMph} mph // Yaw: ${r.apex.yawAngleTargetDeg}°</span>
+            <span class="font-bold text-green">${r.apex.targetKmh || Math.round(r.apex.targetMph * 1.60934)} km/h // Yaw: ${r.apex.yawAngleTargetDeg}°</span>
             <div class="sub-text text-muted">${r.apex.attitudeCheck}</div>
           </td>
           <td>
@@ -659,7 +662,7 @@ export class TrackStudyView {
             <div class="sub-text text-muted">${r.waypoint.landmark}</div>
           </td>
           <td>
-            <span class="font-bold">${r.trackOut.targetMph} mph</span> (Margin: ${r.trackOut.marginSafetyFt}ft)
+            <span class="font-bold">${r.trackOut.targetKmh || Math.round(r.trackOut.targetMph * 1.60934)} km/h</span> (Margin: ${r.trackOut.marginSafetyM || '0.5'}m)
             <div class="sub-text text-muted">${r.trackOut.visualTarget}</div>
           </td>
         </tr>
@@ -744,14 +747,14 @@ export class TrackStudyView {
           <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
           <td>
             <span class="font-bold text-gold">${c.step1_lineStrategy.approach}</span>
-            <div class="sub-text text-muted">Safety Margin: ${c.step1_lineStrategy.safetyMarginFt}ft</div>
+            <div class="sub-text text-muted">Safety Margin: ${c.step1_lineStrategy.safetyMarginM || '0.5'}m</div>
           </td>
           <td>
-            <span class="font-bold text-green">TAP: ${c.step2_exitThrottle.tapDistanceBeforeApexM}m (${c.step2_exitThrottle.tapDistanceBeforeApexFt}ft) before apex</span>
+            <span class="font-bold text-green">TAP: ${c.step2_exitThrottle.tapDistanceBeforeApexM}m before apex</span>
             <div class="sub-text text-muted">${c.step2_exitThrottle.squeezeRateText}</div>
           </td>
           <td>
-            <span class="font-bold text-cyan">${c.step3_brakingProcedure.thresholdPressureLbs} lbs // ${c.step3_brakingProcedure.trailBrakingSec}s Trail</span>
+            <span class="font-bold text-cyan">${c.step3_brakingProcedure.thresholdPressureKg || 60} kg // ${c.step3_brakingProcedure.trailBrakingSec}s Trail</span>
             <div class="sub-text text-muted">${c.step3_brakingProcedure.brakeStyle}</div>
           </td>
         </tr>
@@ -772,7 +775,7 @@ export class TrackStudyView {
       [
         'Step 1 (Line): I will master line consistency and late apex discipline first. I will not early-apex.',
         'Step 2 (TAP): I will locate the Throttle Application Point (TAP) and squeeze progressively before apex as steering unwinds.',
-        'Step 3 (Braking): I will establish threshold braking pressure first, only advancing brake depth in gradual 3–5 ft bites.'
+        'Step 3 (Braking): I will establish threshold braking pressure first, only advancing brake depth in gradual 1.0m bites.'
       ],
       'COMPLETE STAGE 4 DEBRIEFING & UNLOCK STAGE 5'
     );
@@ -797,7 +800,7 @@ export class TrackStudyView {
             <div class="order-step-item">
               <span class="step-badge">STEP 3</span>
               <span class="step-title">Optimize Braking</span>
-              <p class="step-desc">Use "The Procedure": lock in threshold force first, then advance brake points in 3–5 ft bites.</p>
+              <p class="step-desc">Use "The Procedure": lock in threshold force first, then advance brake points in 1.0m bites.</p>
             </div>
           </div>
         </div>
@@ -845,7 +848,7 @@ export class TrackStudyView {
         <tr>
           <td class="font-bold text-accent">${g.turn}</td>
           <td class="font-bold text-cyan">GEAR ${g.gear}</td>
-          <td>${g.minSpeedMph} mph</td>
+          <td>${g.minSpeedKmh || Math.round(g.minSpeedMph * 1.60934)} km/h</td>
           <td class="text-secondary">${g.shiftNote}</td>
         </tr>
       `).join('');
@@ -863,7 +866,7 @@ export class TrackStudyView {
       5,
       'Hardware, Tire Thermals & Racecraft Final Certification',
       [
-        `I will manage tire operating window (${hw.tireThermalManagement.operatingWindowF}) during warm-up out-laps before pushing limit slip angles.`,
+        `I will manage tire operating window (${hw.tireThermalManagement.operatingWindowC || '90°C – 115°C'}) during warm-up out-laps before pushing limit slip angles.`,
         `I have verified the ${hw.brakeSystemManagement.baselineBias} mechanical brake bias and understand the race start accordion effect.`
       ],
       'CERTIFY 5-PHASE TRACK STUDY & COMPLETE BRIEFING 🏁',
@@ -881,7 +884,7 @@ export class TrackStudyView {
             <div class="card-content-stack">
               <div class="hw-item">
                 <span class="hw-lbl">Optimal Operating Window:</span>
-                <span class="hw-val text-green font-bold">${hw.tireThermalManagement.operatingWindowF}</span>
+                <span class="hw-val text-green font-bold">${hw.tireThermalManagement.operatingWindowC || '90°C – 115°C'}</span>
               </div>
               <div class="hw-item">
                 <span class="hw-lbl">Pace Lap Warm-up:</span>
@@ -893,7 +896,7 @@ export class TrackStudyView {
               </div>
               <div class="hw-item">
                 <span class="hw-lbl">Cold-to-Hot Pressure Gain:</span>
-                <span class="hw-val text-cyan font-mono">+${hw.tireThermalManagement.coldToHotTargetPressureGainPsi} PSI per axle</span>
+                <span class="hw-val text-cyan font-mono">+${hw.tireThermalManagement.coldToHotTargetPressureGainBar || '0.30 bar (30 kPa)'} per axle</span>
               </div>
             </div>
           </div>
@@ -931,7 +934,7 @@ export class TrackStudyView {
                 <tr>
                   <th>TURN</th>
                   <th>TARGET GEAR</th>
-                  <th>APEX SPEED</th>
+                  <th>APEX KM/H</th>
                   <th>POWERBAND & SHIFT DISCIPLINE</th>
                 </tr>
               </thead>
@@ -1083,16 +1086,16 @@ export class TrackStudyView {
     if (statusTxt && statusTxt.textContent !== 'TELEMETRY SYNC ACTIVE') statusTxt.textContent = 'TELEMETRY SYNC ACTIVE';
     if (metricsStrip && metricsStrip.style.display !== 'inline-flex') metricsStrip.style.display = 'inline-flex';
 
-    // Update Lap & Speed metrics
+    // Update Lap & Speed metrics (Metric KM/H)
     const lapVal = this.container.querySelector('#study-live-lap-val');
     const speedVal = this.container.querySelector('#study-live-speed-val');
     const turnVal = this.container.querySelector('#study-live-turn-val');
 
     const lapNumber = sample.lapNumber !== undefined ? sample.lapNumber : (sample.currentLap || 1);
-    const speedMph = Math.round(sample.speedMph || (sample.speedKmh ? sample.speedKmh * 0.621371 : (sample.speedMps ? sample.speedMps * 2.23694 : 0)));
+    const speedKmh = Math.round(sample.speedKmh ? sample.speedKmh : (sample.speedMps ? sample.speedMps * 3.6 : (sample.speedMph ? sample.speedMph * 1.60934 : 0)));
 
     if (lapVal && lapVal.textContent !== String(lapNumber)) lapVal.textContent = lapNumber;
-    if (speedVal && speedVal.textContent !== String(speedMph)) speedVal.textContent = speedMph;
+    if (speedVal && speedVal.textContent !== String(speedKmh)) speedVal.textContent = speedKmh;
 
     // Detect and highlight current on-track corner
     const cornerNum = this._detectCurrentCorner(sample);

@@ -109,7 +109,7 @@ export class TrackStudyPdfBuilder {
     const cardW = (this.width - (this.margin * 2) - 18) / 4;
     const stats = [
       { label: 'TOTAL CORNERS', val: `${studyData.circuit.turnsCount} TURNS`, color: C.cyan },
-      { label: 'CIRCUIT LENGTH', val: `${studyData.circuit.lengthMiles} MI (${studyData.circuit.lengthMeters}m)`, color: C.textPrimary },
+      { label: 'CIRCUIT LENGTH', val: `${studyData.circuit.lengthKm || (studyData.circuit.lengthMeters / 1000).toFixed(2)} KM (${studyData.circuit.lengthMeters}m)`, color: C.textPrimary },
       { label: 'STRAIGHTS COVERAGE', val: `${studyData.phase1_macro.straightsCoveragePct}% OF LAP`, color: C.green },
       { label: 'LONGEST RUN', val: `T${studyData.phase1_macro.longestStraight.fromCorner} (${studyData.phase1_macro.longestStraight.distanceMeters}m)`, color: C.gold }
     ];
@@ -186,8 +186,8 @@ export class TrackStudyPdfBuilder {
       { title: 'TURN', x: this.margin + 40, w: 42 },
       { title: 'CLASS', x: this.margin + 84, w: 55 },
       { title: 'RADIUS', x: this.margin + 142, w: 45 },
-      { title: 'APEX MPH', x: this.margin + 190, w: 50 },
-      { title: 'STRAIGHT FT', x: this.margin + 242, w: 68 },
+      { title: 'APEX KM/H', x: this.margin + 190, w: 50 },
+      { title: 'STRAIGHT M', x: this.margin + 242, w: 68 },
       { title: 'LEVERAGE DELTA', x: this.margin + 312, w: 80 },
       { title: 'DISCIPLINE & STRATEGY', x: this.margin + 394, w: 125 }
     ];
@@ -209,9 +209,9 @@ export class TrackStudyPdfBuilder {
       page1.drawText(`Turn ${c.number}`, { x: colsP1[1].x, y: rowY + 5, size: 7, font: fontBold, color: C.textPrimary });
       page1.drawText(c.type, { x: colsP1[2].x, y: rowY + 5, size: 6.5, font: fontBold, color: typeColor(c.type) });
       page1.drawText(`${c.radius}m`, { x: colsP1[3].x, y: rowY + 5, size: 6.5, font: fontRegular, color: C.textSecondary });
-      page1.drawText(`${c.apexSpeedMph} mph`, { x: colsP1[4].x, y: rowY + 5, size: 6.5, font: fontRegular, color: C.textPrimary });
-      page1.drawText(`${c.followingStraightFt} ft`, { x: colsP1[5].x, y: rowY + 5, size: 6.5, font: fontMono, color: c.followingStraightFt > 1000 ? C.green : C.textSecondary });
-      page1.drawText(`+${c.compoundLeverageSec}s / mph`, { x: colsP1[6].x, y: rowY + 5, size: 6.5, font: fontBold, color: C.cyan });
+      page1.drawText(`${c.apexSpeedKmh || Math.round(c.apexSpeedMph * 1.60934)} km/h`, { x: colsP1[4].x, y: rowY + 5, size: 6.5, font: fontRegular, color: C.textPrimary });
+      page1.drawText(`${c.followingStraightMeters} m`, { x: colsP1[5].x, y: rowY + 5, size: 6.5, font: fontMono, color: c.followingStraightMeters > 300 ? C.green : C.textSecondary });
+      page1.drawText(`+${c.compoundLeverageSec}s / km/h`, { x: colsP1[6].x, y: rowY + 5, size: 6.5, font: fontBold, color: C.cyan });
       page1.drawText(c.disciplineAdvice.slice(0, 36), { x: colsP1[7].x, y: rowY + 5, size: 5.5, font: fontRegular, color: C.textSecondary });
 
       curY = rowY;
@@ -318,19 +318,19 @@ export class TrackStudyPdfBuilder {
 
       page3.drawText(`Turn ${r.number}`, { x: colsP3[0].x, y: rowY + 16, size: 7, font: fontBold, color: C.textPrimary });
       
-      page3.drawText(`${r.brakePoint.distanceBeforeTurnInM}m (${r.brakePoint.distanceBeforeTurnInFt}ft)`, { x: colsP3[1].x, y: rowY + 16, size: 6.5, font: fontBold, color: r.brakePoint.isThresholdBraking ? C.f1Red : C.textSecondary });
+      page3.drawText(`${r.brakePoint.distanceBeforeTurnInM}m`, { x: colsP3[1].x, y: rowY + 16, size: 6.5, font: fontBold, color: r.brakePoint.isThresholdBraking ? C.f1Red : C.textSecondary });
       page3.drawText(r.brakePoint.action.slice(0, 24), { x: colsP3[1].x, y: rowY + 6, size: 5, font: fontRegular, color: C.textMuted });
 
-      page3.drawText(`${r.turnIn.targetMph} mph`, { x: colsP3[2].x, y: rowY + 16, size: 6.5, font: fontBold, color: C.cyan });
+      page3.drawText(`${r.turnIn.targetKmh || Math.round(r.turnIn.targetMph * 1.60934)} km/h`, { x: colsP3[2].x, y: rowY + 16, size: 6.5, font: fontBold, color: C.cyan });
       page3.drawText(r.turnIn.visualAnchor.slice(0, 24), { x: colsP3[2].x, y: rowY + 6, size: 5, font: fontRegular, color: C.textMuted });
 
-      page3.drawText(`${r.apex.targetMph} mph // Yaw: ${r.apex.yawAngleTargetDeg}°`, { x: colsP3[3].x, y: rowY + 16, size: 6.5, font: fontBold, color: C.green });
+      page3.drawText(`${r.apex.targetKmh || Math.round(r.apex.targetMph * 1.60934)} km/h // Yaw: ${r.apex.yawAngleTargetDeg}°`, { x: colsP3[3].x, y: rowY + 16, size: 6.5, font: fontBold, color: C.green });
       page3.drawText(r.apex.attitudeCheck.slice(0, 30), { x: colsP3[3].x, y: rowY + 6, size: 5, font: fontRegular, color: C.textMuted });
 
       page3.drawText(r.waypoint.needed ? 'REQUIRED' : 'NONE', { x: colsP3[4].x, y: rowY + 16, size: 6, font: fontBold, color: r.waypoint.needed ? C.purple : C.textMuted });
       page3.drawText(r.waypoint.landmark.slice(0, 24), { x: colsP3[4].x, y: rowY + 6, size: 5, font: fontRegular, color: C.textMuted });
 
-      page3.drawText(`${r.trackOut.targetMph} mph // Margin: ${r.trackOut.marginSafetyFt}ft`, { x: colsP3[5].x, y: rowY + 16, size: 6.5, font: fontBold, color: C.textPrimary });
+      page3.drawText(`${r.trackOut.targetKmh || Math.round(r.trackOut.targetMph * 1.60934)} km/h // Margin: ${r.trackOut.marginSafetyM || '0.5'}m`, { x: colsP3[5].x, y: rowY + 16, size: 6.5, font: fontBold, color: C.textPrimary });
       page3.drawText(r.trackOut.visualTarget.slice(0, 30), { x: colsP3[5].x, y: rowY + 6, size: 5, font: fontRegular, color: C.textMuted });
 
       curY = rowY;
@@ -348,7 +348,7 @@ export class TrackStudyPdfBuilder {
     page4.drawText('THE STRICT 3-STEP ORDER OF PROGRESSION FOR LOWERING LAP TIME', { x: this.margin + 8, y: curY - 14, size: 7.5, font: fontBold, color: C.textPrimary });
     page4.drawText('1. Step 1 — Master the Line: Focus on late apex & road utilization. Never early-apex (drops wheels on exit).', { x: this.margin + 8, y: curY - 26, size: 6.5, font: fontRegular, color: C.textSecondary });
     page4.drawText('2. Step 2 — Maximize Exit Speed: Find Throttle Application Point (TAP). Squeeze power progressively before apex.', { x: this.margin + 8, y: curY - 37, size: 6.5, font: fontRegular, color: C.textSecondary });
-    page4.drawText('3. Step 3 — Optimize Corner Entry: Use "The Procedure". Find threshold force early; advance brake points in 3-5 ft bites.', { x: this.margin + 8, y: curY - 48, size: 6.5, font: fontRegular, color: C.textSecondary });
+    page4.drawText('3. Step 3 — Optimize Corner Entry: Use "The Procedure". Find threshold force early; advance brake points in 1.0m bites.', { x: this.margin + 8, y: curY - 48, size: 6.5, font: fontRegular, color: C.textSecondary });
 
     curY -= 70;
     page4.drawText('CORNER EXECUTION TARGETS (LINE -> EXIT THROTTLE -> ENTRY BRAKING)', { x: this.margin, y: curY, size: 8.5, font: fontBold, color: C.textPrimary });
@@ -378,13 +378,13 @@ export class TrackStudyPdfBuilder {
       page4.drawText(`Turn ${oe.number}`, { x: colsP4[0].x, y: rowY + 14, size: 7, font: fontBold, color: C.textPrimary });
       page4.drawText(oe.type, { x: colsP4[1].x, y: rowY + 14, size: 6.5, font: fontBold, color: typeColor(oe.type) });
 
-      page4.drawText(`${oe.step1_lineStrategy.approach} (Margin: ${oe.step1_lineStrategy.safetyMarginFt}ft)`, { x: colsP4[2].x, y: rowY + 14, size: 6, font: fontBold, color: C.textPrimary });
+      page4.drawText(`${oe.step1_lineStrategy.approach} (Margin: ${oe.step1_lineStrategy.safetyMarginM || '0.5'}m)`, { x: colsP4[2].x, y: rowY + 14, size: 6, font: fontBold, color: C.textPrimary });
       page4.drawText(oe.step1_lineStrategy.earlyApexConsequence.slice(0, 36), { x: colsP4[2].x, y: rowY + 4, size: 5, font: fontRegular, color: C.textMuted });
 
-      page4.drawText(`TAP: ${oe.step2_exitThrottle.tapDistanceBeforeApexM}m (${oe.step2_exitThrottle.tapDistanceBeforeApexFt}ft) before apex`, { x: colsP4[3].x, y: rowY + 14, size: 6, font: fontBold, color: C.green });
+      page4.drawText(`TAP: ${oe.step2_exitThrottle.tapDistanceBeforeApexM}m before apex`, { x: colsP4[3].x, y: rowY + 14, size: 6, font: fontBold, color: C.green });
       page4.drawText(oe.step2_exitThrottle.squeezeRateText.slice(0, 36), { x: colsP4[3].x, y: rowY + 4, size: 5, font: fontRegular, color: C.textMuted });
 
-      page4.drawText(`Force: ${oe.step3_brakingProcedure.thresholdPressureLbs} lbs // Trail: ${oe.step3_brakingProcedure.trailBrakingSec}s`, { x: colsP4[4].x, y: rowY + 14, size: 6, font: fontBold, color: C.cyan });
+      page4.drawText(`Force: ${oe.step3_brakingProcedure.thresholdPressureKg || 60} kg // Trail: ${oe.step3_brakingProcedure.trailBrakingSec}s`, { x: colsP4[4].x, y: rowY + 14, size: 6, font: fontBold, color: C.cyan });
       page4.drawText(oe.step3_brakingProcedure.brakeStyle, { x: colsP4[4].x, y: rowY + 4, size: 5, font: fontRegular, color: C.textMuted });
 
       curY = rowY;
@@ -403,10 +403,10 @@ export class TrackStudyPdfBuilder {
     page5.drawRectangle({ x: this.margin, y: curY - 70, width: mapW, height: 70, color: C.panelLight, borderColor: C.border, borderWidth: 1 });
     page5.drawRectangle({ x: this.margin, y: curY - 70, width: 4, height: 70, color: C.gold });
     page5.drawText('1. TIRE THERMAL MANAGEMENT & PACE LAP PROTOCOL', { x: this.margin + 12, y: curY - 14, size: 7.5, font: fontBold, color: C.textPrimary });
-    page5.drawText(`Target Operating Window: ${studyData.phase5_hardware.tireThermalManagement.operatingWindowF}`, { x: this.margin + 12, y: curY - 26, size: 6.5, font: fontBold, color: C.green });
+    page5.drawText(`Target Operating Window: ${studyData.phase5_hardware.tireThermalManagement.operatingWindowC || '90°C – 115°C'}`, { x: this.margin + 12, y: curY - 26, size: 6.5, font: fontBold, color: C.green });
     page5.drawText(`Pace Lap Scrubbing: ${studyData.phase5_hardware.tireThermalManagement.paceLapWarmupTactic}`, { x: this.margin + 12, y: curY - 38, size: 6, font: fontRegular, color: C.textSecondary });
     page5.drawText(`Slip Angle Operating Limits: ${studyData.phase5_hardware.tireThermalManagement.slipAngleWindow}`, { x: this.margin + 12, y: curY - 50, size: 6, font: fontRegular, color: C.textSecondary });
-    page5.drawText(`Cold-to-Hot Target Pressure Gain: +${studyData.phase5_hardware.tireThermalManagement.coldToHotTargetPressureGainPsi} PSI per axle.`, { x: this.margin + 12, y: curY - 62, size: 6, font: fontMono, color: C.cyan });
+    page5.drawText(`Cold-to-Hot Target Pressure Gain: +${studyData.phase5_hardware.tireThermalManagement.coldToHotTargetPressureGainBar || '0.30 bar (30 kPa)'} per axle.`, { x: this.margin + 12, y: curY - 62, size: 6, font: fontMono, color: C.cyan });
 
     // 2. Brake System & Gauge Scan Card
     curY -= 82;
@@ -426,7 +426,7 @@ export class TrackStudyPdfBuilder {
     const colsP5 = [
       { title: 'TURN', x: this.margin + 6, w: 45 },
       { title: 'TARGET GEAR', x: this.margin + 55, w: 75 },
-      { title: 'APEX SPEED', x: this.margin + 135, w: 75 },
+      { title: 'APEX KM/H', x: this.margin + 135, w: 75 },
       { title: 'DOWNSHIFT & POWERBAND DISCIPLINE', x: this.margin + 215, w: 300 }
     ];
     colsP5.forEach(c => {
@@ -442,7 +442,7 @@ export class TrackStudyPdfBuilder {
 
       page5.drawText(g.turn, { x: colsP5[0].x, y: rowY + 4, size: 6.5, font: fontBold, color: C.textPrimary });
       page5.drawText(`GEAR ${g.gear}`, { x: colsP5[1].x, y: rowY + 4, size: 6.5, font: fontBold, color: C.cyan });
-      page5.drawText(`${g.minSpeedMph} mph`, { x: colsP5[2].x, y: rowY + 4, size: 6.5, font: fontRegular, color: C.textPrimary });
+      page5.drawText(`${g.minSpeedKmh || Math.round(g.minSpeedMph * 1.60934)} km/h`, { x: colsP5[2].x, y: rowY + 4, size: 6.5, font: fontRegular, color: C.textPrimary });
       page5.drawText(g.shiftNote.slice(0, 75), { x: colsP5[3].x, y: rowY + 4, size: 5.5, font: fontRegular, color: C.textSecondary });
 
       curY = rowY;

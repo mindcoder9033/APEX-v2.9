@@ -111,16 +111,22 @@ test('TrackStudyEngine: Dynamically parses track corners from raw telemetry samp
   assert.equal(study.circuit.turnsCount, study.phase1_macro.corners.length);
   
   const t1 = study.phase1_macro.corners[0];
+  assert.ok(t1.apexSpeedKmh > 0);
   assert.ok(t1.apexSpeedMph > 0);
   assert.ok(t1.followingStraightMeters > 0);
   assert.ok(t1.brakingDistanceM > 0);
   assert.ok(t1.priorityRank >= 1);
+  assert.ok(study.circuit.lengthKm !== undefined);
 
-  // Phase 2, 3, 4, 5 should all be populated from the parsed corners
+  // Phase 2, 3, 4, 5 should all be populated from the parsed corners and include metric properties
   assert.equal(study.phase2_surface.corners.length, study.phase1_macro.corners.length);
   assert.equal(study.phase3_reference.corners.length, study.phase1_macro.corners.length);
+  assert.ok(study.phase3_reference.corners[0].apex.targetKmh > 0);
   assert.equal(study.phase4_orderOfEffort.corners.length, study.phase1_macro.corners.length);
+  assert.ok(study.phase4_orderOfEffort.corners[0].step3_brakingProcedure.thresholdPressureKg > 0);
   assert.equal(study.phase5_hardware.gearingMatrix.length, study.phase1_macro.corners.length);
+  assert.ok(study.phase5_hardware.tireThermalManagement.operatingWindowC.includes('°C'));
+  assert.ok(study.phase5_hardware.tireThermalManagement.coldToHotTargetPressureGainBar.includes('bar'));
 });
 
 test('TrackStudyPdfBuilder: Blocks PDF generation when telemetry data is absent', async () => {
