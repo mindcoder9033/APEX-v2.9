@@ -2,64 +2,125 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { TrackStudyEngine } from '../src/analysis/track-study-engine.js';
 import { TrackStudyPdfBuilder } from '../src/pdf/track-study-pdf-builder.js';
+import { TrackStudyLibrary } from '../src/analysis/track-study-library.js';
 
-test('TrackStudyEngine: Generates full 5-Phase study from track profile', () => {
+test('TrackStudyEngine: Extracts 5-phase study with zero mock data when no telemetry is present', () => {
   const engine = new TrackStudyEngine();
-  const mockTrackProfile = {
-    id: 'test-sebring',
-    trackName: 'Sebring International Raceway',
-    layoutName: '12-Hour Course',
-    officialLength: '6.019 km',
-    lengthMeters: 6019,
-    turnsCount: 6,
-    corners: [
-      { number: 1, name: 'Turn 1', radius: 180, angleDeg: 55, entrySpeedMps: 42, minSpeedMps: 38, exitSpeedMps: 45, gear: 4, followingStraightMeters: 450, camberDeg: 1.0, elevationChangeM: 0, brakingDistanceM: 40 },
-      { number: 2, name: 'Turn 2', radius: 140, angleDeg: 40, entrySpeedMps: 40, minSpeedMps: 37, exitSpeedMps: 43, gear: 4, followingStraightMeters: 60, camberDeg: 3.5, elevationChangeM: 0, brakingDistanceM: 20 },
-      { number: 3, name: 'Turn 3', radius: 45, angleDeg: 100, entrySpeedMps: 32, minSpeedMps: 18, exitSpeedMps: 28, gear: 2, followingStraightMeters: 400, camberDeg: 0.5, elevationChangeM: 3.2, brakingDistanceM: 70 },
-      { number: 4, name: 'Turn 4', radius: 75, angleDeg: 90, entrySpeedMps: 35, minSpeedMps: 22, exitSpeedMps: 30, gear: 2, followingStraightMeters: 80, camberDeg: -1.5, elevationChangeM: -2.0, brakingDistanceM: 55 },
-      { number: 5, name: 'Turn 5', radius: 65, angleDeg: 45, entrySpeedMps: 36, minSpeedMps: 32, exitSpeedMps: 35, gear: 3, followingStraightMeters: 120, camberDeg: 0.0, elevationChangeM: 0, brakingDistanceM: 15 },
-      { number: 6, name: 'Turn 6', radius: 130, angleDeg: 110, entrySpeedMps: 38, minSpeedMps: 27, exitSpeedMps: 36, gear: 3, followingStraightMeters: 700, camberDeg: 2.0, elevationChangeM: 0, brakingDistanceM: 45 }
-    ]
+  const rawProfile = {
+    id: 'test-track',
+    trackName: 'Silverstone Circuit',
+    layoutName: 'Grand Prix Circuit',
+    officialLength: '5.891 km',
+    lengthMeters: 5891
   };
 
-  const study = engine.generateStudy(mockTrackProfile);
+  const study = engine.generateStudy(rawProfile, []);
 
-  // Circuit metadata
-  assert.equal(study.circuit.name, 'Sebring International Raceway');
-  assert.equal(study.circuit.turnsCount, 6);
+  // Must have 0 corners and NO mock data
+  assert.equal(study.circuit.name, 'Silverstone Circuit');
+  assert.equal(study.circuit.turnsCount, 0);
+  assert.equal(study.phase1_macro.corners.length, 0);
+  assert.equal(study.phase2_surface.corners.length, 0);
+  assert.equal(study.phase3_reference.corners.length, 0);
+  assert.equal(study.phase4_orderOfEffort.corners.length, 0);
+  assert.equal(study.phase5_hardware.gearingMatrix.length, 0);
+  assert.ok(study.phase1_macro.strategySummary.includes('Awaiting telemetry'));
+});
 
-  // Phase 1: Macro Corner Grading
-  assert.ok(study.phase1_macro, 'Phase 1 macro should exist');
-  assert.equal(study.phase1_macro.corners.length, 6);
-  const typeICorners = study.phase1_macro.corners.filter(c => c.type === 'Type I');
-  const typeIIICorners = study.phase1_macro.corners.filter(c => c.type === 'Type III');
-  assert.ok(typeICorners.length > 0, 'Should identify Type I corners');
-  assert.ok(typeIIICorners.length > 0, 'Should identify Type III compromise corners');
-  assert.ok(study.phase1_macro.longestStraight.distanceMeters >= 700, 'Longest straight should be detected');
+test('TrackStudyEngine: Dynamically parses track corners from raw telemetry samples', () => {
+  const engine = new TrackStudyEngine();
+  
+  // Synthesize realistic telemetry lap with 3 distinct corner deceleration/steering sequences
+  const samples = [];
+  const totalSamples = 300;
+  
+  for (let i = 0; i < totalSamples; i++) {
+    const dist = i * 15; // 0 to 4500m
+    let speed = 65; // m/s on straights (~145 mph)
+    let steer = 0;
+    let brake = 0;
+    let throttle = 1.0;
+    let latG = 0;
 
-  // Phase 2: Surface Recon
-  assert.ok(study.phase2_surface, 'Phase 2 surface recon should exist');
-  const offCamber = study.phase2_surface.corners.find(c => c.camberDeg < 0);
-  assert.ok(offCamber, 'Should detect off-camber corner (Turn 4)');
-  assert.ok(offCamber.camberType.includes('Off-Camber'), 'Should label off-camber correctly');
+    // Turn 1 around sample 60 (Hairpin Right)
+    if (i >= 45 && i <= 75) {
+      if (i < 60) {
+        brake = 0.9;
+        throttle = 0;
+        speed = 65 - (i - 45) * 3; // slows to 20 m/s
+      } else {
+        brake = 0;
+        throttle = 0.8;
+        speed = 20 + (i - 60) * 2;
+      }
+      steer = 0.45;
+      latG = 1.6;
+    }
 
-  // Phase 3: Reference Points
-  assert.ok(study.phase3_reference, 'Phase 3 reference points should exist');
-  assert.equal(study.phase3_reference.corners.length, 6);
-  assert.ok(study.phase3_reference.corners[0].brakePoint.markerText, 'Braking point text must exist');
-  assert.ok(study.phase3_reference.corners[0].apex.attitudeCheck, 'Apex attitude check must exist');
+    // Turn 2 around sample 160 (Fast Sweeper Left)
+    if (i >= 145 && i <= 175) {
+      if (i < 160) {
+        brake = 0.3;
+        throttle = 0.2;
+        speed = 60 - (i - 145) * 1.2; // slows to 42 m/s
+      } else {
+        brake = 0;
+        throttle = 1.0;
+        speed = 42 + (i - 160) * 1.5;
+      }
+      steer = -0.25;
+      latG = -1.4;
+    }
 
-  // Phase 4: Order of Effort
-  assert.ok(study.phase4_orderOfEffort, 'Phase 4 order of effort should exist');
-  assert.equal(study.phase4_orderOfEffort.methodology.length, 3);
-  assert.ok(study.phase4_orderOfEffort.corners[0].step2_exitThrottle.tapDistanceBeforeApexM > 0);
+    // Turn 3 around sample 240 (90-deg Right)
+    if (i >= 225 && i <= 255) {
+      if (i < 240) {
+        brake = 0.8;
+        throttle = 0;
+        speed = 62 - (i - 225) * 2.2; // slows to 29 m/s
+      } else {
+        brake = 0;
+        throttle = 0.9;
+        speed = 29 + (i - 240) * 2.0;
+      }
+      steer = 0.35;
+      latG = 1.5;
+    }
 
-  // Phase 5: Hardware & Stint Prep
-  assert.ok(study.phase5_hardware, 'Phase 5 hardware should exist');
-  assert.ok(study.phase5_hardware.tireThermalManagement.operatingWindowF.includes('200°F'));
-  assert.ok(study.phase5_hardware.brakeSystemManagement.baselineBias.includes('64% Front'));
-  assert.equal(study.phase5_hardware.gearingMatrix.length, 6);
-  assert.ok(study.phase5_hardware.trafficAndAccordionTactics.gridStartPreparation);
+    samples.push({
+      motion: {
+        speedMps: Math.max(15, speed),
+        acceleration: { lateralG: latG },
+        position: { z: i * 0.05 },
+        orientation: { roll: steer * 0.05 }
+      },
+      inputs: {
+        steering: steer,
+        brake: brake,
+        throttle: throttle
+      },
+      lapDistanceMeters: dist,
+      vehicle: { gear: speed < 25 ? 2 : (speed < 45 ? 3 : 5) }
+    });
+  }
+
+  const study = engine.generateStudy({ trackName: 'Telemetry Circuit', lengthMeters: 4500 }, samples);
+
+  // Assert corners were detected and parsed from telemetry
+  assert.ok(study.phase1_macro.corners.length >= 2, 'Should detect at least 2 corners from telemetry');
+  assert.equal(study.circuit.turnsCount, study.phase1_macro.corners.length);
+  
+  const t1 = study.phase1_macro.corners[0];
+  assert.ok(t1.apexSpeedMph > 0);
+  assert.ok(t1.followingStraightMeters > 0);
+  assert.ok(t1.brakingDistanceM > 0);
+  assert.ok(t1.priorityRank >= 1);
+
+  // Phase 2, 3, 4, 5 should all be populated from the parsed corners
+  assert.equal(study.phase2_surface.corners.length, study.phase1_macro.corners.length);
+  assert.equal(study.phase3_reference.corners.length, study.phase1_macro.corners.length);
+  assert.equal(study.phase4_orderOfEffort.corners.length, study.phase1_macro.corners.length);
+  assert.equal(study.phase5_hardware.gearingMatrix.length, study.phase1_macro.corners.length);
 });
 
 test('TrackStudyPdfBuilder: Compiles a valid 5-page PDF document', async () => {
@@ -72,7 +133,10 @@ test('TrackStudyPdfBuilder: Compiles a valid 5-page PDF document', async () => {
     layoutName: 'Grand Prix Course',
     officialLength: '6.515 km',
     lengthMeters: 6515,
-    turnsCount: 14
+    corners: [
+      { number: 1, name: 'Turn 1', entrySpeedMps: 45, minSpeedMps: 35, exitSpeedMps: 42, gear: 4, followingStraightMeters: 400, camberDeg: 1.0, elevationChangeM: 0, brakingDistanceM: 50 },
+      { number: 2, name: 'Turn 2', entrySpeedMps: 40, minSpeedMps: 30, exitSpeedMps: 38, gear: 3, followingStraightMeters: 300, camberDeg: -1.0, elevationChangeM: 2, brakingDistanceM: 40 }
+    ]
   });
 
   const pdfBytes = await pdfBuilder.generate(study);
@@ -84,10 +148,8 @@ test('TrackStudyPdfBuilder: Compiles a valid 5-page PDF document', async () => {
   assert.equal(header, '%PDF-', 'Valid PDF file header signature');
 });
 
-import { TrackStudyLibrary } from '../src/analysis/track-study-library.js';
-
-test('TrackStudyLibrary: Catalog extraction and independent per-track profile synthesis', () => {
-  const library = new TrackStudyLibrary('test_study_store');
+test('TrackStudyLibrary: Catalog extraction and independent per-track profile without mock corners', () => {
+  const library = new TrackStudyLibrary('test_study_store_clean');
   const catalog = library.getAllCatalogTracks();
 
   // 1. Catalog extraction from FM23 Tracks
@@ -97,42 +159,34 @@ test('TrackStudyLibrary: Catalog extraction and independent per-track profile sy
   assert.ok(realCount > 30, 'Should categorize Real circuits');
   assert.ok(fictionalCount > 10, 'Should categorize Fictional circuits');
 
-  // 2. Hand-tuned preset profile test (Sebring)
+  // 2. Verified that initial profile has ZERO mock corners
   const sebringProfile = library.getTrackStudyProfile('sebring-international-raceway--full-circuit');
-  assert.ok(sebringProfile, 'Sebring profile should exist');
-  assert.equal(sebringProfile.turnsCount, 17);
-  assert.equal(sebringProfile.corners[0].name, 'Turn 1 (Fast Left Sweeper)');
-  assert.equal(sebringProfile.corners[sebringProfile.corners.length - 1].name, 'Turn 17 (Sunset Bend)');
+  assert.ok(sebringProfile, 'Sebring profile metadata should exist');
+  assert.equal(sebringProfile.turnsCount, 0, 'Initial turnsCount must be 0 (no mock data)');
+  assert.deepEqual(sebringProfile.corners, [], 'Initial corners must be empty (no mock data)');
 
-  // 3. Procedural synthesized profile test (e.g. Hakone Circuit)
-  const hakone = catalog.find(t => t.trackName.includes('Hakone'));
-  assert.ok(hakone, 'Hakone circuit should be found in catalog');
-  const hakoneProfile = library.getTrackStudyProfile(hakone.trackId);
-  assert.ok(hakoneProfile, 'Hakone synthesized profile should exist');
-  assert.ok(hakoneProfile.corners.length > 0, 'Synthesized corners should exist');
-  assert.ok(hakoneProfile.corners[0].radius > 0);
-  assert.ok(hakoneProfile.corners[0].brakingDistanceM >= 0);
-
-  // 4. Per-track state persistence test
+  // 3. Per-track state persistence test
   const testTrackId = 'test-track-circuit';
   const initialState = library.getTrackStudyState(testTrackId);
   assert.deepEqual(initialState.unlockedPhases, [1]);
   assert.deepEqual(initialState.completedDebriefings, []);
+  assert.deepEqual(initialState.corners, []);
 
   library.saveTrackStudyState(testTrackId, {
     unlockedPhases: [1, 2, 3],
     completedDebriefings: [1, 2],
-    lastPhase: 3
+    lastPhase: 3,
+    corners: [{ number: 1, name: 'Turn 1', apexSpeedMph: 45 }]
   });
 
   const modifiedState = library.getTrackStudyState(testTrackId);
   assert.deepEqual(modifiedState.unlockedPhases, [1, 2, 3]);
   assert.deepEqual(modifiedState.completedDebriefings, [1, 2]);
   assert.equal(modifiedState.lastPhase, 3);
+  assert.equal(modifiedState.corners.length, 1);
 
   library.resetTrackStudyState(testTrackId);
   const resetState = library.getTrackStudyState(testTrackId);
   assert.deepEqual(resetState.unlockedPhases, [1]);
   assert.deepEqual(resetState.completedDebriefings, []);
 });
-

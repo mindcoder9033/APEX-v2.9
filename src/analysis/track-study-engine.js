@@ -17,8 +17,8 @@ export class TrackStudyEngine {
 
   /**
    * Generates comprehensive 5-phase study from a Track Profile or Telemetry Samples
-   * @param {Object} trackProfile - Synthesized track profile or catalog track
-   * @param {Array<Object>} [telemetrySamples] - Optional live or historical telemetry
+   * @param {Object} trackProfile - Track metadata or stored profile
+   * @param {Array<Object>} [telemetrySamples] - Live or historical telemetry samples
    * @returns {Object} Structured 5-Phase Track Study dataset
    */
   generateStudy(trackProfile, telemetrySamples = []) {
@@ -26,8 +26,8 @@ export class TrackStudyEngine {
       throw new Error('TrackStudyEngine: No trackProfile or telemetrySamples provided');
     }
 
-    const circuitMeta = this._extractCircuitMeta(trackProfile, telemetrySamples);
     const rawCorners = this._extractCorners(trackProfile, telemetrySamples);
+    const circuitMeta = this._extractCircuitMeta(trackProfile, telemetrySamples, rawCorners);
 
     const phase1_macro = this._buildPhase1Macro(circuitMeta, rawCorners);
     const phase2_surface = this._buildPhase2Surface(rawCorners, telemetrySamples);
@@ -46,83 +46,234 @@ export class TrackStudyEngine {
     };
   }
 
-  _extractCircuitMeta(trackProfile, samples) {
+  _extractCircuitMeta(trackProfile, samples, corners = []) {
     if (trackProfile) {
+      const turns = corners.length > 0 ? corners.length : (trackProfile.turnsCount || (Array.isArray(trackProfile.corners) ? trackProfile.corners.length : 0));
       return {
-        id: trackProfile.id || 'custom-circuit',
+        id: trackProfile.id || trackProfile.trackId || 'custom-circuit',
         name: trackProfile.name || trackProfile.trackName || 'Grand Prix Circuit',
         layout: trackProfile.layout || trackProfile.layoutName || 'Full Course',
         lengthMeters: trackProfile.lengthMeters || trackProfile.lapDistanceMeters || 3800,
         lengthMiles: ((trackProfile.lengthMeters || trackProfile.lapDistanceMeters || 3800) / 1609.34).toFixed(2),
-        turnsCount: trackProfile.turnsCount || (trackProfile.corners ? trackProfile.corners.length : 10),
+        turnsCount: turns,
         direction: trackProfile.direction || 'Clockwise',
         country: trackProfile.country || 'International'
       };
     }
 
-    // Fallback from samples
-    const maxDist = samples.reduce((m, s) => Math.max(m, s.lapDistance || 0), 0) || 3800;
+    // Derive from samples
+    const maxDist = samples.reduce((m, s) => Math.max(m, s.lapDistanceMeters || s.lapDistance || s.distanceMeters || 0), 0) || 3800;
     return {
       id: 'telemetry-session',
       name: 'Active Circuit Session',
       layout: 'Grand Prix Layout',
       lengthMeters: Math.round(maxDist),
       lengthMiles: (maxDist / 1609.34).toFixed(2),
-      turnsCount: 10,
+      turnsCount: corners.length,
       direction: 'Clockwise',
       country: 'Trackside'
     };
   }
 
+  /**
+   * Extracts or dynamically parses corners from telemetry.
+   * If no telemetry or verified corners exist, returns [] (zero mock data).
+   */
   _extractCorners(trackProfile, samples) {
+    // 1. If telemetry samples are available, dynamically parse real track corners from telemetry data
+    if (Array.isArray(samples) && samples.length >= 20) {
+      const parsed = this._parseCornersFromTelemetry(samples);
+      if (parsed.length > 0) {
+        return parsed;
+      }
+    }
+
+    // 2. If trackProfile already contains verified corners parsed from previous telemetry sessions
     if (trackProfile && Array.isArray(trackProfile.corners) && trackProfile.corners.length > 0) {
       return trackProfile.corners.map((c, idx) => ({
         number: c.number || idx + 1,
         name: c.name || `Turn ${c.number || idx + 1}`,
-        direction: c.direction || (c.radius < 0 ? 'Left' : 'Right'),
+        direction: c.direction || (c.radius < 0 || c.steer < 0 ? 'Left' : 'Right'),
         radius: Math.abs(c.radius || 60),
         angleDeg: Math.abs(c.angleDeg || c.arcAngle || 90),
         entrySpeedMph: Math.round((c.entrySpeedMps || c.minSpeedMps || 25) * 2.23694),
         apexSpeedMph: Math.round((c.minSpeedMps || c.apexSpeedMps || 20) * 2.23694),
         exitSpeedMph: Math.round((c.exitSpeedMps || 30) * 2.23694),
-        gear: c.gear || c.targetGear || (c.minSpeedMps < 18 ? 2 : c.minSpeedMps < 32 ? 3 : 4),
-        followingStraightMeters: Math.round(c.followingStraightMeters || c.straightLengthMeters || 220),
-        camberDeg: c.camberDeg !== undefined ? c.camberDeg : 1.5,
+        gear: c.gear || c.targetGear || 3,
+        followingStraightMeters: Math.round(c.followingStraightMeters || c.straightLengthMeters || 200),
+        camberDeg: c.camberDeg !== undefined ? c.camberDeg : 0.0,
         elevationChangeM: c.elevationChangeM || 0,
-        brakingDistanceM: Math.round(c.brakingDistanceM || c.brakeDistM || 45)
+        brakingDistanceM: Math.round(c.brakingDistanceM || c.brakeDistM || 40)
       }));
     }
 
-    // Default template synthesized corners if profile lacks explicit corner array
-    const count = 10;
-    const defaults = [];
-    for (let i = 1; i <= count; i++) {
-      const isHairpin = i === 10 || i === 3;
-      const isSweeper = i === 1 || i === 2 || i === 9;
-      const straightM = isSweeper ? 500 : isHairpin ? 350 : 180;
-      defaults.push({
-        number: i,
-        name: `Turn ${i}`,
-        direction: i % 2 === 0 ? 'Left' : 'Right',
-        radius: isSweeper ? 180 : isHairpin ? 35 : 75,
-        angleDeg: isHairpin ? 140 : isSweeper ? 45 : 90,
-        entrySpeedMph: isSweeper ? 95 : isHairpin ? 42 : 65,
-        apexSpeedMph: isSweeper ? 88 : isHairpin ? 34 : 54,
-        exitSpeedMph: isSweeper ? 96 : isHairpin ? 48 : 68,
-        gear: isHairpin ? 2 : isSweeper ? 4 : 3,
-        followingStraightMeters: straightM,
-        camberDeg: i === 7 ? -1.5 : (i === 2 ? 3.5 : 1.0),
-        elevationChangeM: i === 4 ? 4.2 : (i === 6 ? -2.5 : 0),
-        brakingDistanceM: isHairpin ? 85 : isSweeper ? 25 : 50
+    // 3. No telemetry recorded for this track yet -> return empty array (NO MOCK DATA)
+    return [];
+  }
+
+  /**
+   * Deterministic telemetry corner parser.
+   * Scans speed minima, lateral acceleration, steering angles, brake/throttle transitions,
+   * and elevation/camber profiles directly from raw telemetry samples.
+   */
+  _parseCornersFromTelemetry(samples) {
+    const n = samples.length;
+    if (n < 20) return [];
+
+    const getSpeed = (s) => s.motion?.speedMps ?? s.speedMps ?? (s.speedKmh ? s.speedKmh / 3.6 : (s.speedMph ? s.speedMph / 2.23694 : 0));
+    const getSteer = (s) => s.inputs?.steering ?? s.steering ?? 0;
+    const getBrake = (s) => s.inputs?.brake ?? s.brake ?? 0;
+    const getThrottle = (s) => s.inputs?.throttle ?? s.throttle ?? 0;
+    const getLatG = (s) => s.motion?.acceleration?.lateralG ?? s.accelY ?? s.lateralG ?? 0;
+    const getGear = (s) => s.vehicle?.gear ?? s.gear ?? 3;
+    const getDist = (s, idx) => s.lapDistanceMeters ?? s.lapDistance ?? s.distanceMeters ?? (idx * 5);
+    const getElevation = (s) => s.motion?.position?.z ?? s.positionZ ?? s.posZ ?? 0;
+    const getRoll = (s) => s.motion?.orientation?.roll ?? s.roll ?? 0;
+
+    // 1. Smooth speed trace (5-point centered moving average)
+    const speeds = samples.map(getSpeed);
+    const smoothed = new Array(n);
+    for (let i = 0; i < n; i++) {
+      let sum = 0, count = 0;
+      for (let j = -2; j <= 2; j++) {
+        const idx = i + j;
+        if (idx >= 0 && idx < n) {
+          sum += speeds[idx];
+          count++;
+        }
+      }
+      smoothed[i] = count > 0 ? sum / count : speeds[i];
+    }
+
+    // 2. Identify local speed minima under steering or lateral G load
+    const candidateApexIndices = [];
+    const minSteerThresh = 0.04;
+    const minLatGThresh = 0.25;
+
+    for (let i = 2; i < n - 2; i++) {
+      const spd = smoothed[i];
+      const isMin = spd <= smoothed[i - 1] && spd <= smoothed[i - 2] && spd <= smoothed[i + 1] && spd <= smoothed[i + 2];
+      if (isMin) {
+        const steer = Math.abs(getSteer(samples[i]));
+        const latG = Math.abs(getLatG(samples[i]));
+        if (steer >= minSteerThresh || latG >= minLatGThresh) {
+          candidateApexIndices.push(i);
+        }
+      }
+    }
+
+    // 3. Merge adjacent apexes within 35 samples (~0.6s) keeping minimum speed apex
+    const mergedApexIndices = [];
+    for (let i = 0; i < candidateApexIndices.length; i++) {
+      const idx = candidateApexIndices[i];
+      if (mergedApexIndices.length === 0) {
+        mergedApexIndices.push(idx);
+      } else {
+        const lastIdx = mergedApexIndices[mergedApexIndices.length - 1];
+        if (idx - lastIdx < 35) {
+          if (smoothed[idx] < smoothed[lastIdx]) {
+            mergedApexIndices[mergedApexIndices.length - 1] = idx;
+          }
+        } else {
+          mergedApexIndices.push(idx);
+        }
+      }
+    }
+
+    if (mergedApexIndices.length === 0) return [];
+
+    // 4. Extract landmarks for each apex
+    const corners = [];
+    for (let k = 0; k < mergedApexIndices.length; k++) {
+      const apexIdx = mergedApexIndices[k];
+      const apexSample = samples[apexIdx];
+      const apexSpeedMps = getSpeed(apexSample);
+      const apexLatG = getLatG(apexSample);
+      const apexSteer = getSteer(apexSample);
+      const apexGear = getGear(apexSample) || (apexSpeedMps < 18 ? 2 : (apexSpeedMps < 32 ? 3 : 4));
+
+      // Scan backwards for brake point & turn-in
+      let brakeIdx = apexIdx;
+      let turnInIdx = apexIdx;
+      const scanBackLimit = Math.max(0, apexIdx - 120);
+      for (let i = apexIdx; i >= scanBackLimit; i--) {
+        if (getBrake(samples[i]) >= 0.08) {
+          brakeIdx = i;
+        }
+        if (Math.abs(getSteer(samples[i])) >= minSteerThresh) {
+          turnInIdx = i;
+        }
+      }
+      const entryIdx = Math.min(brakeIdx, turnInIdx);
+      const entrySpeedMps = Math.max(apexSpeedMps, getSpeed(samples[entryIdx]));
+
+      // Scan forwards for exit / throttle pickup
+      let exitIdx = apexIdx;
+      const scanFwdLimit = Math.min(n - 1, apexIdx + 120);
+      for (let i = apexIdx; i <= scanFwdLimit; i++) {
+        if (getThrottle(samples[i]) >= 0.50 || Math.abs(getSteer(samples[i])) < minSteerThresh) {
+          exitIdx = i;
+          break;
+        }
+      }
+      const exitSpeedMps = Math.max(apexSpeedMps, getSpeed(samples[exitIdx]));
+
+      // Physical calculations from telemetry data
+      const brakingDistM = Math.max(5, Math.abs(getDist(apexSample, apexIdx) - getDist(samples[brakeIdx], brakeIdx)));
+      const elevChangeM = Number((getElevation(samples[exitIdx]) - getElevation(samples[entryIdx])).toFixed(1));
+      const rollRad = getRoll(apexSample);
+      const camberDeg = Number((rollRad * 57.2958 * (apexSteer > 0 ? -1 : 1)).toFixed(1));
+
+      // R = v² / a_lat
+      const effectiveLatG = Math.max(0.35, Math.abs(apexLatG));
+      const radiusM = Math.round(Math.pow(apexSpeedMps, 2) / (effectiveLatG * 9.81));
+
+      // Distance to next corner entry
+      let nextEntryDist = getDist(samples[n - 1], n - 1);
+      if (k + 1 < mergedApexIndices.length) {
+        nextEntryDist = getDist(samples[mergedApexIndices[k + 1]], mergedApexIndices[k + 1]);
+      }
+      const currentExitDist = getDist(samples[exitIdx], exitIdx);
+      const followingStraightM = Math.max(20, Math.round(Math.abs(nextEntryDist - currentExitDist)));
+
+      const direction = (apexSteer > 0 || apexLatG > 0) ? 'Right' : 'Left';
+      const isHairpin = radiusM < 45;
+      const isSweeper = radiusM > 130;
+
+      corners.push({
+        number: k + 1,
+        name: `Turn ${k + 1}${isHairpin ? ' (Hairpin)' : (isSweeper ? ' (Sweeper)' : '')}`,
+        direction,
+        radius: Math.max(20, Math.min(300, radiusM)),
+        angleDeg: isHairpin ? 135 : (isSweeper ? 50 : 90),
+        entrySpeedMph: Math.round(entrySpeedMps * 2.23694),
+        apexSpeedMph: Math.round(apexSpeedMps * 2.23694),
+        exitSpeedMph: Math.round(exitSpeedMps * 2.23694),
+        gear: apexGear,
+        followingStraightMeters: followingStraightM,
+        camberDeg: isNaN(camberDeg) ? 0.0 : camberDeg,
+        elevationChangeM: isNaN(elevChangeM) ? 0.0 : elevChangeM,
+        brakingDistanceM: Math.round(brakingDistM)
       });
     }
-    return defaults;
+
+    return corners;
   }
 
   // ---------------------------------------------------------------------------
   // PHASE 1: MACRO CORNER GRADING & PRIORITY RANKING
   // ---------------------------------------------------------------------------
   _buildPhase1Macro(circuitMeta, corners) {
+    if (!corners || corners.length === 0) {
+      return {
+        corners: [],
+        longestStraight: { fromCorner: 0, toCorner: 0, distanceMeters: 0, distanceFt: 0 },
+        totalStraightMeters: 0,
+        straightsCoveragePct: 0,
+        strategySummary: 'Awaiting telemetry ingestion to detect track turns and calculate compounding exit-speed leverage.'
+      };
+    }
+
     const totalStraightLength = corners.reduce((sum, c) => sum + c.followingStraightMeters, 0);
     const longestStraight = corners.reduce((max, c) => c.followingStraightMeters > max.distanceMeters ? {
       fromCorner: c.number,
@@ -133,7 +284,6 @@ export class TrackStudyEngine {
 
     const scoredCorners = corners.map((c, idx) => {
       const straightFt = c.followingStraightMeters * 3.28084;
-      // Compound speed leverage: 1 mph = 1.467 ft/sec gain across straight duration
       const avgStraightSpeedMps = ((c.exitSpeedMph + 120) / 2) * 0.44704;
       const straightDurationSec = avgStraightSpeedMps > 0 ? (c.followingStraightMeters / avgStraightSpeedMps) : 4.0;
       const compoundLeverageSec = Number((straightDurationSec * 0.08).toFixed(3));
@@ -151,7 +301,7 @@ export class TrackStudyEngine {
         type = 'Type III';
         typeLabel = 'Compromise Corner (Sacrifice for Next Turn)';
         typeDescription = 'Connected turn with negligible straight. Must sacrifice line/entry speed to position car on optimal wide entry for next turn.';
-        priorityScore = 400; // lower priority than Type I
+        priorityScore = 400;
       } else if (c.followingStraightMeters < 150 && c.radius < 60) {
         type = 'Type II';
         typeLabel = 'End of Straight (Threshold Braking Focus)';
@@ -159,7 +309,6 @@ export class TrackStudyEngine {
         priorityScore = 800 + c.brakingDistanceM * 2;
       }
 
-      // Fast sweepers bonus priority
       if (c.apexSpeedMph > 80) {
         priorityScore += 450;
       }
@@ -178,7 +327,6 @@ export class TrackStudyEngine {
       };
     });
 
-    // Sort by priorityScore descending to compute rank
     const sorted = [...scoredCorners].sort((a, b) => b.priorityScore - a.priorityScore);
     const rankedCorners = scoredCorners.map(c => {
       const rank = sorted.findIndex(s => s.number === c.number) + 1;
@@ -189,7 +337,7 @@ export class TrackStudyEngine {
       corners: rankedCorners,
       longestStraight,
       totalStraightMeters: totalStraightLength,
-      straightsCoveragePct: Math.round((totalStraightLength / circuitMeta.lengthMeters) * 100) || 72,
+      straightsCoveragePct: Math.round((totalStraightLength / (circuitMeta.lengthMeters || 4000)) * 100) || 72,
       strategySummary: `Prioritize Turns ${sorted.slice(0, 3).map(c => `T${c.number}`).join(', ')} as top leverage sectors. These lead into ${(longestStraight.distanceMeters)}m+ acceleration zones where +1 mph yields over ${(longestStraight.distanceFt * 0.01).toFixed(1)}s cumulative delta.`
     };
   }
@@ -198,6 +346,15 @@ export class TrackStudyEngine {
   // PHASE 2: MICRO SURFACE RECONNAISSANCE & CAMBER DYNAMICS
   // ---------------------------------------------------------------------------
   _buildPhase2Surface(corners, samples) {
+    if (!corners || corners.length === 0) {
+      return {
+        corners: [],
+        overallTrackGripIndex: 1.0,
+        surfaceHazardCount: 0,
+        generalGuidance: 'Awaiting on-track telemetry to map pavement banking, camber angles, and compression crests.'
+      };
+    }
+
     const surfaceProfiles = corners.map((c) => {
       let camberType = 'Flat / Neutral (0°)';
       let camberEffectPct = 0;
@@ -221,7 +378,7 @@ export class TrackStudyEngine {
 
       const isConcrete = c.number % 3 === 0;
       const surfaceMaterial = isConcrete ? 'Porous Concrete (High Cold Grip)' : (c.camberDeg < 0 ? 'Polished Asphalt (Slippery Offline)' : 'Coarse Asphalt (Progressive Grip)');
-      const bumpSeverity = c.number === 2 || c.number === 7 ? 'High (Mid-Corner Seams)' : (c.elevationChangeM !== 0 ? 'Moderate' : 'Smooth');
+      const bumpSeverity = c.camberDeg < -0.5 ? 'Moderate' : 'Smooth';
       const curbThreat = c.radius < 50 ? 'Severe Drop-Off (Avoid Clouting Inside)' : (c.apexSpeedMph > 85 ? 'Flat FIA Strip (Safe Track-Out Width)' : 'Standard Chamfered Kerb');
 
       return {
@@ -244,7 +401,7 @@ export class TrackStudyEngine {
     return {
       corners: surfaceProfiles,
       overallTrackGripIndex: 0.94,
-      surfaceHazardCount: surfaceProfiles.filter(s => s.camberDeg < -0.5 || s.bumpSeverity === 'High (Mid-Corner Seams)').length,
+      surfaceHazardCount: surfaceProfiles.filter(s => s.camberDeg < -0.5).length,
       generalGuidance: 'Walk/drive track slowly to inspect pavement joints, drainage crowns, and off-camber transitions. Remember: 1° of positive banking adds ~3% cornering grip.'
     };
   }
@@ -253,6 +410,13 @@ export class TrackStudyEngine {
   // PHASE 3: VISUAL REFERENCE POINTS & APEX ATTITUDES
   // ---------------------------------------------------------------------------
   _buildPhase3Reference(corners, samples) {
+    if (!corners || corners.length === 0) {
+      return {
+        corners: [],
+        mentalFramework: 'Establish fixed visual reference points once corner telemetry is parsed.'
+      };
+    }
+
     return {
       corners: corners.map((c) => {
         const brakeDistM = c.brakingDistanceM || 45;
@@ -300,12 +464,21 @@ export class TrackStudyEngine {
   // PHASE 4: PLANNING THE "ORDER OF EFFORT" (Skip Barber 3-Step)
   // ---------------------------------------------------------------------------
   _buildPhase4OrderOfEffort(macroCorners, corners, samples) {
+    const methodology = [
+      { step: 1, name: 'Master the Racing Line', rule: 'Start with a safe Late Apex. Never early-apex. Use every inch of available pavement.' },
+      { step: 2, name: 'Maximize Corner Exit Speed', rule: 'Find the Throttle Application Point (TAP). Squeeze power progressively before apex and unwind steering.' },
+      { step: 3, name: 'Optimize Braking & Entry', rule: 'Apply "The Procedure": Lock down maximum threshold force first, then move brake points inward in 3-5 ft increments.' }
+    ];
+
+    if (!macroCorners || macroCorners.length === 0) {
+      return {
+        methodology,
+        corners: []
+      };
+    }
+
     return {
-      methodology: [
-        { step: 1, name: 'Master the Racing Line', rule: 'Start with a safe Late Apex. Never early-apex. Use every inch of available pavement.' },
-        { step: 2, name: 'Maximize Corner Exit Speed', rule: 'Find the Throttle Application Point (TAP). Squeeze power progressively before apex and unwind steering.' },
-        { step: 3, name: 'Optimize Braking & Entry', rule: 'Apply "The Procedure": Lock down maximum threshold force first, then move brake points inward in 3-5 ft increments.' }
-      ],
+      methodology,
       corners: macroCorners.map(c => {
         const isHighSpeedLoss = c.entrySpeedMph - c.apexSpeedMph > 20;
         const tapDistanceBeforeApexM = c.type === 'Type I' ? 15 : (c.type === 'Type III' ? 5 : 8);
@@ -341,11 +514,11 @@ export class TrackStudyEngine {
   // PHASE 5: MANAGING STINT REALITIES & HARDWARE PREP
   // ---------------------------------------------------------------------------
   _buildPhase5Hardware(circuitMeta, corners, samples) {
-    const gearList = corners.map(c => ({
+    const gearList = (corners || []).map(c => ({
       turn: `T${c.number}`,
-      gear: c.gear,
+      gear: c.gear || 3,
       minSpeedMph: c.apexSpeedMph,
-      shiftNote: c.gear === 2 ? 'Heel-and-toe downshift in straight line; blip cleanly to avoid rear chirp' : 'Maintain gear; throttle modulate on exit'
+      shiftNote: c.gear <= 2 ? 'Heel-and-toe downshift in straight line; blip cleanly to avoid rear chirp' : 'Maintain gear; throttle modulate on exit'
     }));
 
     return {

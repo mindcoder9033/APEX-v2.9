@@ -408,37 +408,50 @@ export class TrackStudyView {
     if (!btn) return;
 
     btn.addEventListener('click', () => {
-      this.completeDebriefing(phaseNum);
-    });
-  }
-
-  // ---------------------------------------------------------------------------
+      this.completeDebriefing(  // ---------------------------------------------------------------------------
   // PHASE 1: MACRO CORNER GRADING
   // ---------------------------------------------------------------------------
   _renderPhase1(container) {
     const macro = this.studyData.phase1_macro;
-    const sortedCorners = [...macro.corners].sort((a, b) => a.priorityRank - b.priorityRank);
+    const hasCorners = macro.corners && macro.corners.length > 0;
+    const sortedCorners = hasCorners ? [...macro.corners].sort((a, b) => a.priorityRank - b.priorityRank) : [];
 
-    let rowsHtml = sortedCorners.map(c => `
-      <tr class="study-table-row ${c.number === this.selectedCornerNumber ? 'selected' : ''}" data-turn="${c.number}">
-        <td><span class="rank-badge ${c.priorityRank <= 3 ? 'top-rank' : ''}">#${c.priorityRank}</span></td>
-        <td class="font-bold text-accent">Turn ${c.number}</td>
-        <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
-        <td>${c.radius}m</td>
-        <td>${c.apexSpeedMph} mph</td>
-        <td class="font-mono ${c.followingStraightFt > 1000 ? 'text-green' : ''}">${c.followingStraightFt} ft</td>
-        <td class="font-bold text-cyan">+${c.compoundLeverageSec}s</td>
-        <td class="text-secondary text-sm">${c.disciplineAdvice}</td>
-      </tr>
-    `).join('');
+    let rowsHtml = '';
+    if (hasCorners) {
+      rowsHtml = sortedCorners.map(c => `
+        <tr class="study-table-row ${c.number === this.selectedCornerNumber ? 'selected' : ''}" data-turn="${c.number}">
+          <td><span class="rank-badge ${c.priorityRank <= 3 ? 'top-rank' : ''}">#${c.priorityRank}</span></td>
+          <td class="font-bold text-accent">Turn ${c.number}</td>
+          <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
+          <td>${c.radius}m</td>
+          <td>${c.apexSpeedMph} mph</td>
+          <td class="font-mono ${c.followingStraightFt > 1000 ? 'text-green' : ''}">${c.followingStraightFt} ft</td>
+          <td class="font-bold text-cyan">+${c.compoundLeverageSec}s</td>
+          <td class="text-secondary text-sm">${c.disciplineAdvice}</td>
+        </tr>
+      `).join('');
+    } else {
+      rowsHtml = `
+        <tr>
+          <td colspan="8" class="text-center text-secondary font-mono" style="padding: 32px 16px;">
+            AWAITING TELEMETRY // Drive laps on this circuit in Live UDP mode or upload a stint to dynamically parse real corner apexes, speeds, and straights.
+          </td>
+        </tr>
+      `;
+    }
+
+    const debriefQuestions = hasCorners ? [
+      `I have analyzed the priority ranking and identified Turn ${macro.longestStraight.fromCorner} (leading onto the ${macro.longestStraight.distanceMeters}m straight) as the highest time-leverage corner.`,
+      'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway launch speed (+1 mph = 1.46 ft/sec compounding advantage).'
+    ] : [
+      'I understand that track turns, apex speeds, and exit straights will be automatically parsed from vehicle telemetry.',
+      'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway exit speed.'
+    ];
 
     const debriefCard = this._renderDebriefingCard(
       1,
       'Macro Priorities & Exit Speed Commitment',
-      [
-        `I have analyzed the priority ranking and identified Turn ${macro.longestStraight.fromCorner} (leading onto the ${macro.longestStraight.distanceMeters}m straight) as the highest time-leverage corner.`,
-        'I commit to sacrificing corner entry dive to prioritize early apex rotation and maximum straightaway launch speed (+1 mph = 1.46 ft/sec compounding advantage).'
-      ],
+      debriefQuestions,
       'COMPLETE STAGE 1 DEBRIEFING & UNLOCK STAGE 2'
     );
 
@@ -453,11 +466,11 @@ export class TrackStudyView {
           <div class="kpi-mini-grid">
             <div class="kpi-item">
               <span class="kpi-label">LONGEST ACCELERATION</span>
-              <span class="kpi-val text-gold">T${macro.longestStraight.fromCorner} → T${macro.longestStraight.toCorner} (${macro.longestStraight.distanceMeters}m / ${macro.longestStraight.distanceFt}ft)</span>
+              <span class="kpi-val text-gold">${hasCorners ? `T${macro.longestStraight.fromCorner} → T${macro.longestStraight.toCorner} (${macro.longestStraight.distanceMeters}m / ${macro.longestStraight.distanceFt}ft)` : 'Awaiting Telemetry'}</span>
             </div>
             <div class="kpi-item">
               <span class="kpi-label">TOTAL FULL THROTTLE DISTANCE</span>
-              <span class="kpi-val text-green">${macro.totalStraightMeters} meters</span>
+              <span class="kpi-val text-green">${hasCorners ? `${macro.totalStraightMeters} meters` : 'Pending On-Track Data'}</span>
             </div>
             <div class="kpi-item">
               <span class="kpi-label">SKIP BARBER TIME RULE</span>
@@ -469,7 +482,7 @@ export class TrackStudyView {
         <div class="phase-card data-table-card chamfer-br">
           <div class="card-header">
             <span class="card-title">CORNER PRIORITY & TIME LEVERAGE MATRIX</span>
-            <span class="text-muted text-xs">Sorted by Potential Lap Time Impact</span>
+            <span class="text-muted text-xs">${hasCorners ? `${macro.corners.length} Real Turns Detected from Telemetry` : 'Awaiting Vehicle Telemetry'}</span>
           </div>
           <div class="study-table-wrap">
             <table class="study-data-table">
@@ -505,45 +518,60 @@ export class TrackStudyView {
   // ---------------------------------------------------------------------------
   _renderPhase2(container) {
     const surface = this.studyData.phase2_surface;
+    const hasCorners = surface.corners && surface.corners.length > 0;
 
-    let cardsHtml = surface.corners.map(s => `
-      <div class="corner-surface-card chamfer-br ${s.camberDeg < -0.5 ? 'hazard-card' : ''}">
-        <div class="corner-surface-header">
-          <span class="turn-num font-bold">Turn ${s.number}</span>
-          <span class="camber-badge ${s.camberDeg < -0.5 ? 'negative' : (s.camberDeg > 0.5 ? 'positive' : 'neutral')}">${s.camberType}</span>
+    let cardsHtml = '';
+    if (hasCorners) {
+      cardsHtml = surface.corners.map(s => `
+        <div class="corner-surface-card chamfer-br ${s.camberDeg < -0.5 ? 'hazard-card' : ''}">
+          <div class="corner-surface-header">
+            <span class="turn-num font-bold">Turn ${s.number}</span>
+            <span class="camber-badge ${s.camberDeg < -0.5 ? 'negative' : (s.camberDeg > 0.5 ? 'positive' : 'neutral')}">${s.camberType}</span>
+          </div>
+          <div class="surface-details-grid">
+            <div class="surface-stat">
+              <span class="stat-lbl">Elevation & Load</span>
+              <span class="stat-val ${s.elevationType.includes('Crest') ? 'text-red' : (s.elevationType.includes('Compression') ? 'text-green' : '')}">${s.elevationType}</span>
+            </div>
+            <div class="surface-stat">
+              <span class="stat-lbl">Pavement</span>
+              <span class="stat-val">${s.surfaceMaterial}</span>
+            </div>
+            <div class="surface-stat">
+              <span class="stat-lbl">Bumps / Seams</span>
+              <span class="stat-val ${s.bumpSeverity.includes('High') ? 'text-red' : ''}">${s.bumpSeverity}</span>
+            </div>
+            <div class="surface-stat">
+              <span class="stat-lbl">Curb Threat</span>
+              <span class="stat-val ${s.curbThreat.includes('Severe') ? 'text-red' : ''}">${s.curbThreat}</span>
+            </div>
+          </div>
+          <div class="recon-note-box">
+            <span class="recon-note-label">RECON ADVISORY:</span>
+            <span class="recon-note-text">${s.reconNote}</span>
+          </div>
         </div>
-        <div class="surface-details-grid">
-          <div class="surface-stat">
-            <span class="stat-lbl">Elevation & Load</span>
-            <span class="stat-val ${s.elevationType.includes('Crest') ? 'text-red' : (s.elevationType.includes('Compression') ? 'text-green' : '')}">${s.elevationType}</span>
-          </div>
-          <div class="surface-stat">
-            <span class="stat-lbl">Pavement</span>
-            <span class="stat-val">${s.surfaceMaterial}</span>
-          </div>
-          <div class="surface-stat">
-            <span class="stat-lbl">Bumps / Seams</span>
-            <span class="stat-val ${s.bumpSeverity.includes('High') ? 'text-red' : ''}">${s.bumpSeverity}</span>
-          </div>
-          <div class="surface-stat">
-            <span class="stat-lbl">Curb Threat</span>
-            <span class="stat-val ${s.curbThreat.includes('Severe') ? 'text-red' : ''}">${s.curbThreat}</span>
-          </div>
+      `).join('');
+    } else {
+      cardsHtml = `
+        <div class="phase-card text-center text-secondary font-mono" style="grid-column: 1 / -1; padding: 32px 16px;">
+          AWAITING TELEMETRY // Pavement banking, camber angles, and elevation compressions will be mapped dynamically once on-track telemetry is recorded.
         </div>
-        <div class="recon-note-box">
-          <span class="recon-note-label">RECON ADVISORY:</span>
-          <span class="recon-note-text">${s.reconNote}</span>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }
+
+    const debriefQuestions = hasCorners ? [
+      `I have audited the ${surface.surfaceHazardCount} surface hazards, negative camber sections, and crest compressions where lateral grip is compromised.`,
+      'I have identified aggressive curb threats and will avoid curb strikes that upset chassis balance during cornering.'
+    ] : [
+      'I understand the impact of positive banking (+3% grip/deg) and off-camber fall-offs on mechanical grip.',
+      'I will look for pavement seams, drainage crowns, and kerb geometry as on-track telemetry is ingested.'
+    ];
 
     const debriefCard = this._renderDebriefingCard(
       2,
       'Surface Reconnaissance & Camber Safety Sign-Off',
-      [
-        `I have audited the ${surface.surfaceHazardCount} surface hazards, negative camber sections, and crest compressions where lateral grip is compromised.`,
-        'I have identified aggressive curb threats and will avoid curb strikes that upset chassis balance during cornering.'
-      ],
+      debriefQuestions,
       'COMPLETE STAGE 2 DEBRIEFING & UNLOCK STAGE 3'
     );
 
@@ -573,40 +601,57 @@ export class TrackStudyView {
   // ---------------------------------------------------------------------------
   _renderPhase3(container) {
     const ref = this.studyData.phase3_reference;
+    const hasCorners = ref.corners && ref.corners.length > 0;
 
-    let rowsHtml = ref.corners.map(r => `
-      <tr class="study-table-row" data-turn="${r.number}">
-        <td class="font-bold text-accent">Turn ${r.number}</td>
-        <td>
-          <span class="font-bold ${r.brakePoint.isThresholdBraking ? 'text-red' : 'text-cyan'}">${r.brakePoint.distanceBeforeTurnInM}m (${r.brakePoint.distanceBeforeTurnInFt}ft)</span>
-          <div class="sub-text text-muted">${r.brakePoint.markerText}</div>
-        </td>
-        <td>
-          <span class="font-bold text-cyan">${r.turnIn.targetMph} mph</span>
-          <div class="sub-text text-muted">${r.turnIn.visualAnchor}</div>
-        </td>
-        <td>
-          <span class="font-bold text-green">${r.apex.targetMph} mph // Yaw: ${r.apex.yawAngleTargetDeg}°</span>
-          <div class="sub-text text-muted">${r.apex.attitudeCheck}</div>
-        </td>
-        <td>
-          <span class="waypoint-pill ${r.waypoint.needed ? 'required' : 'none'}">${r.waypoint.needed ? 'WAYPOINT NEEDED' : 'DIRECT LINE'}</span>
-          <div class="sub-text text-muted">${r.waypoint.landmark}</div>
-        </td>
-        <td>
-          <span class="font-bold">${r.trackOut.targetMph} mph</span> (Margin: ${r.trackOut.marginSafetyFt}ft)
-          <div class="sub-text text-muted">${r.trackOut.visualTarget}</div>
-        </td>
-      </tr>
-    `).join('');
+    let rowsHtml = '';
+    if (hasCorners) {
+      rowsHtml = ref.corners.map(r => `
+        <tr class="study-table-row" data-turn="${r.number}">
+          <td class="font-bold text-accent">Turn ${r.number}</td>
+          <td>
+            <span class="font-bold ${r.brakePoint.isThresholdBraking ? 'text-red' : 'text-cyan'}">${r.brakePoint.distanceBeforeTurnInM}m (${r.brakePoint.distanceBeforeTurnInFt}ft)</span>
+            <div class="sub-text text-muted">${r.brakePoint.markerText}</div>
+          </td>
+          <td>
+            <span class="font-bold text-cyan">${r.turnIn.targetMph} mph</span>
+            <div class="sub-text text-muted">${r.turnIn.visualAnchor}</div>
+          </td>
+          <td>
+            <span class="font-bold text-green">${r.apex.targetMph} mph // Yaw: ${r.apex.yawAngleTargetDeg}°</span>
+            <div class="sub-text text-muted">${r.apex.attitudeCheck}</div>
+          </td>
+          <td>
+            <span class="waypoint-pill ${r.waypoint.needed ? 'required' : 'none'}">${r.waypoint.needed ? 'WAYPOINT NEEDED' : 'DIRECT LINE'}</span>
+            <div class="sub-text text-muted">${r.waypoint.landmark}</div>
+          </td>
+          <td>
+            <span class="font-bold">${r.trackOut.targetMph} mph</span> (Margin: ${r.trackOut.marginSafetyFt}ft)
+            <div class="sub-text text-muted">${r.trackOut.visualTarget}</div>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      rowsHtml = `
+        <tr>
+          <td colspan="6" class="text-center text-secondary font-mono" style="padding: 32px 16px;">
+            AWAITING TELEMETRY // Braking markers, turn-in points, and apex attitudes will be calculated directly from telemetry data.
+          </td>
+        </tr>
+      `;
+    }
+
+    const debriefQuestions = hasCorners ? [
+      `I have memorized concrete braking point markers, turn-in visual anchors, and apex attitudes for all ${this.studyData.circuit.turnsCount} corners.`,
+      'I know my blind track-out reference targets and will actively look ahead to the next visual anchor before reaching each apex.'
+    ] : [
+      'I commit to identifying concrete, unchanging physical visual markers (brake boards, curbing ends, flag stands) for every turn.',
+      'I will actively look ahead to the next visual target before reaching each apex.'
+    ];
 
     const debriefCard = this._renderDebriefingCard(
       3,
       'Visual Reference Points & Sight Pictures Sign-Off',
-      [
-        `I have memorized concrete braking point markers, turn-in visual anchors, and apex attitudes for all ${this.studyData.circuit.turnsCount} corners.`,
-        'I know my blind track-out reference targets and will actively look ahead to the next visual anchor before reaching each apex.'
-      ],
+      debriefQuestions,
       'COMPLETE STAGE 3 DEBRIEFING & UNLOCK STAGE 4'
     );
 
@@ -622,6 +667,7 @@ export class TrackStudyView {
         <div class="phase-card data-table-card chamfer-br">
           <div class="card-header">
             <span class="card-title">TURN-BY-TURN VISUAL ANCHORS & ATTITUDES</span>
+            <span class="text-muted text-xs">${hasCorners ? `${ref.corners.length} Corner Anchors Mapped` : 'Awaiting Telemetry'}</span>
           </div>
           <div class="study-table-wrap">
             <table class="study-data-table">
@@ -654,25 +700,37 @@ export class TrackStudyView {
   // ---------------------------------------------------------------------------
   _renderPhase4(container) {
     const ooe = this.studyData.phase4_orderOfEffort;
+    const hasCorners = ooe.corners && ooe.corners.length > 0;
 
-    let rowsHtml = ooe.corners.map(c => `
-      <tr class="study-table-row" data-turn="${c.number}">
-        <td class="font-bold text-accent">Turn ${c.number}</td>
-        <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
-        <td>
-          <span class="font-bold text-gold">${c.step1_lineStrategy.approach}</span>
-          <div class="sub-text text-muted">Safety Margin: ${c.step1_lineStrategy.safetyMarginFt}ft</div>
-        </td>
-        <td>
-          <span class="font-bold text-green">TAP: ${c.step2_exitThrottle.tapDistanceBeforeApexM}m (${c.step2_exitThrottle.tapDistanceBeforeApexFt}ft) before apex</span>
-          <div class="sub-text text-muted">${c.step2_exitThrottle.squeezeRateText}</div>
-        </td>
-        <td>
-          <span class="font-bold text-cyan">${c.step3_brakingProcedure.thresholdPressureLbs} lbs // ${c.step3_brakingProcedure.trailBrakingSec}s Trail</span>
-          <div class="sub-text text-muted">${c.step3_brakingProcedure.brakeStyle}</div>
-        </td>
-      </tr>
-    `).join('');
+    let rowsHtml = '';
+    if (hasCorners) {
+      rowsHtml = ooe.corners.map(c => `
+        <tr class="study-table-row" data-turn="${c.number}">
+          <td class="font-bold text-accent">Turn ${c.number}</td>
+          <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
+          <td>
+            <span class="font-bold text-gold">${c.step1_lineStrategy.approach}</span>
+            <div class="sub-text text-muted">Safety Margin: ${c.step1_lineStrategy.safetyMarginFt}ft</div>
+          </td>
+          <td>
+            <span class="font-bold text-green">TAP: ${c.step2_exitThrottle.tapDistanceBeforeApexM}m (${c.step2_exitThrottle.tapDistanceBeforeApexFt}ft) before apex</span>
+            <div class="sub-text text-muted">${c.step2_exitThrottle.squeezeRateText}</div>
+          </td>
+          <td>
+            <span class="font-bold text-cyan">${c.step3_brakingProcedure.thresholdPressureLbs} lbs // ${c.step3_brakingProcedure.trailBrakingSec}s Trail</span>
+            <div class="sub-text text-muted">${c.step3_brakingProcedure.brakeStyle}</div>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      rowsHtml = `
+        <tr>
+          <td colspan="5" class="text-center text-secondary font-mono" style="padding: 32px 16px;">
+            AWAITING TELEMETRY // Corner discipline, throttle application timing, and trail-braking pressure will be computed from vehicle telemetry.
+          </td>
+        </tr>
+      `;
+    }
 
     const debriefCard = this._renderDebriefingCard(
       4,
@@ -713,6 +771,7 @@ export class TrackStudyView {
         <div class="phase-card data-table-card chamfer-br">
           <div class="card-header">
             <span class="card-title">CORNER EXECUTION TARGETS (LINE → EXIT THROTTLE → ENTRY BRAKING)</span>
+            <span class="text-muted text-xs">${hasCorners ? `${ooe.corners.length} Turns Structured` : 'Awaiting Telemetry'}</span>
           </div>
           <div class="study-table-wrap">
             <table class="study-data-table">
@@ -744,15 +803,27 @@ export class TrackStudyView {
   // ---------------------------------------------------------------------------
   _renderPhase5(container) {
     const hw = this.studyData.phase5_hardware;
+    const hasGears = hw.gearingMatrix && hw.gearingMatrix.length > 0;
 
-    let gearRowsHtml = hw.gearingMatrix.map(g => `
-      <tr>
-        <td class="font-bold text-accent">${g.turn}</td>
-        <td class="font-bold text-cyan">GEAR ${g.gear}</td>
-        <td>${g.minSpeedMph} mph</td>
-        <td class="text-secondary">${g.shiftNote}</td>
-      </tr>
-    `).join('');
+    let gearRowsHtml = '';
+    if (hasGears) {
+      gearRowsHtml = hw.gearingMatrix.map(g => `
+        <tr>
+          <td class="font-bold text-accent">${g.turn}</td>
+          <td class="font-bold text-cyan">GEAR ${g.gear}</td>
+          <td>${g.minSpeedMph} mph</td>
+          <td class="text-secondary">${g.shiftNote}</td>
+        </tr>
+      `).join('');
+    } else {
+      gearRowsHtml = `
+        <tr>
+          <td colspan="4" class="text-center text-secondary font-mono" style="padding: 24px 16px;">
+            Turn gearing will be populated once vehicle telemetry is parsed.
+          </td>
+        </tr>
+      `;
+    }
 
     const debriefCard = this._renderDebriefingCard(
       5,
@@ -818,7 +889,7 @@ export class TrackStudyView {
         <!-- Gearing Matrix -->
         <div class="phase-card data-table-card chamfer-br">
           <div class="card-header">
-            <span class="card-title">3. GEARING POWERBAND MATRIX</span>
+            <span class="card-title">3. GEARING & RPM POWERBAND RECON</span>
           </div>
           <div class="study-table-wrap">
             <table class="study-data-table">
@@ -921,6 +992,31 @@ export class TrackStudyView {
     this.liveTelemetryActive = true;
     if (this.telemetrySamples.length < 5000) {
       this.telemetrySamples.push(sample);
+    }
+
+    // Dynamic Telemetry Ingestion: When telemetry samples accumulate, parse real track corners
+    if (this.currentTrackProfile && (this.telemetrySamples.length === 25 || this.telemetrySamples.length % 75 === 0)) {
+      try {
+        const updatedStudy = this.engine.generateStudy(this.currentTrackProfile, this.telemetrySamples);
+        const prevTurnCount = this.studyData?.phase1_macro?.corners?.length || 0;
+        const newTurnCount = updatedStudy?.phase1_macro?.corners?.length || 0;
+
+        if (newTurnCount > 0 && newTurnCount !== prevTurnCount) {
+          this.studyData = updatedStudy;
+          this.currentTrackProfile.corners = updatedStudy.phase1_macro.corners;
+          this.currentTrackProfile.turnsCount = newTurnCount;
+          trackStudyLibrary.updateTrackProfile(this.selectedTrackId, this.currentTrackProfile);
+          this.render();
+          if (window.PitToast) {
+            window.PitToast.info(`Telemetry parsed: ${newTurnCount} corners mapped for ${this.studyData.circuit.name}`, 'TRACK MAPPED');
+          }
+        } else if (newTurnCount > 0 && !this.studyData) {
+          this.studyData = updatedStudy;
+          this.render();
+        }
+      } catch (err) {
+        console.warn('[TrackStudyView] Dynamic telemetry parsing error:', err);
+      }
     }
 
     // Update status pill & dot
