@@ -6,6 +6,7 @@
 
 import { trackEditorEngine, WAYPOINT_TYPES, CORNER_TYPES } from './analysis/track-editor-engine.js';
 import { trackStudyLibrary } from './analysis/track-study-library.js';
+import { trackLibraryStore } from './track-library-store.js';
 
 export class TrackEditorView {
   constructor() {
@@ -161,7 +162,8 @@ export class TrackEditorView {
   }
 
   /**
-   * Loads track profile, stored waypoints, or synthesizes from 5-lap session telemetry
+   * Loads track profile and real telemetry baseline if available.
+   * Zero-mock policy: does NOT generate fake sinusoidal tracks or dummy waypoints.
    * @param {string} trackId 
    */
   loadTrack(trackId) {
@@ -169,7 +171,7 @@ export class TrackEditorView {
     this.trackProfile = trackStudyLibrary.getTrackStudyProfile(trackId);
     this.waypoints = trackStudyLibrary.getWaypoints(trackId);
 
-    // Check if session has 5 completed laps
+    // Check if live session has 5 completed laps
     const sessionLaps = window.apexApp?.session?.laps || [];
     const has5Laps = trackEditorEngine.hasValid5LapBaseline(sessionLaps);
 
@@ -184,19 +186,18 @@ export class TrackEditorView {
       }
     }
 
-    // Ingest 5-lap baseline or construct synthetic geometry
+    // Ingest 5-lap baseline from live session or from previously recorded track library
+    const storedTrack = trackLibraryStore.getTrackById(trackId);
     if (has5Laps) {
       const baseline = trackEditorEngine.synthesize5LapBaseline(sessionLaps);
       this.spline = baseline.spline;
       this.telemetryData = baseline.telemetry;
+    } else if (storedTrack && storedTrack.vectorMap?.points?.length > 10) {
+      this._loadFromStoredVectorMap(storedTrack);
     } else {
-      this._generateDefaultCircuitSpline();
-    }
-
-    // If no waypoints exist, auto-detect or seed initial corner points
-    if (this.waypoints.length === 0 && this.spline.length > 0) {
-      this.waypoints = trackEditorEngine.autoDetectWaypoints(this.spline);
-      this.saveWaypointsToStore();
+      // Zero mock data: empty spline and telemetry until real laps are driven
+      this.spline = [];
+      this.telemetryData = [];
     }
 
     this.fitTrackToCanvas();
@@ -204,18 +205,17 @@ export class TrackEditorView {
     this.renderSidebar();
   }
 
-  _generateDefaultCircuitSpline() {
-    // Generate synthetic 2D Sebring-style closed circuit
-    const numPoints = 180;
+  _loadFromStoredVectorMap(storedTrack) {
+    const rawPoints = storedTrack.vectorMap.points || [];
     const spline = [];
     const telemetry = [];
     let cumDist = 0;
 
-    for (let i = 0; i < numPoints; i++) {
-      const angle = (i / numPoints) * Math.PI * 2;
-      const r = 250 + 60 * Math.sin(3 * angle) + 40 * Math.cos(2 * angle);
-      const x = r * Math.cos(angle);
-      const z = (r * 0.7) * Math.sin(angle);
+    for (let i = 0; i < rawPoints.length; i++) {
+      const p = rawPoints[i];
+      const x = p.x || 0;
+      const z = p.y !== undefined ? p.y : (p.z || 0);
+      const speedMph = (p.speed || 0) * 2.23694;
 
       if (i > 0) {
         const prev = spline[i - 1];
@@ -224,18 +224,22 @@ export class TrackEditorView {
         cumDist += Math.sqrt(dx * dx + dz * dz);
       }
 
-      const speedMph = 60 + 40 * Math.cos(angle * 2);
-      const throttle = speedMph > 75 ? 100 : Math.max(0, (speedMph - 50) * 4);
-      const brake = speedMph < 65 ? Math.min(100, (70 - speedMph) * 8) : 0;
-      const steer = Math.sin(angle * 3) * 20;
-      const gLat = (steer / 20) * 1.2;
-
-      spline.push({ index: i, x, z, distance: cumDist, speedMph, throttle, brake, steer, gLat });
+      spline.push({
+        index: i,
+        x,
+        z,
+        distance: cumDist,
+        speedMph,
+        throttle: p.state === 'throttle' ? 100 : 0,
+        brake: p.state === 'brake' ? 80 : 0,
+        steer: 0,
+        gLat: 0
+      });
     }
 
-    const totalD = cumDist > 0 ? cumDist : 1;
+    const totalDist = cumDist > 0 ? cumDist : 1;
     spline.forEach(p => {
-      p.normalizedDistance = p.distance / totalD;
+      p.normalizedDistance = p.distance / totalDist;
       telemetry.push({
         distance: p.distance,
         normDist: p.normalizedDistance,
@@ -299,12 +303,43 @@ export class TrackEditorView {
    * 2D Track Map Renderer
    */
   renderMap() {
-    if (!this.mapCtx || !this.mapCanvas || this.spline.length === 0) return;
+    if (!this.mapCtx || !this.mapCanvas) return;
     const ctx = this.mapCtx;
     const { width, height } = this.mapCanvas;
-    const { zoom, offsetX, offsetY } = this.viewTransform;
 
     ctx.clearRect(0, 0, width, height);
+
+    if (this.spline.length === 0) {
+      ctx.save();
+      // Subtle background grid
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, height); ctx.stroke();
+      }
+      for (let y = 0; y < height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 16px "Chakra Petch", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('AWAITING 5-LAP STINT TELEMETRY', width / 2, height / 2 - 20);
+
+      ctx.fillStyle = '#888888';
+      ctx.font = '12px "JetBrains Mono", monospace';
+      ctx.fillText('Drive 5 clean laps on track in Forza Motorsport to extract real circuit geometry.', width / 2, height / 2 + 8);
+
+      const sessionLaps = window.apexApp?.session?.laps || [];
+      ctx.fillStyle = '#00e5ff';
+      ctx.font = 'bold 11px "JetBrains Mono", monospace';
+      ctx.fillText(`CURRENT STINT: ${sessionLaps.length} / 5 LAPS RECORDED`, width / 2, height / 2 + 34);
+
+      ctx.restore();
+      return;
+    }
+
+    const { zoom, offsetX, offsetY } = this.viewTransform;
 
     // Coordinate space converter
     const toScreen = (x, z) => ({
@@ -406,11 +441,21 @@ export class TrackEditorView {
    * Synchronized Telemetry Strip Graph Renderer
    */
   renderTelemetry() {
-    if (!this.telemetryCtx || !this.telemetryCanvas || this.telemetryData.length === 0) return;
+    if (!this.telemetryCtx || !this.telemetryCanvas) return;
     const ctx = this.telemetryCtx;
     const { width, height } = this.telemetryCanvas;
 
     ctx.clearRect(0, 0, width, height);
+
+    if (this.telemetryData.length === 0) {
+      ctx.save();
+      ctx.fillStyle = '#666666';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('Telemetry timeline will populate when 5-lap baseline is recorded.', width / 2, height / 2 + 4);
+      ctx.restore();
+      return;
+    }
 
     // Background grid lines
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
@@ -509,12 +554,18 @@ export class TrackEditorView {
 
   _renderWaypointsListTab(container) {
     if (this.waypoints.length === 0) {
+      const hasSpline = this.spline.length > 0;
       container.innerHTML = `
-        <div style="text-align: center; color: #777; padding: 40px 10px; font-family: monospace; font-size: 12px;">
-          <p>No waypoints defined yet.</p>
-          <button id="btn-empty-autodetect" class="btn btn-secondary" style="margin-top: 10px; font-size: 11px;">
-            Auto-Detect from 5-Lap Baseline
-          </button>
+        <div style="text-align: center; color: #777; padding: 40px 14px; font-family: monospace; font-size: 12px; line-height: 1.5;">
+          <p style="color: #aaa; margin-bottom: 6px;">No waypoints defined for this circuit.</p>
+          ${hasSpline ? `
+            <p style="font-size: 11px; color: #888;">Telemetry baseline is active. Click below to automatically extract Skip Barber braking, turn-in, and apex markers.</p>
+            <button id="btn-empty-autodetect" class="btn btn-primary" style="margin-top: 12px; font-size: 11px; font-weight: 700;">
+              ⚡ Auto-Detect from 5-Lap Baseline
+            </button>
+          ` : `
+            <p style="font-size: 11px; color: #666;">Complete 5 laps in Forza Motorsport to enable telemetry-based milestone extraction.</p>
+          `}
         </div>
       `;
       const btn = container.querySelector('#btn-empty-autodetect');
