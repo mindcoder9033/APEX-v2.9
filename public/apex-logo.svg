@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="apexGlow" cx="50%" cy="44%" r="48%" fx="50%" fy="44%">
+      <stop offset="0%" stop-color="#E10600" stop-opacity="0.32" />
+      <stop offset="60%" stop-color="#E10600" stop-opacity="0.06" />
+      <stop offset="100%" stop-color="#0A0C10" stop-opacity="0" />
+    </radialGradient>
+    
+    <!-- Chamfered Outer Plate Clip -->
+    <clipPath id="chamferClip">
+      <polygon points="154,44 870,44 980,154 980,870 870,980 154,980 44,870 44,154" />
+    </clipPath>
+
+    <!-- Metallic Wing Gradient -->
+    <linearGradient id="metalLeft" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#E2E8F0" />
+      <stop offset="100%" stop-color="#FFFFFF" />
+    </linearGradient>
+
+    <linearGradient id="metalRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#CBD5E1" />
+    </linearGradient>
+
+    <!-- Crimson Gradient -->
+    <linearGradient id="f1Crimson" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF1E1E" />
+      <stop offset="100%" stop-color="#B80500" />
+    </linearGradient>
+  </defs>
+
+  <!-- 1. Deep Obsidian Base Container -->
+  <rect width="1024" height="1024" fill="#0A0C10" />
+
+  <!-- 2. Ambient F1 Crimson Radial Glow -->
+  <rect width="1024" height="1024" fill="url(#apexGlow)" />
+
+  <!-- 3. Chamfered Tech-Plate Background & Borders -->
+  <g id="tech-frame">
+    <!-- Inner Plate -->
+    <polygon points="154,44 870,44 980,154 980,870 870,980 154,980 44,870 44,154" fill="#0D0F12" />
+    
+    <!-- Outer Chamfer Border -->
+    <polygon points="154,44 870,44 980,154 980,870 870,980 154,980 44,870 44,154" 
+             fill="none" stroke="#222936" stroke-width="4" />
+             
+    <!-- Inner Fine Tech Border -->
+    <polygon points="160,62 864,62 962,160 962,864 864,962 160,962 62,864 62,160" 
+             fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="2" />
+
+    <!-- Corner F1 Crimson & Cyan Precision Ticks -->
+    <line x1="870" y1="44" x2="980" y2="154" stroke="#E10600" stroke-width="5" stroke-linecap="square" />
+    <line x1="154" y1="980" x2="44" y2="870" stroke="#E10600" stroke-width="5" stroke-linecap="square" />
+
+    <!-- Top Telemetry Micro-Ticks -->
+    <g stroke="rgba(255,255,255,0.2)" stroke-width="2">
+      <line x1="416" y1="80" x2="416" y2="88" />
+      <line x1="448" y1="80" x2="448" y2="88" />
+      <line x1="480" y1="80" x2="480" y2="88" />
+      <line x1="512" y1="76" x2="512" y2="92" stroke="#E10600" stroke-width="3" />
+      <line x1="544" y1="80" x2="544" y2="88" />
+      <line x1="576" y1="80" x2="576" y2="88" />
+      <line x1="608" y1="80" x2="608" y2="88" />
+    </g>
+
+    <!-- Bottom Telemetry Micro-Ticks -->
+    <g stroke="rgba(255,255,255,0.2)" stroke-width="2">
+      <line x1="416" y1="936" x2="416" y2="944" />
+      <line x1="448" y1="936" x2="448" y2="944" />
+      <line x1="480" y1="936" x2="480" y2="944" />
+      <line x1="512" y1="932" x2="512" y2="948" stroke="#00E5FF" stroke-width="3" />
+      <line x1="544" y1="936" x2="544" y2="944" />
+      <line x1="576" y1="936" x2="576" y2="944" />
+      <line x1="608" y1="936" x2="608" y2="944" />
+    </g>
+  </g>
+
+  <!-- 4. Core Icon: Aerodynamic Stylized "A" -->
+  <g id="apex-mark">
+    <!-- Left Wing -->
+    <polygon points="194,737 284,737 512,316 512,225" fill="url(#metalLeft)" />
+    
+    <!-- Right Wing -->
+    <polygon points="512,225 512,316 740,737 830,737" fill="url(#metalRight)" />
+
+    <!-- Chamfered Base Feet Cutouts -->
+    <polygon points="194,737 234,737 194,697" fill="#0D0F12" />
+    <polygon points="830,737 790,737 830,697" fill="#0D0F12" />
+
+    <!-- Center Dynamic Apex Chevron -->
+    <polygon points="287,594 512,516 737,594 715,635 512,565 309,635" fill="url(#f1Crimson)" />
+
+    <!-- Center Apex Node Diamond -->
+    <polygon points="512,396 526,410 512,424 498,410" fill="#FFFFFF" />
+
+    <!-- Aero Speed Slits -->
+    <g stroke="#E10600" stroke-width="3" stroke-linecap="round">
+      <line x1="684" y1="701" x2="698" y2="687" />
+      <line x1="670" y1="683" x2="684" y2="669" />
+      <line x1="656" y1="665" x2="670" y2="651" />
+    </g>
+  </g>
+
+  <!-- 5. High-Tech Precision Wordmark: APEX -->
+  <g id="wordmark" stroke-linecap="round" stroke-linejoin="round">
+    <!-- A -->
+    <path d="M 355 868 L 371 830 L 387 868" fill="none" stroke="#FFFFFF" stroke-width="7" />
+    <line x1="362" y1="855" x2="380" y2="855" stroke="#E10600" stroke-width="6" />
+
+    <!-- P -->
+    <path d="M 460 868 L 460 830 L 488 830 L 488 851 L 460 851" fill="none" stroke="#FFFFFF" stroke-width="7" />
+
+    <!-- E -->
+    <path d="M 565 868 L 565 830 L 593 830" fill="none" stroke="#FFFFFF" stroke-width="7" />
+    <line x1="565" y1="849" x2="585" y2="849" stroke="#E10600" stroke-width="6" />
+    <line x1="565" y1="868" x2="593" y2="868" stroke="#FFFFFF" stroke-width="7" />
+
+    <!-- X -->
+    <line x1="670" y1="830" x2="702" y2="868" stroke="#FFFFFF" stroke-width="7" />
+    <line x1="702" y1="830" x2="670" y2="868" stroke="#FFFFFF" stroke-width="7" />
+  </g>
+</svg>
