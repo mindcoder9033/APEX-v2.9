@@ -305,7 +305,7 @@ export class LiveHudRenderer {
               </div>
               <div style="position: relative; height: 14px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
                 <div style="position: absolute; left: 88%; width: 12%; height: 100%; background: rgba(0, 204, 102, 0.25); border-left: 1px dashed var(--color-success);"></div>
-                <div id="hud-t5-brake-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #FF6B00, #00FFCC); transition: width 0.04s ease-out;"></div>
+                <div id="hud-t5-brake-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; transform-origin: left center; transform: scaleX(0); background: linear-gradient(90deg, #FF6B00, #00FFCC); transition: transform 0.04s cubic-bezier(0.23, 1, 0.32, 1); will-change: transform;"></div>
               </div>
               <div style="display: flex; justify-content: space-between; margin-top: 6px; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted);">
                 <span>Transition Squeeze: <strong id="hud-t5-trans-timer" style="color: var(--color-text-primary);">0.00s</strong> (&lt;0.35s target)</span>
@@ -401,7 +401,7 @@ export class LiveHudRenderer {
                     <span id="hud-t6-pedal-throttle" style="color: #00FFCC; font-weight: 700;">0%</span>
                   </div>
                   <div style="height: 12px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-                    <div id="hud-t6-fill-throttle" style="height: 100%; width: 0%; background: #00FFCC; transition: width 0.04s ease-out;"></div>
+                    <div id="hud-t6-fill-throttle" style="height: 100%; width: 100%; transform-origin: left center; transform: scaleX(0); background: #00FFCC; transition: transform 0.04s cubic-bezier(0.23, 1, 0.32, 1); will-change: transform;"></div>
                   </div>
                 </div>
                 <!-- Brake Pressure (lbs) -->
@@ -411,7 +411,7 @@ export class LiveHudRenderer {
                     <span id="hud-t6-pedal-brake" style="color: #FF6B00; font-weight: 700;">0 lbs</span>
                   </div>
                   <div style="height: 12px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-                    <div id="hud-t6-fill-brake" style="height: 100%; width: 0%; background: #FF6B00; transition: width 0.04s ease-out;"></div>
+                    <div id="hud-t6-fill-brake" style="height: 100%; width: 100%; transform-origin: left center; transform: scaleX(0); background: #FF6B00; transition: transform 0.04s cubic-bezier(0.23, 1, 0.32, 1); will-change: transform;"></div>
                   </div>
                 </div>
               </div>
@@ -434,7 +434,7 @@ export class LiveHudRenderer {
                 </div>
               </div>
               <div style="position: relative; height: 10px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-                <div id="hud-t6-stress-fill" style="height: 100%; width: 10%; background: linear-gradient(90deg, #00FFCC 0%, #FFD700 75%, #FF3366 100%); transition: width 0.05s ease-out;"></div>
+                <div id="hud-t6-stress-fill" style="height: 100%; width: 100%; transform-origin: left center; transform: scaleX(0.1); background: linear-gradient(90deg, #00FFCC 0%, #FFD700 75%, #FF3366 100%); transition: transform 0.04s cubic-bezier(0.23, 1, 0.32, 1); will-change: transform;"></div>
               </div>
             </div>
           </div>
@@ -502,7 +502,7 @@ export class LiveHudRenderer {
             </div>
             <div style="position: relative; height: 14px; background: #1a1a1e; border-radius: 2px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
               <div style="position: absolute; left: 50%; width: 50%; height: 100%; background: rgba(0, 191, 255, 0.15); border-left: 1px dashed #00BFFF;"></div>
-              <div id="hud-vis-meter-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: linear-gradient(90deg, #E10600 0%, #FFD700 45%, #00BFFF 80%, #00CC66 100%); transition: width 0.08s ease-out;"></div>
+              <div id="hud-vis-meter-fill" style="position: absolute; top: 0; left: 0; height: 100%; width: 100%; transform-origin: left center; transform: scaleX(1); background: linear-gradient(90deg, #E10600 0%, #FFD700 45%, #00BFFF 80%, #00CC66 100%); transition: transform 0.08s cubic-bezier(0.23, 1, 0.32, 1); will-change: transform;"></div>
             </div>
             <div id="hud-poor-vis-alert" class="hud-poor-vis-alert" style="display: none; margin-top: 8px;">
               ⚠️ SLOW DOWN - POOR VISIBILITY (<50%)! DROP BACK 2 CAR LENGTHS OR MOVE OFFLINE
@@ -1360,7 +1360,7 @@ export class LiveHudRenderer {
       }
 
       const elFill = document.getElementById('hud-t5-brake-fill');
-      if (elFill) elFill.style.width = `${brakePct}%`;
+      if (elFill) elFill.style.transform = `scaleX(${Math.min(1, Math.max(0, brakePct / 100))})`;
 
       const elThreshold = document.getElementById('hud-t5-threshold-status');
       if (elThreshold) {
@@ -1539,12 +1539,12 @@ export class LiveHudRenderer {
       const elPedalT = document.getElementById('hud-t6-pedal-throttle');
       const elFillT = document.getElementById('hud-t6-fill-throttle');
       if (elPedalT) elPedalT.textContent = `${throttlePct}%`;
-      if (elFillT) elFillT.style.width = `${throttlePct}%`;
+      if (elFillT) elFillT.style.transform = `scaleX(${Math.min(1, Math.max(0, throttlePct / 100))})`;
 
       const elPedalB = document.getElementById('hud-t6-pedal-brake');
       const elFillB = document.getElementById('hud-t6-fill-brake');
       if (elPedalB) elPedalB.textContent = `${brakeLbs} lbs`;
-      if (elFillB) elFillB.style.width = `${brakePct}%`;
+      if (elFillB) elFillB.style.transform = `scaleX(${Math.min(1, Math.max(0, brakePct / 100))})`;
 
       // Live Tachometer Display & Powerband Shift Lights (Peak at ~6,800 RPM in M2 CS / M3)
       const maxPowerbandRpm = Math.round(sample.engine?.maxRpm || sample.maxRpm || sample.maxEngineRpm || sample.EngineMaxRpm || 7000);
@@ -1557,7 +1557,7 @@ export class LiveHudRenderer {
       const powerbandPct = Math.min(100, Math.max(10, Math.round((currentRpm / maxPowerbandRpm) * 100)));
       const elStressFill = document.getElementById('hud-t6-stress-fill');
       const elPowerbandStatus = document.getElementById('hud-t6-powerband-status');
-      if (elStressFill) elStressFill.style.width = `${powerbandPct}%`;
+      if (elStressFill) elStressFill.style.transform = `scaleX(${Math.min(1, Math.max(0, powerbandPct / 100))})`;
       if (elPowerbandStatus) {
         if (powerbandPct >= 92 && powerbandPct <= 98) {
           elPowerbandStatus.textContent = '🎯 SHIFT NOW (95%)';
@@ -1765,7 +1765,7 @@ export class LiveHudRenderer {
 
       const elVisMeterFill = document.getElementById('hud-vis-meter-fill');
       if (elVisMeterFill) {
-        elVisMeterFill.style.width = `${visScore}%`;
+        elVisMeterFill.style.transform = `scaleX(${Math.min(1, Math.max(0, visScore / 100))})`;
       }
 
       const elVisMeterText = document.getElementById('hud-vis-meter-text');

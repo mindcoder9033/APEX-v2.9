@@ -690,10 +690,15 @@ class ApexApp {
         titleDot.classList.add('active');
         const sessionName = this.session?.sessionName || 'PIT-WALL TELEMETRY';
         titleText.textContent = `LIVE // ${sessionName.toUpperCase()}`;
+        if (window.PitToast && !this._hasNotifiedConnected) {
+          this._hasNotifiedConnected = true;
+          window.PitToast.telemetry('Telemetry Link Active (Port 9999)', 'PIT-WALL CONNECTED');
+        }
       } else if (state === 'connecting') {
         titleText.textContent = 'CONNECTING // AWAITING UDP TELEMETRY';
       } else {
         titleText.textContent = 'STANDBY // NO ACTIVE TELEMETRY';
+        this._hasNotifiedConnected = false;
       }
     }
   }
@@ -716,6 +721,13 @@ class ApexApp {
   }
 
   switchView(viewName) {
+    // Blur crossfade mask on container during view swap (Emil Kowalski Design Eng)
+    const appContainer = document.querySelector('.app-container') || document.body;
+    appContainer.classList.add('tab-view-transitioning');
+    setTimeout(() => {
+      appContainer.classList.remove('tab-view-transitioning');
+    }, 180);
+
     // 1. Hide all views
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
     if (this.viewTrackStudy) this.viewTrackStudy.style.display = 'none';

@@ -1,0 +1,196 @@
+/* ==========================================================================
+   APEX - Pit-Wall Toast Notification System
+   Sonner-Inspired Design Engineering, OLED Theme, GPU Accelerated
+   ========================================================================== */
+
+#apex-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 10px;
+  pointer-events: none;
+  max-width: 380px;
+  width: calc(100vw - 48px);
+}
+
+.apex-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border-bright, #333333);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8), 0 0 15px rgba(0, 0, 0, 0.5);
+  color: #FFFFFF;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: auto;
+  user-select: none;
+  cursor: pointer;
+  touch-action: pan-y;
+  will-change: transform, opacity;
+  transform-origin: bottom right;
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1), 
+              opacity 200ms ease, 
+              box-shadow 200ms ease;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+
+/* Entry Animation via @starting-style (CSS Modern Spec) */
+@starting-style {
+  .apex-toast {
+    opacity: 0;
+    transform: translateY(18px) scale(0.95);
+  }
+}
+
+/* Fallback for browsers without @starting-style */
+.apex-toast.toast-entering {
+  opacity: 0;
+  transform: translateY(18px) scale(0.95);
+}
+
+.apex-toast.toast-exiting {
+  opacity: 0;
+  transform: translateY(12px) scale(0.92);
+  transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1), opacity 150ms ease;
+  pointer-events: none;
+}
+
+/* Hover & Active Feedback */
+@media (hover: hover) and (pointer: fine) {
+  .apex-toast:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.9), 0 0 20px var(--color-f1-red-glow, rgba(225, 6, 0, 0.25));
+  }
+}
+
+.apex-toast:active {
+  transform: scale(0.97);
+  transition-duration: 120ms;
+}
+
+/* Icon & Indicator */
+.toast-icon-zone {
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.toast-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.toast-title {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #FFFFFF;
+}
+
+.toast-message {
+  font-size: 12px;
+  color: #AAAAAA;
+  word-break: break-word;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: #666666;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 140ms ease;
+}
+
+.toast-close:hover {
+  color: #FFFFFF;
+}
+
+/* Variants */
+.apex-toast.toast-success {
+  border-left: 3px solid var(--color-success, #00CC66);
+}
+.apex-toast.toast-success .toast-icon-zone {
+  color: var(--color-success, #00CC66);
+  background: rgba(0, 204, 102, 0.12);
+}
+
+.apex-toast.toast-warning {
+  border-left: 3px solid var(--color-warning, #FFCC00);
+}
+.apex-toast.toast-warning .toast-icon-zone {
+  color: var(--color-warning, #FFCC00);
+  background: rgba(255, 204, 0, 0.12);
+}
+
+.apex-toast.toast-error {
+  border-left: 3px solid var(--color-error, #FF3333);
+}
+.apex-toast.toast-error .toast-icon-zone {
+  color: var(--color-error, #FF3333);
+  background: rgba(255, 51, 51, 0.12);
+}
+
+.apex-toast.toast-lap {
+  border-left: 3px solid #FFD700;
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.85), 0 0 20px rgba(255, 215, 0, 0.25);
+}
+.apex-toast.toast-lap .toast-icon-zone {
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.15);
+}
+
+.apex-toast.toast-telemetry {
+  border-left: 3px solid var(--color-f1-red, #E10600);
+}
+.apex-toast.toast-telemetry .toast-icon-zone {
+  color: var(--color-f1-red, #E10600);
+  background: rgba(225, 6, 0, 0.15);
+}
+
+/* Progress bar inside toast */
+.toast-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  background: var(--color-f1-red, #E10600);
+  width: 100%;
+  transform-origin: left center;
+  transform: scaleX(1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .apex-toast {
+    transition: opacity 150ms ease !important;
+    transform: none !important;
+  }
+}
