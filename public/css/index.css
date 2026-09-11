@@ -5057,6 +5057,82 @@ select,
   flex-wrap: wrap;
 }
 
+.btn-study-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: var(--color-cyan);
+  cursor: pointer;
+  transition: all var(--dur-fast) var(--ease-out);
+}
+
+.btn-study-save:hover {
+  background: rgba(0, 229, 255, 0.22);
+  border-color: var(--color-cyan);
+  color: #FFFFFF;
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-study-save:active {
+  transform: translateY(0);
+}
+
+.study-save-status-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 4px 8px;
+  border-radius: 3px;
+  background: rgba(0, 230, 118, 0.15);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  color: var(--color-success);
+  transition: all 300ms ease;
+}
+
+.study-save-status-pill.saved-active {
+  animation: pulse-saved 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-saved {
+  0% { box-shadow: 0 0 4px rgba(0, 230, 118, 0.3); }
+  100% { box-shadow: 0 0 12px rgba(0, 230, 118, 0.8); }
+}
+
+/* Inline Editable Field Styling */
+.editable-note,
+.editable-field {
+  display: inline-block;
+  min-width: 30px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+  padding: 1px 3px;
+  border-radius: 2px;
+  cursor: text;
+  transition: background-color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
+}
+
+.editable-note:hover,
+.editable-field:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-bottom-color: var(--color-cyan);
+}
+
+.editable-note:focus,
+.editable-field:focus {
+  outline: none;
+  background: rgba(0, 229, 255, 0.1);
+  border-bottom: 1px solid var(--color-cyan);
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.25);
+  color: #FFFFFF;
+}
+
+.phase-mandate-text .editable-note {
+  display: inline;
+  font-style: normal;
+}
+
 #btn-study-export-pdf.disabled-telemetry-required,
 #btn-study-export-pdf:disabled {
   opacity: 0.45;

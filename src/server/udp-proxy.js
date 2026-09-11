@@ -169,8 +169,163 @@ export class UdpProxyServer {
    */
   startHttpServer() {
     return new Promise((resolve, reject) => {
+      const DATA_DIR = path.resolve(__dirname, '../../data');
+      const TRACK_STUDIES_DIR = path.join(DATA_DIR, 'track-studies');
+      const DOSSIERS_DIR = path.join(DATA_DIR, 'dossiers');
+
+      if (!fs.existsSync(TRACK_STUDIES_DIR)) fs.mkdirSync(TRACK_STUDIES_DIR, { recursive: true });
+      if (!fs.existsSync(DOSSIERS_DIR)) fs.mkdirSync(DOSSIERS_DIR, { recursive: true });
+
       this.httpServer = http.createServer(async (req, res) => {
-        let reqPath = req.url.split('?')[0];
+        const parsedUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+        const pathname = parsedUrl.pathname;
+
+        // --- REST API ENDPOINTS ---
+        if (pathname.startsWith('/api/track-stud')) {
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+          if (req.method === 'OPTIONS') {
+            res.writeHead(204);
+            res.end();
+            return;
+          }
+
+          // 1. GET /api/track-studies (List all saved studies)
+          if (pathname === '/api/track-studies' && req.method === 'GET') {
+            try {
+              const files = fs.readdirSync(TRACK_STUDIES_DIR).filter(f => f.endsWith('.json'));
+              const studies = files.map(file => {
+                try {
+                  const content = JSON.parse(fs.readFileSync(path.join(TRACK_STUDIES_DIR, file), 'utf8'));
+                  return {
+                    trackId: content.trackId || path.basename(file, '.json'),
+                    trackName: content.trackName || content.circuit?.name || 'Circuit',
+                    lapsCompleted: content.lapsCompleted || 0,
+                    certified: content.certified || false,
+                    updatedAt: content.updatedAt || null
+                  };
+                } catch {
+                  return null;
+                }
+              }).filter(Boolean);
+
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: true, count: studies.length, studies }));
+            } catch (err) {
+              res.writeHead(500, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ success: false, error: err.message }));
+            }
+            return;
+          }
+
+          // 2. POST /api/track-study/save-pdf (Archive generated PDF dossier)
+          if (pathname === '/api/track-study/save-pdf' && req.method === 'POST') {
+            let bodyChunks = [];
+            req.on('data', chunk => bodyChunks.push(chunk));
+            req.on('end', () => {
+              try {
+                const totalBuffer = Buffer.concat(bodyChunks);
+                const contentType = req.headers['content-type'] || '';
+                
+                let filename = `APEX_Track_Study_${Date.now()}.pdf`;
+                let pdfBuffer;
+
+                if (contentType.includes('application/json')) {
+                  const json = JSON.parse(totalBuffer.toString('utf8'));
+                  if (json.filename) filename = json.filename.replace(/[^a-zA-Z0-9_.-]/g, '_');
+                  if (json.pdfBase64) {
+                    pdfBuffer = Buffer.from(json.pdfBase64, 'base64');
+                  } else {
+                    throw new Error('No pdfBase64 data provided');
+                  }
+                } else {
+                  pdfBuffer = totalBuffer;
+                  const customHeaderName = req.headers['x-dossier-filename'];
+                  if (customHeaderName) {
+                    filename = customHeaderName.replace(/[^a-zA-Z0-9_.-]/g, '_');
+                  }
+                }
+
+                if (!filename.endsWith('.pdf')) filename += '.pdf';
+                const destPath = path.join(DOSSIERS_DIR, filename);
+                fs.writeFileSync(destPath, pdfBuffer);
+
+                console.log(`[DOSSIER ARCHIVE] Saved PDF to ${destPath} (${(pdfBuffer.length / 1024).toFixed(1)} KB)`);
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                  success: true,
+                  filename,
+                  sizeBytes: pdfBuffer.length,
+                  savedAt: new Date().toISOString()
+                }));
+              } catch (err) {
+                console.error('[DOSSIER ERROR] Failed to save PDF dossier:', err);
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: err.message }));
+              }
+            });
+            return;
+          }
+
+          // 3. GET /api/track-study/:trackId (Get single track study JSON)
+          const trackMatch = pathname.match(/^\/api\/track-study\/([^/?#]+)$/);
+          if (trackMatch) {
+            const trackId = decodeURIComponent(trackMatch[1]);
+            const safeTrackId = trackId.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const filePath = path.join(TRACK_STUDIES_DIR, `${safeTrackId}.json`);
+
+            if (req.method === 'GET') {
+              if (fs.existsSync(filePath)) {
+                try {
+                  const raw = fs.readFileSync(filePath, 'utf8');
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(raw);
+                } catch (err) {
+                  res.writeHead(500, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: false, error: err.message }));
+                }
+              } else {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: 'Track study dossier not found' }));
+              }
+              return;
+            }
+
+            // 4. POST /api/track-study/:trackId (Save single track study JSON)
+            if (req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', () => {
+                try {
+                  const parsed = JSON.parse(body);
+                  parsed.trackId = trackId;
+                  parsed.updatedAt = new Date().toISOString();
+
+                  fs.writeFileSync(filePath, JSON.stringify(parsed, null, 2), 'utf8');
+                  console.log(`[TRACK STUDY] Saved dossier for track '${trackId}' to ${filePath}`);
+
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({
+                    success: true,
+                    trackId,
+                    updatedAt: parsed.updatedAt
+                  }));
+                } catch (err) {
+                  console.error(`[TRACK STUDY ERROR] Failed saving dossier for '${trackId}':`, err);
+                  res.writeHead(400, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: false, error: err.message }));
+                }
+              });
+              return;
+            }
+          }
+        }
+
+        // --- STATIC FILE SERVING ---
+        let reqPath = pathname;
         if (!reqPath || reqPath === '/') {
           reqPath = '/index.html';
         }

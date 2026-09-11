@@ -19,6 +19,9 @@ export class TrackStudyView {
     this.selectedTrackId = 'sebring-international-raceway--full-circuit';
     this.currentTrackProfile = null;
     this.studyData = null;
+    this.customNotes = {};
+    this._autoSaveTimer = null;
+    this._statusTimer = null;
     this.telemetrySamples = [];
     this.liveTelemetryActive = false;
     this.hasNotifiedLiveSync = false;
@@ -113,6 +116,14 @@ export class TrackStudyView {
       });
     });
 
+    // Save Track Data Button
+    const btnSave = this.container.querySelector('#btn-study-save-data');
+    if (btnSave) {
+      btnSave.addEventListener('click', () => {
+        this.saveCurrentTrackStudy(true);
+      });
+    }
+
     // PDF Export Button
     const btnExport = this.container.querySelector('#btn-study-export-pdf');
     if (btnExport) {
@@ -153,10 +164,28 @@ export class TrackStudyView {
     this._sessionBaseLap = undefined;
     this._lastSampleLap = undefined;
 
-    // Load independent persistent study progression for this specific track
+    // Load independent persistent study progression and driver notes for this specific track
     const savedState = trackStudyLibrary.getTrackStudyState(trackId);
     this.lapsCompleted = savedState.lapsCompleted || 0;
+    this.customNotes = savedState.customNotes || {};
     this._hasAutoDownloadedPdf = this.lapsCompleted >= 5;
+
+    // Asynchronously try to fetch newer server version from REST API
+    trackStudyLibrary.fetchServerTrackStudy(trackId).then(serverState => {
+      if (serverState && serverState.customNotes && this.selectedTrackId === trackId) {
+        let hasNew = false;
+        for (const k of Object.keys(serverState.customNotes)) {
+          if (!this.customNotes[k]) {
+            this.customNotes[k] = serverState.customNotes[k];
+            hasNew = true;
+          }
+        }
+        if (hasNew) {
+          this._applyCustomNotesToStudyData();
+          this.render();
+        }
+      }
+    }).catch(() => {});
 
     // Compute unlocked phases from laps completed (Stage 1 is always unlocked; Stage k+1 unlocked if lapsCompleted >= k)
     const unlocked = new Set([1]);
@@ -183,6 +212,7 @@ export class TrackStudyView {
     this.currentTrackProfile = trackProfile;
     try {
       this.studyData = this.engine.generateStudy(trackProfile, telemetrySamples);
+      this._applyCustomNotesToStudyData();
       
       // If telemetry samples are provided, derive completed laps count automatically
       if (Array.isArray(telemetrySamples) && telemetrySamples.length > 0) {
@@ -201,6 +231,150 @@ export class TrackStudyView {
       }
     } catch (err) {
       console.error('[TrackStudyView] Error generating study data:', err);
+    }
+  }
+
+  _applyCustomNotesToStudyData() {
+    if (!this.studyData || !this.customNotes) return;
+    for (const [key, val] of Object.entries(this.customNotes)) {
+      if (val !== undefined && val !== null) {
+        this._applySingleCustomNote(key, val);
+      }
+    }
+  }
+
+  _applySingleCustomNote(key, val) {
+    if (!this.studyData) return;
+
+    if (key === 'phase1.mandate' && this.studyData.phase1_macro) {
+      this.studyData.phase1_macro.strategySummary = val;
+    } else if (key.startsWith('phase1.turn.')) {
+      const match = key.match(/^phase1\.turn\.(\d+)\.discipline$/);
+      if (match) {
+        const turnNum = parseInt(match[1], 10);
+        const c = this.studyData.phase1_macro?.corners?.find(x => x.number === turnNum);
+        if (c) c.disciplineAdvice = val;
+      }
+    } else if (key.startsWith('phase2.turn.')) {
+      const match = key.match(/^phase2\.turn\.(\d+)\.reconNote$/);
+      if (match) {
+        const turnNum = parseInt(match[1], 10);
+        const s = this.studyData.phase2_surface?.corners?.find(x => x.number === turnNum);
+        if (s) s.reconNote = val;
+      }
+    } else if (key.startsWith('phase3.turn.')) {
+      const match = key.match(/^phase3\.turn\.(\d+)\.(brakeMarker|turnInAnchor|apexAttitude|waypoint|trackOut)$/);
+      if (match) {
+        const turnNum = parseInt(match[1], 10);
+        const field = match[2];
+        const r = this.studyData.phase3_reference?.corners?.find(x => x.number === turnNum);
+        if (r) {
+          if (field === 'brakeMarker') r.brakePoint.markerText = val;
+          if (field === 'turnInAnchor') r.turnIn.visualAnchor = val;
+          if (field === 'apexAttitude') r.apex.attitudeCheck = val;
+          if (field === 'waypoint') r.waypoint.landmark = val;
+          if (field === 'trackOut') r.trackOut.visualTarget = val;
+        }
+      }
+    } else if (key.startsWith('phase4.turn.')) {
+      const match = key.match(/^phase4\.turn\.(\d+)\.(earlyApex|tapNote|brakeStyle)$/);
+      if (match) {
+        const turnNum = parseInt(match[1], 10);
+        const field = match[2];
+        const o = this.studyData.phase4_orderOfEffort?.corners?.find(x => x.number === turnNum);
+        if (o) {
+          if (field === 'earlyApex') o.step1_lineStrategy.earlyApexConsequence = val;
+          if (field === 'tapNote') o.step2_exitThrottle.squeezeRateText = val;
+          if (field === 'brakeStyle') o.step3_brakingProcedure.brakeStyle = val;
+        }
+      }
+    } else if (key.startsWith('phase5.turn.')) {
+      const match = key.match(/^phase5\.turn\.(.+)\.shiftNote$/);
+      if (match) {
+        const turnName = match[1];
+        const g = this.studyData.phase5_hardware?.gearingMatrix?.find(x => x.turn === turnName);
+        if (g) g.shiftNote = val;
+      }
+    } else if (key === 'phase5.tireWarmup' && this.studyData.phase5_hardware) {
+      this.studyData.phase5_hardware.tireThermalManagement.paceLapWarmupTactic = val;
+    } else if (key === 'phase5.brakeTuning' && this.studyData.phase5_hardware) {
+      this.studyData.phase5_hardware.brakeSystemManagement.dynamicAdjustmentTactic = val;
+    }
+  }
+
+  _bindEditableFields(container) {
+    if (!container) return;
+    const editables = container.querySelectorAll('.editable-note, .editable-field');
+    editables.forEach(el => {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !el.classList.contains('multiline')) {
+          e.preventDefault();
+          el.blur();
+        }
+      });
+
+      const handleEdit = () => {
+        const key = el.dataset.editKey;
+        const val = el.innerText.trim();
+        if (key) {
+          this.customNotes[key] = val;
+          this._applySingleCustomNote(key, val);
+          this._debouncedAutoSave();
+        }
+      };
+
+      el.addEventListener('blur', handleEdit);
+    });
+  }
+
+  _debouncedAutoSave() {
+    if (this._autoSaveTimer) clearTimeout(this._autoSaveTimer);
+    this._autoSaveTimer = setTimeout(() => {
+      this.saveCurrentTrackStudy(false);
+    }, 800);
+  }
+
+  saveCurrentTrackStudy(notify = true) {
+    if (!this.selectedTrackId) return;
+
+    // Collect any actively focused editable fields
+    if (this.container) {
+      const activeEl = this.container.querySelector('.editable-note:focus, .editable-field:focus');
+      if (activeEl && activeEl.dataset.editKey) {
+        const key = activeEl.dataset.editKey;
+        const val = activeEl.innerText.trim();
+        this.customNotes[key] = val;
+        this._applySingleCustomNote(key, val);
+      }
+    }
+
+    const stateToSave = {
+      unlockedPhases: Array.from(this.unlockedPhases),
+      lapsCompleted: this.lapsCompleted,
+      lastPhase: this.currentPhase,
+      customNotes: this.customNotes || {},
+      corners: this.currentTrackProfile?.corners || this.studyData?.phase1_macro?.corners || [],
+      circuit: this.studyData?.circuit || { name: this.currentTrackProfile?.trackName || 'Circuit' },
+      updatedAt: new Date().toISOString()
+    };
+
+    trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, stateToSave);
+
+    // Update status badge in header
+    const statusPill = this.container?.querySelector('#study-save-status');
+    if (statusPill) {
+      statusPill.style.display = 'inline-block';
+      statusPill.textContent = 'SAVED ✓';
+      statusPill.classList.add('saved-active');
+      if (this._statusTimer) clearTimeout(this._statusTimer);
+      this._statusTimer = setTimeout(() => {
+        statusPill.classList.remove('saved-active');
+      }, 2500);
+    }
+
+    if (notify && window.PitToast) {
+      const trackName = this.studyData?.circuit?.name || this.currentTrackProfile?.trackName || 'Circuit';
+      window.PitToast.success(`Persisted custom notes and telemetry data for ${trackName}.`, 'TRACK STUDY SAVED');
     }
   }
 
@@ -514,7 +688,9 @@ export class TrackStudyView {
           <td>${c.apexSpeedKmh || Math.round(c.apexSpeedMph * 1.60934)} km/h</td>
           <td class="font-mono ${c.followingStraightMeters > 300 ? 'text-green' : ''}">${c.followingStraightMeters} m</td>
           <td class="font-bold text-cyan">+${c.compoundLeverageSec}s</td>
-          <td class="text-secondary text-sm">${c.disciplineAdvice}</td>
+          <td class="text-secondary text-sm">
+            <span class="editable-note" data-edit-key="phase1.turn.${c.number}.discipline" contenteditable="true" title="Click to edit driver discipline strategy">${c.disciplineAdvice}</span>
+          </td>
         </tr>
       `).join('');
     } else {
@@ -536,7 +712,7 @@ export class TrackStudyView {
             <span class="phase-tag">PHASE 1: MACRO CORNER GRADING & PRIORITY</span>
             <span class="coverage-tag">${macro.straightsCoveragePct}% FULL THROTTLE / STRAIGHTS</span>
           </div>
-          <p class="phase-mandate-text"><strong>TACTICAL MANDATE:</strong> ${macro.strategySummary}</p>
+          <p class="phase-mandate-text"><strong>TACTICAL MANDATE:</strong> <span class="editable-note" data-edit-key="phase1.mandate" contenteditable="true" title="Click to edit tactical mandate">${macro.strategySummary}</span></p>
           <div class="kpi-mini-grid">
             <div class="kpi-item">
               <span class="kpi-label">LONGEST ACCELERATION</span>
@@ -584,6 +760,7 @@ export class TrackStudyView {
     `;
 
     this._bindRowSelection(container);
+    this._bindEditableFields(container);
   }
 
   // ---------------------------------------------------------------------------
@@ -621,7 +798,7 @@ export class TrackStudyView {
           </div>
           <div class="recon-note-box">
             <span class="recon-note-label">RECON ADVISORY:</span>
-            <span class="recon-note-text">${s.reconNote}</span>
+            <span class="recon-note-text editable-note" data-edit-key="phase2.turn.${s.number}.reconNote" contenteditable="true" title="Click to edit surface recon advisory">${s.reconNote}</span>
           </div>
         </div>
       `).join('');
@@ -652,6 +829,8 @@ export class TrackStudyView {
         ${lapGateCard}
       </div>
     `;
+
+    this._bindEditableFields(container);
   }
 
   // ---------------------------------------------------------------------------
@@ -668,23 +847,33 @@ export class TrackStudyView {
           <td class="font-bold text-accent">Turn ${r.number}</td>
           <td>
             <span class="font-bold ${r.brakePoint.isThresholdBraking ? 'text-red' : 'text-cyan'}">${r.brakePoint.distanceBeforeTurnInM}m</span>
-            <div class="sub-text text-muted">${r.brakePoint.markerText}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase3.turn.${r.number}.brakeMarker" contenteditable="true" title="Click to edit braking visual cue">${r.brakePoint.markerText}</span>
+            </div>
           </td>
           <td>
             <span class="font-bold text-cyan">${r.turnIn.targetKmh || Math.round(r.turnIn.targetMph * 1.60934)} km/h</span>
-            <div class="sub-text text-muted">${r.turnIn.visualAnchor}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase3.turn.${r.number}.turnInAnchor" contenteditable="true" title="Click to edit turn-in visual anchor">${r.turnIn.visualAnchor}</span>
+            </div>
           </td>
           <td>
             <span class="font-bold text-green">${r.apex.targetKmh || Math.round(r.apex.targetMph * 1.60934)} km/h // Yaw: ${r.apex.yawAngleTargetDeg}°</span>
-            <div class="sub-text text-muted">${r.apex.attitudeCheck}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase3.turn.${r.number}.apexAttitude" contenteditable="true" title="Click to edit apex attitude check">${r.apex.attitudeCheck}</span>
+            </div>
           </td>
           <td>
             <span class="waypoint-pill ${r.waypoint.needed ? 'required' : 'none'}">${r.waypoint.needed ? 'WAYPOINT NEEDED' : 'DIRECT LINE'}</span>
-            <div class="sub-text text-muted">${r.waypoint.landmark}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase3.turn.${r.number}.waypoint" contenteditable="true" title="Click to edit waypoint landmark">${r.waypoint.landmark}</span>
+            </div>
           </td>
           <td>
             <span class="font-bold">${r.trackOut.targetKmh || Math.round(r.trackOut.targetMph * 1.60934)} km/h</span> (Margin: ${r.trackOut.marginSafetyM || '0.5'}m)
-            <div class="sub-text text-muted">${r.trackOut.visualTarget}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase3.turn.${r.number}.trackOut" contenteditable="true" title="Click to edit track-out target">${r.trackOut.visualTarget}</span>
+            </div>
           </td>
         </tr>
       `).join('');
@@ -736,6 +925,8 @@ export class TrackStudyView {
         ${lapGateCard}
       </div>
     `;
+
+    this._bindEditableFields(container);
   }
 
   // ---------------------------------------------------------------------------
@@ -753,15 +944,21 @@ export class TrackStudyView {
           <td><span class="type-pill ${c.type.toLowerCase().replace(/\s+/g, '-')}">${c.type}</span></td>
           <td>
             <span class="font-bold text-gold">${c.step1_lineStrategy.approach}</span>
-            <div class="sub-text text-muted">Safety Margin: ${c.step1_lineStrategy.safetyMarginM || '0.5'}m</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase4.turn.${c.number}.earlyApex" contenteditable="true" title="Click to edit line strategy consequence">${c.step1_lineStrategy.earlyApexConsequence || 'Late Apex Focus'}</span>
+            </div>
           </td>
           <td>
             <span class="font-bold text-green">TAP: ${c.step2_exitThrottle.tapDistanceBeforeApexM}m before apex</span>
-            <div class="sub-text text-muted">${c.step2_exitThrottle.squeezeRateText}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase4.turn.${c.number}.tapNote" contenteditable="true" title="Click to edit throttle commit cue">${c.step2_exitThrottle.squeezeRateText}</span>
+            </div>
           </td>
           <td>
             <span class="font-bold text-cyan">${c.step3_brakingProcedure.thresholdPressureKg || 60} kg // ${c.step3_brakingProcedure.trailBrakingSec}s Trail</span>
-            <div class="sub-text text-muted">${c.step3_brakingProcedure.brakeStyle}</div>
+            <div class="sub-text text-muted">
+              <span class="editable-note" data-edit-key="phase4.turn.${c.number}.brakeStyle" contenteditable="true" title="Click to edit braking procedure">${c.step3_brakingProcedure.brakeStyle}</span>
+            </div>
           </td>
         </tr>
       `).join('');
@@ -828,6 +1025,8 @@ export class TrackStudyView {
         ${lapGateCard}
       </div>
     `;
+
+    this._bindEditableFields(container);
   }
 
   // ---------------------------------------------------------------------------
@@ -844,7 +1043,9 @@ export class TrackStudyView {
           <td class="font-bold text-accent">${g.turn}</td>
           <td class="font-bold text-cyan">GEAR ${g.gear}</td>
           <td>${g.minSpeedKmh || Math.round(g.minSpeedMph * 1.60934)} km/h</td>
-          <td class="text-secondary">${g.shiftNote}</td>
+          <td class="text-secondary">
+            <span class="editable-note" data-edit-key="phase5.turn.${g.turn}.shiftNote" contenteditable="true" title="Click to edit shift note">${g.shiftNote}</span>
+          </td>
         </tr>
       `).join('');
     } else {
@@ -874,7 +1075,7 @@ export class TrackStudyView {
               </div>
               <div class="hw-item">
                 <span class="hw-lbl">Pace Lap Warm-up:</span>
-                <span class="hw-desc">${hw.tireThermalManagement.paceLapWarmupTactic}</span>
+                <span class="hw-desc editable-note" data-edit-key="phase5.tireWarmup" contenteditable="true" title="Click to edit warm-up advice">${hw.tireThermalManagement.paceLapWarmupTactic}</span>
               </div>
               <div class="hw-item">
                 <span class="hw-lbl">Slip Angle Limits:</span>
@@ -899,7 +1100,7 @@ export class TrackStudyView {
               </div>
               <div class="hw-item">
                 <span class="hw-lbl">Dynamic Bias Tuning:</span>
-                <span class="hw-desc">${hw.brakeSystemManagement.dynamicAdjustmentTactic}</span>
+                <span class="hw-desc editable-note" data-edit-key="phase5.brakeTuning" contenteditable="true" title="Click to edit dynamic brake tuning note">${hw.brakeSystemManagement.dynamicAdjustmentTactic}</span>
               </div>
               <div class="hw-item">
                 <span class="hw-lbl">Gauge Check Routine:</span>
@@ -946,6 +1147,8 @@ export class TrackStudyView {
         ${lapGateCard}
       </div>
     `;
+
+    this._bindEditableFields(container);
   }
 
   _bindRowSelection(container) {
@@ -996,15 +1199,26 @@ export class TrackStudyView {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       const safeName = (this.studyData.circuit.name || 'Circuit').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `APEX_5Phase_Track_Study_${safeName}.pdf`;
+      
       a.href = url;
-      a.download = `APEX_5Phase_Track_Study_${safeName}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      // Auto-archive a permanent copy on the server / app data directory
+      trackStudyLibrary.archivePdfToServer(this.selectedTrackId, pdfBytes, filename).then(res => {
+        if (res && res.success) {
+          console.log(`[TrackStudyView] Archived PDF dossier to server: ${res.filename}`);
+        }
+      }).catch(err => {
+        console.warn('[TrackStudyView] Server PDF archive non-blocking warning:', err);
+      });
+
       if (window.PitToast) {
-        window.PitToast.success(`Exported APEX_5Phase_Track_Study_${safeName}.pdf`, 'PDF EXPORTED');
+        window.PitToast.success(`Exported & Archived ${filename}`, 'PDF SAVED & ARCHIVED');
       }
     } catch (err) {
       console.error('[TrackStudyView] PDF Generation failed:', err);
