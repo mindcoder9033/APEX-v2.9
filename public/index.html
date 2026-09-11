@@ -1349,13 +1349,29 @@
             <h1 id="study-circuit-title" class="track-study-heading">CIRCUIT TRACK STUDY</h1>
             <span id="study-circuit-sub" class="track-study-subheading">5-Phase Skip Barber Racecraft Preparation & Telemetry Dossier</span>
           </div>
+
+          <!-- 5-Phase Preparation Readiness Meter -->
+          <div class="study-readiness-meter" title="Driver Pre-Stint Preparation Progress">
+            <div class="study-readiness-label-row">
+              <span class="study-readiness-title">STUDY READINESS</span>
+              <span id="study-readiness-badge" class="study-readiness-pct font-mono">20% (1/5)</span>
+            </div>
+            <div class="study-readiness-track">
+              <div id="study-readiness-fill" class="study-readiness-fill" style="width: 20%;"></div>
+            </div>
+          </div>
         </div>
 
         <div class="study-header-right">
-          <!-- Live Telemetry Status Badge -->
+          <!-- Compact Live Telemetry Status Strip -->
           <div id="study-live-status-pill" class="study-status-pill chamfer-all-corners" title="Live UDP Ingestion Status">
             <span id="study-live-status-dot" class="status-dot"></span>
             <span id="study-live-status-text">STANDBY // READY</span>
+            <div id="study-live-metrics-strip" class="study-live-metrics-strip" style="display: none;">
+              <span id="study-live-lap-pill" class="metric-pill">LAP <b id="study-live-lap-val">-</b></span>
+              <span id="study-live-turn-pill" class="metric-pill highlight">TURN <b id="study-live-turn-val">-</b></span>
+              <span id="study-live-speed-pill" class="metric-pill"><b id="study-live-speed-val">0</b> MPH</span>
+            </div>
           </div>
 
           <!-- Track Profile Selector -->
@@ -1384,6 +1400,7 @@
             <span class="step-lbl">PHASE 1</span>
             <span class="step-name">Macro Map & Priority</span>
           </div>
+          <span class="step-check-mark" title="Phase Reviewed">✓</span>
         </button>
         <button class="study-step-btn" data-step="2">
           <span class="step-num">02</span>
@@ -1391,6 +1408,7 @@
             <span class="step-lbl">PHASE 2</span>
             <span class="step-name">Surface Recon & Camber</span>
           </div>
+          <span class="step-check-mark" title="Phase Reviewed">✓</span>
         </button>
         <button class="study-step-btn" data-step="3">
           <span class="step-num">03</span>
@@ -1398,6 +1416,7 @@
             <span class="step-lbl">PHASE 3</span>
             <span class="step-name">Visual Reference Points</span>
           </div>
+          <span class="step-check-mark" title="Phase Reviewed">✓</span>
         </button>
         <button class="study-step-btn" data-step="4">
           <span class="step-num">04</span>
@@ -1405,6 +1424,7 @@
             <span class="step-lbl">PHASE 4</span>
             <span class="step-name">Order of Effort</span>
           </div>
+          <span class="step-check-mark" title="Phase Reviewed">✓</span>
         </button>
         <button class="study-step-btn" data-step="5">
           <span class="step-num">05</span>
@@ -1412,6 +1432,7 @@
             <span class="step-lbl">PHASE 5</span>
             <span class="step-name">Hardware & Stint Prep</span>
           </div>
+          <span class="step-check-mark" title="Phase Reviewed">✓</span>
         </button>
       </nav>
 

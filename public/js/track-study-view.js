@@ -15,9 +15,13 @@ export class TrackStudyView {
     
     this.currentPhase = 1; // 1 to 5
     this.selectedCornerNumber = 1;
+    this.activeCornerNumber = null;
     this.currentTrackProfile = null;
     this.studyData = null;
     this.liveTelemetryActive = false;
+    this.hasNotifiedLiveSync = false;
+    this.reviewedPhases = new Set([1]);
+    this.hasCompletedBriefing = false;
 
     this.container = null;
   }
@@ -31,6 +35,7 @@ export class TrackStudyView {
 
     this._bindEvents();
     this._loadInitialTrack();
+    this.updateReadinessMeter();
   }
 
   _bindEvents() {
@@ -67,6 +72,9 @@ export class TrackStudyView {
     if (btnRefresh) {
       btnRefresh.addEventListener('click', () => {
         this._loadInitialTrack();
+        if (window.PitToast) {
+          window.PitToast.info('Track Study profiles reloaded from library', 'CIRCUIT SYNC');
+        }
       });
     }
   }
@@ -84,7 +92,7 @@ export class TrackStudyView {
         if (i === 0) opt.selected = true;
         trackSelect.appendChild(opt);
       });
-      this.loadTrackById(tracks[0].id);
+      this.loadTrackById(tracks[0].id, false);
     } else {
       // Fallback synthetic track (e.g. Sebring Grand Prix)
       const fallbackProfile = {
@@ -104,37 +112,73 @@ export class TrackStudyView {
           { number: 10, name: 'Turn 10 (Hairpin)', radius: 35, angleDeg: 140, entrySpeedMps: 48, minSpeedMps: 15, exitSpeedMps: 24, gear: 2, followingStraightMeters: 550, camberDeg: 0.0, elevationChangeM: 0, brakingDistanceM: 95 }
         ]
       };
-      this.setTrackProfile(fallbackProfile);
+      this.setTrackProfile(fallbackProfile, [], false);
     }
   }
 
-  loadTrackById(trackId) {
+  loadTrackById(trackId, notify = true) {
     const track = trackLibraryStore.getTrackById(trackId);
     if (track) {
-      this.setTrackProfile(track);
+      this.setTrackProfile(track, [], notify);
     }
   }
 
-  setTrackProfile(trackProfile, telemetrySamples = []) {
+  setTrackProfile(trackProfile, telemetrySamples = [], notify = true) {
     this.currentTrackProfile = trackProfile;
     try {
       this.studyData = this.engine.generateStudy(trackProfile, telemetrySamples);
       this.render();
+
+      if (notify && window.PitToast) {
+        const trackName = trackProfile.trackName || trackProfile.name || 'Circuit';
+        const turns = trackProfile.turnsCount || this.studyData?.circuit?.turnsCount || 'Multi';
+        window.PitToast.info(`Loaded ${trackName} (${turns} Turns)`, 'TRACK STUDY READY');
+      }
     } catch (err) {
       console.error('[TrackStudyView] Error generating study data:', err);
     }
   }
 
+  updateReadinessMeter() {
+    if (!this.container) return;
+    const reviewedCount = this.reviewedPhases.size;
+    const pct = Math.round((reviewedCount / 5) * 100);
+
+    const badge = this.container.querySelector('#study-readiness-badge');
+    if (badge) badge.textContent = `${pct}% (${reviewedCount}/5)`;
+
+    const fill = this.container.querySelector('#study-readiness-fill');
+    if (fill) fill.style.width = `${pct}%`;
+
+    // Update checkmark state on stepper buttons
+    const stepBtns = this.container.querySelectorAll('.study-step-btn');
+    stepBtns.forEach(btn => {
+      const step = parseInt(btn.dataset.step, 10);
+      btn.classList.toggle('reviewed', this.reviewedPhases.has(step));
+    });
+
+    // Notify upon 100% completion
+    if (pct === 100 && !this.hasCompletedBriefing) {
+      this.hasCompletedBriefing = true;
+      if (window.PitToast) {
+        window.PitToast.success('All 5 Study Phases Reviewed // Pre-Stint Preparation Complete!', 'BRIEFING READY');
+      }
+    }
+  }
+
   setPhase(stepNumber) {
     this.currentPhase = stepNumber;
+    this.reviewedPhases.add(stepNumber);
     
-    // Update Stepper active state
+    // Update Stepper active state & checkmarks
     const stepBtns = this.container.querySelectorAll('.study-step-btn');
     stepBtns.forEach(btn => {
       const step = parseInt(btn.dataset.step, 10);
       btn.classList.toggle('active', step === this.currentPhase);
+      btn.classList.toggle('reviewed', this.reviewedPhases.has(step));
     });
 
+    this.updateReadinessMeter();
     this.render();
   }
 
@@ -157,6 +201,11 @@ export class TrackStudyView {
     const phaseContent = this.container.querySelector('#study-phase-container');
     if (!phaseContent) return;
 
+    // Reset and trigger smooth phase entrance animation
+    phaseContent.classList.remove('phase-fade-in');
+    void phaseContent.offsetWidth; // trigger reflow
+    phaseContent.classList.add('phase-fade-in');
+
     switch (this.currentPhase) {
       case 1:
         this._renderPhase1(phaseContent);
@@ -173,6 +222,10 @@ export class TrackStudyView {
       case 5:
         this._renderPhase5(phaseContent);
         break;
+    }
+
+    if (this.activeCornerNumber) {
+      this._highlightActiveCorner(this.activeCornerNumber);
     }
   }
 
@@ -574,6 +627,10 @@ export class TrackStudyView {
       btnExport.innerHTML = '<span class="loading-spinner"></span> Generating 5-Page Dossier...';
     }
 
+    if (window.PitToast) {
+      window.PitToast.info('Compiling 5-Phase Skip Barber Study Dossier...', 'GENERATING PDF');
+    }
+
     try {
       const pdfBytes = await this.pdfBuilder.generate(this.studyData, this.currentTrackProfile);
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -586,9 +643,17 @@ export class TrackStudyView {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      if (window.PitToast) {
+        window.PitToast.success(`Exported APEX_5Phase_Track_Study_${safeName}.pdf`, 'PDF EXPORTED');
+      }
     } catch (err) {
       console.error('[TrackStudyView] PDF Generation failed:', err);
-      alert('Failed to generate Track Study PDF: ' + err.message);
+      if (window.PitToast) {
+        window.PitToast.error(err.message, 'PDF GENERATION FAILED');
+      } else {
+        alert('Failed to generate Track Study PDF: ' + err.message);
+      }
     } finally {
       if (btnExport) {
         btnExport.disabled = false;
@@ -598,11 +663,123 @@ export class TrackStudyView {
   }
 
   onTelemetrySample(sample) {
-    if (!sample) return;
+    if (!sample || !this.container) return;
     this.liveTelemetryActive = true;
-    const statusDot = this.container?.querySelector('#study-live-status-dot');
-    const statusTxt = this.container?.querySelector('#study-live-status-text');
+
+    // Update status pill & dot
+    const statusPill = this.container.querySelector('#study-live-status-pill');
+    const statusDot = this.container.querySelector('#study-live-status-dot');
+    const statusTxt = this.container.querySelector('#study-live-status-text');
+    const metricsStrip = this.container.querySelector('#study-live-metrics-strip');
+
+    if (statusPill) statusPill.classList.add('live-active');
     if (statusDot) statusDot.className = 'status-dot live';
     if (statusTxt) statusTxt.textContent = 'TELEMETRY SYNC ACTIVE';
+    if (metricsStrip) metricsStrip.style.display = 'inline-flex';
+
+    // Update Lap & Speed metrics
+    const lapVal = this.container.querySelector('#study-live-lap-val');
+    const speedVal = this.container.querySelector('#study-live-speed-val');
+    const turnVal = this.container.querySelector('#study-live-turn-val');
+
+    const lapNumber = sample.lapNumber !== undefined ? sample.lapNumber : (sample.currentLap || 1);
+    const speedMph = Math.round(sample.speedMph || (sample.speedKmh ? sample.speedKmh * 0.621371 : (sample.speedMps ? sample.speedMps * 2.23694 : 0)));
+
+    if (lapVal) lapVal.textContent = lapNumber;
+    if (speedVal) speedVal.textContent = speedMph;
+
+    // Detect and highlight current on-track corner
+    const cornerNum = this._detectCurrentCorner(sample);
+    if (cornerNum) {
+      if (turnVal) turnVal.textContent = `T${cornerNum}`;
+      this._highlightActiveCorner(cornerNum);
+    } else {
+      if (turnVal) turnVal.textContent = 'STR';
+      this._highlightActiveCorner(null);
+    }
+
+    // First connection toast alert
+    if (!this.hasNotifiedLiveSync) {
+      this.hasNotifiedLiveSync = true;
+      if (window.PitToast) {
+        const trackName = this.studyData?.circuit?.name || 'Circuit';
+        window.PitToast.telemetry(`Live Telemetry Synced // Tracking on-track progression for ${trackName}`, 'TRACK STUDY LIVE');
+      }
+    }
+  }
+
+  _detectCurrentCorner(sample) {
+    if (!this.studyData?.phase1_macro?.corners) return null;
+    const corners = this.studyData.phase1_macro.corners;
+    if (corners.length === 0) return null;
+
+    // 1. If sample explicitly carries corner index / active turn
+    if (sample.activeCorner !== undefined && sample.activeCorner !== null) {
+      return sample.activeCorner;
+    }
+    if (sample.cornerIndex !== undefined && sample.cornerIndex !== null) {
+      return corners[sample.cornerIndex % corners.length]?.number || null;
+    }
+
+    // 2. Derive from lap distance progression
+    const totalDist = this.currentTrackProfile?.lengthMeters || this.studyData.circuit.lengthMeters || 5000;
+    let lapDist = sample.lapDistanceMeters !== undefined ? sample.lapDistanceMeters : (sample.distanceMeters !== undefined ? sample.distanceMeters % totalDist : null);
+
+    if (lapDist === null && sample.normalizedLapPosition !== undefined) {
+      lapDist = sample.normalizedLapPosition * totalDist;
+    }
+
+    if (lapDist !== null && corners.length > 0) {
+      // Approximate corner index by segmenting lap distance
+      const segmentSize = totalDist / corners.length;
+      const cornerIdx = Math.floor(lapDist / segmentSize);
+      const safeIdx = Math.min(Math.max(cornerIdx, 0), corners.length - 1);
+      return corners[safeIdx].number;
+    }
+
+    // Default to first corner if driving
+    return corners[0].number;
+  }
+
+  _highlightActiveCorner(cornerNumber) {
+    this.activeCornerNumber = cornerNumber;
+    if (!this.container) return;
+
+    // 1. Clear previous on-track highlights and badges
+    const existingActive = this.container.querySelectorAll('.active-on-track');
+    existingActive.forEach(el => el.classList.remove('active-on-track'));
+
+    const existingTags = this.container.querySelectorAll('.on-track-live-tag');
+    existingTags.forEach(tag => tag.remove());
+
+    if (!cornerNumber) return;
+
+    // 2. Spotlight matching table row (Phase 1, 3, 4, 5)
+    const activeRow = this.container.querySelector(`.study-table-row[data-turn="${cornerNumber}"]`);
+    if (activeRow) {
+      activeRow.classList.add('active-on-track');
+      const turnCell = activeRow.querySelector('td:nth-child(2)') || activeRow.querySelector('td:first-child');
+      if (turnCell && !turnCell.querySelector('.on-track-live-tag')) {
+        const tag = document.createElement('span');
+        tag.className = 'on-track-live-tag';
+        tag.textContent = '● ON TRACK';
+        turnCell.appendChild(tag);
+      }
+    }
+
+    // 3. Spotlight matching surface card (Phase 2)
+    const surfaceCards = this.container.querySelectorAll('.corner-surface-card');
+    surfaceCards.forEach(card => {
+      const turnHeader = card.querySelector('.turn-num');
+      if (turnHeader && turnHeader.textContent.includes(`Turn ${cornerNumber}`)) {
+        card.classList.add('active-on-track');
+        if (!card.querySelector('.on-track-live-tag')) {
+          const tag = document.createElement('span');
+          tag.className = 'on-track-live-tag';
+          tag.textContent = '● ON TRACK';
+          turnHeader.appendChild(tag);
+        }
+      }
+    });
   }
 }
