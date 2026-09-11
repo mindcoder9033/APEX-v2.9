@@ -361,6 +361,20 @@ export class TrackStudyView {
       }
     }
 
+    const sampleSlice = Array.isArray(this.telemetrySamples) && this.telemetrySamples.length > 0
+      ? this.telemetrySamples.slice(-1500).map(s => ({
+          x: s.x !== undefined ? s.x : (s.positionX || 0),
+          z: s.z !== undefined ? s.z : (s.positionZ !== undefined ? s.positionZ : (s.y || 0)),
+          speed: s.speed !== undefined ? s.speed : (s.speedMph ? s.speedMph / 2.23694 : 0),
+          speedMph: s.speedMph !== undefined ? s.speedMph : ((s.speed || 0) * 2.23694),
+          throttle: s.throttle !== undefined ? s.throttle : 0,
+          brake: s.brake !== undefined ? s.brake : 0,
+          steer: s.steer !== undefined ? s.steer : (s.steerAngle || 0),
+          gLat: s.gLat !== undefined ? s.gLat : (s.accelLateral || 0),
+          lapNumber: s.lapNumber !== undefined ? s.lapNumber : (s.timing?.lapNumber || 1)
+        }))
+      : [];
+
     const stateToSave = {
       unlockedPhases: Array.from(this.unlockedPhases),
       lapsCompleted: this.lapsCompleted,
@@ -368,10 +382,16 @@ export class TrackStudyView {
       customNotes: this.customNotes || {},
       corners: this.currentTrackProfile?.corners || this.studyData?.phase1_macro?.corners || [],
       circuit: this.studyData?.circuit || { name: this.currentTrackProfile?.trackName || 'Circuit' },
+      telemetrySamples: sampleSlice,
       updatedAt: new Date().toISOString()
     };
 
     trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, stateToSave);
+
+    // Sync live data with Track Editor if available
+    if (window.apexApp?.trackEditor && window.apexApp.trackEditor.currentTrackId === this.selectedTrackId) {
+      window.apexApp.trackEditor.loadTrack(this.selectedTrackId);
+    }
 
     // Update status badge in header
     const statusPill = this.container?.querySelector('#study-save-status');

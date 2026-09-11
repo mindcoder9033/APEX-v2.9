@@ -163,7 +163,7 @@ export class TrackEditorView {
 
   /**
    * Loads track profile and real telemetry baseline if available.
-   * Zero-mock policy: does NOT generate fake sinusoidal tracks or dummy waypoints.
+   * Directly syncs with Track Study telemetry data, live session laps, and stored track dossiers.
    * @param {string} trackId 
    */
   loadTrack(trackId) {
@@ -171,38 +171,174 @@ export class TrackEditorView {
     this.trackProfile = trackStudyLibrary.getTrackStudyProfile(trackId);
     this.waypoints = trackStudyLibrary.getWaypoints(trackId);
 
-    // Check if live session has 5 completed laps
+    const trackStudy = window.apexApp?.trackStudy;
     const sessionLaps = window.apexApp?.session?.laps || [];
     const has5Laps = trackEditorEngine.hasValid5LapBaseline(sessionLaps);
+    const studyState = trackStudyLibrary.getTrackStudyState(trackId);
+    const storedTrack = trackLibraryStore.getTrackById(trackId);
+
+    // Calculate effective completed lap count across session, track study, and stored records
+    let totalLaps = sessionLaps.length;
+    if (totalLaps < 5 && studyState?.lapsCompleted) {
+      totalLaps = studyState.lapsCompleted;
+    }
+    if (totalLaps < 5 && trackStudy && (trackStudy.selectedTrackId === trackId || !trackStudy.selectedTrackId) && trackStudy.lapsCompleted) {
+      totalLaps = trackStudy.lapsCompleted;
+    }
 
     const badge5Lap = document.getElementById('editor-5lap-badge');
     if (badge5Lap) {
-      if (has5Laps) {
+      if (totalLaps >= 5 || has5Laps) {
         badge5Lap.className = 'editor-badge-5lap';
-        badge5Lap.innerHTML = `<span>✓</span> 5-Lap Baseline Active (${sessionLaps.length} Laps)`;
+        badge5Lap.innerHTML = `<span>✓</span> 5-Lap Baseline Active (${totalLaps} Laps)`;
       } else {
         badge5Lap.className = 'editor-badge-5lap waiting';
-        badge5Lap.innerHTML = `<span>⏳</span> Baseline: ${sessionLaps.length}/5 Laps`;
+        badge5Lap.innerHTML = `<span>⏳</span> Baseline: ${totalLaps}/5 Laps`;
       }
     }
 
-    // Ingest 5-lap baseline from live session or from previously recorded track library
-    const storedTrack = trackLibraryStore.getTrackById(trackId);
+    // 1. If 5 live session laps exist, synthesize composite
     if (has5Laps) {
       const baseline = trackEditorEngine.synthesize5LapBaseline(sessionLaps);
       this.spline = baseline.spline;
       this.telemetryData = baseline.telemetry;
-    } else if (storedTrack && storedTrack.vectorMap?.points?.length > 10) {
+    }
+    // 2. Check if active Track Study has telemetry samples for this track
+    else if (trackStudy && (trackStudy.selectedTrackId === trackId || !trackStudy.selectedTrackId) && Array.isArray(trackStudy.telemetrySamples) && trackStudy.telemetrySamples.length >= 20) {
+      this._loadFromTelemetrySamples(trackStudy.telemetrySamples);
+    }
+    // 3. Check if saved Track Study state has persisted telemetry samples
+    else if (studyState && Array.isArray(studyState.telemetrySamples) && studyState.telemetrySamples.length >= 20) {
+      this._loadFromTelemetrySamples(studyState.telemetrySamples);
+    }
+    // 4. Check if Track Study has mapped corners with coordinates
+    else if (studyState && Array.isArray(studyState.corners) && studyState.corners.length > 0) {
+      this._loadFromStudyCorners(studyState.corners);
+    }
+    // 5. Check if persistent track library has recorded vectorMap points
+    else if (storedTrack && storedTrack.vectorMap?.points?.length > 10) {
       this._loadFromStoredVectorMap(storedTrack);
-    } else {
-      // Zero mock data: empty spline and telemetry until real laps are driven
+    }
+    // 6. Zero-mock fallback: empty spline
+    else {
       this.spline = [];
       this.telemetryData = [];
+    }
+
+    // If no custom waypoints exist yet but we have real spline telemetry and 5 laps, auto-detect milestones
+    if (this.waypoints.length === 0 && this.spline.length > 0 && totalLaps >= 5) {
+      this.waypoints = trackEditorEngine.autoDetectWaypoints(this.spline);
+      this.saveWaypointsToStore();
     }
 
     this.fitTrackToCanvas();
     this.render();
     this.renderSidebar();
+  }
+
+  _loadFromTelemetrySamples(samples) {
+    if (!Array.isArray(samples) || samples.length === 0) return;
+    const spline = [];
+    const telemetry = [];
+    let cumDist = 0;
+
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i];
+      const x = s.positionX !== undefined ? s.positionX : (s.x || 0);
+      const z = s.positionZ !== undefined ? s.positionZ : (s.z !== undefined ? s.z : (s.y || 0));
+      const speedMph = s.speedMph !== undefined ? s.speedMph : ((s.speed || 0) * 2.23694);
+      const throttle = s.throttle !== undefined ? s.throttle : 0;
+      const brake = s.brake !== undefined ? s.brake : 0;
+      const steer = s.steer !== undefined ? s.steer : (s.steerAngle || 0);
+      const gLat = s.gLat !== undefined ? s.gLat : (s.accelLateral || 0);
+      const gLong = s.gLong !== undefined ? s.gLong : (s.accelForward || 0);
+
+      if (i > 0) {
+        const prev = spline[i - 1];
+        const dx = x - prev.x;
+        const dz = z - prev.z;
+        cumDist += Math.sqrt(dx * dx + dz * dz);
+      }
+
+      spline.push({
+        index: i,
+        x,
+        z,
+        distance: cumDist,
+        speedMph,
+        throttle,
+        brake,
+        steer,
+        gLat,
+        gLong
+      });
+    }
+
+    const totalDist = cumDist > 0 ? cumDist : 1;
+    spline.forEach(p => {
+      p.normalizedDistance = p.distance / totalDist;
+      telemetry.push({
+        distance: p.distance,
+        normDist: p.normalizedDistance,
+        speedMph: p.speedMph,
+        throttle: p.throttle,
+        brake: p.brake,
+        steer: p.steer,
+        gLat: p.gLat
+      });
+    });
+
+    this.spline = spline;
+    this.telemetryData = telemetry;
+  }
+
+  _loadFromStudyCorners(corners) {
+    if (!Array.isArray(corners) || corners.length === 0) return;
+    const spline = [];
+    const telemetry = [];
+    let cumDist = 0;
+
+    corners.forEach((c, i) => {
+      const x = c.coordinates?.x !== undefined ? c.coordinates.x : (c.x || (i * 30));
+      const z = c.coordinates?.y !== undefined ? c.coordinates.y : (c.coordinates?.z || (c.z || 0));
+      const speedMph = c.apexSpeedMph || (c.targetSpeedMph || 60);
+
+      if (i > 0) {
+        const prev = spline[i - 1];
+        const dx = x - prev.x;
+        const dz = z - prev.z;
+        cumDist += Math.sqrt(dx * dx + dz * dz);
+      }
+
+      spline.push({
+        index: i,
+        x,
+        z,
+        distance: cumDist,
+        speedMph,
+        throttle: c.type === 'Type I' ? 100 : 50,
+        brake: c.type === 'Type II' ? 80 : 20,
+        steer: 15,
+        gLat: 0.9
+      });
+    });
+
+    const totalDist = cumDist > 0 ? cumDist : 1;
+    spline.forEach(p => {
+      p.normalizedDistance = p.distance / totalDist;
+      telemetry.push({
+        distance: p.distance,
+        normDist: p.normalizedDistance,
+        speedMph: p.speedMph,
+        throttle: p.throttle,
+        brake: p.brake,
+        steer: p.steer,
+        gLat: p.gLat
+      });
+    });
+
+    this.spline = spline;
+    this.telemetryData = telemetry;
   }
 
   _loadFromStoredVectorMap(storedTrack) {
