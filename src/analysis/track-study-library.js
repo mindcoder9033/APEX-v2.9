@@ -283,6 +283,90 @@ export class TrackStudyLibrary {
   }
 
   /**
+   * Retrieves all waypoints for a track
+   * @param {string} trackId 
+   * @returns {Array<Object>}
+   */
+  getWaypoints(trackId) {
+    const state = this.getTrackStudyState(trackId);
+    return Array.isArray(state?.waypoints) ? state.waypoints : [];
+  }
+
+  /**
+   * Saves or updates a single waypoint for a track
+   * @param {string} trackId 
+   * @param {Object} waypoint 
+   * @returns {Object} Saved waypoint
+   */
+  saveWaypoint(trackId, waypoint) {
+    if (!trackId || !waypoint) return null;
+    const currentState = this.getTrackStudyState(trackId) || {};
+    const waypoints = Array.isArray(currentState.waypoints) ? [...currentState.waypoints] : [];
+    
+    if (!waypoint.id) {
+      waypoint.id = `wp-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    }
+    waypoint.updatedAt = new Date().toISOString();
+
+    const existingIndex = waypoints.findIndex(w => w.id === waypoint.id);
+    if (existingIndex >= 0) {
+      waypoints[existingIndex] = { ...waypoints[existingIndex], ...waypoint };
+    } else {
+      waypoint.createdAt = waypoint.createdAt || new Date().toISOString();
+      waypoints.push(waypoint);
+    }
+
+    // Keep waypoints sorted by distance
+    waypoints.sort((a, b) => (a.distanceMeters || 0) - (b.distanceMeters || 0));
+
+    this.saveTrackStudyState(trackId, {
+      ...currentState,
+      waypoints
+    });
+
+    return waypoint;
+  }
+
+  /**
+   * Saves an entire collection of waypoints for a track
+   * @param {string} trackId 
+   * @param {Array<Object>} waypoints 
+   */
+  saveAllWaypoints(trackId, waypoints) {
+    if (!trackId) return;
+    const currentState = this.getTrackStudyState(trackId) || {};
+    const list = Array.isArray(waypoints) ? [...waypoints] : [];
+    list.sort((a, b) => (a.distanceMeters || 0) - (b.distanceMeters || 0));
+
+    this.saveTrackStudyState(trackId, {
+      ...currentState,
+      waypoints: list
+    });
+  }
+
+  /**
+   * Deletes a waypoint by ID
+   * @param {string} trackId 
+   * @param {string} waypointId 
+   * @returns {boolean}
+   */
+  deleteWaypoint(trackId, waypointId) {
+    if (!trackId || !waypointId) return false;
+    const currentState = this.getTrackStudyState(trackId) || {};
+    const waypoints = Array.isArray(currentState.waypoints) ? currentState.waypoints : [];
+    const filtered = waypoints.filter(w => w.id !== waypointId);
+
+    if (filtered.length !== waypoints.length) {
+      this.saveTrackStudyState(trackId, {
+        ...currentState,
+        waypoints: filtered
+      });
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Resets study progression and purged telemetry corners for a track
    * @param {string} trackId 
    */
@@ -306,6 +390,7 @@ export class TrackStudyLibrary {
             lapsCompleted: 0,
             lastPhase: 1,
             corners: [],
+            waypoints: [],
             customNotes: {},
             certified: false
           })

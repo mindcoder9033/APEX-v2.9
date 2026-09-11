@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/components/updater.css">
   <link rel="stylesheet" href="css/components/pit-toast.css">
+  <link rel="stylesheet" href="css/track-editor.css">
 </head>
 <body>
   <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
@@ -105,6 +106,10 @@
         <button id="btn-nav-track-study" class="nav-tab-btn chamfer-br" title="5-Phase Track Study & Pre-Stint Preparation (S)">
           <span class="nav-tab-icon">📋</span>
           <span class="nav-tab-label">TRACK STUDY</span>
+        </button>
+        <button id="btn-nav-track-editor" class="nav-tab-btn chamfer-br" title="Dual-View Track & Telemetry Waypoint Studio (W)">
+          <span class="nav-tab-icon">📐</span>
+          <span class="nav-tab-label">TRACK EDITOR</span>
         </button>
         <button id="btn-nav-track-library" class="nav-tab-btn chamfer-br" title="Track Intelligence & Dossier Hub (T)">
           <span class="nav-tab-icon">🗺️</span>
@@ -1395,6 +1400,10 @@
           </button>
           <span id="study-save-status" class="study-save-status-pill font-mono" style="display: none;">SAVED ✓</span>
 
+          <button id="btn-study-open-editor" class="btn btn-secondary chamfer-br" style="height: 40px; font-size: 11px; font-weight: 700;" title="Open Dual-View Track Editor & Waypoint Studio">
+            <span class="btn-icon">📐</span> TRACK EDITOR
+          </button>
+
           <button id="btn-study-export-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
             <span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF
           </button>
@@ -1455,6 +1464,91 @@
         <!-- Rendered dynamically by TrackStudyView -->
       </main>
     </div> <!-- /#view-track-study -->
+
+    <!-- DUAL-VIEW TRACK & TELEMETRY WAYPOINT STUDIO (TRACK EDITOR) -->
+    <div id="view-track-editor" class="view-container view-track-editor" style="display: none;">
+      <div class="track-editor-layout">
+        <!-- TOP TOOLBAR -->
+        <header class="track-editor-toolbar chamfer-br">
+          <div class="editor-toolbar-left">
+            <button id="btn-return-pitwall-from-editor" class="btn btn-secondary chamfer-bl" title="Return to Pit Wall">
+              <span>⬅️</span> PIT WALL
+            </button>
+            <div style="display: flex; flex-direction: column;">
+              <span style="font-family: var(--font-display, sans-serif); font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.5px;">TRACK EDITOR & WAYPOINT STUDIO</span>
+              <span style="font-size: 10px; color: var(--color-text-secondary, #888);">Skip Barber Reference Points & Sight Pictures CRUD</span>
+            </div>
+            <select id="editor-track-selector" class="study-select chamfer-all-corners" style="max-width: 260px; height: 32px; font-size: 11px;">
+              <!-- Dynamically populated -->
+            </select>
+          </div>
+
+          <div class="editor-toolbar-right">
+            <span id="editor-5lap-badge" class="editor-badge-5lap waiting">
+              <span>⏳</span> Baseline: 0/5 Laps
+            </span>
+            <button id="btn-editor-auto-detect" class="btn btn-secondary chamfer-br" style="height: 34px; font-size: 11px; font-weight: 700;" title="Auto-detect braking zones and apexes from telemetry">
+              <span>⚡</span> AUTO-DETECT
+            </button>
+            <button id="btn-editor-add-point" class="btn btn-primary chamfer-br" style="height: 34px; font-size: 11px; font-weight: 700;" title="Add new waypoint pin at current scrubber position">
+              <span>+</span> ADD WAYPOINT
+            </button>
+            <button id="btn-editor-reset-view" class="btn btn-secondary btn-icon chamfer-br" style="height: 34px;" title="Reset Map Zoom & Center">
+              <span>⟲</span>
+            </button>
+            <button id="btn-editor-clear-all" class="btn btn-secondary btn-icon chamfer-br" style="height: 34px; color: #ff1744;" title="Clear All Custom Waypoints">
+              <span>🗑️</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- 2D TRACK CANVAS CONTAINER -->
+        <section class="track-editor-map-container chamfer-tl-br">
+          <canvas id="track-editor-canvas" class="track-editor-canvas"></canvas>
+          <div class="map-floating-controls">
+            <span style="font-family: var(--font-mono, monospace); font-size: 10px; color: #666; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px;">
+              🖱️ Pan: Drag · Zoom: Scroll · Move Pin: Drag Pin
+            </span>
+          </div>
+          <div class="map-legend-overlay">
+            <div class="legend-item"><span class="legend-dot brake"></span> Brake Point</div>
+            <div class="legend-item"><span class="legend-dot turnin"></span> Turn-in</div>
+            <div class="legend-item"><span class="legend-dot apex"></span> Apex (Late/Geo)</div>
+            <div class="legend-item"><span class="legend-dot throttle"></span> Throttle App</div>
+            <div class="legend-item"><span class="legend-dot trackout"></span> Track-Out</div>
+            <div class="legend-item"><span class="legend-dot sight"></span> Sight Picture</div>
+          </div>
+        </section>
+
+        <!-- SYNCHRONIZED TELEMETRY TIMELINE STRIP -->
+        <section class="track-editor-telemetry-container chamfer-tl-br">
+          <div class="telemetry-header-bar">
+            <span style="font-family: var(--font-mono, monospace); font-size: 10px; font-weight: 700; color: #aaa; letter-spacing: 0.5px;">
+              SYNCHRONIZED TELEMETRY STRIP (5-LAP COMPOSITE)
+            </span>
+            <div class="telemetry-legend-tags">
+              <span class="tag-speed">━ Speed</span>
+              <span class="tag-throttle">━ Throttle</span>
+              <span class="tag-brake">━ Brake</span>
+            </div>
+          </div>
+          <div class="telemetry-canvas-wrapper">
+            <canvas id="telemetry-graph-canvas" class="telemetry-graph-canvas"></canvas>
+          </div>
+        </section>
+
+        <!-- SIDEBAR INSPECTOR & CRUD PANEL -->
+        <aside class="track-editor-sidebar chamfer-tl-br">
+          <div class="sidebar-tabs">
+            <button class="sidebar-tab-btn active" data-tab="list">Waypoints List</button>
+            <button class="sidebar-tab-btn" data-tab="inspector">Inspector & Coaching</button>
+          </div>
+          <div class="sidebar-content-scroll">
+            <!-- Dynamically populated by TrackEditorView -->
+          </div>
+        </aside>
+      </div>
+    </div> <!-- /#view-track-editor -->
   </div> <!-- /.app-container -->
 
   <!-- Stint Metadata Modal (Track, Layout, Car, Session) -->

@@ -322,6 +322,56 @@ export class UdpProxyServer {
               return;
             }
           }
+
+          // 5. GET/POST /api/tracks/:trackId/waypoints
+          const waypointMatch = pathname.match(/^\/api\/tracks\/([^/?#]+)\/waypoints$/);
+          if (waypointMatch) {
+            const trackId = decodeURIComponent(waypointMatch[1]);
+            const safeTrackId = trackId.replace(/[^a-zA-Z0-9_-]/g, '_');
+            const filePath = path.join(TRACK_STUDIES_DIR, `${safeTrackId}.json`);
+
+            if (req.method === 'GET') {
+              try {
+                if (fs.existsSync(filePath)) {
+                  const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: true, waypoints: data.waypoints || [] }));
+                } else {
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: true, waypoints: [] }));
+                }
+              } catch (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ success: false, error: err.message }));
+              }
+              return;
+            }
+
+            if (req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => { body += chunk; });
+              req.on('end', () => {
+                try {
+                  const payload = JSON.parse(body);
+                  let current = {};
+                  if (fs.existsSync(filePath)) {
+                    current = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                  }
+                  current.trackId = trackId;
+                  current.waypoints = Array.isArray(payload.waypoints) ? payload.waypoints : (payload.waypoint ? [...(current.waypoints || []), payload.waypoint] : current.waypoints || []);
+                  current.updatedAt = new Date().toISOString();
+
+                  fs.writeFileSync(filePath, JSON.stringify(current, null, 2), 'utf8');
+                  res.writeHead(200, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: true, waypoints: current.waypoints }));
+                } catch (err) {
+                  res.writeHead(400, { 'Content-Type': 'application/json' });
+                  res.end(JSON.stringify({ success: false, error: err.message }));
+                }
+              });
+              return;
+            }
+          }
         }
 
         // --- STATIC FILE SERVING ---

@@ -132,6 +132,19 @@ export class TrackStudyView {
       });
     }
 
+    // Open Track Editor Button
+    const btnOpenEditor = this.container.querySelector('#btn-study-open-editor');
+    if (btnOpenEditor) {
+      btnOpenEditor.addEventListener('click', () => {
+        if (window.apexApp) {
+          window.apexApp.switchView('track-editor');
+          if (window.apexApp.trackEditor) {
+            window.apexApp.trackEditor.loadTrack(this.selectedTrackId);
+          }
+        }
+      });
+    }
+
     // Refresh / Live Ingest Button
     const btnRefresh = this.container.querySelector('#btn-study-refresh');
     if (btnRefresh) {
