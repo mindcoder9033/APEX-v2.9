@@ -30,6 +30,9 @@ export class TrackStudyPdfBuilder {
    */
   async generate(studyData, trackProfile = null) {
     if (!studyData) throw new Error('TrackStudyPdfBuilder: No studyData provided');
+    if (!studyData.phase1_macro?.corners || studyData.phase1_macro.corners.length === 0) {
+      throw new Error('Cannot export PDF dossier: No telemetry data recorded for this track. Real corner telemetry is required.');
+    }
 
     let PDFLib = getPdfLib();
     if (!PDFLib && typeof globalThis !== 'undefined' && globalThis.PDFLib) PDFLib = globalThis.PDFLib;

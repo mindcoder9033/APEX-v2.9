@@ -123,6 +123,25 @@ test('TrackStudyEngine: Dynamically parses track corners from raw telemetry samp
   assert.equal(study.phase5_hardware.gearingMatrix.length, study.phase1_macro.corners.length);
 });
 
+test('TrackStudyPdfBuilder: Blocks PDF generation when telemetry data is absent', async () => {
+  const engine = new TrackStudyEngine();
+  const pdfBuilder = new TrackStudyPdfBuilder();
+
+  const emptyStudy = engine.generateStudy({
+    id: 'empty-circuit',
+    trackName: 'Spa-Francorchamps',
+    lengthMeters: 7004
+  }, []);
+
+  await assert.rejects(
+    async () => {
+      await pdfBuilder.generate(emptyStudy);
+    },
+    /Cannot export PDF dossier: No telemetry data recorded/,
+    'Should block PDF export and throw informative error when no telemetry is present'
+  );
+});
+
 test('TrackStudyPdfBuilder: Compiles a valid 5-page PDF document', async () => {
   const engine = new TrackStudyEngine();
   const pdfBuilder = new TrackStudyPdfBuilder();

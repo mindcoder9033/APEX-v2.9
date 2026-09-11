@@ -367,6 +367,30 @@ export class TrackStudyView {
     if (this.activeCornerNumber) {
       this._highlightActiveCorner(this.activeCornerNumber);
     }
+
+    // Sync PDF Export Button State (Block if no telemetry data)
+    this._updateExportButtonState();
+  }
+
+  _updateExportButtonState() {
+    if (!this.container) return;
+    const btnExport = this.container.querySelector('#btn-study-export-pdf');
+    if (!btnExport) return;
+
+    const hasTelemetryData = (this.studyData?.phase1_macro?.corners?.length > 0) ||
+                             (this.currentTrackProfile?.corners?.length > 0);
+
+    if (!hasTelemetryData) {
+      btnExport.disabled = true;
+      btnExport.classList.add('disabled-telemetry-required');
+      btnExport.setAttribute('title', 'Telemetry Required: Drive laps on this circuit in Live UDP mode or upload a stint to enable PDF dossier export');
+      btnExport.innerHTML = '<span class="btn-icon">🔒</span> EXPORT PDF (TELEMETRY REQUIRED)';
+    } else {
+      btnExport.disabled = false;
+      btnExport.classList.remove('disabled-telemetry-required');
+      btnExport.setAttribute('title', 'Export 5-Page Track Study PDF Dossier');
+      btnExport.innerHTML = '<span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF';
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -956,6 +980,19 @@ export class TrackStudyView {
   async exportDossierPdf() {
     if (!this.studyData) return;
 
+    const hasTelemetryData = (this.studyData.phase1_macro?.corners?.length > 0) ||
+                             (this.currentTrackProfile?.corners?.length > 0);
+
+    if (!hasTelemetryData) {
+      const msg = 'PDF Dossier export blocked: No telemetry data recorded for this track yet. Drive laps in Live mode or upload a stint to map track turns.';
+      if (window.PitToast) {
+        window.PitToast.warning(msg, 'TELEMETRY REQUIRED');
+      } else {
+        alert(msg);
+      }
+      return;
+    }
+
     const btnExport = this.container?.querySelector('#btn-study-export-pdf');
     if (btnExport) {
       btnExport.disabled = true;
@@ -991,8 +1028,7 @@ export class TrackStudyView {
       }
     } finally {
       if (btnExport) {
-        btnExport.disabled = false;
-        btnExport.innerHTML = '<span class="btn-icon">📄</span> Export 5-Phase Study PDF';
+        this._updateExportButtonState();
       }
     }
   }

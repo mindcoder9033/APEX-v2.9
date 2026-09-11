@@ -5057,6 +5057,26 @@ select,
   flex-wrap: wrap;
 }
 
+#btn-study-export-pdf.disabled-telemetry-required,
+#btn-study-export-pdf:disabled {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  filter: grayscale(0.6);
+  pointer-events: auto !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: var(--color-text-secondary) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+#btn-study-export-pdf.disabled-telemetry-required:hover,
+#btn-study-export-pdf:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+}
+
 /* 5-Phase Preparation Readiness Meter */
 .study-readiness-meter {
   display: flex;
