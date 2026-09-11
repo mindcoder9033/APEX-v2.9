@@ -145,7 +145,10 @@ export class TrackStudyView {
     const profile = trackStudyLibrary.getTrackStudyProfile(trackId);
     if (!profile) return;
 
-    // Reset session base lap offset for newly loaded track
+    // Reset session tracking references
+    this._prevLapNumber = null;
+    this._prevLastLapTime = null;
+    this._prevNormPos = null;
     this._sessionBaseLap = undefined;
     this._lastSampleLap = undefined;
 
@@ -179,26 +182,11 @@ export class TrackStudyView {
     try {
       this.studyData = this.engine.generateStudy(trackProfile, telemetrySamples);
       
-      // If telemetry samples are provided, derive completed laps count
+      // If telemetry samples are provided, derive completed laps count automatically
       if (Array.isArray(telemetrySamples) && telemetrySamples.length > 0) {
-        const maxSampleLap = telemetrySamples.reduce((max, s) => {
-          const lap = s.lapNumber !== undefined ? s.lapNumber : (s.currentLap !== undefined ? s.currentLap : 0);
-          return Math.max(max, lap);
-        }, 0);
-        if (maxSampleLap > this.lapsCompleted) {
-          this.lapsCompleted = maxSampleLap;
-          for (let s = 1; s <= Math.min(4, this.lapsCompleted); s++) {
-            this.unlockedPhases.add(s + 1);
-          }
-          if (this.lapsCompleted >= 5) {
-            this.hasCompletedBriefing = true;
-          }
-          trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
-            unlockedPhases: Array.from(this.unlockedPhases),
-            lapsCompleted: this.lapsCompleted,
-            lastPhase: this.currentPhase
-          });
-          this.updateReadinessMeter();
+        const detectedLaps = this._computeLapsFromSamples(telemetrySamples);
+        if (detectedLaps > this.lapsCompleted) {
+          this._applyLapsCompleted(detectedLaps);
         }
       }
 
@@ -214,6 +202,41 @@ export class TrackStudyView {
     }
   }
 
+  _computeLapsFromSamples(samples) {
+    if (!Array.isArray(samples) || samples.length === 0) return 0;
+    
+    let maxLap = 0;
+    const distinctLaps = new Set();
+    let prevLastLapTime = 0;
+    let completedFromLapTimes = 0;
+
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i];
+      const lap = s.timing?.lapNumber !== undefined 
+        ? s.timing.lapNumber 
+        : (s.lapNumber !== undefined 
+            ? s.lapNumber 
+            : (s.timing?.rawLapNumber !== undefined ? s.timing.rawLapNumber + 1 : null));
+      
+      if (lap !== null && lap > 0) {
+        distinctLaps.add(lap);
+        if (lap > maxLap) maxLap = lap;
+      }
+
+      const lastLapTime = s.timing?.lastLapTime !== undefined 
+        ? s.timing.lastLapTime 
+        : (s.lastLapTime !== undefined ? s.lastLapTime : 0);
+      
+      if (lastLapTime > 0 && Math.abs(lastLapTime - prevLastLapTime) > 0.05) {
+        completedFromLapTimes++;
+        prevLastLapTime = lastLapTime;
+      }
+    }
+
+    const completedFromLapNumbers = maxLap > 1 ? maxLap - 1 : (distinctLaps.size > 1 ? distinctLaps.size - 1 : 0);
+    return Math.max(completedFromLapNumbers, completedFromLapTimes);
+  }
+
   resetCurrentTrackStudy() {
     // 1. Clear independent storage for this circuit
     trackStudyLibrary.resetTrackStudyState(this.selectedTrackId);
@@ -225,14 +248,20 @@ export class TrackStudyView {
     this.activeCornerNumber = null;
     this.selectedCornerNumber = 1;
 
-    // 3. Reset 5-stage sequential progression & laps completed to 0
+    // 3. Reset lap tracking state
     this.lapsCompleted = 0;
-    this._sessionBaseLap = this._lastSampleLap !== undefined ? this._lastSampleLap : 0;
+    this._prevLapNumber = null;
+    this._prevLastLapTime = null;
+    this._prevNormPos = null;
+    this._sessionBaseLap = undefined;
+    this._lastSampleLap = undefined;
+
+    // 4. Reset 5-stage sequential progression & laps completed to 0
     this.unlockedPhases = new Set([1]);
     this.hasCompletedBriefing = false;
     this.currentPhase = 1;
 
-    // 4. Reset UI header live indicators & metrics strip to standby empty state
+    // 5. Reset UI header live indicators & metrics strip to standby empty state
     if (this.container) {
       const statusPill = this.container.querySelector('#study-live-status-pill');
       const statusDot = this.container.querySelector('#study-live-status-dot');
@@ -254,25 +283,25 @@ export class TrackStudyView {
       this._highlightActiveCorner(null);
     }
 
-    // 5. Re-generate pristine baseline study from catalog profile with zero telemetry
+    // 6. Re-generate pristine baseline study from catalog profile with zero telemetry
     const profile = trackStudyLibrary.getTrackStudyProfile(this.selectedTrackId);
     if (profile) {
       this.currentTrackProfile = profile;
       this.studyData = this.engine.generateStudy(profile, []);
     }
 
-    // 6. Save pristine empty state with 0 laps completed in store
+    // 7. Save pristine empty state with 0 laps completed in store
     trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
       unlockedPhases: [1],
       lapsCompleted: 0,
       lastPhase: 1
     });
 
-    // 7. Update readiness meter (0% - 0/5 Laps) and re-render Phase 1
+    // 8. Update readiness meter (0% - 0/5 Laps) and re-render Phase 1
     this.updateReadinessMeter();
     this.render();
 
-    // 8. Notify user via PitToast
+    // 9. Notify user via PitToast
     if (window.PitToast) {
       const trackName = this.studyData?.circuit?.name || 'Circuit';
       window.PitToast.info(`Collected data & lap count for ${trackName} reset to 0 laps.`, 'STUDY RESET');
@@ -995,6 +1024,9 @@ export class TrackStudyView {
       this.telemetrySamples.push(sample);
     }
 
+    // 1. Process automatic lap progress detection from telemetry signals
+    this._trackLapProgress(sample);
+
     const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
 
     // Throttled Dynamic Telemetry Ingestion (at most once every 4 seconds)
@@ -1043,48 +1075,17 @@ export class TrackStudyView {
     const speedVal = this.container.querySelector('#study-live-speed-val');
     const turnVal = this.container.querySelector('#study-live-turn-val');
 
-    const rawLap = sample.lapNumber !== undefined ? sample.lapNumber : (sample.currentLap || 1);
-    this._lastSampleLap = rawLap;
+    const sampleLap = sample.timing?.lapNumber !== undefined 
+      ? sample.timing.lapNumber 
+      : (sample.lapNumber !== undefined 
+          ? sample.lapNumber 
+          : (sample.timing?.rawLapNumber !== undefined ? sample.timing.rawLapNumber + 1 : 1));
 
-    if (this._sessionBaseLap === undefined) {
-      this._sessionBaseLap = Math.max(0, rawLap - (this.lapsCompleted || 0));
-    }
-    const sessionLap = Math.max(0, rawLap - this._sessionBaseLap);
-    const displayLap = sessionLap > 0 ? sessionLap : rawLap;
-
+    const displayLap = Math.max(sampleLap, this.lapsCompleted + 1);
     const speedKmh = Math.round(sample.speedKmh ? sample.speedKmh : (sample.speedMps ? sample.speedMps * 3.6 : (sample.speedMph ? sample.speedMph * 1.60934 : 0)));
 
     if (lapVal && lapVal.textContent !== String(displayLap)) lapVal.textContent = displayLap;
     if (speedVal && speedVal.textContent !== String(speedKmh)) speedVal.textContent = speedKmh;
-
-    // Detect on-track lap progress and unlock stages (1-5 laps requirement)
-    if (sessionLap > this.lapsCompleted) {
-      const prevLaps = this.lapsCompleted;
-      this.lapsCompleted = sessionLap;
-      for (let s = 1; s <= Math.min(4, this.lapsCompleted); s++) {
-        this.unlockedPhases.add(s + 1);
-      }
-      if (this.lapsCompleted >= 5) {
-        this.hasCompletedBriefing = true;
-      }
-      trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
-        unlockedPhases: Array.from(this.unlockedPhases),
-        lapsCompleted: this.lapsCompleted,
-        lastPhase: this.currentPhase
-      });
-      this.updateReadinessMeter();
-      if (this.container && this.container.style.display !== 'none') {
-        this.render();
-      }
-      if (window.PitToast && this.lapsCompleted > prevLaps) {
-        const newlyPassedStage = Math.min(5, this.lapsCompleted);
-        const nextStage = newlyPassedStage < 5 ? newlyPassedStage + 1 : null;
-        window.PitToast.success(
-          `Lap ${this.lapsCompleted} completed! Stage ${newlyPassedStage} passed${nextStage ? ` — Stage ${nextStage} Unlocked` : ' — Track Study Certified'}!`,
-          'STAGE REQUIREMENT MET'
-        );
-      }
-    }
 
     // Detect and highlight current on-track corner
     const cornerNum = this._detectCurrentCorner(sample);
@@ -1103,6 +1104,103 @@ export class TrackStudyView {
         const trackName = this.studyData?.circuit?.name || 'Circuit';
         window.PitToast.telemetry(`Live Telemetry Synced // Tracking on-track progression for ${trackName}`, 'TRACK STUDY LIVE');
       }
+    }
+  }
+
+  _trackLapProgress(sample) {
+    if (!sample) return;
+
+    // 1. Extract lap number from telemetry
+    const sampleLap = sample.timing?.lapNumber !== undefined 
+      ? sample.timing.lapNumber 
+      : (sample.lapNumber !== undefined 
+          ? sample.lapNumber 
+          : (sample.timing?.rawLapNumber !== undefined ? sample.timing.rawLapNumber + 1 : null));
+
+    // 2. Extract last lap time
+    const lastLapTime = sample.timing?.lastLapTime !== undefined 
+      ? sample.timing.lastLapTime 
+      : (sample.lastLapTime !== undefined ? sample.lastLapTime : 0);
+
+    // 3. Extract normalized position or distance
+    const trackLen = this.currentTrackProfile?.lengthMeters || this.studyData?.circuit?.lengthMeters || 4000;
+    let normPos = sample.normalizedLapPosition !== undefined 
+      ? sample.normalizedLapPosition 
+      : (sample.lapDistanceMeters !== undefined ? (sample.lapDistanceMeters % trackLen) / trackLen : null);
+
+    let lapCompletedEvent = false;
+
+    // Signal A: Telemetry Lap Number incremented
+    if (sampleLap !== null) {
+      if (this._prevLapNumber !== null && sampleLap > this._prevLapNumber) {
+        lapCompletedEvent = true;
+      }
+      this._prevLapNumber = sampleLap;
+    }
+
+    // Signal B: Last Lap Time updated with a new valid lap duration
+    if (lastLapTime > 0) {
+      if (this._prevLastLapTime !== null && this._prevLastLapTime > 0 && Math.abs(lastLapTime - this._prevLastLapTime) > 0.05) {
+        lapCompletedEvent = true;
+      }
+      this._prevLastLapTime = lastLapTime;
+    } else if (this._prevLastLapTime === null) {
+      this._prevLastLapTime = 0;
+    }
+
+    // Signal C: Normalized lap position wrap-around from > 0.85 to < 0.15 with forward motion
+    const speedKmh = sample.speedKmh || (sample.speedMps ? sample.speedMps * 3.6 : (sample.speedMph ? sample.speedMph * 1.60934 : 0));
+    if (normPos !== null && this._prevNormPos !== null && speedKmh > 15) {
+      if (this._prevNormPos > 0.85 && normPos < 0.15) {
+        lapCompletedEvent = true;
+      }
+    }
+    this._prevNormPos = normPos;
+
+    // Direct minimum baseline if game reports lapNumber >= 2
+    let calculatedLaps = this.lapsCompleted;
+    if (sampleLap !== null && sampleLap > 1) {
+      calculatedLaps = Math.max(calculatedLaps, sampleLap - 1);
+    }
+    if (lapCompletedEvent) {
+      calculatedLaps = Math.max(calculatedLaps, this.lapsCompleted + 1);
+    }
+
+    if (calculatedLaps > this.lapsCompleted) {
+      this._applyLapsCompleted(calculatedLaps);
+    }
+  }
+
+  _applyLapsCompleted(newLaps) {
+    if (newLaps <= this.lapsCompleted) return;
+    const prevLaps = this.lapsCompleted;
+    this.lapsCompleted = newLaps;
+
+    for (let s = 1; s <= Math.min(4, this.lapsCompleted); s++) {
+      this.unlockedPhases.add(s + 1);
+    }
+    if (this.lapsCompleted >= 5) {
+      this.hasCompletedBriefing = true;
+    }
+
+    trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
+      unlockedPhases: Array.from(this.unlockedPhases),
+      lapsCompleted: this.lapsCompleted,
+      lastPhase: this.currentPhase
+    });
+
+    this.updateReadinessMeter();
+    if (this.container && this.container.style.display !== 'none') {
+      this.render();
+    }
+
+    if (window.PitToast && this.lapsCompleted > prevLaps) {
+      const newlyPassedStage = Math.min(5, this.lapsCompleted);
+      const nextStage = newlyPassedStage < 5 ? newlyPassedStage + 1 : null;
+      window.PitToast.success(
+        `Lap ${this.lapsCompleted} completed! Stage ${newlyPassedStage} passed${nextStage ? ` — Stage ${nextStage} Unlocked` : ' — Track Study Certified'}!`,
+        'STAGE REQUIREMENT MET'
+      );
     }
   }
 

@@ -249,3 +249,71 @@ test('TrackStudy: Lap-based stage unlock progression (1-5 laps required)', () =>
   assert.equal(readinessPct(5), 100);
 });
 
+test('TrackStudy: Automatic telemetry lap counting across multiple signal sources', () => {
+  // Test compute laps from batch telemetry samples
+  const computeLapsFromSamples = (samples) => {
+    if (!Array.isArray(samples) || samples.length === 0) return 0;
+    let maxLap = 0;
+    const distinctLaps = new Set();
+    let prevLastLapTime = 0;
+    let completedFromLapTimes = 0;
+
+    for (let i = 0; i < samples.length; i++) {
+      const s = samples[i];
+      const lap = s.timing?.lapNumber !== undefined 
+        ? s.timing.lapNumber 
+        : (s.lapNumber !== undefined 
+            ? s.lapNumber 
+            : (s.timing?.rawLapNumber !== undefined ? s.timing.rawLapNumber + 1 : null));
+      
+      if (lap !== null && lap > 0) {
+        distinctLaps.add(lap);
+        if (lap > maxLap) maxLap = lap;
+      }
+
+      const lastLapTime = s.timing?.lastLapTime !== undefined 
+        ? s.timing.lastLapTime 
+        : (s.lastLapTime !== undefined ? s.lastLapTime : 0);
+      
+      if (lastLapTime > 0 && Math.abs(lastLapTime - prevLastLapTime) > 0.05) {
+        completedFromLapTimes++;
+        prevLastLapTime = lastLapTime;
+      }
+    }
+
+    const completedFromLapNumbers = maxLap > 1 ? maxLap - 1 : (distinctLaps.size > 1 ? distinctLaps.size - 1 : 0);
+    return Math.max(completedFromLapNumbers, completedFromLapTimes);
+  };
+
+  // Signal 1: Standard Forza UDP timing.lapNumber progression (laps 1, 2, 3 -> 2 completed laps)
+  const forzaSamples = [
+    { timing: { lapNumber: 1, lastLapTime: 0 } },
+    { timing: { lapNumber: 1, lastLapTime: 0 } },
+    { timing: { lapNumber: 2, lastLapTime: 84.32 } },
+    { timing: { lapNumber: 2, lastLapTime: 84.32 } },
+    { timing: { lapNumber: 3, lastLapTime: 82.15 } }
+  ];
+  assert.equal(computeLapsFromSamples(forzaSamples), 2, 'Should detect 2 completed laps from Forza UDP packets');
+
+  // Signal 2: Direct top-level lapNumber in recorded/imported stints (laps 1, 2, 3, 4 -> 3 completed laps)
+  const stintSamples = [
+    { lapNumber: 1 },
+    { lapNumber: 2 },
+    { lapNumber: 3 },
+    { lapNumber: 4 }
+  ];
+  assert.equal(computeLapsFromSamples(stintSamples), 3, 'Should detect 3 completed laps from stint sample array');
+
+  // Signal 3: Out-lap or practice session with lastLapTime updates (5 completed laps)
+  const lastLapTimeSamples = [
+    { timing: { lapNumber: 1, lastLapTime: 0 } },
+    { timing: { lapNumber: 1, lastLapTime: 95.2 } },
+    { timing: { lapNumber: 1, lastLapTime: 94.1 } },
+    { timing: { lapNumber: 1, lastLapTime: 93.8 } },
+    { timing: { lapNumber: 1, lastLapTime: 92.5 } },
+    { timing: { lapNumber: 1, lastLapTime: 91.9 } }
+  ];
+  assert.equal(computeLapsFromSamples(lastLapTimeSamples), 5, 'Should detect 5 completed laps from lastLapTime updates');
+});
+
+
