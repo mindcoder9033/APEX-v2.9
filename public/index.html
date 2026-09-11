@@ -101,6 +101,10 @@
           <span class="nav-tab-icon">🏁</span>
           <span class="nav-tab-label">PIT WALL</span>
         </button>
+        <button id="btn-nav-track-study" class="nav-tab-btn chamfer-br" title="5-Phase Track Study & Pre-Stint Preparation (S)">
+          <span class="nav-tab-icon">📋</span>
+          <span class="nav-tab-label">TRACK STUDY</span>
+        </button>
         <button id="btn-nav-track-library" class="nav-tab-btn chamfer-br" title="Track Intelligence & Dossier Hub (T)">
           <span class="nav-tab-icon">🗺️</span>
           <span class="nav-tab-label">TRACK DOSSIER</span>
@@ -1331,6 +1335,87 @@
         </main>
       </div>
     </div> <!-- /#view-stints -->
+
+    <!-- 5-PHASE TRACK STUDY & PRE-STINT PREPARATION VIEW CONTAINER -->
+    <div id="view-track-study" class="view-container view-track-study" style="display: none;">
+      <!-- Track Study Top Bar -->
+      <div class="track-study-top-bar chamfer-br">
+        <div class="study-header-left">
+          <div class="study-title-cluster">
+            <h1 id="study-circuit-title" class="track-study-heading">CIRCUIT TRACK STUDY</h1>
+            <span id="study-circuit-sub" class="track-study-subheading">5-Phase Skip Barber Racecraft Preparation & Telemetry Dossier</span>
+          </div>
+        </div>
+
+        <div class="study-header-right">
+          <!-- Live Telemetry Status Badge -->
+          <div id="study-live-status-pill" class="study-status-pill chamfer-all-corners" title="Live UDP Ingestion Status">
+            <span id="study-live-status-dot" class="status-dot"></span>
+            <span id="study-live-status-text">STANDBY // READY</span>
+          </div>
+
+          <!-- Track Profile Selector -->
+          <div class="study-track-select-wrap">
+            <label class="study-select-lbl" for="study-track-selector">CIRCUIT:</label>
+            <select id="study-track-selector" class="form-input chamfer-all-corners study-select">
+              <!-- Dynamically populated from trackLibraryStore -->
+            </select>
+          </div>
+
+          <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Track Profile">
+            <span>⟲</span>
+          </button>
+
+          <button id="btn-study-export-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
+            <span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- 5-Phase Stepper Navigation Bar -->
+      <nav class="study-stepper-bar chamfer-br" aria-label="Track Study Phases">
+        <button class="study-step-btn active" data-step="1">
+          <span class="step-num">01</span>
+          <div class="step-text-wrap">
+            <span class="step-lbl">PHASE 1</span>
+            <span class="step-name">Macro Map & Priority</span>
+          </div>
+        </button>
+        <button class="study-step-btn" data-step="2">
+          <span class="step-num">02</span>
+          <div class="step-text-wrap">
+            <span class="step-lbl">PHASE 2</span>
+            <span class="step-name">Surface Recon & Camber</span>
+          </div>
+        </button>
+        <button class="study-step-btn" data-step="3">
+          <span class="step-num">03</span>
+          <div class="step-text-wrap">
+            <span class="step-lbl">PHASE 3</span>
+            <span class="step-name">Visual Reference Points</span>
+          </div>
+        </button>
+        <button class="study-step-btn" data-step="4">
+          <span class="step-num">04</span>
+          <div class="step-text-wrap">
+            <span class="step-lbl">PHASE 4</span>
+            <span class="step-name">Order of Effort</span>
+          </div>
+        </button>
+        <button class="study-step-btn" data-step="5">
+          <span class="step-num">05</span>
+          <div class="step-text-wrap">
+            <span class="step-lbl">PHASE 5</span>
+            <span class="step-name">Hardware & Stint Prep</span>
+          </div>
+        </button>
+      </nav>
+
+      <!-- Active Phase View Stage -->
+      <main id="study-phase-container" class="study-phase-container">
+        <!-- Rendered dynamically by TrackStudyView -->
+      </main>
+    </div> <!-- /#view-track-study -->
   </div> <!-- /.app-container -->
 
   <!-- Stint Metadata Modal (Track, Layout, Car, Session) -->

@@ -11,6 +11,7 @@ import { trackLibraryStore } from './track-library-store.js';
 import { weatherProfileStore } from './weather-profile-store.js';
 import { WeatherSimulator } from './analysis/weather-simulator.js';
 import { StintsManager } from './stints.js';
+import { TrackStudyView } from './track-study-view.js';
 import { IsometricTrackMap } from './components/isometric-track-map.js';
 import { LoopbackModal } from './components/loopback-modal.js';
 import { driverProfileStore } from './driver-profile-store.js';
@@ -26,6 +27,7 @@ class ApexApp {
     this.session = new SessionManager();
     this.layoutManager = new GridLayoutManager();
     this.trackLibrary = new TrackLibraryView();
+    this.trackStudy = new TrackStudyView();
     this.stintsManager = new StintsManager();
     this.loopbackModal = new LoopbackModal();
     this.driverDossierModal = new DriverDossierModal();
@@ -68,11 +70,13 @@ class ApexApp {
 
     // Primary Navigation Tab Buttons
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
+    this.btnNavTrackStudy = document.getElementById('btn-nav-track-study');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
     this.btnNavStints = document.getElementById('btn-nav-stints');
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
+    this.viewTrackStudy = document.getElementById('view-track-study');
     this.viewTrackLibrary = document.getElementById('view-track-library');
     this.viewStints = document.getElementById('view-stints');
     
@@ -393,6 +397,12 @@ class ApexApp {
       });
     }
 
+    if (this.btnNavTrackStudy) {
+      this.btnNavTrackStudy.addEventListener('click', () => {
+        this.switchView('track-study');
+      });
+    }
+
     if (this.btnNavTrackLibrary) {
       this.btnNavTrackLibrary.addEventListener('click', () => {
         this.switchView('track-library');
@@ -523,6 +533,9 @@ class ApexApp {
       this.session.processSample(sample);
       if (this.stintsManager) {
         this.stintsManager.updateTelemetry(sample);
+      }
+      if (this.trackStudy) {
+        this.trackStudy.onTelemetrySample(sample);
       }
 
       if (this.trackMap3D) {
@@ -705,11 +718,13 @@ class ApexApp {
   switchView(viewName) {
     // 1. Hide all views
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
+    if (this.viewTrackStudy) this.viewTrackStudy.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
     if (this.viewStints) this.viewStints.style.display = 'none';
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
+    if (this.btnNavTrackStudy) this.btnNavTrackStudy.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
     if (this.btnNavStints) this.btnNavStints.classList.remove('active');
 
@@ -717,6 +732,10 @@ class ApexApp {
     if (viewName === 'pitwall') {
       if (this.viewPitwall) this.viewPitwall.style.display = 'block';
       if (this.btnNavPitwall) this.btnNavPitwall.classList.add('active');
+    } else if (viewName === 'track-study') {
+      if (this.viewTrackStudy) this.viewTrackStudy.style.display = 'block';
+      if (this.btnNavTrackStudy) this.btnNavTrackStudy.classList.add('active');
+      if (this.trackStudy) this.trackStudy.init();
     } else if (viewName === 'track-library') {
       if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
       if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.add('active');
