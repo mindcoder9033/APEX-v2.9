@@ -25,93 +25,70 @@
 
 ## 2. Color System
 
-### 2.1 Primary Palette
+### 2.1 Primary Palette (Deep Pitwall Obsidian Theme)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                                                                                   │
-│  ● BLACK        #000000   RGB(0, 0, 0)      Primary background, text          │
-│  ● DARK GRAY    #1A1A1A   RGB(26, 26, 26)   Card backgrounds, panels          │
-│  ● MID GRAY     #2A2A2A   RGB(42, 42, 42)   Borders, dividers                 │
-│  ● LIGHT GRAY   #3A3A3A   RGB(58, 58, 58)   Inputs, hover states              │
-│  ● TEXT GRAY    #8A8A8A   RGB(138, 138, 138) Secondary text                  │
-│  ● TEXT WHITE   #FFFFFF   RGB(255, 255, 255) Primary text                    │
+│  ● PITCH BLACK   #000000   RGB(0, 0, 0)      Primary background (OLED base)    │
+│  ● COCKPIT CARBON#0D0F12   RGB(13, 15, 18)   Card backgrounds, panels          │
+│  ● OBSIDIAN ELEV #13171F   RGB(19, 23, 31)   Elevated panels, containers       │
+│  ● SURFACE POPOVER#1A202C  RGB(26, 32, 44)   Popovers, modals, dropdowns       │
+│  ● INPUT SURFACE #161B22   RGB(22, 27, 34)   Inputs, form elements             │
+│  ● HAIRLINE BORDER rgba(255,255,255,0.08)    Subtle technical component borders│
+│  ● BORDER BRIGHT #222936   RGB(34, 41, 54)   Active / focused panel borders    │
+│  ● TEXT WHITE    #FFFFFF   RGB(255, 255, 255) Primary telemetry & headers       │
+│  ● TEXT MUTED    #94A3B8   RGB(148, 163, 184) Secondary labels, units          │
+│  ● TEXT SUBTLE   #64748B   RGB(100, 116, 139) Disabled / background metadata   │
 │                                                                                   │
-│  ● F1 RED       #E10600   RGB(225, 6, 0)     Primary accent, CTA buttons      │
-│  ● F1 RED DARK  #B80500   RGB(184, 5, 0)     Button hover                     │
-│  ● F1 RED GLOW  rgba(225,6,0,0.15)           Subtle glow effects              │
-│  ● F1 RED DIM   rgba(225,6,0,0.3)            Dim accent elements             │
+│  ● F1 RED        #E10600   RGB(225, 6, 0)     Primary accent, CTA buttons      │
+│  ● F1 RED DARK   #B80500   RGB(184, 5, 0)     Button hover                     │
+│  ● F1 RED GLOW   rgba(225,6,0,0.25)           Telemetry active trace glow      │
+│  ● F1 RED SUBTLE rgba(225,6,0,0.08)           Background highlight tint        │
 │                                                                                   │
-│  ● SUCCESS      #00CC66   RGB(0, 204, 102)   Connected status                 │
-│  ● WARNING      #FFCC00   RGB(255, 204, 0)   Connecting status               │
-│  ● ERROR        #FF3333   RGB(255, 51, 51)   Disconnected status              │
+│  ● APEX GOLD     #FFB800   RGB(255, 184, 0)   Coach insights, potential gains  │
+│  ● ELECTRIC CYAN #00E5FF   RGB(0, 229, 255)   Telemetry channels, trace data   │
+│                                                                                   │
+│  ● FIA SUCCESS   #00E676   RGB(0, 230, 118)   Positive delta, connected        │
+│  ● FIA WARNING   #FF9500   RGB(255, 149, 0)   Caution, connecting status       │
+│  ● FIA ERROR     #FF3B30   RGB(255, 59, 48)   Negative delta, disconnected     │
 │                                                                                   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 2.2 Color Usage Rules
 
-| Element | Color | Hex | Notes |
-|---------|-------|-----|-------|
-| Page Background | Black | #000000 | Full page, no gradient |
-| Card Background | Dark Gray | #1A1A1A | 8px border-radius |
-| Primary Text | White | #FFFFFF | Headers, labels |
-| Secondary Text | Text Gray | #8A8A8A | Descriptions, metadata |
-| Primary CTA | F1 Red | #E10600 | Start Recording button |
-| Secondary CTA | Dark Gray | #2A2A2A | Save Settings button |
-| Status Connected | Success | #00CC66 | With subtle pulse glow |
-| Status Disconnected | Error | #FF3333 | Static indicator |
-| Status Connecting | Warning | #FFCC00 | Pulsing animation |
-| Dividers | Mid Gray | #2A2A2A | 1px solid |
-| Input Fields | Light Gray | #3A3A3A | Focus: F1 Red border |
-| Border Accents | F1 Red Dim | rgba(225,6,0,0.3) | Subtle edge glow |
-
-### 2.3 Glow Effects
-
-```css
-/* Status indicator glow */
-.glow-success {
-    box-shadow: 0 0 20px rgba(0, 204, 102, 0.3);
-}
-
-.glow-error {
-    box-shadow: 0 0 20px rgba(255, 51, 51, 0.3);
-}
-
-.glow-warning {
-    box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
-}
-
-/* F1 Red glow accent */
-.glow-red-subtle {
-    box-shadow: 0 0 30px rgba(225, 6, 0, 0.05);
-}
-
-/* Panel separator glow */
-.separator-glow {
-    height: 1px;
-    background: linear-gradient(
-        to right,
-        transparent,
-        rgba(225, 6, 0, 0.3) 20%,
-        rgba(225, 6, 0, 0.3) 80%,
-        transparent
-    );
-    margin: 20px 0;
-}
-```
+| Element | Color | Hex / RGBA | Notes |
+|---------|-------|------------|-------|
+| Page Canvas | Pitch Black | #000000 | Pure OLED black base |
+| Card / Panel | Cockpit Carbon | #0D0F12 | Hairline border `rgba(255,255,255,0.08)` |
+| Elevated Module | Obsidian Elev | #13171F | Chamfer-cut containers |
+| Primary Text | White | #FFFFFF | Headers, active stats |
+| Secondary Text | Text Slate | #94A3B8 | Unit markers, field labels |
+| Tertiary Text | Text Subdued | #64748B | Metadata, timestamps |
+| Primary CTA | F1 Red | #E10600 | Start Recording / Live Action |
+| Secondary CTA | Input Surface | #161B22 | Border: #222936 |
+| Positive Delta / Gain | FIA Emerald | #00E676 | Gained time / Optimal sector |
+| Negative Delta / Loss | FIA Crimson | #FF3B30 | Lost time / Oversteer event |
+| Coach Recommendation | Apex Gold | #FFB800 | Potential lap time gain |
+| Telemetry Trace | Electric Cyan | #00E5FF | Speed, steering & G-force curves |
 
 ---
 
 ## 3. Typography
 
-### 3.1 Font Family
+### 3.1 Font Suite (Sharp Cockpit + Utilitarian UI + Tabular Monospace)
 
 ```css
 :root {
-    --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 
-                     'Helvetica Neue', Arial, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    /* Display / Headers: Sharp angular motorsport cockpit styling */
+    --font-display: 'Chakra Petch', 'Rajdhani', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    /* Body / UI: Clean, legible utilitarian grotesque */
+    --font-sans: 'Roboto', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    /* Monospace / Telemetry: High-precision tabular data with ligatures */
+    --font-mono: 'Fira Code', 'JetBrains Mono', 'Consolas', monospace;
 }
 ```
 
@@ -120,19 +97,19 @@
 ```css
 :root {
     /* Display */
-    --text-display: 48px;      /* Main title */
+    --text-display: 48px;      /* Main hero / lap times */
     --text-hero: 32px;         /* Section titles */
     --text-headline: 24px;     /* Panel titles */
     --text-title: 18px;        /* Card titles */
     
     /* Body */
-    --text-body: 14px;         /* Standard text */
-    --text-small: 12px;        /* Secondary info */
-    --text-tiny: 10px;         /* Labels, metrics */
+    --text-body: 14px;         /* Standard UI text */
+    --text-small: 12px;        /* Secondary labels */
+    --text-tiny: 10px;         /* Technical badges & metadata */
     
     /* Monospace */
-    --text-mono: 14px;         /* Telemetry data, times */
-    --text-mono-small: 12px;   /* Status data */
+    --text-mono: 14px;         /* Telemetry data, split times */
+    --text-mono-small: 11px;   /* Status telemetry logs */
 }
 ```
 
@@ -140,12 +117,11 @@
 
 | Weight | Value | Usage |
 |--------|-------|-------|
-| Light | 300 | Subtle labels, secondary |
-| Regular | 400 | Body text, descriptions |
-| Medium | 500 | Subheaders, stats |
-| Semibold | 600 | Primary labels, metrics |
-| Bold | 700 | CTAs, headers |
-| Black | 900 | Brand name, display text |
+| Light | 300 | Secondary descriptions, subtle telemetry notes |
+| Regular | 400 | Body text, UI descriptions |
+| Medium | 500 | Tab navigation, badges, subheadings |
+| Semibold | 600 | Primary labels, button text, table headers |
+| Bold | 700 | Display numbers, lap deltas, brand title |
 
 ### 3.4 Letter Spacing
 
@@ -681,87 +657,70 @@ Properties:
 
 ---
 
-## 6. Animation & Motion
+## 6. Animation & Motion (Emil Kowalski Design Engineering)
 
-### 6.1 Animation Principles
+### 6.1 Motion Principles
+- **Unseen details compound**: Animations should feel physical, tactile, and natural without drawing attention away from telemetry analysis.
+- **Sub-300ms Rule**: All UI transitions must complete in under 250ms (button press: 140ms, popovers: 180ms, modals: 240ms).
+- **GPU-Accelerated**: Only animate `transform` and `opacity`. Never animate `width`, `height`, `margin`, or `padding`.
+- **Zero Animation on High-Frequency Loops**: Live telemetry data feeds and keyboard-initiated triggers update with zero latency (0ms).
+- **Tactile Response**: Buttons and actionable elements depress subtly on press (`scale(0.97)` on `:active`) to confirm user input.
 
-- **Purposeful**: Animations communicate state changes
-- **Fast**: 150-300ms duration for immediate feedback
-- **Subtle**: No jarring or excessive motion
-- **F1-inspired**: Snappy, precise, like a gear change
-
-### 6.2 Animation Specifications
-
-| Element | Animation | Duration | Easing |
-|---------|-----------|----------|--------|
-| Status dot pulse | Opacity + box-shadow | 2s | ease-in-out |
-| Connecting pulse | Scale + opacity | 1s | ease-in-out |
-| Button hover | Scale + background | 0.2s | cubic-bezier(0.25, 0.46, 0.45, 0.94) |
-| Button active | Scale | 0.1s | ease-out |
-| Panel transition | Opacity | 0.3s | ease |
-| Status bar update | Opacity | 0.2s | ease |
-| Number increment | Counter animation | 0.3s | ease-out |
-
-### 6.3 Status Bar Animation
+### 6.2 Custom Easing Curves & Timing Tokens
 
 ```css
-.status-bar {
-    background: var(--dark-gray);
-    padding: 12px 20px;
-    border: 1px solid var(--mid-gray);
-    font-size: 12px;
-    color: var(--text-gray);
-    font-family: var(--font-mono);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.3s ease;
-}
+:root {
+  /* Strong ease-out for immediate UI responsiveness */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
-.status-bar .status-icon {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    background: var(--text-gray);
-}
+  /* Strong ease-in-out for layout morphing */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 
-.status-bar .status-icon.recording {
-    background: var(--f1-red);
-    animation: blink-recording 1s ease-in-out infinite;
-}
+  /* iOS / Drawer physics curve */
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 
-@keyframes blink-recording {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-}
-
-.status-bar .status-icon.success {
-    background: var(--success);
-}
-
-.status-bar .status-icon.error {
-    background: var(--error);
-}
-
-.status-bar .status-icon.warning {
-    background: var(--warning);
-    animation: pulse-warning 1s ease-in-out infinite;
+  /* Micro-timing specs */
+  --dur-press: 140ms;
+  --dur-popover: 180ms;
+  --dur-modal: 240ms;
 }
 ```
 
+### 6.3 Animation Specifications
+
+| Element | Properties Animated | Duration | Easing | Rationale |
+|---------|---------------------|----------|--------|-----------|
+| Button Press (:active) | `transform: scale(0.97)` | 140ms | `--ease-out` | Tactile feedback confirms click immediately |
+| Button Hover | `transform: translateY(-1px)` | 150ms | `--ease-out` | Subtle lift on mouse hover |
+| Status Dot Pulse | `opacity`, `box-shadow` | 2s | `--ease-in-out` | Gentle breathing state indicator |
+| Recording Blink | `opacity` | 1s | linear | High-visibility telemetry recording confirmation |
+| Modal / Popover Open | `transform: scale(0.96)`, `opacity` | 180-240ms | `--ease-out` | Enters with origin-awareness, never `scale(0)` |
+
 ---
 
-## 7. Micro-interactions
+## 7. Micro-interactions & Tactile Feedback
 
-### 7.1 Button Hover States
+### 7.1 Button Press & Hover States
 
 ```css
-.btn-primary:hover:not(:disabled) {
-    background: var(--f1-red-dark);
-    transform: scale(1.02);
-    box-shadow: 0 0 30px rgba(225, 6, 0, 0.2);
+.btn {
+    transition: transform var(--dur-press) var(--ease-out),
+                background-color 140ms ease,
+                border-color 140ms ease,
+                box-shadow 140ms ease;
+    will-change: transform;
 }
+
+@media (hover: hover) and (pointer: fine) {
+    .btn:hover {
+        transform: translateY(-1px) scale(1.015);
+    }
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+```
 
 .btn-primary:active:not(:disabled) {
     transform: scale(0.98);
