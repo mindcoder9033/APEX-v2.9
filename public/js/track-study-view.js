@@ -25,6 +25,7 @@ export class TrackStudyView {
     this.lapsCompleted = 0;
     this.unlockedPhases = new Set([1]);
     this.hasCompletedBriefing = false;
+    this._hasAutoDownloadedPdf = false;
 
     this.container = null;
   }
@@ -155,6 +156,7 @@ export class TrackStudyView {
     // Load independent persistent study progression for this specific track
     const savedState = trackStudyLibrary.getTrackStudyState(trackId);
     this.lapsCompleted = savedState.lapsCompleted || 0;
+    this._hasAutoDownloadedPdf = this.lapsCompleted >= 5;
 
     // Compute unlocked phases from laps completed (Stage 1 is always unlocked; Stage k+1 unlocked if lapsCompleted >= k)
     const unlocked = new Set([1]);
@@ -260,6 +262,7 @@ export class TrackStudyView {
     this.unlockedPhases = new Set([1]);
     this.hasCompletedBriefing = false;
     this.currentPhase = 1;
+    this._hasAutoDownloadedPdf = false;
 
     // 5. Reset UI header live indicators & metrics strip to standby empty state
     if (this.container) {
@@ -1183,10 +1186,18 @@ export class TrackStudyView {
       this.hasCompletedBriefing = true;
     }
 
+    // Automatically advance active stage view as laps progress
+    // (Lap 1 -> Stage 2, Lap 2 -> Stage 3, Lap 3 -> Stage 4, Lap 4 -> Stage 5, Lap 5+ -> Stage 5)
+    this.currentPhase = Math.min(5, this.lapsCompleted + 1);
+
+    // Save comprehensive study state to persistent storage
     trackStudyLibrary.saveTrackStudyState(this.selectedTrackId, {
       unlockedPhases: Array.from(this.unlockedPhases),
       lapsCompleted: this.lapsCompleted,
-      lastPhase: this.currentPhase
+      lastPhase: this.currentPhase,
+      corners: this.currentTrackProfile?.corners || this.studyData?.phase1_macro?.corners || [],
+      certified: this.lapsCompleted >= 5,
+      updatedAt: new Date().toISOString()
     });
 
     this.updateReadinessMeter();
@@ -1198,9 +1209,26 @@ export class TrackStudyView {
       const newlyPassedStage = Math.min(5, this.lapsCompleted);
       const nextStage = newlyPassedStage < 5 ? newlyPassedStage + 1 : null;
       window.PitToast.success(
-        `Lap ${this.lapsCompleted} completed! Stage ${newlyPassedStage} passed${nextStage ? ` — Stage ${nextStage} Unlocked` : ' — Track Study Certified'}!`,
+        `Lap ${this.lapsCompleted} completed! Stage ${newlyPassedStage} passed${nextStage ? ` — Advanced to Stage ${nextStage}` : ' — Track Study Certified'}!`,
         'STAGE REQUIREMENT MET'
       );
+    }
+
+    // Requirement: If 5 laps are completed in any track, save data & auto-download the 5-Phase PDF Dossier once
+    if (this.lapsCompleted >= 5 && !this._hasAutoDownloadedPdf) {
+      this._hasAutoDownloadedPdf = true;
+      if (window.PitToast) {
+        const trackName = this.studyData?.circuit?.name || this.currentTrackProfile?.trackName || 'Circuit';
+        window.PitToast.info(
+          `5 Laps completed on ${trackName}! Saved track study data & compiling 5-Phase PDF Dossier...`,
+          '5 LAPS COMPLETED // DOSSIER READY'
+        );
+      }
+      setTimeout(() => {
+        this.exportDossierPdf().catch(err => {
+          console.error('[TrackStudyView] Auto PDF export on 5 laps failed:', err);
+        });
+      }, 300);
     }
   }
 

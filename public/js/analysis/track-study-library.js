@@ -99,35 +99,45 @@ export class TrackStudyLibrary {
   getTrackStudyState(trackId) {
     try {
       if (typeof window === 'undefined' || !window.localStorage) {
-        return this.inMemoryStore?.[trackId] || { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [] };
+        return this.inMemoryStore?.[trackId] || { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [], certified: false };
       }
       const raw = window.localStorage.getItem(`${this.storageKey}_${trackId}`);
       if (!raw) {
-        return { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [] };
+        return { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [], certified: false };
       }
       const parsed = JSON.parse(raw);
       if (parsed.lapsCompleted === undefined) {
         parsed.lapsCompleted = Array.isArray(parsed.completedDebriefings) ? parsed.completedDebriefings.length : 0;
       }
+      if (parsed.certified === undefined) {
+        parsed.certified = parsed.lapsCompleted >= 5;
+      }
       return parsed;
     } catch (e) {
-      return { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [] };
+      return { unlockedPhases: [1], lapsCompleted: 0, lastPhase: 1, corners: [], certified: false };
     }
   }
 
   /**
-   * Saves study progression and telemetry corners for a track
+   * Saves study progression, certification, and telemetry corners for a track
    * @param {string} trackId 
    * @param {Object} state 
    */
   saveTrackStudyState(trackId, state) {
     try {
+      const currentState = this.getTrackStudyState(trackId) || {};
+      const merged = {
+        ...currentState,
+        ...state,
+        certified: state.certified !== undefined ? state.certified : (state.lapsCompleted >= 5 || currentState.certified || false),
+        updatedAt: state.updatedAt || new Date().toISOString()
+      };
       if (typeof window === 'undefined' || !window.localStorage) {
         if (!this.inMemoryStore) this.inMemoryStore = {};
-        this.inMemoryStore[trackId] = state;
+        this.inMemoryStore[trackId] = merged;
         return;
       }
-      window.localStorage.setItem(`${this.storageKey}_${trackId}`, JSON.stringify(state));
+      window.localStorage.setItem(`${this.storageKey}_${trackId}`, JSON.stringify(merged));
     } catch (e) {
       console.error('[TrackStudyLibrary] Error saving state:', e);
     }

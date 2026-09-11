@@ -316,4 +316,51 @@ test('TrackStudy: Automatic telemetry lap counting across multiple signal source
   assert.equal(computeLapsFromSamples(lastLapTimeSamples), 5, 'Should detect 5 completed laps from lastLapTime updates');
 });
 
+test('TrackStudy: Automatic stage progression logic per completed lap', () => {
+  const getAutoStage = (lapsCompleted) => Math.min(5, lapsCompleted + 1);
+
+  // Lap 0 (pre-stint / starting): Stage 1
+  assert.equal(getAutoStage(0), 1);
+  // Lap 1 completed: advances to Stage 2
+  assert.equal(getAutoStage(1), 2);
+  // Lap 2 completed: advances to Stage 3
+  assert.equal(getAutoStage(2), 3);
+  // Lap 3 completed: advances to Stage 4
+  assert.equal(getAutoStage(3), 4);
+  // Lap 4 completed: advances to Stage 5
+  assert.equal(getAutoStage(4), 5);
+  // Lap 5 completed: capped at Stage 5
+  assert.equal(getAutoStage(5), 5);
+  // Lap 6+ completed: remains at Stage 5
+  assert.equal(getAutoStage(6), 5);
+});
+
+test('TrackStudy: 5-lap completion persists certified state with timestamp and corner telemetry', () => {
+  const library = new TrackStudyLibrary('test_study_store_5laps');
+  const trackId = 'watkins-glen--full-course';
+
+  const mockCorners = [
+    { number: 1, name: 'The Ninety', apexSpeedKmh: 120 },
+    { number: 2, name: 'The Esses', apexSpeedKmh: 210 }
+  ];
+
+  // Simulate saving after 5 laps completed
+  library.saveTrackStudyState(trackId, {
+    unlockedPhases: [1, 2, 3, 4, 5],
+    lapsCompleted: 5,
+    lastPhase: 5,
+    corners: mockCorners,
+    certified: true
+  });
+
+  const saved = library.getTrackStudyState(trackId);
+  assert.equal(saved.lapsCompleted, 5);
+  assert.equal(saved.certified, true);
+  assert.equal(saved.lastPhase, 5);
+  assert.deepEqual(saved.unlockedPhases, [1, 2, 3, 4, 5]);
+  assert.equal(saved.corners.length, 2);
+  assert.ok(saved.updatedAt, 'Should include timestamp');
+});
+
+
 
