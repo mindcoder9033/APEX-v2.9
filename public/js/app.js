@@ -13,6 +13,7 @@ import { WeatherSimulator } from './analysis/weather-simulator.js';
 import { StintsManager } from './stints.js';
 import { TrackStudyView } from './track-study-view.js';
 import { TrackEditorView } from './track-editor-view.js';
+import { CircuitLabView, circuitLabView } from './circuit-lab-view.js';
 import { IsometricTrackMap } from './components/isometric-track-map.js';
 import { LoopbackModal } from './components/loopback-modal.js';
 import { driverProfileStore } from './driver-profile-store.js';
@@ -30,6 +31,7 @@ class ApexApp {
     this.trackLibrary = new TrackLibraryView();
     this.trackStudy = new TrackStudyView();
     this.trackEditor = new TrackEditorView();
+    this.circuitLab = circuitLabView;
     this.stintsManager = new StintsManager();
     this.loopbackModal = new LoopbackModal();
     this.driverDossierModal = new DriverDossierModal();
@@ -72,6 +74,7 @@ class ApexApp {
 
     // Primary Navigation Tab Buttons
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
+    this.btnNavCircuitLab = document.getElementById('btn-nav-circuit-lab');
     this.btnNavTrackStudy = document.getElementById('btn-nav-track-study');
     this.btnNavTrackEditor = document.getElementById('btn-nav-track-editor');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
@@ -79,6 +82,7 @@ class ApexApp {
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
+    this.viewCircuitLab = document.getElementById('view-circuit-lab');
     this.viewTrackStudy = document.getElementById('view-track-study');
     this.viewTrackEditor = document.getElementById('view-track-editor');
     this.viewTrackLibrary = document.getElementById('view-track-library');
@@ -401,21 +405,27 @@ class ApexApp {
       });
     }
 
+    if (this.btnNavCircuitLab) {
+      this.btnNavCircuitLab.addEventListener('click', () => {
+        this.switchView('circuit-lab');
+      });
+    }
+
     if (this.btnNavTrackStudy) {
       this.btnNavTrackStudy.addEventListener('click', () => {
-        this.switchView('track-study');
+        this.switchCircuitLabSubView('study');
       });
     }
 
     if (this.btnNavTrackEditor) {
       this.btnNavTrackEditor.addEventListener('click', () => {
-        this.switchView('track-editor');
+        this.switchCircuitLabSubView('editor');
       });
     }
 
     if (this.btnNavTrackLibrary) {
       this.btnNavTrackLibrary.addEventListener('click', () => {
-        this.switchView('track-library');
+        this.switchCircuitLabSubView('dossier');
       });
     }
 
@@ -467,12 +477,15 @@ class ApexApp {
       } else if (e.key === 'p' || e.key === 'P') {
         e.preventDefault();
         this.switchView('pitwall');
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        this.switchView('circuit-lab');
       } else if (e.key === 'w' || e.key === 'W') {
         e.preventDefault();
-        this.switchView('track-editor');
+        this.switchCircuitLabSubView('editor');
       } else if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
-        this.switchView('track-library');
+        this.switchCircuitLabSubView('dossier');
       } else if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         this.switchView('stints');
@@ -553,6 +566,9 @@ class ApexApp {
       this.session.processSample(sample);
       if (this.stintsManager) {
         this.stintsManager.updateTelemetry(sample);
+      }
+      if (this.circuitLab) {
+        this.circuitLab.onTelemetrySample(sample);
       }
       if (this.trackStudy) {
         this.trackStudy.onTelemetrySample(sample);
@@ -753,6 +769,7 @@ class ApexApp {
 
     // 1. Hide all views
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
+    if (this.viewCircuitLab) this.viewCircuitLab.style.display = 'none';
     if (this.viewTrackStudy) this.viewTrackStudy.style.display = 'none';
     if (this.viewTrackEditor) this.viewTrackEditor.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
@@ -760,6 +777,7 @@ class ApexApp {
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
+    if (this.btnNavCircuitLab) this.btnNavCircuitLab.classList.remove('active');
     if (this.btnNavTrackStudy) this.btnNavTrackStudy.classList.remove('active');
     if (this.btnNavTrackEditor) this.btnNavTrackEditor.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
@@ -769,27 +787,30 @@ class ApexApp {
     if (viewName === 'pitwall') {
       if (this.viewPitwall) this.viewPitwall.style.display = 'block';
       if (this.btnNavPitwall) this.btnNavPitwall.classList.add('active');
+    } else if (viewName === 'circuit-lab') {
+      if (this.viewCircuitLab) this.viewCircuitLab.style.display = 'block';
+      if (this.btnNavCircuitLab) this.btnNavCircuitLab.classList.add('active');
+      if (this.circuitLab) this.circuitLab.init();
     } else if (viewName === 'track-study') {
-      if (this.viewTrackStudy) this.viewTrackStudy.style.display = 'block';
-      if (this.btnNavTrackStudy) this.btnNavTrackStudy.classList.add('active');
-      if (this.trackStudy) this.trackStudy.init();
+      this.switchCircuitLabSubView('study');
     } else if (viewName === 'track-editor') {
-      if (this.viewTrackEditor) this.viewTrackEditor.style.display = 'block';
-      if (this.btnNavTrackEditor) this.btnNavTrackEditor.classList.add('active');
-      if (this.trackEditor) {
-        this.trackEditor.init();
-        this.trackEditor.resizeCanvases();
-        this.trackEditor.fitTrackToCanvas();
-        this.trackEditor.render();
-      }
+      this.switchCircuitLabSubView('editor');
     } else if (viewName === 'track-library') {
-      if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
-      if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.add('active');
-      if (this.trackLibrary) this.trackLibrary.refresh();
+      this.switchCircuitLabSubView('dossier');
     } else if (viewName === 'stints') {
       if (this.viewStints) this.viewStints.style.display = 'block';
       if (this.btnNavStints) this.btnNavStints.classList.add('active');
       if (this.stintsManager) this.stintsManager.onViewOpened();
+    }
+  }
+
+  /**
+   * Switches to Circuit Lab and activates a specific sub-view ('study' | 'editor' | 'dossier')
+   */
+  switchCircuitLabSubView(subViewName = 'study') {
+    this.switchView('circuit-lab');
+    if (this.circuitLab) {
+      this.circuitLab.switchSubView(subViewName);
     }
   }
 

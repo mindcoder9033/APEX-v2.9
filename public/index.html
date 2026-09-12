@@ -20,6 +20,7 @@
   <link rel="stylesheet" href="css/components/updater.css">
   <link rel="stylesheet" href="css/components/pit-toast.css">
   <link rel="stylesheet" href="css/track-editor.css">
+  <link rel="stylesheet" href="css/circuit-lab.css">
 </head>
 <body>
   <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
@@ -103,17 +104,9 @@
           <span class="nav-tab-icon">🏁</span>
           <span class="nav-tab-label">PIT WALL</span>
         </button>
-        <button id="btn-nav-track-study" class="nav-tab-btn chamfer-br" title="5-Phase Track Study & Pre-Stint Preparation (S)">
-          <span class="nav-tab-icon">📋</span>
-          <span class="nav-tab-label">TRACK STUDY</span>
-        </button>
-        <button id="btn-nav-track-editor" class="nav-tab-btn chamfer-br" title="Dual-View Track & Telemetry Waypoint Studio (W)">
-          <span class="nav-tab-icon">📐</span>
-          <span class="nav-tab-label">TRACK EDITOR</span>
-        </button>
-        <button id="btn-nav-track-library" class="nav-tab-btn chamfer-br" title="Track Intelligence & Dossier Hub (T)">
-          <span class="nav-tab-icon">🗺️</span>
-          <span class="nav-tab-label">TRACK DOSSIER</span>
+        <button id="btn-nav-circuit-lab" class="nav-tab-btn chamfer-br" title="Circuit Lab Studio: Study, Editor & Dossier (C)">
+          <span class="nav-tab-icon">🔬</span>
+          <span class="nav-tab-label">CIRCUIT LAB</span>
         </button>
         <button id="btn-nav-stints" class="nav-tab-btn chamfer-br" title="Motorsport Practice Stints (L)">
           <span class="nav-tab-icon">🎯</span>
@@ -1345,11 +1338,11 @@
       </div>
     </div> <!-- /#view-stints -->
 
-    <!-- 5-PHASE TRACK STUDY & PRE-STINT PREPARATION VIEW CONTAINER -->
-    <div id="view-track-study" class="view-container view-track-study" style="display: none;">
-      <div class="study-layout-wrapper">
-        <!-- LEFT TRACK SELECTION SIDEBAR (280px Fixed) -->
-        <aside id="study-track-sidebar" class="study-track-sidebar chamfer-all-corners">
+    <!-- CIRCUIT LAB UNIFIED MASTER STUDIO (TRACK STUDY, TRACK EDITOR & TRACK DOSSIER) -->
+    <div id="view-circuit-lab" class="view-container view-circuit-lab" style="display: none;">
+      <div class="circuit-lab-layout">
+        <!-- UNIFIED MASTER LEFT SIDEBAR (260px Fixed) -->
+        <aside id="circuit-lab-sidebar" class="circuit-lab-sidebar chamfer-all-corners">
           <div class="sidebar-header">
             <div class="sidebar-title-row">
               <span class="sidebar-title-icon">🏁</span>
@@ -1357,8 +1350,8 @@
             </div>
             <div class="sidebar-search-wrap">
               <span class="sidebar-search-icon">🔍</span>
-              <input type="text" id="study-track-search" class="sidebar-search-input font-mono" placeholder="Search 71+ FM23 circuits..." autocomplete="off" spellcheck="false" aria-label="Search circuits">
-              <button id="btn-study-search-clear" class="sidebar-search-clear" style="display: none;" title="Clear Search">✕</button>
+              <input type="text" id="circuit-lab-search" class="sidebar-search-input font-mono" placeholder="Search 71+ FM23 circuits..." autocomplete="off" spellcheck="false" aria-label="Search circuits">
+              <button id="btn-circuit-lab-search-clear" class="sidebar-search-clear" style="display: none;" title="Clear Search">✕</button>
             </div>
             <div class="sidebar-filter-tabs">
               <button class="sidebar-filter-tab active" data-filter="all">ALL</button>
@@ -1366,253 +1359,412 @@
               <button class="sidebar-filter-tab" data-filter="Fantasy">FANTASY</button>
             </div>
           </div>
-          <div id="study-track-list" class="study-track-list" role="listbox" aria-label="FM23 Track Selection List">
+          <div id="circuit-lab-track-list" class="circuit-lab-track-list" role="listbox" aria-label="Circuit Lab Track List">
             <!-- Populated dynamically with compact 2-line items -->
           </div>
         </aside>
 
         <!-- MAIN RIGHT PANE -->
-        <div class="study-main-pane">
-          <!-- Full Dossier Hero Banner -->
-          <div class="track-study-top-bar chamfer-br">
-            <div class="study-header-left">
-              <div class="study-title-cluster">
-                <div class="study-hero-badge-row">
-                  <span id="study-circuit-type-badge" class="badge-circuit-type">REAL WORLD</span>
-                  <span id="study-circuit-country-badge" class="badge-circuit-meta">UNITED STATES</span>
+        <div class="circuit-lab-main-pane">
+          <!-- CIRCUIT LAB MASTER HEADER BAR -->
+          <header class="circuit-lab-header chamfer-br">
+            <div class="circuit-lab-header-left">
+              <div class="circuit-lab-dossier-meta">
+                <div class="circuit-lab-badge-row">
+                  <span id="circuit-lab-type-badge" class="badge-circuit-type">REAL WORLD</span>
+                  <span id="circuit-lab-country-badge" class="badge-circuit-meta">UNITED STATES</span>
                 </div>
-                <h1 id="study-circuit-title" class="track-study-heading">SEBRING INTERNATIONAL RACEWAY</h1>
-                <span id="study-circuit-sub" class="track-study-subheading">Full Circuit · 6.02 km · 17 Turns · Clockwise</span>
+                <h1 id="circuit-lab-title" class="circuit-lab-heading">SEBRING INTERNATIONAL RACEWAY</h1>
+                <span id="circuit-lab-subtitle" class="circuit-lab-subheading">Full Circuit · 6.02 km · 17 Turns · Clockwise</span>
               </div>
 
-              <!-- Track Specs Quick Badges -->
-              <div class="study-specs-strip">
-                <div class="spec-pill">
-                  <span class="spec-lbl">LENGTH</span>
-                  <span id="study-spec-length" class="spec-val font-mono">6.02 KM</span>
+              <!-- Dynamic Weather & Surface Conditions Strip -->
+              <div class="circuit-lab-weather-strip">
+                <div class="weather-chip" title="Track Wetness Percentage">
+                  <span class="weather-icon">🌧️</span>
+                  <span class="weather-lbl">WETNESS:</span>
+                  <span id="circuit-lab-wetness-val" class="weather-val font-mono">0% (DRY)</span>
                 </div>
-                <div class="spec-pill">
-                  <span class="spec-lbl">TURNS</span>
-                  <span id="study-spec-turns" class="spec-val font-mono">17 TURNS</span>
+                <div class="weather-chip" title="Track Surface Temperature">
+                  <span class="weather-icon">🌡️</span>
+                  <span class="weather-lbl">TRACK:</span>
+                  <span id="circuit-lab-track-temp-val" class="weather-val font-mono">28°C</span>
                 </div>
-                <div class="spec-pill">
-                  <span class="spec-lbl">DIRECTION</span>
-                  <span id="study-spec-direction" class="spec-val font-mono">CLOCKWISE</span>
+                <div class="weather-chip" title="Ambient Air Temperature">
+                  <span class="weather-icon">💨</span>
+                  <span class="weather-lbl">AIR:</span>
+                  <span id="circuit-lab-air-temp-val" class="weather-val font-mono">22°C</span>
                 </div>
-              </div>
-
-              <!-- 5-Phase Preparation Readiness Meter -->
-              <div class="study-readiness-meter" title="Driver Pre-Stint Preparation Progress">
-                <div class="study-readiness-label-row">
-                  <span class="study-readiness-title">STUDY READINESS</span>
-                  <span id="study-readiness-badge" class="study-readiness-pct font-mono">0% (0/5)</span>
-                </div>
-                <div class="study-readiness-track">
-                  <div id="study-readiness-fill" class="study-readiness-fill" style="width: 0%;"></div>
+                <div class="weather-chip" title="Surface Grip Coefficient">
+                  <span class="weather-icon">🏎️</span>
+                  <span class="weather-lbl">GRIP:</span>
+                  <span id="circuit-lab-grip-val" class="weather-val font-mono">100%</span>
                 </div>
               </div>
             </div>
 
-            <div class="study-header-right">
-              <!-- Compact Live Telemetry Status Strip -->
-              <div id="study-live-status-pill" class="study-status-pill chamfer-all-corners" title="Live UDP Ingestion Status">
-                <span id="study-live-status-dot" class="status-dot"></span>
-                <span id="study-live-status-text">STANDBY // READY</span>
-                <div id="study-live-metrics-strip" class="study-live-metrics-strip" style="display: none;">
-                  <span id="study-live-lap-pill" class="metric-pill">LAP <b id="study-live-lap-val">-</b></span>
-                  <span id="study-live-turn-pill" class="metric-pill highlight">TURN <b id="study-live-turn-val">-</b></span>
-                  <span id="study-live-speed-pill" class="metric-pill"><b id="study-live-speed-val">0</b> KM/H</span>
+            <div class="circuit-lab-header-right">
+              <!-- SEGMENTED SUB-VIEW SWITCHER PILLS -->
+              <nav class="circuit-lab-subnav-pills" aria-label="Circuit Lab Sub-Views">
+                <button id="btn-circuit-sub-study" class="subnav-pill-btn active chamfer-br" data-subview="study" title="5-Phase Track Study & Pre-Stint Preparation (S)">
+                  <span class="subnav-icon">📋</span>
+                  <span class="subnav-label">TRACK STUDY</span>
+                  <span id="circuit-study-readiness-pill" class="subnav-badge font-mono">0/5</span>
+                </button>
+                <button id="btn-circuit-sub-editor" class="subnav-pill-btn chamfer-br" data-subview="editor" title="Dual-View 2D Spline Map & Waypoint Studio (W)">
+                  <span class="subnav-icon">📐</span>
+                  <span class="subnav-label">TRACK EDITOR</span>
+                  <span id="circuit-editor-waypoints-pill" class="subnav-badge font-mono">0 WP</span>
+                </button>
+                <button id="btn-circuit-sub-dossier" class="subnav-pill-btn chamfer-br" data-subview="dossier" title="Circuit Overview, Turn-by-Turn Guide & Track Intelligence (T)">
+                  <span class="subnav-icon">🗺️</span>
+                  <span class="subnav-label">TRACK DOSSIER</span>
+                  <span id="circuit-dossier-turns-pill" class="subnav-badge font-mono">17 T</span>
+                </button>
+              </nav>
+            </div>
+          </header>
+
+          <!-- SUB-VIEW STAGES CONTAINER -->
+          <div id="circuit-lab-stage" class="circuit-lab-stage">
+            
+            <!-- SUB-VIEW 1: TRACK STUDY -->
+            <div id="circuit-subview-study" class="circuit-subview active">
+              <div id="view-track-study" class="view-track-study" style="display: block;">
+                <div class="study-layout-wrapper">
+                  <div class="study-main-pane">
+                    <!-- Full Dossier Hero Banner -->
+                    <div class="track-study-top-bar chamfer-br">
+                      <div class="study-header-left">
+                        <div class="study-title-cluster">
+                          <div class="study-hero-badge-row">
+                            <span id="study-circuit-type-badge" class="badge-circuit-type">REAL WORLD</span>
+                            <span id="study-circuit-country-badge" class="badge-circuit-meta">UNITED STATES</span>
+                          </div>
+                          <h1 id="study-circuit-title" class="track-study-heading">SEBRING INTERNATIONAL RACEWAY</h1>
+                          <span id="study-circuit-sub" class="track-study-subheading">Full Circuit · 6.02 km · 17 Turns · Clockwise</span>
+                        </div>
+
+                        <!-- Track Specs Quick Badges -->
+                        <div class="study-specs-strip">
+                          <div class="spec-pill">
+                            <span class="spec-lbl">LENGTH</span>
+                            <span id="study-spec-length" class="spec-val font-mono">6.02 KM</span>
+                          </div>
+                          <div class="spec-pill">
+                            <span class="spec-lbl">TURNS</span>
+                            <span id="study-spec-turns" class="spec-val font-mono">17 TURNS</span>
+                          </div>
+                          <div class="spec-pill">
+                            <span class="spec-lbl">DIRECTION</span>
+                            <span id="study-spec-direction" class="spec-val font-mono">CLOCKWISE</span>
+                          </div>
+                        </div>
+
+                        <!-- 5-Phase Preparation Readiness Meter -->
+                        <div class="study-readiness-meter" title="Driver Pre-Stint Preparation Progress">
+                          <div class="study-readiness-label-row">
+                            <span class="study-readiness-title">STUDY READINESS</span>
+                            <span id="study-readiness-badge" class="study-readiness-pct font-mono">0% (0/5)</span>
+                          </div>
+                          <div class="study-readiness-track">
+                            <div id="study-readiness-fill" class="study-readiness-fill" style="width: 0%;"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="study-header-right">
+                        <!-- Compact Live Telemetry Status Strip -->
+                        <div id="study-live-status-pill" class="study-status-pill chamfer-all-corners" title="Live UDP Ingestion Status">
+                          <span id="study-live-status-dot" class="status-dot"></span>
+                          <span id="study-live-status-text">STANDBY // READY</span>
+                          <div id="study-live-metrics-strip" class="study-live-metrics-strip" style="display: none;">
+                            <span id="study-live-lap-pill" class="metric-pill">LAP <b id="study-live-lap-val">-</b></span>
+                            <span id="study-live-turn-pill" class="metric-pill highlight">TURN <b id="study-live-turn-val">-</b></span>
+                            <span id="study-live-speed-pill" class="metric-pill"><b id="study-live-speed-val">0</b> KM/H</span>
+                          </div>
+                        </div>
+
+                        <button id="btn-study-reset" class="btn btn-study-reset chamfer-br" title="Reset Study Progress for Selected Circuit">
+                          <span>↺</span> RESET STUDY
+                        </button>
+
+                        <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Active Track Study">
+                          <span>⟲</span>
+                        </button>
+
+                        <button id="btn-study-save-data" class="btn btn-secondary chamfer-br btn-study-save" style="height: 40px; font-size: 12px; font-weight: 700;" title="Save Custom Driver Notes, Turn Cues & Track Progress">
+                          <span class="btn-icon">💾</span> SAVE TRACK DATA
+                        </button>
+                        <span id="study-save-status" class="study-save-status-pill font-mono" style="display: none;">SAVED ✓</span>
+
+                        <button id="btn-study-export-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
+                          <span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- 5-Phase Stepper Navigation Bar (Sequential Progression) -->
+                    <nav class="study-stepper-bar chamfer-br" aria-label="Track Study Phases">
+                      <button class="study-step-btn active" data-step="1" title="Phase 1: Macro Map & Priority">
+                        <span class="step-num">01</span>
+                        <div class="step-text-wrap">
+                          <span class="step-lbl">PHASE 1</span>
+                          <span class="step-name">Macro Map & Priority</span>
+                        </div>
+                        <span class="step-check-mark" title="Stage Passed">✓</span>
+                        <span class="step-lock-icon" title="Phase Locked">🔒</span>
+                      </button>
+                      <button class="study-step-btn locked" data-step="2" disabled title="Complete 1 Lap on-track to Unlock Phase 2">
+                        <span class="step-num">02</span>
+                        <div class="step-text-wrap">
+                          <span class="step-lbl">PHASE 2</span>
+                          <span class="step-name">Surface Recon & Camber</span>
+                        </div>
+                        <span class="step-check-mark" title="Stage Passed">✓</span>
+                        <span class="step-lock-icon" title="Phase Locked">🔒</span>
+                      </button>
+                      <button class="study-step-btn locked" data-step="3" disabled title="Complete 2 Laps on-track to Unlock Phase 3">
+                        <span class="step-num">03</span>
+                        <div class="step-text-wrap">
+                          <span class="step-lbl">PHASE 3</span>
+                          <span class="step-name">Visual Reference Points</span>
+                        </div>
+                        <span class="step-check-mark" title="Stage Passed">✓</span>
+                        <span class="step-lock-icon" title="Phase Locked">🔒</span>
+                      </button>
+                      <button class="study-step-btn locked" data-step="4" disabled title="Complete 3 Laps on-track to Unlock Phase 4">
+                        <span class="step-num">04</span>
+                        <div class="step-text-wrap">
+                          <span class="step-lbl">PHASE 4</span>
+                          <span class="step-name">Order of Effort</span>
+                        </div>
+                        <span class="step-check-mark" title="Stage Passed">✓</span>
+                        <span class="step-lock-icon" title="Phase Locked">🔒</span>
+                      </button>
+                      <button class="study-step-btn locked" data-step="5" disabled title="Complete 4 Laps on-track to Unlock Phase 5">
+                        <span class="step-num">05</span>
+                        <div class="step-text-wrap">
+                          <span class="step-lbl">PHASE 5</span>
+                          <span class="step-name">Hardware & Stint Prep</span>
+                        </div>
+                        <span class="step-check-mark" title="Stage Passed">✓</span>
+                        <span class="step-lock-icon" title="Phase Locked">🔒</span>
+                      </button>
+                    </nav>
+
+                    <!-- Active Phase View Stage -->
+                    <main id="study-phase-container" class="study-phase-container">
+                      <!-- Rendered dynamically by TrackStudyView -->
+                    </main>
+                  </div>
                 </div>
               </div>
-
-              <button id="btn-study-reset" class="btn btn-study-reset chamfer-br" title="Reset Study Progress for Selected Circuit">
-                <span>↺</span> RESET STUDY
-              </button>
-
-              <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Active Track Study">
-                <span>⟲</span>
-              </button>
-
-              <button id="btn-study-save-data" class="btn btn-secondary chamfer-br btn-study-save" style="height: 40px; font-size: 12px; font-weight: 700;" title="Save Custom Driver Notes, Turn Cues & Track Progress">
-                <span class="btn-icon">💾</span> SAVE TRACK DATA
-              </button>
-              <span id="study-save-status" class="study-save-status-pill font-mono" style="display: none;">SAVED ✓</span>
-
-              <button id="btn-study-open-editor" class="btn btn-secondary chamfer-br" style="height: 40px; font-size: 11px; font-weight: 700;" title="Open Dual-View Track Editor & Waypoint Studio">
-                <span class="btn-icon">📐</span> TRACK EDITOR
-              </button>
-
-              <button id="btn-study-export-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
-                <span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF
-              </button>
             </div>
+
+            <!-- SUB-VIEW 2: TRACK EDITOR -->
+            <div id="circuit-subview-editor" class="circuit-subview" style="display: none;">
+              <div id="view-track-editor" class="view-track-editor" style="display: block; padding: 0;">
+                <div class="track-editor-layout">
+                  <!-- TOP TOOLBAR -->
+                  <header class="track-editor-toolbar chamfer-br">
+                    <div class="editor-toolbar-left">
+                      <div id="editor-circuit-title-cluster" class="editor-circuit-title-cluster">
+                        <div class="editor-circuit-meta-row">
+                          <span id="editor-circuit-type-badge" class="badge-circuit-type">REAL WORLD</span>
+                          <span id="editor-circuit-badge" class="badge-circuit-meta">6.02 KM</span>
+                        </div>
+                        <h1 id="editor-circuit-title" class="editor-circuit-heading">SEBRING INTERNATIONAL RACEWAY</h1>
+                        <span id="editor-circuit-sub" class="editor-circuit-subheading">Full Circuit · 17 Turns · Waypoint Studio</span>
+                      </div>
+                    </div>
+
+                    <div class="editor-toolbar-right">
+                      <span id="editor-5lap-badge" class="editor-badge-5lap waiting">
+                        <span>⏳</span> Baseline: 0/5 Laps
+                      </span>
+                      <button id="btn-editor-auto-detect" class="btn btn-secondary chamfer-br" style="height: 34px; font-size: 11px; font-weight: 700;" title="Auto-detect braking zones and apexes from telemetry">
+                        <span>⚡</span> AUTO-DETECT
+                      </button>
+                      <button id="btn-editor-add-point" class="btn btn-primary chamfer-br" style="height: 34px; font-size: 11px; font-weight: 700;" title="Add new waypoint pin at current scrubber position">
+                        <span>+</span> ADD WAYPOINT
+                      </button>
+                      <button id="btn-editor-reset-view" class="btn btn-secondary btn-icon chamfer-br" style="height: 34px;" title="Reset Map Zoom & Center">
+                        <span>⟲</span>
+                      </button>
+                      <button id="btn-editor-clear-all" class="btn btn-secondary btn-icon chamfer-br" style="height: 34px; color: #ff1744;" title="Clear All Custom Waypoints">
+                        <span>🗑️</span>
+                      </button>
+                    </div>
+                  </header>
+
+                  <!-- 2D TRACK CANVAS CONTAINER -->
+                  <section class="track-editor-map-container chamfer-tl-br">
+                    <canvas id="track-editor-canvas" class="track-editor-canvas"></canvas>
+                    <div class="map-floating-controls">
+                      <span style="font-family: var(--font-mono, monospace); font-size: 10px; color: #666; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px;">
+                        🖱️ Pan: Drag · Zoom: Scroll · Move Pin: Drag Pin
+                      </span>
+                    </div>
+                    <div class="map-legend-overlay">
+                      <div class="legend-item"><span class="legend-dot brake"></span> Brake Point</div>
+                      <div class="legend-item"><span class="legend-dot turnin"></span> Turn-in</div>
+                      <div class="legend-item"><span class="legend-dot apex"></span> Apex (Late/Geo)</div>
+                      <div class="legend-item"><span class="legend-dot throttle"></span> Throttle App</div>
+                      <div class="legend-item"><span class="legend-dot trackout"></span> Track-Out</div>
+                      <div class="legend-item"><span class="legend-dot sight"></span> Sight Picture</div>
+                    </div>
+                  </section>
+
+                  <!-- SYNCHRONIZED TELEMETRY TIMELINE STRIP -->
+                  <section class="track-editor-telemetry-container chamfer-tl-br">
+                    <div class="telemetry-header-bar">
+                      <span style="font-family: var(--font-mono, monospace); font-size: 10px; font-weight: 700; color: #aaa; letter-spacing: 0.5px;">
+                        SYNCHRONIZED TELEMETRY STRIP (5-LAP COMPOSITE)
+                      </span>
+                      <div class="telemetry-legend-tags">
+                        <span class="tag-speed">━ Speed</span>
+                        <span class="tag-throttle">━ Throttle</span>
+                        <span class="tag-brake">━ Brake</span>
+                      </div>
+                    </div>
+                    <div class="telemetry-canvas-wrapper">
+                      <canvas id="telemetry-graph-canvas" class="telemetry-graph-canvas"></canvas>
+                    </div>
+                  </section>
+
+                  <!-- SIDEBAR INSPECTOR & CRUD PANEL -->
+                  <aside class="track-editor-sidebar chamfer-tl-br">
+                    <div class="sidebar-tabs">
+                      <button class="sidebar-tab-btn active" data-tab="list">Waypoints List</button>
+                      <button class="sidebar-tab-btn" data-tab="inspector">Inspector & Coaching</button>
+                    </div>
+                    <div class="sidebar-content-scroll">
+                      <!-- Dynamically populated by TrackEditorView -->
+                    </div>
+                  </aside>
+                </div>
+              </div>
+            </div>
+
+            <!-- SUB-VIEW 3: TRACK DOSSIER -->
+            <div id="circuit-subview-dossier" class="circuit-subview" style="display: none;">
+              <div id="view-track-library" class="view-track-library" style="display: block; padding: 0;">
+                <div class="track-detail-pane chamfer-tl-br" id="track-detail-stage">
+                  <!-- Header Meta Strip -->
+                  <div class="track-detail-header-strip">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                      <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                          <span id="detail-track-type-badge" class="badge badge-real">Real Circuit</span>
+                          <span id="detail-track-length" class="badge" style="background: rgba(255,255,255,0.06); font-family: var(--font-mono);">6.020 km</span>
+                        </div>
+                        <h1 id="detail-track-name" class="track-detail-title">SEBRING INTERNATIONAL RACEWAY</h1>
+                        <div id="detail-track-layout" class="track-detail-subtitle">Full Circuit</div>
+                      </div>
+
+                      <div style="display: flex; gap: 8px;">
+                        <button id="btn-export-pre-stint-pdf" class="btn btn-primary chamfer-br" style="height: 38px; font-size: 11px; font-weight: 700;">
+                          <span>📄</span> EXPORT PRE-STINT DOSSIER PDF
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Key Metrics Strip -->
+                    <div class="track-metrics-summary-grid">
+                      <div class="track-metric-box chamfer-all-corners">
+                        <span class="metric-lbl">RECORDED BEST LAP</span>
+                        <span id="detail-track-best-lap" class="metric-val font-mono" style="color: var(--color-gold);">--:--.---</span>
+                      </div>
+                      <div class="track-metric-box chamfer-all-corners">
+                        <span class="metric-lbl">BENCHMARK VEHICLE</span>
+                        <span id="detail-track-car" class="metric-val" style="font-size: 12px; color: var(--color-text-primary);">2023 Porsche 911 GT3 R</span>
+                      </div>
+                      <div class="track-metric-box chamfer-all-corners">
+                        <span class="metric-lbl">SESSION INTELLIGENCE</span>
+                        <span id="detail-track-stints-count" class="metric-val font-mono" style="color: var(--color-cyan);">5 Stints (28 Laps)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 2-Column Split: Vector Track Map & Turn-by-Turn Cheat Sheet -->
+                  <div class="track-detail-body-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px;">
+                    <!-- Left: Vector SVG Map & Hazards -->
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <div class="vector-map-card chamfer-tl-br" style="background: #101216; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; height: 320px; position: relative;">
+                        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: #888; margin-bottom: 8px; letter-spacing: 0.5px;">
+                          VECTOR SYNTHESIZED RACING LINE & GPS COORD MAP
+                        </div>
+                        <div id="detail-track-map-svg" style="width: 100%; height: calc(100% - 24px);">
+                          <!-- Rendered SVG Map -->
+                        </div>
+                      </div>
+
+                      <!-- Surface Hazards Feed -->
+                      <div class="hazards-card chamfer-tl-br" style="background: #101216; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px;">
+                        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: #ffab00; margin-bottom: 8px; letter-spacing: 0.5px;">
+                          ⚠️ CRITICAL SURFACE HAZARDS & CORNER ADVISORIES
+                        </div>
+                        <div id="detail-hazards-feed" style="display: flex; flex-direction: column; gap: 6px;">
+                          <!-- Rendered Hazard Cards -->
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Right: Turn-by-Turn Telemetry Table & Setup Advisories -->
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <div class="turns-table-card chamfer-tl-br" style="background: #101216; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px; max-height: 420px; overflow-y: auto;">
+                        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: #00e5ff; margin-bottom: 8px; letter-spacing: 0.5px;">
+                          TURN-BY-TURN TELEMETRY TARGETS & COACHING CUES
+                        </div>
+                        <table class="turns-table" style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                          <thead>
+                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); color: #888; text-align: left;">
+                              <th style="padding: 6px 4px;">TURN</th>
+                              <th style="padding: 6px 4px;">TYPE</th>
+                              <th style="padding: 6px 4px;">BRAKE</th>
+                              <th style="padding: 6px 4px;">GEAR</th>
+                              <th style="padding: 6px 4px;">APEX</th>
+                              <th style="padding: 6px 4px;">ENTRY</th>
+                              <th style="padding: 6px 4px;">COACHING CUE</th>
+                            </tr>
+                          </thead>
+                          <tbody id="detail-turns-table-body">
+                            <!-- Populated dynamically -->
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <!-- Vehicle Setup Advisory -->
+                      <div class="setup-advisory-card chamfer-tl-br" style="background: #101216; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 12px;">
+                        <div style="font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: #00e676; margin-bottom: 8px; letter-spacing: 0.5px;">
+                          🛠️ PRE-STINT VEHICLE SETUP RECOMMENDATIONS
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                          <div style="background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 3px;">
+                            <span style="font-size: 9px; color: #888; display: block;">AERO DOWNFORCE</span>
+                            <span id="detail-setup-aero" style="font-size: 11px; font-weight: 700; color: #fff;">Medium Downforce</span>
+                          </div>
+                          <div style="background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 3px;">
+                            <span style="font-size: 9px; color: #888; display: block;">TIRE WEAR RISK</span>
+                            <span id="detail-setup-tire" style="font-size: 11px; font-weight: 700; color: #ffab00;">Front-Left scrub</span>
+                          </div>
+                          <div style="background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 3px;">
+                            <span style="font-size: 9px; color: #888; display: block;">BRAKE BIAS</span>
+                            <span id="detail-setup-brake" style="font-size: 11px; font-weight: 700; color: #fff;">54% Front</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
-
-          <!-- 5-Phase Stepper Navigation Bar (Sequential Progression) -->
-          <nav class="study-stepper-bar chamfer-br" aria-label="Track Study Phases">
-            <button class="study-step-btn active" data-step="1" title="Phase 1: Macro Map & Priority">
-              <span class="step-num">01</span>
-              <div class="step-text-wrap">
-                <span class="step-lbl">PHASE 1</span>
-                <span class="step-name">Macro Map & Priority</span>
-              </div>
-              <span class="step-check-mark" title="Stage Passed">✓</span>
-              <span class="step-lock-icon" title="Phase Locked">🔒</span>
-            </button>
-            <button class="study-step-btn locked" data-step="2" disabled title="Complete 1 Lap on-track to Unlock Phase 2">
-              <span class="step-num">02</span>
-              <div class="step-text-wrap">
-                <span class="step-lbl">PHASE 2</span>
-                <span class="step-name">Surface Recon & Camber</span>
-              </div>
-              <span class="step-check-mark" title="Stage Passed">✓</span>
-              <span class="step-lock-icon" title="Phase Locked">🔒</span>
-            </button>
-            <button class="study-step-btn locked" data-step="3" disabled title="Complete 2 Laps on-track to Unlock Phase 3">
-              <span class="step-num">03</span>
-              <div class="step-text-wrap">
-                <span class="step-lbl">PHASE 3</span>
-                <span class="step-name">Visual Reference Points</span>
-              </div>
-              <span class="step-check-mark" title="Stage Passed">✓</span>
-              <span class="step-lock-icon" title="Phase Locked">🔒</span>
-            </button>
-            <button class="study-step-btn locked" data-step="4" disabled title="Complete 3 Laps on-track to Unlock Phase 4">
-              <span class="step-num">04</span>
-              <div class="step-text-wrap">
-                <span class="step-lbl">PHASE 4</span>
-                <span class="step-name">Order of Effort</span>
-              </div>
-              <span class="step-check-mark" title="Stage Passed">✓</span>
-              <span class="step-lock-icon" title="Phase Locked">🔒</span>
-            </button>
-            <button class="study-step-btn locked" data-step="5" disabled title="Complete 4 Laps on-track to Unlock Phase 5">
-              <span class="step-num">05</span>
-              <div class="step-text-wrap">
-                <span class="step-lbl">PHASE 5</span>
-                <span class="step-name">Hardware & Stint Prep</span>
-              </div>
-              <span class="step-check-mark" title="Stage Passed">✓</span>
-              <span class="step-lock-icon" title="Phase Locked">🔒</span>
-            </button>
-          </nav>
-
-          <!-- Active Phase View Stage -->
-          <main id="study-phase-container" class="study-phase-container">
-            <!-- Rendered dynamically by TrackStudyView -->
-          </main>
         </div>
       </div>
-    </div> <!-- /#view-track-study -->
-
-    <!-- DUAL-VIEW TRACK & TELEMETRY WAYPOINT STUDIO (TRACK EDITOR) -->
-    <div id="view-track-editor" class="view-container view-track-editor" style="display: none;">
-      <div class="track-editor-layout">
-        <!-- LEFT TRACK SELECTION SIDEBAR (260px Fixed) -->
-        <aside id="editor-track-sidebar" class="editor-track-sidebar chamfer-all-corners">
-          <div class="sidebar-header">
-            <div class="sidebar-title-row">
-              <span class="sidebar-title-icon">🏁</span>
-              <span class="sidebar-title-text">CIRCUIT CATALOG</span>
-            </div>
-            <div class="sidebar-search-wrap">
-              <span class="sidebar-search-icon">🔍</span>
-              <input type="text" id="editor-track-search" class="sidebar-search-input font-mono" placeholder="Search circuits..." autocomplete="off" spellcheck="false" aria-label="Search circuits">
-              <button id="btn-editor-search-clear" class="sidebar-search-clear" style="display: none;" title="Clear Search">✕</button>
-            </div>
-            <div class="sidebar-filter-tabs">
-              <button class="sidebar-filter-tab active" data-filter="all">ALL</button>
-              <button class="sidebar-filter-tab" data-filter="Real">REAL</button>
-              <button class="sidebar-filter-tab" data-filter="Fantasy">FANTASY</button>
-            </div>
-          </div>
-          <div id="editor-track-list" class="editor-track-list" role="listbox" aria-label="Track Editor Circuit List">
-            <!-- Populated dynamically with compact 2-line items -->
-          </div>
-        </aside>
-
-        <!-- TOP TOOLBAR -->
-        <header class="track-editor-toolbar chamfer-br">
-          <div class="editor-toolbar-left">
-            <button id="btn-return-pitwall-from-editor" class="btn btn-secondary chamfer-bl" title="Return to Pit Wall">
-              <span>⬅️</span> PIT WALL
-            </button>
-            <div id="editor-circuit-title-cluster" class="editor-circuit-title-cluster">
-              <div class="editor-circuit-meta-row">
-                <span id="editor-circuit-type-badge" class="badge-circuit-type">REAL WORLD</span>
-                <span id="editor-circuit-badge" class="badge-circuit-meta">6.02 KM</span>
-              </div>
-              <h1 id="editor-circuit-title" class="editor-circuit-heading">SEBRING INTERNATIONAL RACEWAY</h1>
-              <span id="editor-circuit-sub" class="editor-circuit-subheading">Full Circuit · 17 Turns · Waypoint Studio</span>
-            </div>
-          </div>
-
-          <div class="editor-toolbar-right">
-            <span id="editor-5lap-badge" class="editor-badge-5lap waiting">
-              <span>⏳</span> Baseline: 0/5 Laps
-            </span>
-            <button id="btn-editor-auto-detect" class="btn btn-secondary chamfer-br" style="height: 34px; font-size: 11px; font-weight: 700;" title="Auto-detect braking zones and apexes from telemetry">
-              <span>⚡</span> AUTO-DETECT
-            </button>
-            <button id="btn-editor-add-point" class="btn btn-primary chamfer-br" style="height: 34px; font-size: 11px; font-weight: 700;" title="Add new waypoint pin at current scrubber position">
-              <span>+</span> ADD WAYPOINT
-            </button>
-            <button id="btn-editor-reset-view" class="btn btn-secondary btn-icon chamfer-br" style="height: 34px;" title="Reset Map Zoom & Center">
-              <span>⟲</span>
-            </button>
-            <button id="btn-editor-clear-all" class="btn btn-secondary btn-icon chamfer-br" style="height: 34px; color: #ff1744;" title="Clear All Custom Waypoints">
-              <span>🗑️</span>
-            </button>
-          </div>
-        </header>
-
-        <!-- 2D TRACK CANVAS CONTAINER -->
-        <section class="track-editor-map-container chamfer-tl-br">
-          <canvas id="track-editor-canvas" class="track-editor-canvas"></canvas>
-          <div class="map-floating-controls">
-            <span style="font-family: var(--font-mono, monospace); font-size: 10px; color: #666; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 3px;">
-              🖱️ Pan: Drag · Zoom: Scroll · Move Pin: Drag Pin
-            </span>
-          </div>
-          <div class="map-legend-overlay">
-            <div class="legend-item"><span class="legend-dot brake"></span> Brake Point</div>
-            <div class="legend-item"><span class="legend-dot turnin"></span> Turn-in</div>
-            <div class="legend-item"><span class="legend-dot apex"></span> Apex (Late/Geo)</div>
-            <div class="legend-item"><span class="legend-dot throttle"></span> Throttle App</div>
-            <div class="legend-item"><span class="legend-dot trackout"></span> Track-Out</div>
-            <div class="legend-item"><span class="legend-dot sight"></span> Sight Picture</div>
-          </div>
-        </section>
-
-        <!-- SYNCHRONIZED TELEMETRY TIMELINE STRIP -->
-        <section class="track-editor-telemetry-container chamfer-tl-br">
-          <div class="telemetry-header-bar">
-            <span style="font-family: var(--font-mono, monospace); font-size: 10px; font-weight: 700; color: #aaa; letter-spacing: 0.5px;">
-              SYNCHRONIZED TELEMETRY STRIP (5-LAP COMPOSITE)
-            </span>
-            <div class="telemetry-legend-tags">
-              <span class="tag-speed">━ Speed</span>
-              <span class="tag-throttle">━ Throttle</span>
-              <span class="tag-brake">━ Brake</span>
-            </div>
-          </div>
-          <div class="telemetry-canvas-wrapper">
-            <canvas id="telemetry-graph-canvas" class="telemetry-graph-canvas"></canvas>
-          </div>
-        </section>
-
-        <!-- SIDEBAR INSPECTOR & CRUD PANEL -->
-        <aside class="track-editor-sidebar chamfer-tl-br">
-          <div class="sidebar-tabs">
-            <button class="sidebar-tab-btn active" data-tab="list">Waypoints List</button>
-            <button class="sidebar-tab-btn" data-tab="inspector">Inspector & Coaching</button>
-          </div>
-          <div class="sidebar-content-scroll">
-            <!-- Dynamically populated by TrackEditorView -->
-          </div>
-        </aside>
-      </div>
-    </div> <!-- /#view-track-editor -->
+    </div> <!-- /#view-circuit-lab -->
   </div> <!-- /.app-container -->
 
   <!-- Stint Metadata Modal (Track, Layout, Car, Session) -->
