@@ -189,6 +189,17 @@ export class TrackStudyView {
       });
     });
 
+    // Sidebar Track List Click via Event Delegation
+    const listEl = this.container.querySelector('#study-track-list');
+    if (listEl) {
+      listEl.addEventListener('click', (e) => {
+        const item = e.target.closest('.study-track-item');
+        if (item && item.dataset.trackId) {
+          this.switchTrack(item.dataset.trackId);
+        }
+      });
+    }
+
     // Reset Study Progress Button
     const btnReset = this.container.querySelector('#btn-study-reset');
     if (btnReset) {
@@ -258,7 +269,7 @@ export class TrackStudyView {
     if (!trackId) return;
 
     // Auto-save current custom notes before switching
-    this._saveCurrentState(false);
+    this.saveCurrentTrackStudy(false);
 
     this.selectedTrackId = trackId;
     this.selectedCornerNumber = 1;
@@ -721,15 +732,8 @@ export class TrackStudyView {
   render() {
     if (!this.studyData || !this.container) return;
 
-    // Header Meta
-    const titleEl = this.container.querySelector('#study-circuit-title');
-    if (titleEl) titleEl.textContent = this.studyData.circuit.name.toUpperCase();
-
-    const subEl = this.container.querySelector('#study-circuit-sub');
-    if (subEl) {
-      const km = this.studyData.circuit.lengthKm || (this.studyData.circuit.lengthMeters / 1000).toFixed(2);
-      subEl.textContent = `${this.studyData.circuit.layout} // ${km} KM (${this.studyData.circuit.lengthMeters}M) // ${this.studyData.circuit.turnsCount} CORNERS`;
-    }
+    // Update Header Meta & Specs Dossier Banner
+    this._updateHeaderDossierBanner();
 
     // Render Active Phase View
     const phaseContent = this.container.querySelector('#study-phase-container');
