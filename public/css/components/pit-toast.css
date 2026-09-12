@@ -3,20 +3,14 @@
    Sonner-Inspired Design Engineering, OLED Theme, GPU Accelerated
    ========================================================================== */
 
-#apex-toast-container {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  z-index: 99999;
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 10px;
-  pointer-events: none;
-  max-width: 380px;
-  width: calc(100vw - 48px);
-}
-
+#apex-toast-container,
+.apex-toast-container,
 .apex-toast {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
   position: relative;
   display: flex;
   align-items: flex-start;

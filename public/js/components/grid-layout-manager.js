@@ -492,35 +492,9 @@ export class GridLayoutManager {
     document.body.appendChild(backdrop);
   }
 
-  createToastContainer() {
-    if (document.getElementById('apex-toast-container')) return;
-    const toastBox = document.createElement('div');
-    toastBox.id = 'apex-toast-container';
-    toastBox.className = 'apex-toast-container';
-    document.body.appendChild(toastBox);
-  }
+  createToastContainer() {}
 
-  showToast(message, type = 'info') {
-    const box = document.getElementById('apex-toast-container');
-    if (!box) return;
-
-    const toast = document.createElement('div');
-    toast.className = `apex-toast apex-toast-${type} chamfer-all-corners`;
-    toast.innerHTML = `
-      <span class="toast-icon">${type === 'success' ? '✓' : type === 'warning' ? '⚠' : 'ℹ'}</span>
-      <span class="toast-message">${message}</span>
-    `;
-
-    box.appendChild(toast);
-    setTimeout(() => {
-      toast.classList.add('show');
-    }, 10);
-
-    setTimeout(() => {
-      toast.classList.remove('show');
-      setTimeout(() => toast.remove(), 300);
-    }, 2800);
-  }
+  showToast() {}
 
   /* --- Layout Loading, Saving & Rendering --- */
 
