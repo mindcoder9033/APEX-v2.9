@@ -1508,19 +1508,43 @@
     <!-- DUAL-VIEW TRACK & TELEMETRY WAYPOINT STUDIO (TRACK EDITOR) -->
     <div id="view-track-editor" class="view-container view-track-editor" style="display: none;">
       <div class="track-editor-layout">
+        <!-- LEFT TRACK SELECTION SIDEBAR (260px Fixed) -->
+        <aside id="editor-track-sidebar" class="editor-track-sidebar chamfer-all-corners">
+          <div class="sidebar-header">
+            <div class="sidebar-title-row">
+              <span class="sidebar-title-icon">🏁</span>
+              <span class="sidebar-title-text">CIRCUIT CATALOG</span>
+            </div>
+            <div class="sidebar-search-wrap">
+              <span class="sidebar-search-icon">🔍</span>
+              <input type="text" id="editor-track-search" class="sidebar-search-input font-mono" placeholder="Search circuits..." autocomplete="off" spellcheck="false" aria-label="Search circuits">
+              <button id="btn-editor-search-clear" class="sidebar-search-clear" style="display: none;" title="Clear Search">✕</button>
+            </div>
+            <div class="sidebar-filter-tabs">
+              <button class="sidebar-filter-tab active" data-filter="all">ALL</button>
+              <button class="sidebar-filter-tab" data-filter="Real">REAL</button>
+              <button class="sidebar-filter-tab" data-filter="Fantasy">FANTASY</button>
+            </div>
+          </div>
+          <div id="editor-track-list" class="editor-track-list" role="listbox" aria-label="Track Editor Circuit List">
+            <!-- Populated dynamically with compact 2-line items -->
+          </div>
+        </aside>
+
         <!-- TOP TOOLBAR -->
         <header class="track-editor-toolbar chamfer-br">
           <div class="editor-toolbar-left">
             <button id="btn-return-pitwall-from-editor" class="btn btn-secondary chamfer-bl" title="Return to Pit Wall">
               <span>⬅️</span> PIT WALL
             </button>
-            <div style="display: flex; flex-direction: column;">
-              <span style="font-family: var(--font-display, sans-serif); font-size: 14px; font-weight: 700; color: #fff; letter-spacing: 0.5px;">TRACK EDITOR & WAYPOINT STUDIO</span>
-              <span style="font-size: 10px; color: var(--color-text-secondary, #888);">Skip Barber Reference Points & Sight Pictures CRUD</span>
+            <div id="editor-circuit-title-cluster" class="editor-circuit-title-cluster">
+              <div class="editor-circuit-meta-row">
+                <span id="editor-circuit-type-badge" class="badge-circuit-type">REAL WORLD</span>
+                <span id="editor-circuit-badge" class="badge-circuit-meta">6.02 KM</span>
+              </div>
+              <h1 id="editor-circuit-title" class="editor-circuit-heading">SEBRING INTERNATIONAL RACEWAY</h1>
+              <span id="editor-circuit-sub" class="editor-circuit-subheading">Full Circuit · 17 Turns · Waypoint Studio</span>
             </div>
-            <select id="editor-track-selector" class="study-select chamfer-all-corners" style="max-width: 260px; height: 32px; font-size: 11px;">
-              <!-- Dynamically populated -->
-            </select>
           </div>
 
           <div class="editor-toolbar-right">

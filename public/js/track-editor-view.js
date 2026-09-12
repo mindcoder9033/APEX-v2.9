@@ -49,6 +49,10 @@ export class TrackEditorView {
     this._lastLiveRenderTime = 0;
     this._lastAnalysisTime = 0;
 
+    // Left Sidebar Filter & Search
+    this.currentSidebarFilter = 'all';
+    this.currentSidebarSearch = '';
+
     this._initialized = false;
   }
 
@@ -68,24 +72,129 @@ export class TrackEditorView {
     if (!this._initialized) {
       this._initialized = true;
       this._bindEvents();
-      this._populateTrackSelector();
     }
 
+    this._populateTrackSidebar();
+    this._updateHeaderDossier();
     this.resizeCanvases();
     this.loadTrack(this.currentTrackId);
   }
 
-  _populateTrackSelector() {
-    const select = document.getElementById('editor-track-selector');
-    if (!select) return;
+  /**
+   * Populates the 260px left sidebar with FM23 track items and live lap status dots
+   */
+  _populateTrackSidebar(filterType = this.currentSidebarFilter, searchQuery = this.currentSidebarSearch) {
+    const listEl = this.container?.querySelector('#editor-track-list');
+    if (!listEl) return;
 
-    const tracks = trackStudyLibrary.getAllCatalogTracks();
-    let html = '';
-    tracks.forEach(t => {
-      html += `<option value="${t.trackId}">${t.displayName}</option>`;
+    this.currentSidebarFilter = filterType;
+    this.currentSidebarSearch = searchQuery;
+
+    const allTracks = trackStudyLibrary.getAllCatalogTracks();
+    const query = String(searchQuery || '').trim().toLowerCase();
+
+    const filtered = allTracks.filter(t => {
+      // Category filter
+      if (filterType === 'Real' && t.type !== 'Real') return false;
+      if (filterType === 'Fantasy' && t.type === 'Real') return false;
+
+      // Search query filter
+      if (query.length > 0) {
+        const nameMatch = (t.trackName || '').toLowerCase().includes(query);
+        const layoutMatch = (t.layoutName || '').toLowerCase().includes(query);
+        const displayMatch = (t.displayName || '').toLowerCase().includes(query);
+        return nameMatch || layoutMatch || displayMatch;
+      }
+      return true;
     });
-    select.innerHTML = html;
-    select.value = this.currentTrackId;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<div class="editor-track-empty-msg font-mono">No matching circuits found.</div>`;
+      return;
+    }
+
+    let html = '';
+    filtered.forEach(t => {
+      const state = trackStudyLibrary.getTrackStudyState(t.trackId);
+      const laps = state?.lapsCompleted || 0;
+      const isCertified = state?.certified || laps >= 5;
+
+      let statusClass = 'awaiting';
+      let statusTitle = '0 Laps (Awaiting Baseline)';
+      if (isCertified) {
+        statusClass = 'certified';
+        statusTitle = `${laps} Laps (Certified Baseline ✓)`;
+      } else if (laps > 0) {
+        statusClass = 'progress';
+        statusTitle = `${laps}/5 Laps In Progress`;
+      }
+
+      const isActive = t.trackId === this.currentTrackId;
+      const lengthKm = t.officialLength ? t.officialLength.split('/')[1]?.trim() || t.officialLength : `${(t.lengthMeters / 1000).toFixed(2)} km`;
+
+      html += `
+        <div class="editor-track-item chamfer-all-corners ${isActive ? 'active' : ''}" 
+             data-track-id="${t.trackId}" 
+             role="option" 
+             aria-selected="${isActive ? 'true' : 'false'}"
+             title="${t.displayName} (${statusTitle})">
+          <div class="track-item-main">
+            <div class="track-item-name-row">
+              <span class="track-item-name">${t.trackName}</span>
+              <span class="track-item-status-dot ${statusClass}" title="${statusTitle}"></span>
+            </div>
+            <div class="track-item-sub-row">
+              <span class="track-item-layout">${t.layoutName}</span>
+              <span class="track-item-length font-mono">${lengthKm}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
+    this._updateSidebarActiveState();
+  }
+
+  _updateSidebarActiveState() {
+    if (!this.container) return;
+    const items = this.container.querySelectorAll('.editor-track-item');
+    items.forEach(item => {
+      const isActive = item.dataset.trackId === this.currentTrackId;
+      if (isActive) {
+        item.classList.add('active');
+        item.setAttribute('aria-selected', 'true');
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } else {
+        item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
+      }
+    });
+  }
+
+  _updateHeaderDossier() {
+    if (!this.container) return;
+    const profile = this.trackProfile || trackStudyLibrary.getTrackStudyProfile(this.currentTrackId);
+    if (!profile) return;
+
+    const titleEl = this.container.querySelector('#editor-circuit-title');
+    const subEl = this.container.querySelector('#editor-circuit-sub');
+    const typeBadge = this.container.querySelector('#editor-circuit-type-badge');
+    const badgeEl = this.container.querySelector('#editor-circuit-badge');
+
+    const turnsCount = profile.turnsCount || (Array.isArray(profile.corners) ? profile.corners.length : 0);
+    const lengthKm = profile.lengthMeters ? (profile.lengthMeters / 1000).toFixed(2) : '4.00';
+
+    if (titleEl) titleEl.textContent = (profile.trackName || profile.name || 'Circuit').toUpperCase();
+    if (subEl) subEl.textContent = `${profile.layoutName || 'Full Course'} · ${turnsCount} Turns · Waypoint Studio`;
+    if (typeBadge) {
+      const isReal = profile.type === 'Real';
+      typeBadge.textContent = isReal ? 'REAL WORLD' : 'FANTASY CIRCUIT';
+      typeBadge.className = isReal ? 'badge-circuit-type' : 'badge-circuit-type fantasy';
+    }
+    if (badgeEl) {
+      badgeEl.textContent = `${lengthKm} KM`;
+    }
   }
 
   _bindEvents() {
@@ -96,11 +205,48 @@ export class TrackEditorView {
       }
     });
 
-    // Track Selector
-    const select = document.getElementById('editor-track-selector');
-    if (select) {
-      select.addEventListener('change', (e) => {
-        this.loadTrack(e.target.value);
+    // Sidebar Search Input
+    const searchInput = this.container?.querySelector('#editor-track-search');
+    const clearBtn = this.container?.querySelector('#btn-editor-search-clear');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.currentSidebarSearch = e.target.value;
+        if (clearBtn) clearBtn.style.display = this.currentSidebarSearch.length > 0 ? 'block' : 'none';
+        this._populateTrackSidebar(this.currentSidebarFilter, this.currentSidebarSearch);
+      });
+    }
+
+    if (clearBtn && searchInput) {
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        this.currentSidebarSearch = '';
+        clearBtn.style.display = 'none';
+        this._populateTrackSidebar(this.currentSidebarFilter, '');
+        searchInput.focus();
+      });
+    }
+
+    // Sidebar Category Filter Tabs (ALL / REAL / FANTASY)
+    const filterTabs = this.container?.querySelectorAll('#editor-track-sidebar .sidebar-filter-tab');
+    if (filterTabs) {
+      filterTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          filterTabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          this.currentSidebarFilter = tab.dataset.filter || 'all';
+          this._populateTrackSidebar(this.currentSidebarFilter, this.currentSidebarSearch);
+        });
+      });
+    }
+
+    // Sidebar Track Selection via Event Delegation
+    const trackList = this.container?.querySelector('#editor-track-list');
+    if (trackList) {
+      trackList.addEventListener('click', (e) => {
+        const item = e.target.closest('.editor-track-item');
+        if (item && item.dataset.trackId) {
+          this.loadTrack(item.dataset.trackId);
+        }
       });
     }
 
@@ -377,6 +523,8 @@ export class TrackEditorView {
       this.saveWaypointsToStore();
     }
 
+    this._updateSidebarActiveState();
+    this._updateHeaderDossier();
     this.fitTrackToCanvas();
     this.render();
     this.renderSidebar();
