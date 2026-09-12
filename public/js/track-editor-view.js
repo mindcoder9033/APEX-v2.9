@@ -39,6 +39,16 @@ export class TrackEditorView {
     this.hoveredWaypointId = null;
     this.activeTab = 'list'; // 'list' | 'inspector'
 
+    // Live Telemetry Buffer & Laps State
+    this.liveTelemetrySamples = [];
+    this.lapsCompleted = 0;
+    this.currentLiveSample = null;
+    this._prevLapNumber = null;
+    this._prevLastLapTime = null;
+    this._prevNormPos = null;
+    this._lastLiveRenderTime = 0;
+    this._lastAnalysisTime = 0;
+
     this._initialized = false;
   }
 
@@ -61,8 +71,8 @@ export class TrackEditorView {
       this._populateTrackSelector();
     }
 
-    this.loadTrack(this.currentTrackId);
     this.resizeCanvases();
+    this.loadTrack(this.currentTrackId);
   }
 
   _populateTrackSelector() {
@@ -162,6 +172,129 @@ export class TrackEditorView {
   }
 
   /**
+   * Real-time live UDP telemetry ingestion
+   * @param {Object} sample 
+   */
+  onTelemetrySample(sample) {
+    if (!sample) return;
+    this.currentLiveSample = sample;
+
+    // Buffer up to 3500 recent live samples
+    if (this.liveTelemetrySamples.length >= 3500) {
+      this.liveTelemetrySamples.shift();
+    }
+    this.liveTelemetrySamples.push(sample);
+
+    // Track lap progress
+    this._trackLapProgress(sample);
+
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+    // If we have at least 25 samples and spline is empty or awaiting baseline, dynamically update spline
+    if (this.liveTelemetrySamples.length >= 25 && (!this._lastAnalysisTime || (now - this._lastAnalysisTime > 1500))) {
+      this._lastAnalysisTime = now;
+      if (this.spline.length === 0 || this.lapsCompleted < 5) {
+        this._loadFromTelemetrySamples(this.liveTelemetrySamples);
+        this.fitTrackToCanvas();
+      }
+    }
+
+    // Dynamic scrubber position updates from live car position
+    if (this.spline.length > 0) {
+      const curX = sample.motion?.position?.x ?? sample.positionX ?? sample.posX ?? sample.x;
+      const curZ = sample.motion?.position?.z ?? sample.positionZ ?? sample.posZ ?? sample.z;
+      if (curX !== undefined && curZ !== undefined) {
+        const nearest = trackEditorEngine.projectPointToSpline(curX, curZ, this.spline);
+        if (nearest && nearest.normalizedDistance !== undefined) {
+          this.scrubberDistNorm = nearest.normalizedDistance;
+        }
+      }
+    }
+
+    // Throttle rendering if view container is visible (15Hz max)
+    if (this.container && this.container.style.display !== 'none') {
+      if (!this._lastLiveRenderTime || (now - this._lastLiveRenderTime > 66)) {
+        this._lastLiveRenderTime = now;
+        this.render();
+      }
+    }
+  }
+
+  _trackLapProgress(sample) {
+    if (!sample) return;
+
+    const sampleLap = sample.timing?.lapNumber !== undefined 
+      ? sample.timing.lapNumber 
+      : (sample.lapNumber !== undefined 
+          ? sample.lapNumber 
+          : (sample.timing?.rawLapNumber !== undefined ? sample.timing.rawLapNumber + 1 : null));
+
+    const lastLapTime = sample.timing?.lastLapTime !== undefined 
+      ? sample.timing.lastLapTime 
+      : (sample.lastLapTime !== undefined ? sample.lastLapTime : 0);
+
+    const trackLen = this.trackProfile?.lengthMeters || 4000;
+    let normPos = sample.timing?.normalizedDrivingLine !== undefined 
+      ? sample.timing.normalizedDrivingLine 
+      : (sample.lapDistanceMeters !== undefined ? (sample.lapDistanceMeters % trackLen) / trackLen : null);
+
+    let lapCompletedEvent = false;
+
+    if (sampleLap !== null) {
+      if (this._prevLapNumber !== null && sampleLap > this._prevLapNumber) {
+        lapCompletedEvent = true;
+      }
+      this._prevLapNumber = sampleLap;
+    }
+
+    if (lastLapTime > 0) {
+      if (this._prevLastLapTime !== null && this._prevLastLapTime > 0 && Math.abs(lastLapTime - this._prevLastLapTime) > 0.05) {
+        lapCompletedEvent = true;
+      }
+      this._prevLastLapTime = lastLapTime;
+    } else if (this._prevLastLapTime === null) {
+      this._prevLastLapTime = 0;
+    }
+
+    const speedKmh = sample.motion?.speedKmh || (sample.motion?.speedMps ? sample.motion.speedMps * 3.6 : (sample.speedMph ? sample.speedMph * 1.60934 : 0));
+    if (normPos !== null && this._prevNormPos !== null && speedKmh > 15) {
+      if (this._prevNormPos > 0.85 && normPos < 0.15) {
+        lapCompletedEvent = true;
+      }
+    }
+    this._prevNormPos = normPos;
+
+    let calculatedLaps = this.lapsCompleted;
+    if (sampleLap !== null && sampleLap > 1) {
+      calculatedLaps = Math.max(calculatedLaps, sampleLap - 1);
+    }
+    if (lapCompletedEvent) {
+      calculatedLaps = Math.max(calculatedLaps, this.lapsCompleted + 1);
+    }
+
+    if (calculatedLaps > this.lapsCompleted) {
+      this.lapsCompleted = calculatedLaps;
+      const badge5Lap = document.getElementById('editor-5lap-badge');
+      if (badge5Lap) {
+        if (this.lapsCompleted >= 5) {
+          badge5Lap.className = 'editor-badge-5lap';
+          badge5Lap.innerHTML = `<span>✓</span> 5-Lap Baseline Active (${this.lapsCompleted} Laps)`;
+        } else {
+          badge5Lap.className = 'editor-badge-5lap waiting';
+          badge5Lap.innerHTML = `<span>⏳</span> Baseline: ${this.lapsCompleted}/5 Laps`;
+        }
+      }
+
+      // Auto-detect waypoints if 5 laps reached and none created yet
+      if (this.lapsCompleted >= 5 && this.waypoints.length === 0 && this.spline.length > 0) {
+        this.waypoints = trackEditorEngine.autoDetectWaypoints(this.spline);
+        this.saveWaypointsToStore();
+        this.renderSidebar();
+      }
+    }
+  }
+
+  /**
    * Loads track profile and real telemetry baseline if available.
    * Directly syncs with Track Study telemetry data, live session laps, and stored track dossiers.
    * @param {string} trackId 
@@ -172,19 +305,24 @@ export class TrackEditorView {
     this.waypoints = trackStudyLibrary.getWaypoints(trackId);
 
     const trackStudy = window.apexApp?.trackStudy;
-    const sessionLaps = window.apexApp?.session?.laps || [];
+    const session = window.apexApp?.session;
+    const sessionLaps = session?.latestAnalysisReport?.laps || session?.laps || [];
     const has5Laps = trackEditorEngine.hasValid5LapBaseline(sessionLaps);
     const studyState = trackStudyLibrary.getTrackStudyState(trackId);
     const storedTrack = trackLibraryStore.getTrackById(trackId);
 
     // Calculate effective completed lap count across session, track study, and stored records
     let totalLaps = sessionLaps.length;
+    if (totalLaps < (this.lapsCompleted || 0)) {
+      totalLaps = this.lapsCompleted;
+    }
     if (totalLaps < 5 && studyState?.lapsCompleted) {
       totalLaps = studyState.lapsCompleted;
     }
     if (totalLaps < 5 && trackStudy && (trackStudy.selectedTrackId === trackId || !trackStudy.selectedTrackId) && trackStudy.lapsCompleted) {
       totalLaps = trackStudy.lapsCompleted;
     }
+    this.lapsCompleted = totalLaps;
 
     const badge5Lap = document.getElementById('editor-5lap-badge');
     if (badge5Lap) {
@@ -203,23 +341,31 @@ export class TrackEditorView {
       this.spline = baseline.spline;
       this.telemetryData = baseline.telemetry;
     }
-    // 2. Check if active Track Study has telemetry samples for this track
-    else if (trackStudy && (trackStudy.selectedTrackId === trackId || !trackStudy.selectedTrackId) && Array.isArray(trackStudy.telemetrySamples) && trackStudy.telemetrySamples.length >= 20) {
+    // 2. Check if Track Editor's own live buffer has samples
+    else if (Array.isArray(this.liveTelemetrySamples) && this.liveTelemetrySamples.length >= 20) {
+      this._loadFromTelemetrySamples(this.liveTelemetrySamples);
+    }
+    // 3. Check if active Track Study has telemetry samples for this track
+    else if (trackStudy && Array.isArray(trackStudy.telemetrySamples) && trackStudy.telemetrySamples.length >= 20) {
       this._loadFromTelemetrySamples(trackStudy.telemetrySamples);
     }
-    // 3. Check if saved Track Study state has persisted telemetry samples
+    // 4. Check if session has recorded samples
+    else if (session && Array.isArray(session.recordedSamples) && session.recordedSamples.length >= 20) {
+      this._loadFromTelemetrySamples(session.recordedSamples);
+    }
+    // 5. Check if saved Track Study state has persisted telemetry samples
     else if (studyState && Array.isArray(studyState.telemetrySamples) && studyState.telemetrySamples.length >= 20) {
       this._loadFromTelemetrySamples(studyState.telemetrySamples);
     }
-    // 4. Check if Track Study has mapped corners with coordinates
+    // 6. Check if Track Study has mapped corners with coordinates
     else if (studyState && Array.isArray(studyState.corners) && studyState.corners.length > 0) {
       this._loadFromStudyCorners(studyState.corners);
     }
-    // 5. Check if persistent track library has recorded vectorMap points
+    // 7. Check if persistent track library has recorded vectorMap points
     else if (storedTrack && storedTrack.vectorMap?.points?.length > 10) {
       this._loadFromStoredVectorMap(storedTrack);
     }
-    // 6. Zero-mock fallback: empty spline
+    // 8. Zero-mock fallback: empty spline
     else {
       this.spline = [];
       this.telemetryData = [];
@@ -244,24 +390,29 @@ export class TrackEditorView {
 
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
-      const x = s.positionX !== undefined ? s.positionX : (s.x || 0);
-      const z = s.positionZ !== undefined ? s.positionZ : (s.z !== undefined ? s.z : (s.y || 0));
-      const speedMph = s.speedMph !== undefined ? s.speedMph : ((s.speed || 0) * 2.23694);
-      const throttle = s.throttle !== undefined ? s.throttle : 0;
-      const brake = s.brake !== undefined ? s.brake : 0;
-      const steer = s.steer !== undefined ? s.steer : (s.steerAngle || 0);
-      const gLat = s.gLat !== undefined ? s.gLat : (s.accelLateral || 0);
-      const gLong = s.gLong !== undefined ? s.gLong : (s.accelForward || 0);
+      const x = s.motion?.position?.x ?? s.positionX ?? s.posX ?? s.x ?? 0;
+      const z = s.motion?.position?.z ?? s.positionZ ?? s.posZ ?? s.z ?? (s.motion?.position?.y !== undefined ? s.motion.position.y : (s.y ?? 0));
+      const speedMph = s.motion?.speedMph ?? s.speedMph ?? (s.motion?.speedMps ? s.motion.speedMps * 2.23694 : ((s.speed || 0) * 2.23694));
+      const throttle = s.inputs?.throttle !== undefined ? (s.inputs.throttle <= 1 ? s.inputs.throttle * 100 : s.inputs.throttle) : (s.throttle !== undefined ? (s.throttle <= 1 ? s.throttle * 100 : s.throttle) : 0);
+      const brake = s.inputs?.brake !== undefined ? (s.inputs.brake <= 1 ? s.inputs.brake * 100 : s.inputs.brake) : (s.brake !== undefined ? (s.brake <= 1 ? s.brake * 100 : s.brake) : 0);
+      const steer = s.inputs?.steering !== undefined ? s.inputs.steering : (s.steer !== undefined ? s.steer : (s.steerAngle || 0));
+      const gLat = s.motion?.acceleration?.lateralG ?? s.gLat ?? s.accelLateral ?? 0;
+      const gLong = s.motion?.acceleration?.longitudinalG ?? s.gLong ?? s.accelForward ?? 0;
 
-      if (i > 0) {
-        const prev = spline[i - 1];
+      if (spline.length > 0) {
+        const prev = spline[spline.length - 1];
         const dx = x - prev.x;
         const dz = z - prev.z;
-        cumDist += Math.sqrt(dx * dx + dz * dz);
+        const distDelta = Math.sqrt(dx * dx + dz * dz);
+        // Avoid duplicate stationary points if distance delta is virtually zero (< 0.05m)
+        if (distDelta < 0.05 && i < samples.length - 1) {
+          continue;
+        }
+        cumDist += distDelta;
       }
 
       spline.push({
-        index: i,
+        index: spline.length,
         x,
         z,
         distance: cumDist,
@@ -273,6 +424,8 @@ export class TrackEditorView {
         gLong
       });
     }
+
+    if (spline.length === 0) return;
 
     const totalDist = cumDist > 0 ? cumDist : 1;
     spline.forEach(p => {
@@ -303,15 +456,15 @@ export class TrackEditorView {
       const z = c.coordinates?.y !== undefined ? c.coordinates.y : (c.coordinates?.z || (c.z || 0));
       const speedMph = c.apexSpeedMph || (c.targetSpeedMph || 60);
 
-      if (i > 0) {
-        const prev = spline[i - 1];
+      if (spline.length > 0) {
+        const prev = spline[spline.length - 1];
         const dx = x - prev.x;
         const dz = z - prev.z;
         cumDist += Math.sqrt(dx * dx + dz * dz);
       }
 
       spline.push({
-        index: i,
+        index: spline.length,
         x,
         z,
         distance: cumDist,
@@ -322,6 +475,8 @@ export class TrackEditorView {
         gLat: 0.9
       });
     });
+
+    if (spline.length === 0) return;
 
     const totalDist = cumDist > 0 ? cumDist : 1;
     spline.forEach(p => {
@@ -353,15 +508,15 @@ export class TrackEditorView {
       const z = p.y !== undefined ? p.y : (p.z || 0);
       const speedMph = (p.speed || 0) * 2.23694;
 
-      if (i > 0) {
-        const prev = spline[i - 1];
+      if (spline.length > 0) {
+        const prev = spline[spline.length - 1];
         const dx = x - prev.x;
         const dz = z - prev.z;
         cumDist += Math.sqrt(dx * dx + dz * dz);
       }
 
       spline.push({
-        index: i,
+        index: spline.length,
         x,
         z,
         distance: cumDist,
@@ -372,6 +527,8 @@ export class TrackEditorView {
         gLat: 0
       });
     }
+
+    if (spline.length === 0) return;
 
     const totalDist = cumDist > 0 ? cumDist : 1;
     spline.forEach(p => {
@@ -404,26 +561,33 @@ export class TrackEditorView {
     const rangeX = maxX - minX || 100;
     const rangeZ = maxZ - minZ || 100;
     const padding = 60;
-    const scaleX = (this.mapCanvas.width - padding * 2) / rangeX;
-    const scaleZ = (this.mapCanvas.height - padding * 2) / rangeZ;
+    const width = this.mapCanvas.width || 800;
+    const height = this.mapCanvas.height || 600;
+    const scaleX = (width - padding * 2) / rangeX;
+    const scaleZ = (height - padding * 2) / rangeZ;
     const zoom = Math.min(scaleX, scaleZ);
 
     this.viewTransform.zoom = zoom;
-    this.viewTransform.offsetX = this.mapCanvas.width / 2 - ((minX + maxX) / 2) * zoom;
-    this.viewTransform.offsetY = this.mapCanvas.height / 2 - ((minZ + maxZ) / 2) * zoom;
+    this.viewTransform.offsetX = width / 2 - ((minX + maxX) / 2) * zoom;
+    this.viewTransform.offsetY = height / 2 - ((minZ + maxZ) / 2) * zoom;
   }
 
   resizeCanvases() {
-    if (this.mapCanvas) {
+    if (this.mapCanvas && this.mapCanvas.parentElement) {
       const rect = this.mapCanvas.parentElement.getBoundingClientRect();
-      this.mapCanvas.width = rect.width;
-      this.mapCanvas.height = rect.height;
+      if (rect.width > 0 && rect.height > 0) {
+        this.mapCanvas.width = Math.floor(rect.width);
+        this.mapCanvas.height = Math.floor(rect.height);
+      }
     }
-    if (this.telemetryCanvas) {
+    if (this.telemetryCanvas && this.telemetryCanvas.parentElement) {
       const rect = this.telemetryCanvas.parentElement.getBoundingClientRect();
-      this.telemetryCanvas.width = rect.width;
-      this.telemetryCanvas.height = rect.height;
+      if (rect.width > 0 && rect.height > 0) {
+        this.telemetryCanvas.width = Math.floor(rect.width);
+        this.telemetryCanvas.height = Math.floor(rect.height);
+      }
     }
+    this.fitTrackToCanvas();
     this.render();
   }
 
@@ -464,12 +628,13 @@ export class TrackEditorView {
 
       ctx.fillStyle = '#888888';
       ctx.font = '12px "JetBrains Mono", monospace';
-      ctx.fillText('Drive 5 clean laps on track in Forza Motorsport to extract real circuit geometry.', width / 2, height / 2 + 8);
+      ctx.fillText('Drive on track in Forza Motorsport to extract real circuit geometry.', width / 2, height / 2 + 8);
 
-      const sessionLaps = window.apexApp?.session?.laps || [];
+      const sessionLaps = window.apexApp?.session?.latestAnalysisReport?.laps || window.apexApp?.session?.laps || [];
+      const lapsCount = Math.max(sessionLaps.length, this.lapsCompleted || 0);
       ctx.fillStyle = '#00e5ff';
       ctx.font = 'bold 11px "JetBrains Mono", monospace';
-      ctx.fillText(`CURRENT STINT: ${sessionLaps.length} / 5 LAPS RECORDED`, width / 2, height / 2 + 34);
+      ctx.fillText(`CURRENT PROGRESS: ${lapsCount} / 5 LAPS RECORDED (${this.liveTelemetrySamples.length} PACKETS LOGGED)`, width / 2, height / 2 + 34);
 
       ctx.restore();
       return;
@@ -520,7 +685,8 @@ export class TrackEditorView {
 
     // 4. Draw Waypoints
     this.waypoints.forEach(wp => {
-      const pos = toScreen(wp.coordinates.x, wp.coordinates.y);
+      const wpZ = wp.coordinates?.y !== undefined ? wp.coordinates.y : (wp.coordinates?.z ?? 0);
+      const pos = toScreen(wp.coordinates?.x ?? 0, wpZ);
       const isSelected = wp.id === this.selectedWaypointId;
       const isHovered = wp.id === this.hoveredWaypointId;
 

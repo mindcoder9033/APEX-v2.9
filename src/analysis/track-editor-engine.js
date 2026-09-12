@@ -79,24 +79,29 @@ export class TrackEditorEngine {
 
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
-      const x = s.positionX !== undefined ? s.positionX : (s.x || 0);
-      const z = s.positionZ !== undefined ? s.positionZ : (s.y !== undefined ? s.y : 0);
-      const speedMph = s.speedMph !== undefined ? s.speedMph : ((s.speed || 0) * 2.23694);
-      const throttle = s.throttle !== undefined ? s.throttle : 0;
-      const brake = s.brake !== undefined ? s.brake : 0;
-      const steer = s.steer !== undefined ? s.steer : (s.steerAngle || 0);
-      const gLat = s.gLat !== undefined ? s.gLat : (s.accelLateral || 0);
-      const gLong = s.gLong !== undefined ? s.gLong : (s.accelForward || 0);
+      const x = s.motion?.position?.x ?? s.positionX ?? s.posX ?? s.x ?? 0;
+      const z = s.motion?.position?.z ?? s.positionZ ?? s.posZ ?? s.z ?? (s.motion?.position?.y !== undefined ? s.motion.position.y : (s.y ?? 0));
+      const speedMph = s.motion?.speedMph ?? s.speedMph ?? (s.motion?.speedMps ? s.motion.speedMps * 2.23694 : ((s.speed || 0) * 2.23694));
+      const throttle = s.inputs?.throttle !== undefined ? (s.inputs.throttle <= 1 ? s.inputs.throttle * 100 : s.inputs.throttle) : (s.throttle !== undefined ? (s.throttle <= 1 ? s.throttle * 100 : s.throttle) : 0);
+      const brake = s.inputs?.brake !== undefined ? (s.inputs.brake <= 1 ? s.inputs.brake * 100 : s.inputs.brake) : (s.brake !== undefined ? (s.brake <= 1 ? s.brake * 100 : s.brake) : 0);
+      const steer = s.inputs?.steering !== undefined ? s.inputs.steering : (s.steer !== undefined ? s.steer : (s.steerAngle || 0));
+      const gLat = s.motion?.acceleration?.lateralG ?? s.gLat ?? s.accelLateral ?? 0;
+      const gLong = s.motion?.acceleration?.longitudinalG ?? s.gLong ?? s.accelForward ?? 0;
 
-      if (i > 0) {
-        const prev = spline[i - 1];
+      if (spline.length > 0) {
+        const prev = spline[spline.length - 1];
         const dx = x - prev.x;
         const dz = z - prev.z;
-        cumulativeDistance += Math.sqrt(dx * dx + dz * dz);
+        const distDelta = Math.sqrt(dx * dx + dz * dz);
+        // Avoid duplicate stationary points if distance delta is virtually zero (< 0.05m)
+        if (distDelta < 0.05 && i < samples.length - 1) {
+          continue;
+        }
+        cumulativeDistance += distDelta;
       }
 
       spline.push({
-        index: i,
+        index: spline.length,
         x,
         z,
         distance: cumulativeDistance,

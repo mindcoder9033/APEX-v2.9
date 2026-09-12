@@ -247,6 +247,9 @@ export class TrackStudyEngine {
       const isHairpin = radiusM < 45;
       const isSweeper = radiusM > 130;
 
+      const apexX = apexSample.motion?.position?.x ?? apexSample.positionX ?? apexSample.posX ?? apexSample.x ?? 0;
+      const apexZ = apexSample.motion?.position?.z ?? apexSample.positionZ ?? apexSample.posZ ?? apexSample.z ?? (apexSample.motion?.position?.y !== undefined ? apexSample.motion.position.y : (apexSample.y ?? 0));
+
       corners.push({
         number: k + 1,
         name: `Turn ${k + 1}${isHairpin ? ' (Hairpin)' : (isSweeper ? ' (Sweeper)' : '')}`,
@@ -264,7 +267,8 @@ export class TrackStudyEngine {
         followingStraightMeters: followingStraightM,
         camberDeg: isNaN(camberDeg) ? 0.0 : camberDeg,
         elevationChangeM: isNaN(elevChangeM) ? 0.0 : elevChangeM,
-        brakingDistanceM: Math.round(brakingDistM)
+        brakingDistanceM: Math.round(brakingDistM),
+        coordinates: { x: apexX, y: apexZ, z: apexZ }
       });
     }
 

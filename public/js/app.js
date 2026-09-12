@@ -557,6 +557,9 @@ class ApexApp {
       if (this.trackStudy) {
         this.trackStudy.onTelemetrySample(sample);
       }
+      if (this.trackEditor) {
+        this.trackEditor.onTelemetrySample(sample);
+      }
 
       if (this.trackMap3D) {
         this.trackMap3D.updateLiveTelemetry(sample, this.session.recordedSamples);
@@ -773,7 +776,12 @@ class ApexApp {
     } else if (viewName === 'track-editor') {
       if (this.viewTrackEditor) this.viewTrackEditor.style.display = 'block';
       if (this.btnNavTrackEditor) this.btnNavTrackEditor.classList.add('active');
-      if (this.trackEditor) this.trackEditor.init();
+      if (this.trackEditor) {
+        this.trackEditor.init();
+        this.trackEditor.resizeCanvases();
+        this.trackEditor.fitTrackToCanvas();
+        this.trackEditor.render();
+      }
     } else if (viewName === 'track-library') {
       if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
       if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.add('active');

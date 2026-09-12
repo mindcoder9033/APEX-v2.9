@@ -363,15 +363,15 @@ export class TrackStudyView {
 
     const sampleSlice = Array.isArray(this.telemetrySamples) && this.telemetrySamples.length > 0
       ? this.telemetrySamples.slice(-1500).map(s => ({
-          x: s.x !== undefined ? s.x : (s.positionX || 0),
-          z: s.z !== undefined ? s.z : (s.positionZ !== undefined ? s.positionZ : (s.y || 0)),
-          speed: s.speed !== undefined ? s.speed : (s.speedMph ? s.speedMph / 2.23694 : 0),
-          speedMph: s.speedMph !== undefined ? s.speedMph : ((s.speed || 0) * 2.23694),
-          throttle: s.throttle !== undefined ? s.throttle : 0,
-          brake: s.brake !== undefined ? s.brake : 0,
-          steer: s.steer !== undefined ? s.steer : (s.steerAngle || 0),
-          gLat: s.gLat !== undefined ? s.gLat : (s.accelLateral || 0),
-          lapNumber: s.lapNumber !== undefined ? s.lapNumber : (s.timing?.lapNumber || 1)
+          x: s.motion?.position?.x ?? s.positionX ?? s.posX ?? s.x ?? 0,
+          z: s.motion?.position?.z ?? s.positionZ ?? s.posZ ?? s.z ?? (s.motion?.position?.y !== undefined ? s.motion.position.y : (s.y ?? 0)),
+          speed: s.motion?.speedMps ?? s.speed ?? (s.motion?.speedMph ? s.motion.speedMph / 2.23694 : ((s.speedMph || 0) / 2.23694)),
+          speedMph: s.motion?.speedMph ?? s.speedMph ?? (s.motion?.speedMps ? s.motion.speedMps * 2.23694 : ((s.speed || 0) * 2.23694)),
+          throttle: s.inputs?.throttle !== undefined ? (s.inputs.throttle <= 1 ? s.inputs.throttle * 100 : s.inputs.throttle) : (s.throttle !== undefined ? (s.throttle <= 1 ? s.throttle * 100 : s.throttle) : 0),
+          brake: s.inputs?.brake !== undefined ? (s.inputs.brake <= 1 ? s.inputs.brake * 100 : s.inputs.brake) : (s.brake !== undefined ? (s.brake <= 1 ? s.brake * 100 : s.brake) : 0),
+          steer: s.inputs?.steering !== undefined ? s.inputs.steering : (s.steer !== undefined ? s.steer : (s.steerAngle || 0)),
+          gLat: s.motion?.acceleration?.lateralG ?? s.gLat ?? s.accelLateral ?? 0,
+          lapNumber: s.timing?.lapNumber ?? s.lapNumber ?? 1
         }))
       : [];
 

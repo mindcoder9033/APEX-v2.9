@@ -55,6 +55,46 @@ describe('TrackEditorEngine', () => {
       assert.ok(baseline.totalDistance > 0);
       assert.ok(Math.abs(baseline.spline[baseline.spline.length - 1].normalizedDistance - 1.0) < 0.05);
     });
+
+    it('synthesizes composite spline from raw Forza UDP packet structure with nested motion & inputs', () => {
+      const rawUdpSamples = [];
+      for (let i = 0; i < 60; i++) {
+        rawUdpSamples.push({
+          motion: {
+            position: { x: i * 8.5, y: 12.0, z: Math.cos(i * 0.12) * 35.0 },
+            speedMps: 35.0,
+            speedMph: 78.3,
+            acceleration: { lateralG: 0.95, longitudinalG: 0.1 }
+          },
+          inputs: {
+            throttle: 0.9,
+            brake: 0.0,
+            steering: 0.15
+          },
+          timing: {
+            lapNumber: 1,
+            lapDistance: i * 8.5
+          }
+        });
+      }
+
+      const rawLaps = [
+        { lapNumber: 1, lapTime: 92.0, samples: rawUdpSamples },
+        { lapNumber: 2, lapTime: 91.0, samples: rawUdpSamples },
+        { lapNumber: 3, lapTime: 90.5, samples: rawUdpSamples },
+        { lapNumber: 4, lapTime: 90.0, samples: rawUdpSamples },
+        { lapNumber: 5, lapTime: 89.2, samples: rawUdpSamples }
+      ];
+
+      const baseline = trackEditorEngine.synthesize5LapBaseline(rawLaps);
+      assert.equal(baseline.lapCount, 5);
+      assert.equal(baseline.fastestLapTime, 89.2);
+      assert.ok(baseline.spline.length > 0);
+      // Verify real coordinates were extracted from motion.position
+      assert.equal(baseline.spline[0].x, 0);
+      assert.ok(baseline.spline[10].x > 0);
+      assert.ok(baseline.totalDistance > 0);
+    });
   });
 
   describe('Auto-Waypoint Detection', () => {
