@@ -29,12 +29,14 @@ export class TrackStudyView {
     this.unlockedPhases = new Set([1]);
     this.hasCompletedBriefing = false;
     this._hasAutoDownloadedPdf = false;
+    this.currentSidebarFilter = 'all';
+    this.currentSidebarSearch = '';
 
     this.container = null;
   }
 
   /**
-   * Initializes DOM bindings, track selector dropdown, stepper tabs, and PDF export
+   * Initializes DOM bindings, track selector sidebar, stepper tabs, and PDF export
    */
   init() {
     this.container = document.getElementById('view-track-study');
@@ -46,56 +48,146 @@ export class TrackStudyView {
     }
     this._initialized = true;
 
-    this._populateTrackDropdown();
+    this._populateTrackSidebar();
     this._bindEvents();
     this._loadTrackFromLibrary(this.selectedTrackId, false);
     this.updateReadinessMeter();
   }
 
-  _populateTrackDropdown() {
-    const trackSelect = this.container.querySelector('#study-track-selector');
-    if (!trackSelect) return;
+  /**
+   * Populates the 280px left sidebar with FM23 track items and live lap status dots
+   */
+  _populateTrackSidebar(filterType = this.currentSidebarFilter, searchQuery = this.currentSidebarSearch) {
+    const listEl = this.container?.querySelector('#study-track-list');
+    if (!listEl) return;
 
-    const tracks = trackStudyLibrary.getAllCatalogTracks();
-    const realTracks = tracks.filter(t => t.type === 'Real');
-    const fictionalTracks = tracks.filter(t => t.type !== 'Real');
+    this.currentSidebarFilter = filterType;
+    this.currentSidebarSearch = searchQuery;
+
+    const allTracks = trackStudyLibrary.getAllCatalogTracks();
+    const query = String(searchQuery || '').trim().toLowerCase();
+
+    const filtered = allTracks.filter(t => {
+      // Category filter
+      if (filterType === 'Real' && t.type !== 'Real') return false;
+      if (filterType === 'Fantasy' && t.type === 'Real') return false;
+
+      // Search query filter
+      if (query.length > 0) {
+        const nameMatch = (t.trackName || '').toLowerCase().includes(query);
+        const layoutMatch = (t.layoutName || '').toLowerCase().includes(query);
+        const displayMatch = (t.displayName || '').toLowerCase().includes(query);
+        return nameMatch || layoutMatch || displayMatch;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<div class="study-track-empty-msg font-mono">No matching circuits found.</div>`;
+      return;
+    }
 
     let html = '';
-    if (realTracks.length > 0) {
-      html += `<optgroup label="── Real World Circuits ──">`;
-      realTracks.forEach(t => {
-        html += `<option value="${t.trackId}">${t.displayName}</option>`;
-      });
-      html += `</optgroup>`;
-    }
-    if (fictionalTracks.length > 0) {
-      html += `<optgroup label="── Fictional / Fantasy Circuits ──">`;
-      fictionalTracks.forEach(t => {
-        html += `<option value="${t.trackId}">${t.displayName}</option>`;
-      });
-      html += `</optgroup>`;
-    }
+    filtered.forEach(t => {
+      const state = trackStudyLibrary.getTrackStudyState(t.trackId);
+      const laps = state?.lapsCompleted || 0;
+      const isCertified = state?.certified || laps >= 5;
 
-    trackSelect.innerHTML = html;
-    if (tracks.some(t => t.trackId === this.selectedTrackId)) {
-      trackSelect.value = this.selectedTrackId;
-    } else if (tracks.length > 0) {
-      this.selectedTrackId = tracks[0].trackId;
-      trackSelect.value = this.selectedTrackId;
-    }
+      let statusClass = 'awaiting';
+      let statusTitle = '0 Laps (Awaiting Telemetry)';
+      if (isCertified) {
+        statusClass = 'certified';
+        statusTitle = `${laps} Laps (Certified ✓)`;
+      } else if (laps > 0) {
+        statusClass = 'progress';
+        statusTitle = `${laps}/5 Laps In Progress`;
+      }
+
+      const isActive = t.trackId === this.selectedTrackId;
+      const lengthKm = t.officialLength ? t.officialLength.split('/')[1]?.trim() || t.officialLength : `${(t.lengthMeters / 1000).toFixed(2)} km`;
+
+      html += `
+        <div class="study-track-item chamfer-all-corners ${isActive ? 'active' : ''}" 
+             data-track-id="${t.trackId}" 
+             role="option" 
+             aria-selected="${isActive ? 'true' : 'false'}"
+             title="${t.displayName} (${statusTitle})">
+          <div class="track-item-main">
+            <div class="track-item-name-row">
+              <span class="track-item-name">${t.trackName}</span>
+              <span class="track-item-status-dot ${statusClass}" title="${statusTitle}"></span>
+            </div>
+            <div class="track-item-sub-row">
+              <span class="track-item-layout">${t.layoutName}</span>
+              <span class="track-item-length font-mono">${lengthKm}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    listEl.innerHTML = html;
+
+    // Bind click events on track cards
+    const items = listEl.querySelectorAll('.study-track-item');
+    items.forEach(item => {
+      item.addEventListener('click', () => {
+        const trackId = item.dataset.trackId;
+        if (trackId) {
+          this.switchTrack(trackId);
+        }
+      });
+    });
+  }
+
+  _updateSidebarActiveState() {
+    if (!this.container) return;
+    const items = this.container.querySelectorAll('.study-track-item');
+    items.forEach(item => {
+      const isActive = item.dataset.trackId === this.selectedTrackId;
+      if (isActive) {
+        item.classList.add('active');
+        item.setAttribute('aria-selected', 'true');
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      } else {
+        item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
+      }
+    });
   }
 
   _bindEvents() {
-    // Track Dropdown Selector
-    const trackSelect = this.container.querySelector('#study-track-selector');
-    if (trackSelect) {
-      trackSelect.addEventListener('change', (e) => {
-        const newTrackId = e.target.value;
-        if (newTrackId) {
-          this.switchTrack(newTrackId);
-        }
+    // Sidebar Search Input
+    const searchInput = this.container.querySelector('#study-track-search');
+    const clearBtn = this.container.querySelector('#btn-study-search-clear');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.currentSidebarSearch = e.target.value;
+        if (clearBtn) clearBtn.style.display = this.currentSidebarSearch.length > 0 ? 'block' : 'none';
+        this._populateTrackSidebar(this.currentSidebarFilter, this.currentSidebarSearch);
       });
     }
+
+    if (clearBtn && searchInput) {
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        this.currentSidebarSearch = '';
+        clearBtn.style.display = 'none';
+        this._populateTrackSidebar(this.currentSidebarFilter, '');
+        searchInput.focus();
+      });
+    }
+
+    // Sidebar Category Filter Tabs (ALL / REAL / FANTASY)
+    const filterTabs = this.container.querySelectorAll('.sidebar-filter-tab');
+    filterTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        this.currentSidebarFilter = tab.dataset.filter || 'all';
+        this._populateTrackSidebar(this.currentSidebarFilter, this.currentSidebarSearch);
+      });
+    });
 
     // Reset Study Progress Button
     const btnReset = this.container.querySelector('#btn-study-reset');
@@ -157,13 +249,33 @@ export class TrackStudyView {
     }
   }
 
+  /**
+   * Switches active track study with seamless notes auto-persistence
+   * @param {string} trackId 
+   * @param {boolean} notify 
+   */
   switchTrack(trackId, notify = true) {
+    if (!trackId) return;
+
+    // Auto-save current custom notes before switching
+    this._saveCurrentState(false);
+
     this.selectedTrackId = trackId;
-    const trackSelect = this.container.querySelector('#study-track-selector');
-    if (trackSelect && trackSelect.value !== trackId) {
-      trackSelect.value = trackId;
-    }
+    this.selectedCornerNumber = 1;
+    this.activeCornerNumber = null;
+    this.currentPhase = 1;
+    this.telemetrySamples = [];
+    this.hasNotifiedLiveSync = false;
+
+    this._updateSidebarActiveState();
     this._loadTrackFromLibrary(trackId, notify);
+    this.updateReadinessMeter();
+    this.render();
+
+    // Sync with Track Editor if available
+    if (window.apexApp?.trackEditor) {
+      window.apexApp.trackEditor.loadTrack(trackId);
+    }
   }
 
   _loadTrackFromLibrary(trackId, notify = true) {
@@ -235,6 +347,7 @@ export class TrackStudyView {
         }
       }
 
+      this._updateHeaderDossierBanner();
       this.render();
 
       if (notify && window.PitToast) {
@@ -245,6 +358,38 @@ export class TrackStudyView {
     } catch (err) {
       console.error('[TrackStudyView] Error generating study data:', err);
     }
+  }
+
+  _updateHeaderDossierBanner() {
+    if (!this.container) return;
+    const profile = this.currentTrackProfile;
+    if (!profile) return;
+
+    const titleEl = this.container.querySelector('#study-circuit-title');
+    const subEl = this.container.querySelector('#study-circuit-sub');
+    const typeBadge = this.container.querySelector('#study-circuit-type-badge');
+    const countryBadge = this.container.querySelector('#study-circuit-country-badge');
+    const specLen = this.container.querySelector('#study-spec-length');
+    const specTurns = this.container.querySelector('#study-spec-turns');
+    const specDir = this.container.querySelector('#study-spec-direction');
+
+    const turnsCount = profile.turnsCount || this.studyData?.phase1_macro?.corners?.length || (Array.isArray(profile.corners) ? profile.corners.length : 0);
+    const lengthKm = profile.lengthMeters ? (profile.lengthMeters / 1000).toFixed(2) : (this.studyData?.circuit?.lengthKm || '4.00');
+    const direction = profile.direction || this.studyData?.circuit?.direction || 'Clockwise';
+
+    if (titleEl) titleEl.textContent = (profile.trackName || profile.name || 'Circuit').toUpperCase();
+    if (subEl) subEl.textContent = `${profile.layoutName || 'Full Course'} · ${lengthKm} km · ${turnsCount} Turns · ${direction}`;
+    if (typeBadge) {
+      const isReal = profile.type === 'Real';
+      typeBadge.textContent = isReal ? 'REAL WORLD' : 'FANTASY CIRCUIT';
+      typeBadge.className = isReal ? 'badge-circuit-type' : 'badge-circuit-type fantasy';
+    }
+    if (countryBadge) {
+      countryBadge.textContent = (profile.country || (profile.type === 'Real' ? 'INTERNATIONAL' : 'FM23 ARENA')).toUpperCase();
+    }
+    if (specLen) specLen.textContent = `${lengthKm} KM`;
+    if (specTurns) specTurns.textContent = `${turnsCount} TURNS`;
+    if (specDir) specDir.textContent = direction.toUpperCase();
   }
 
   _applyCustomNotesToStudyData() {

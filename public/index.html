@@ -1347,122 +1347,162 @@
 
     <!-- 5-PHASE TRACK STUDY & PRE-STINT PREPARATION VIEW CONTAINER -->
     <div id="view-track-study" class="view-container view-track-study" style="display: none;">
-      <!-- Track Study Top Bar -->
-      <div class="track-study-top-bar chamfer-br">
-        <div class="study-header-left">
-          <div class="study-title-cluster">
-            <h1 id="study-circuit-title" class="track-study-heading">CIRCUIT TRACK STUDY</h1>
-            <span id="study-circuit-sub" class="track-study-subheading">5-Phase Skip Barber Racecraft Preparation & Telemetry Dossier</span>
-          </div>
-
-          <!-- Independent Track Study Circuit Selector -->
-          <div class="study-track-select-wrap">
-            <label for="study-track-selector" class="study-select-lbl">STUDY CIRCUIT // LAYOUT</label>
-            <select id="study-track-selector" class="study-select chamfer-all-corners" aria-label="Select Circuit to Study">
-              <!-- Populated dynamically with all FM23 layouts -->
-            </select>
-          </div>
-
-          <!-- 5-Phase Preparation Readiness Meter -->
-          <div class="study-readiness-meter" title="Driver Pre-Stint Preparation Progress">
-            <div class="study-readiness-label-row">
-              <span class="study-readiness-title">STUDY READINESS</span>
-              <span id="study-readiness-badge" class="study-readiness-pct font-mono">0% (0/5)</span>
+      <div class="study-layout-wrapper">
+        <!-- LEFT TRACK SELECTION SIDEBAR (280px Fixed) -->
+        <aside id="study-track-sidebar" class="study-track-sidebar chamfer-all-corners">
+          <div class="sidebar-header">
+            <div class="sidebar-title-row">
+              <span class="sidebar-title-icon">🏁</span>
+              <span class="sidebar-title-text">CIRCUIT CATALOG</span>
             </div>
-            <div class="study-readiness-track">
-              <div id="study-readiness-fill" class="study-readiness-fill" style="width: 0%;"></div>
+            <div class="sidebar-search-wrap">
+              <span class="sidebar-search-icon">🔍</span>
+              <input type="text" id="study-track-search" class="sidebar-search-input font-mono" placeholder="Search 71+ FM23 circuits..." autocomplete="off" spellcheck="false" aria-label="Search circuits">
+              <button id="btn-study-search-clear" class="sidebar-search-clear" style="display: none;" title="Clear Search">✕</button>
+            </div>
+            <div class="sidebar-filter-tabs">
+              <button class="sidebar-filter-tab active" data-filter="all">ALL</button>
+              <button class="sidebar-filter-tab" data-filter="Real">REAL</button>
+              <button class="sidebar-filter-tab" data-filter="Fantasy">FANTASY</button>
             </div>
           </div>
-        </div>
+          <div id="study-track-list" class="study-track-list" role="listbox" aria-label="FM23 Track Selection List">
+            <!-- Populated dynamically with compact 2-line items -->
+          </div>
+        </aside>
 
-        <div class="study-header-right">
-          <!-- Compact Live Telemetry Status Strip -->
-          <div id="study-live-status-pill" class="study-status-pill chamfer-all-corners" title="Live UDP Ingestion Status">
-            <span id="study-live-status-dot" class="status-dot"></span>
-            <span id="study-live-status-text">STANDBY // READY</span>
-            <div id="study-live-metrics-strip" class="study-live-metrics-strip" style="display: none;">
-              <span id="study-live-lap-pill" class="metric-pill">LAP <b id="study-live-lap-val">-</b></span>
-              <span id="study-live-turn-pill" class="metric-pill highlight">TURN <b id="study-live-turn-val">-</b></span>
-              <span id="study-live-speed-pill" class="metric-pill"><b id="study-live-speed-val">0</b> KM/H</span>
+        <!-- MAIN RIGHT PANE -->
+        <div class="study-main-pane">
+          <!-- Full Dossier Hero Banner -->
+          <div class="track-study-top-bar chamfer-br">
+            <div class="study-header-left">
+              <div class="study-title-cluster">
+                <div class="study-hero-badge-row">
+                  <span id="study-circuit-type-badge" class="badge-circuit-type">REAL WORLD</span>
+                  <span id="study-circuit-country-badge" class="badge-circuit-meta">UNITED STATES</span>
+                </div>
+                <h1 id="study-circuit-title" class="track-study-heading">SEBRING INTERNATIONAL RACEWAY</h1>
+                <span id="study-circuit-sub" class="track-study-subheading">Full Circuit · 6.02 km · 17 Turns · Clockwise</span>
+              </div>
+
+              <!-- Track Specs Quick Badges -->
+              <div class="study-specs-strip">
+                <div class="spec-pill">
+                  <span class="spec-lbl">LENGTH</span>
+                  <span id="study-spec-length" class="spec-val font-mono">6.02 KM</span>
+                </div>
+                <div class="spec-pill">
+                  <span class="spec-lbl">TURNS</span>
+                  <span id="study-spec-turns" class="spec-val font-mono">17 TURNS</span>
+                </div>
+                <div class="spec-pill">
+                  <span class="spec-lbl">DIRECTION</span>
+                  <span id="study-spec-direction" class="spec-val font-mono">CLOCKWISE</span>
+                </div>
+              </div>
+
+              <!-- 5-Phase Preparation Readiness Meter -->
+              <div class="study-readiness-meter" title="Driver Pre-Stint Preparation Progress">
+                <div class="study-readiness-label-row">
+                  <span class="study-readiness-title">STUDY READINESS</span>
+                  <span id="study-readiness-badge" class="study-readiness-pct font-mono">0% (0/5)</span>
+                </div>
+                <div class="study-readiness-track">
+                  <div id="study-readiness-fill" class="study-readiness-fill" style="width: 0%;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="study-header-right">
+              <!-- Compact Live Telemetry Status Strip -->
+              <div id="study-live-status-pill" class="study-status-pill chamfer-all-corners" title="Live UDP Ingestion Status">
+                <span id="study-live-status-dot" class="status-dot"></span>
+                <span id="study-live-status-text">STANDBY // READY</span>
+                <div id="study-live-metrics-strip" class="study-live-metrics-strip" style="display: none;">
+                  <span id="study-live-lap-pill" class="metric-pill">LAP <b id="study-live-lap-val">-</b></span>
+                  <span id="study-live-turn-pill" class="metric-pill highlight">TURN <b id="study-live-turn-val">-</b></span>
+                  <span id="study-live-speed-pill" class="metric-pill"><b id="study-live-speed-val">0</b> KM/H</span>
+                </div>
+              </div>
+
+              <button id="btn-study-reset" class="btn btn-study-reset chamfer-br" title="Reset Study Progress for Selected Circuit">
+                <span>↺</span> RESET STUDY
+              </button>
+
+              <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Active Track Study">
+                <span>⟲</span>
+              </button>
+
+              <button id="btn-study-save-data" class="btn btn-secondary chamfer-br btn-study-save" style="height: 40px; font-size: 12px; font-weight: 700;" title="Save Custom Driver Notes, Turn Cues & Track Progress">
+                <span class="btn-icon">💾</span> SAVE TRACK DATA
+              </button>
+              <span id="study-save-status" class="study-save-status-pill font-mono" style="display: none;">SAVED ✓</span>
+
+              <button id="btn-study-open-editor" class="btn btn-secondary chamfer-br" style="height: 40px; font-size: 11px; font-weight: 700;" title="Open Dual-View Track Editor & Waypoint Studio">
+                <span class="btn-icon">📐</span> TRACK EDITOR
+              </button>
+
+              <button id="btn-study-export-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
+                <span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF
+              </button>
             </div>
           </div>
 
-          <button id="btn-study-reset" class="btn btn-study-reset chamfer-br" title="Reset Study Progress for Selected Circuit">
-            <span>↺</span> RESET STUDY
-          </button>
+          <!-- 5-Phase Stepper Navigation Bar (Sequential Progression) -->
+          <nav class="study-stepper-bar chamfer-br" aria-label="Track Study Phases">
+            <button class="study-step-btn active" data-step="1" title="Phase 1: Macro Map & Priority">
+              <span class="step-num">01</span>
+              <div class="step-text-wrap">
+                <span class="step-lbl">PHASE 1</span>
+                <span class="step-name">Macro Map & Priority</span>
+              </div>
+              <span class="step-check-mark" title="Stage Passed">✓</span>
+              <span class="step-lock-icon" title="Phase Locked">🔒</span>
+            </button>
+            <button class="study-step-btn locked" data-step="2" disabled title="Complete 1 Lap on-track to Unlock Phase 2">
+              <span class="step-num">02</span>
+              <div class="step-text-wrap">
+                <span class="step-lbl">PHASE 2</span>
+                <span class="step-name">Surface Recon & Camber</span>
+              </div>
+              <span class="step-check-mark" title="Stage Passed">✓</span>
+              <span class="step-lock-icon" title="Phase Locked">🔒</span>
+            </button>
+            <button class="study-step-btn locked" data-step="3" disabled title="Complete 2 Laps on-track to Unlock Phase 3">
+              <span class="step-num">03</span>
+              <div class="step-text-wrap">
+                <span class="step-lbl">PHASE 3</span>
+                <span class="step-name">Visual Reference Points</span>
+              </div>
+              <span class="step-check-mark" title="Stage Passed">✓</span>
+              <span class="step-lock-icon" title="Phase Locked">🔒</span>
+            </button>
+            <button class="study-step-btn locked" data-step="4" disabled title="Complete 3 Laps on-track to Unlock Phase 4">
+              <span class="step-num">04</span>
+              <div class="step-text-wrap">
+                <span class="step-lbl">PHASE 4</span>
+                <span class="step-name">Order of Effort</span>
+              </div>
+              <span class="step-check-mark" title="Stage Passed">✓</span>
+              <span class="step-lock-icon" title="Phase Locked">🔒</span>
+            </button>
+            <button class="study-step-btn locked" data-step="5" disabled title="Complete 4 Laps on-track to Unlock Phase 5">
+              <span class="step-num">05</span>
+              <div class="step-text-wrap">
+                <span class="step-lbl">PHASE 5</span>
+                <span class="step-name">Hardware & Stint Prep</span>
+              </div>
+              <span class="step-check-mark" title="Stage Passed">✓</span>
+              <span class="step-lock-icon" title="Phase Locked">🔒</span>
+            </button>
+          </nav>
 
-          <button id="btn-study-refresh" class="btn btn-secondary btn-icon chamfer-br" title="Reload Active Track Study">
-            <span>⟲</span>
-          </button>
-
-          <button id="btn-study-save-data" class="btn btn-secondary chamfer-br btn-study-save" style="height: 40px; font-size: 12px; font-weight: 700;" title="Save Custom Driver Notes, Turn Cues & Track Progress">
-            <span class="btn-icon">💾</span> SAVE TRACK DATA
-          </button>
-          <span id="study-save-status" class="study-save-status-pill font-mono" style="display: none;">SAVED ✓</span>
-
-          <button id="btn-study-open-editor" class="btn btn-secondary chamfer-br" style="height: 40px; font-size: 11px; font-weight: 700;" title="Open Dual-View Track Editor & Waypoint Studio">
-            <span class="btn-icon">📐</span> TRACK EDITOR
-          </button>
-
-          <button id="btn-study-export-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
-            <span class="btn-icon">📄</span> EXPORT 5-PHASE STUDY PDF
-          </button>
+          <!-- Active Phase View Stage -->
+          <main id="study-phase-container" class="study-phase-container">
+            <!-- Rendered dynamically by TrackStudyView -->
+          </main>
         </div>
       </div>
-
-      <!-- 5-Phase Stepper Navigation Bar (Sequential Progression) -->
-      <nav class="study-stepper-bar chamfer-br" aria-label="Track Study Phases">
-        <button class="study-step-btn active" data-step="1" title="Phase 1: Macro Map & Priority">
-          <span class="step-num">01</span>
-          <div class="step-text-wrap">
-            <span class="step-lbl">PHASE 1</span>
-            <span class="step-name">Macro Map & Priority</span>
-          </div>
-          <span class="step-check-mark" title="Stage Passed">✓</span>
-          <span class="step-lock-icon" title="Phase Locked">🔒</span>
-        </button>
-        <button class="study-step-btn locked" data-step="2" disabled title="Complete 1 Lap on-track to Unlock Phase 2">
-          <span class="step-num">02</span>
-          <div class="step-text-wrap">
-            <span class="step-lbl">PHASE 2</span>
-            <span class="step-name">Surface Recon & Camber</span>
-          </div>
-          <span class="step-check-mark" title="Stage Passed">✓</span>
-          <span class="step-lock-icon" title="Phase Locked">🔒</span>
-        </button>
-        <button class="study-step-btn locked" data-step="3" disabled title="Complete 2 Laps on-track to Unlock Phase 3">
-          <span class="step-num">03</span>
-          <div class="step-text-wrap">
-            <span class="step-lbl">PHASE 3</span>
-            <span class="step-name">Visual Reference Points</span>
-          </div>
-          <span class="step-check-mark" title="Stage Passed">✓</span>
-          <span class="step-lock-icon" title="Phase Locked">🔒</span>
-        </button>
-        <button class="study-step-btn locked" data-step="4" disabled title="Complete 3 Laps on-track to Unlock Phase 4">
-          <span class="step-num">04</span>
-          <div class="step-text-wrap">
-            <span class="step-lbl">PHASE 4</span>
-            <span class="step-name">Order of Effort</span>
-          </div>
-          <span class="step-check-mark" title="Stage Passed">✓</span>
-          <span class="step-lock-icon" title="Phase Locked">🔒</span>
-        </button>
-        <button class="study-step-btn locked" data-step="5" disabled title="Complete 4 Laps on-track to Unlock Phase 5">
-          <span class="step-num">05</span>
-          <div class="step-text-wrap">
-            <span class="step-lbl">PHASE 5</span>
-            <span class="step-name">Hardware & Stint Prep</span>
-          </div>
-          <span class="step-check-mark" title="Stage Passed">✓</span>
-          <span class="step-lock-icon" title="Phase Locked">🔒</span>
-        </button>
-      </nav>
-
-      <!-- Active Phase View Stage -->
-      <main id="study-phase-container" class="study-phase-container">
-        <!-- Rendered dynamically by TrackStudyView -->
-      </main>
     </div> <!-- /#view-track-study -->
 
     <!-- DUAL-VIEW TRACK & TELEMETRY WAYPOINT STUDIO (TRACK EDITOR) -->
