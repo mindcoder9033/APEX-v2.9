@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/components/updater.css">
   <link rel="stylesheet" href="css/components/pit-toast.css">
+  <link rel="stylesheet" href="css/components/track-study.css">
 </head>
 <body>
   <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
@@ -1085,6 +1086,9 @@
         </div>
 
         <div style="display: flex; align-items: center; gap: 10px;">
+          <button id="btn-open-track-study" class="btn btn-secondary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700; border-color: #00e5ff; color: #00e5ff;" title="Open 4-Phase Track Study Studio">
+            <span>🔍</span> TRACK STUDY (4-PHASE)
+          </button>
           <button id="btn-export-pre-stint-pdf" class="btn btn-primary chamfer-br" style="height: 40px; font-size: 12px; font-weight: 700;">
             <span>📄</span> EXPORT PRE-STINT PREP PDF
           </button>
@@ -1731,6 +1735,65 @@
 
       <div class="modal-footer" style="display: flex; justify-content: flex-end;">
         <button id="btn-close-loopback-footer" class="btn btn-primary chamfer-br">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACK STUDY 4-PHASE MODAL / STUDIO -->
+  <div id="track-study-modal" class="track-study-modal-overlay">
+    <div class="track-study-container chamfer-tl-br">
+      <!-- Top Header -->
+      <div class="track-study-header">
+        <div class="track-study-title-group">
+          <span class="track-study-badge">4-PHASE METHODOLOGY</span>
+          <div>
+            <h2 id="study-track-title" class="track-study-title">Circuit // Track Study</h2>
+            <span id="study-track-subtitle" class="track-study-subtitle">Layout & Length</span>
+          </div>
+        </div>
+        <div class="track-study-actions">
+          <button id="btn-export-study-pdf" class="btn btn-primary chamfer-br" style="height: 38px; font-size: 11px; font-weight: 700;">
+            <span>📄</span> EXPORT TRACK STUDY PDF (2-PAGE)
+          </button>
+          <button id="btn-close-track-study" class="btn btn-secondary chamfer-tr btn-icon-xs" title="Close">✕</button>
+        </div>
+      </div>
+
+      <!-- 4-Phase Stepper Navigation -->
+      <nav class="track-study-stepper" aria-label="Study Phases">
+        <button class="study-step-tab active" data-step="1">
+          <span class="step-num">PHASE 01</span>
+          <span class="step-label">Macro Corner Grading</span>
+        </button>
+        <button class="study-step-tab" data-step="2">
+          <span class="step-num">PHASE 02</span>
+          <span class="step-label">Micro Surface & Camber</span>
+        </button>
+        <button class="study-step-tab" data-step="3">
+          <span class="step-num">PHASE 03</span>
+          <span class="step-label">Reference Points & Sights</span>
+        </button>
+        <button class="study-step-tab" data-step="4">
+          <span class="step-num">PHASE 04</span>
+          <span class="step-label">Telemetry Targets</span>
+        </button>
+      </nav>
+
+      <!-- Horizontal Turn Navigator -->
+      <div id="study-turn-nav" class="track-study-turn-nav">
+        <!-- Dynamically rendered turn pills -->
+      </div>
+
+      <!-- Main Stage Container -->
+      <div class="track-study-stage">
+        <!-- Phase 1 Panel -->
+        <div id="phase-1-content" class="study-phase-panel active" data-phase="1"></div>
+        <!-- Phase 2 Panel -->
+        <div id="phase-2-content" class="study-phase-panel" data-phase="2"></div>
+        <!-- Phase 3 Panel -->
+        <div id="phase-3-content" class="study-phase-panel" data-phase="3"></div>
+        <!-- Phase 4 Panel -->
+        <div id="phase-4-content" class="study-phase-panel" data-phase="4"></div>
       </div>
     </div>
   </div>
