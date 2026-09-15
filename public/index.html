@@ -1752,6 +1752,9 @@
           </div>
         </div>
         <div class="track-study-actions">
+          <button id="btn-open-track-editor-from-study" class="btn btn-secondary chamfer-tl" style="height: 38px; font-size: 11px; font-weight: 700; border-color: #00e5ff; color: #00e5ff;">
+            <span>✏️</span> EDIT TRACK & TELEMETRY
+          </button>
           <button id="btn-export-study-pdf" class="btn btn-primary chamfer-br" style="height: 38px; font-size: 11px; font-weight: 700;">
             <span>📄</span> EXPORT TRACK STUDY PDF (2-PAGE)
           </button>
@@ -1797,6 +1800,197 @@
       </div>
     </div>
   </div>
+
+  <!-- TRACK EDITOR MODAL - OPTION B DUAL PANE -->
+  <div id="track-editor-modal" class="track-editor-modal-overlay">
+    <div class="track-editor-container chamfer-tl-br">
+      <!-- Top Header -->
+      <div class="track-editor-header">
+        <div class="track-study-title-group">
+          <span class="track-study-badge" style="border-color: #00ff66; color: #00ff66;">GOING FASTER! TRACK EDITOR</span>
+          <div>
+            <h2 id="editor-track-title" class="track-study-title">Circuit // Dual-Pane Editor</h2>
+            <span id="editor-track-subtitle" class="track-study-subtitle">Layout & Length</span>
+          </div>
+        </div>
+        <div class="track-editor-toolbar">
+          <button id="btn-autodetect-corners" class="editor-btn">
+            <span>⚡</span> AUTO-DETECT APEXES
+          </button>
+          <button id="btn-toggle-rain-line" class="editor-btn">
+            <span>🌧️</span> RAIN LINE: DRY
+          </button>
+          <button id="btn-reset-track-editor" class="editor-btn" style="color: #ff3b30;">
+            <span>↺</span> REVERT RAW
+          </button>
+          <button id="btn-save-track-editor" class="editor-btn primary">
+            <span>💾</span> SAVE TRACK MODEL
+          </button>
+          <button id="btn-close-track-editor" class="btn btn-secondary chamfer-tr btn-icon-xs" title="Close">✕</button>
+        </div>
+      </div>
+
+      <!-- Turn Navigator & Corner Actions Bar -->
+      <div class="editor-turn-bar">
+        <div id="editor-turn-pill-list" class="track-study-turn-nav" style="padding: 0; background: transparent;">
+          <!-- Rendered pills -->
+        </div>
+        <div class="editor-turn-actions">
+          <button id="btn-add-turn" class="editor-btn" style="padding: 4px 10px; font-size: 10px;">
+            <span>+</span> ADD CORNER
+          </button>
+          <button id="btn-delete-turn" class="editor-btn" style="padding: 4px 10px; font-size: 10px; color: #ff3b30;">
+            <span>✕</span> DELETE CORNER
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Dual-Pane Body -->
+      <div class="track-editor-body">
+        <!-- Dual Stage: Top 2D Map + Bottom Telemetry Strip -->
+        <div class="track-editor-dual-stage">
+          <!-- Top 2D Vector Map -->
+          <div class="editor-map-pane">
+            <div id="editor-map-canvas-container" class="editor-map-canvas-container">
+              <!-- Rendered SVG -->
+            </div>
+          </div>
+
+          <!-- Bottom Telemetry Strip -->
+          <div class="editor-telemetry-pane">
+            <div class="telemetry-strip-header">
+              <span class="telemetry-strip-title">SYNCHRONIZED TELEMETRY & 4-BLOCK DECOMPOSITION</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #8b9bb4;">
+                Click & Drag scrubber to inspect car position on 2D map
+              </span>
+            </div>
+            <div class="telemetry-strip-canvas-wrapper">
+              <canvas id="editor-telemetry-canvas"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right-Side Inspector Sidebar -->
+        <div class="editor-inspector-pane">
+          <!-- Corner Geometry & Classification -->
+          <div class="editor-section-card">
+            <h4 class="editor-section-title">
+              <span>1. Corner Geometry & Type</span>
+              <span id="val-theoretical-speed" class="editor-tag-val" style="color: #00ff66;">-- km/h</span>
+            </h4>
+            <div class="editor-field-row">
+              <label class="editor-label">Corner Name</label>
+              <input type="text" id="edit-turn-name" class="editor-input-text" placeholder="e.g. Turn 1 (Hairpin)">
+            </div>
+            <div class="editor-field-row inline">
+              <label class="editor-label">Classification (Alan Johnson)</label>
+              <select id="edit-turn-type" class="editor-input-select" style="width: 170px;">
+                <option value="Type I">Type I (Exit Priority)</option>
+                <option value="Type II">Type II (Entry / Braking)</option>
+                <option value="Type III">Type III (Compromise Esse)</option>
+              </select>
+            </div>
+            <div class="editor-field-row inline">
+              <label class="editor-label">Radius R (meters)</label>
+              <input type="number" id="edit-turn-radius" class="editor-input-text" style="width: 90px;" min="10" max="600" step="1">
+            </div>
+          </div>
+
+          <!-- Surface, Camber & Topography -->
+          <div class="editor-section-card">
+            <h4 class="editor-section-title">2. Physical Track Topography</h4>
+            <div class="editor-field-row">
+              <div style="display: flex; justify-content: space-between;">
+                <label class="editor-label">Road Camber / Banking</label>
+                <span id="val-camber-deg" class="editor-tag-val" style="color: #8b9bb4;">0° (Flat)</span>
+              </div>
+              <input type="range" id="edit-turn-camber" class="editor-range-slider" min="-5" max="10" step="1" value="0">
+            </div>
+            <div class="editor-field-row inline">
+              <label class="editor-label">Pavement Material</label>
+              <select id="edit-turn-surface" class="editor-input-select" style="width: 170px;">
+                <option value="Standard Asphalt">Standard Asphalt</option>
+                <option value="Aged Weathered Asphalt">Aged Weathered Asphalt</option>
+                <option value="Concrete / Asphalt Seam">Concrete / Asphalt Seam</option>
+                <option value="Fresh Smooth Asphalt">Fresh Smooth Asphalt</option>
+                <option value="Epoxy Sealer (Slippery)">Epoxy Sealer (Slippery)</option>
+              </select>
+            </div>
+            <div class="editor-field-row inline">
+              <label class="editor-label">Elevation Dynamic</label>
+              <select id="edit-turn-elevation" class="editor-input-select" style="width: 170px;">
+                <option value="Level">Level (Standard 1G)</option>
+                <option value="Compression Dip">Compression Dip (+Downforce)</option>
+                <option value="Blind Crest">Blind Crest (Unweighted -G)</option>
+                <option value="Uphill Incline">Uphill Incline</option>
+                <option value="Downhill Falloff">Downhill Falloff</option>
+              </select>
+            </div>
+            <div class="editor-field-row inline">
+              <label class="editor-label">Curb Severity</label>
+              <select id="edit-turn-curb" class="editor-input-select" style="width: 170px;">
+                <option value="Flat Paint / Low Usable">Flat Paint / Low Usable</option>
+                <option value="High Serrated (Avoid Hitting)">High Serrated (Avoid)</option>
+                <option value="Deep Drop-Off Outside">Deep Drop-Off Outside</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Skip Barber 4-Block Entry Decomposition -->
+          <div class="editor-section-card">
+            <h4 class="editor-section-title">3. Skip Barber 4-Block Controls</h4>
+            <div class="editor-field-row">
+              <div style="display: flex; justify-content: space-between;">
+                <label class="editor-label">Block 2 Straight Braking Distance</label>
+                <span id="val-block2-dist" class="editor-tag-val" style="color: #ff3b30;">65 m</span>
+              </div>
+              <input type="range" id="edit-block2-dist" class="editor-range-slider" min="10" max="250" step="5" value="65">
+            </div>
+            <div class="editor-field-row">
+              <div style="display: flex; justify-content: space-between;">
+                <label class="editor-label">Block 3 Trail-Braking Depth</label>
+                <span id="val-block3-trail" class="editor-tag-val" style="color: #ffb800;">35 %</span>
+              </div>
+              <input type="range" id="edit-block3-trail" class="editor-range-slider" min="10" max="80" step="5" value="35">
+            </div>
+            <div class="editor-field-row">
+              <div style="display: flex; justify-content: space-between;">
+                <label class="editor-label">Block 4 Yaw Stabilization Pause</label>
+                <span id="val-block4-pause" class="editor-tag-val" style="color: #00e5ff;">0 ms</span>
+              </div>
+              <input type="range" id="edit-block4-pause" class="editor-range-slider" min="0" max="400" step="50" value="0">
+            </div>
+          </div>
+
+          <!-- Reference Markers & Sight Pictures -->
+          <div class="editor-section-card">
+            <h4 class="editor-section-title">4. Reference Landmarks & Sights</h4>
+            <div class="editor-field-row">
+              <label class="editor-label">Braking Board Cue</label>
+              <input type="text" id="edit-ref-brake" class="editor-input-text" placeholder="e.g. 100m marker board">
+            </div>
+            <div class="editor-field-row">
+              <label class="editor-label">Turn-In Landmark</label>
+              <input type="text" id="edit-ref-turnin" class="editor-input-text" placeholder="e.g. Access road seam">
+            </div>
+            <div class="editor-field-row">
+              <label class="editor-label">Apex Landmark</label>
+              <input type="text" id="edit-ref-apex" class="editor-input-text" placeholder="e.g. Center of painted curb">
+            </div>
+            <div class="editor-field-row">
+              <label class="editor-label">Track-Out Cue</label>
+              <input type="text" id="edit-ref-trackout" class="editor-input-text" placeholder="e.g. End of green exit strip">
+            </div>
+            <div class="editor-field-row" style="margin-top: 4px;">
+              <label class="editor-label">Sight Picture & Coaching Notes</label>
+              <textarea id="edit-driver-notes" class="editor-input-text study-textarea" placeholder="Mental picture, sight vector, or car balance notes..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Driver Dossier and Onboarding Wizard Modals -->
   <div id="modal-driver-dossier-container"></div>

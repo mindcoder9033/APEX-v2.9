@@ -83,3 +83,43 @@ test('TrackStudyAnalyzer fallback generation works for empty turns', () => {
   assert.ok(study.macroSummary.totalCorners === 8);
   assert.ok(study.turns[0].targets.targetGear >= 1);
 });
+
+test('Going Faster Physics: calculateCornerRadius and 15GR=V^2 limit speed', () => {
+  const analyzer = new TrackStudyAnalyzer();
+
+  // Test circumcircle radius for 3 points
+  const p1 = { x: 0, z: 0 };
+  const p2 = { x: 100, z: 50 };
+  const p3 = { x: 200, z: 0 };
+  const radius = analyzer.calculateCornerRadius(p1, p2, p3);
+  assert.ok(radius > 100 && radius < 150, `Radius should be reasonable (~125m), got ${radius}`);
+
+  // Test Going Faster speed calculation (15*G*R = V^2)
+  // For R = 60m (~197ft), baseG = 1.3:
+  const flatSpeed = analyzer.calculateLimitSpeedKmh(60, 1.3, 0);
+  assert.ok(flatSpeed > 90 && flatSpeed < 110, `Flat speed should be ~100 km/h, got ${flatSpeed}`);
+
+  // Positive camber (+5 deg) should increase corner limit speed
+  const bankedSpeed = analyzer.calculateLimitSpeedKmh(60, 1.3, 5);
+  assert.ok(bankedSpeed > flatSpeed, `Banked speed (${bankedSpeed}) should exceed flat speed (${flatSpeed})`);
+
+  // Off-camber (-3 deg) should decrease corner limit speed
+  const offCamberSpeed = analyzer.calculateLimitSpeedKmh(60, 1.3, -3);
+  assert.ok(offCamberSpeed < flatSpeed, `Off-camber speed (${offCamberSpeed}) should be lower than flat speed (${flatSpeed})`);
+});
+
+test('Going Faster 4-Block Decomposition: decomposes corner entry into 4 building blocks', () => {
+  const analyzer = new TrackStudyAnalyzer();
+  const mockTurn = { cornerType: 'Type II', radiusType: 'Hairpin' };
+  
+  const blocks = analyzer.decomposeFourBlocks(mockTurn, 220, 80);
+  
+  assert.equal(blocks.speedLossKmh, 140);
+  assert.ok(blocks.block1.name.includes('Block 1'));
+  assert.ok(blocks.block2.name.includes('Block 2'));
+  assert.equal(blocks.block2.isThreshold, true);
+  assert.ok(blocks.block3.name.includes('Block 3'));
+  assert.equal(blocks.block3.trailStyle, 'Constant-Level');
+  assert.ok(blocks.block4.name.includes('Block 4'));
+});
+

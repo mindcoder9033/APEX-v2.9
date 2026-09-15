@@ -2,12 +2,13 @@
  * APEX Track Study View Controller
  * Manages the interactive 4-Phase Circuit Study workflow inspired by Going Faster!
  * Provides step-by-step guidance, corner telemetry targets, editable driver sight pictures,
- * and 1-click 2-page PDF export.
+ * synchronized Track Editor launcher, and 1-click 2-page PDF export.
  */
 
 import { trackStudyAnalyzer } from './analysis/track-study-analyzer.js';
 import { trackStudyStore } from './track-study-store.js';
 import { trackStudyPdfBuilder } from './track-study-pdf-builder.js';
+import { trackEditorView } from './track-editor-view.js';
 
 export class TrackStudyView {
   constructor() {
@@ -20,6 +21,7 @@ export class TrackStudyView {
     this.modalOverlay = document.getElementById('track-study-modal');
     this.btnClose = document.getElementById('btn-close-track-study');
     this.btnExportPdf = document.getElementById('btn-export-study-pdf');
+    this.btnOpenEditor = document.getElementById('btn-open-track-editor-from-study');
     this.trackTitle = document.getElementById('study-track-title');
     this.trackSubtitle = document.getElementById('study-track-subtitle');
     this.turnNavContainer = document.getElementById('study-turn-nav');
@@ -50,6 +52,17 @@ export class TrackStudyView {
       });
     }
 
+    // Open Track Editor (Option B Dual-Pane)
+    if (this.btnOpenEditor) {
+      this.btnOpenEditor.addEventListener('click', () => {
+        if (this.activeTrack) {
+          trackEditorView.open(this.activeTrack, () => {
+            this.open(this.activeTrack);
+          });
+        }
+      });
+    }
+
     // PDF Export
     if (this.btnExportPdf) {
       this.btnExportPdf.addEventListener('click', () => this.exportPdf());
@@ -64,8 +77,18 @@ export class TrackStudyView {
     if (!trackProfile) return;
     this.activeTrack = trackProfile;
 
+    // Check for saved editor model first
+    const savedEditor = trackStudyStore.getEditorModel(trackProfile.trackId);
+    let trackToAnalyze = trackProfile;
+    if (savedEditor && Array.isArray(savedEditor.turns) && savedEditor.turns.length > 0) {
+      trackToAnalyze = {
+        ...trackProfile,
+        turns: savedEditor.turns
+      };
+    }
+
     // Analyze track and merge with stored driver notes
-    this.studyData = trackStudyAnalyzer.analyzeTrackStudy(trackProfile);
+    this.studyData = trackStudyAnalyzer.analyzeTrackStudy(trackToAnalyze);
     const savedOverrides = trackStudyStore.getStudy(trackProfile.trackId);
 
     if (savedOverrides && savedOverrides.corners) {
@@ -251,14 +274,18 @@ export class TrackStudyView {
           <span class="corner-type-tag ${typeClass}">${turn.cornerType} — ${turn.typeLabel}</span>
         </h4>
         <p class="study-card-body"><strong>Strategic Rationale:</strong> ${turn.typeRationale}</p>
-        <div class="study-grid-2col">
+        <div class="study-grid-3col" style="margin-top: 10px;">
           <div class="metric-row">
             <span class="metric-label">Preceding Straight Length:</span>
             <span class="metric-val">${turn.precedingStraightMeters} m</span>
           </div>
           <div class="metric-row">
-            <span class="metric-label">Following Acceleration Straight:</span>
+            <span class="metric-label">Following Straight Length:</span>
             <span class="metric-val" style="color: #00ff66;">${turn.followingStraightMeters} m</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Calculated Arc Radius:</span>
+            <span class="metric-val" style="color: #00e5ff;">R=${turn.geometry?.radiusMeters || 65}m (${turn.geometry?.radiusFeet || 213}ft)</span>
           </div>
         </div>
       </div>
@@ -361,21 +388,26 @@ export class TrackStudyView {
   }
 
   /**
-   * Phase 4: Telemetry Target & Progressive Ladder
+   * Phase 4: Telemetry Target & Progressive Ladder (With 4-Block Breakdown)
    */
   renderPhase4(turn) {
     const container = document.getElementById('phase-4-content');
     if (!container) return;
 
     const targets = turn.targets || {};
+    const fb = turn.fourBlocks || {};
 
     container.innerHTML = `
       <div class="study-grid-2col">
         <div class="study-card">
-          <h4 class="study-card-title">Telemetry Targets</h4>
+          <h4 class="study-card-title">Telemetry Targets & Physics Limit (15GR = V²)</h4>
+          <div class="metric-row">
+            <span class="metric-label">Theoretical Limit Speed:</span>
+            <span class="metric-val" style="color: #00ff66; font-size: 15px;">${turn.geometry?.theoreticalMaxSpeedKmh || targets.minApexSpeedKmh} km/h</span>
+          </div>
           <div class="metric-row">
             <span class="metric-label">Target Min Apex Speed:</span>
-            <span class="metric-val" style="color: #00ff66; font-size: 16px;">${targets.minApexSpeedKmh || 100} km/h</span>
+            <span class="metric-val" style="color: #00ff66; font-size: 15px;">${targets.minApexSpeedKmh || 100} km/h</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Approach Entry Speed:</span>
@@ -386,12 +418,12 @@ export class TrackStudyView {
             <span class="metric-val" style="color: #00e5ff;">Gear ${targets.targetGear || 3}</span>
           </div>
           <div class="metric-row">
-            <span class="metric-label">Peak Braking Pressure:</span>
-            <span class="metric-val">${targets.suggestedBrakePressurePct || 80}%</span>
+            <span class="metric-label">Straight Decel Distance (Block 2):</span>
+            <span class="metric-val" style="color: #ff3b30;">${fb.block2?.distanceMeters || 65} m</span>
           </div>
           <div class="metric-row">
-            <span class="metric-label">Trail-Braking Depth:</span>
-            <span class="metric-val">${targets.trailBrakeDepthPct || 30}% of turn entry</span>
+            <span class="metric-label">Trail-Braking Depth (Block 3):</span>
+            <span class="metric-val" style="color: #ffb800;">${fb.block3?.trailDepthPct || 35}% (${fb.block3?.trailStyle || 'Bleed-Off'})</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Throttle Pick-Up Point:</span>
@@ -400,16 +432,21 @@ export class TrackStudyView {
         </div>
 
         <div class="study-card">
-          <h4 class="study-card-title">The 3-Step Stint Progression</h4>
-          <p class="study-card-body" style="font-size: 12px; margin-bottom: 8px;">
-            <strong>Step 1: The Line</strong> — Place the car within 6 inches of turn-in, apex, and track-out.
-          </p>
-          <p class="study-card-body" style="font-size: 12px; margin-bottom: 8px;">
-            <strong>Step 2: Exit Speed</strong> — Squeeze throttle smoothly and unwind steering to eliminate tire scrub.
-          </p>
-          <p class="study-card-body" style="font-size: 12px;">
-            <strong>Step 3: Braking Depth</strong> — Move braking point closer in 3-foot increments once threshold pressure is mastered.
-          </p>
+          <h4 class="study-card-title">Skip Barber 4-Block Entry Decomposition</h4>
+          <div style="font-size: 11px; line-height: 1.5; color: var(--color-text-secondary);">
+            <div style="margin-bottom: 6px;">
+              <strong style="color: #8b9bb4;">Block 1 (Throttle-to-Brake):</strong> ${fb.block1?.durationSec || 0.25}s transition (${fb.block1?.distanceMeters || 12}m). Squeeze, no slamming.
+            </div>
+            <div style="margin-bottom: 6px;">
+              <strong style="color: #ff3b30;">Block 2 (Threshold Decel):</strong> ${fb.block2?.targetBrakeEffortPct || 80}% effort over ${fb.block2?.distanceMeters || 65}m straight.
+            </div>
+            <div style="margin-bottom: 6px;">
+              <strong style="color: #ffb800;">Block 3 (Trail-Braking):</strong> ${fb.block3?.trailStyle || 'Bleed-Off'} braking into apex (${fb.block3?.distanceMeters || 20}m).
+            </div>
+            <div>
+              <strong style="color: #00ff66;">Block 4 (Brake-Throttle & Unwind):</strong> ${fb.block4?.pauseMs ? fb.block4.pauseMs + 'ms pause' : 'Immediate squeeze'} at apex. ${fb.block4?.exitUnwindRule || 'Unwind steering progressively.'}
+            </div>
+          </div>
         </div>
       </div>
     `;
