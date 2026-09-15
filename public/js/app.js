@@ -75,7 +75,7 @@ class ApexApp {
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
     this.viewStints = document.getElementById('view-stints');
-    
+
     this.wsClient = new ApexWsClient({
       url: this.session.settings.wsUrl,
       autoReconnect: true
@@ -245,9 +245,9 @@ class ApexApp {
         } else {
           // Browser fallback: toggle HTML5 fullscreen
           if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {});
+            document.documentElement.requestFullscreen().catch(() => { });
           } else {
-            document.exitFullscreen().catch(() => {});
+            document.exitFullscreen().catch(() => { });
           }
         }
       });
@@ -830,4 +830,5 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', bootstrapApexApp);
 } else {
   bootstrapApexApp();
+}
 }
