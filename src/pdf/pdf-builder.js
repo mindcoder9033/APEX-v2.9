@@ -618,8 +618,8 @@ export class ApexPdfBuilder {
 
     y -= (boxH + 14);
 
-    // 3. Positive vs Opportunity Stack
-    const sectionH = 120;
+    // 3. Positive vs Opportunity & 3-Tier Action Hierarchy
+    const sectionH = 100;
 
     // What you did right panel
     page.drawRectangle({
@@ -652,9 +652,9 @@ export class ApexPdfBuilder {
     // Dynamically retrieve positive findings or use clean guidelines
     const positiveFindings = report.findings?.filter(f => f.severity === 'Low').slice(0, 2) || [];
     const rightBullets = [
-      positiveFindings[0] ? positiveFindings[0].actionPlan : 'Your line through complex turns is excellent. You\'re using full track width and maintaining apex speed.',
-      positiveFindings[1] ? positiveFindings[1].actionPlan : 'Upshifting and powerband engagement are crisp and consistent with zero over-rev events.',
-      'Your best lap shows strong pace capability across all sectors.'
+      positiveFindings[0] ? positiveFindings[0].actionPlan : 'Your line through technical turns is consistent. You are using the full track width at turn-in.',
+      positiveFindings[1] ? positiveFindings[1].actionPlan : 'Upshifts and powerband engagement are crisp and consistent with zero over-rev events.',
+      'Your best lap shows solid car control capability across all sectors.'
     ];
 
     let bulletY = y - 30;
@@ -672,100 +672,105 @@ export class ApexPdfBuilder {
       }) - 2;
     });
 
-    y -= (sectionH + 10);
+    y -= (sectionH + 8);
 
-    // Opportunity panel
+    // 4. NEXT STINT 3-TIER ACTION HIERARCHY (Going Faster! Ch 1 & 8)
+    const tierH = 110;
     page.drawRectangle({
       x: this.margin,
-      y: y - sectionH,
+      y: y - tierH,
       width: contentW,
-      height: sectionH,
+      height: tierH,
       color: this.colors.panel,
       borderColor: this.colors.border,
       borderWidth: 1
     });
 
-    // Left red border line
     page.drawRectangle({
       x: this.margin,
-      y: y - sectionH,
+      y: y - tierH,
       width: 4,
-      height: sectionH,
-      color: this.colors.f1Red
+      height: tierH,
+      color: this.colors.gold
     });
 
-    page.drawText('TOP COACHING PRIORITY [MAX LAP TIME GAIN]', {
+    page.drawText('NEXT STINT ACTION HIERARCHY // SKIP BARBER METHODOLOGY', {
       x: this.margin + 16,
-      y: y - 16,
-      size: 9,
-      font: fonts.bold,
-      color: this.colors.f1Red
-    });
-
-    const topRecommendation = report.recommendations?.[0] || {
-      title: 'Turn 9 Exit Speed Optimization',
-      description: 'Turn 9 exit speed is 5.5 km/h slower than theoretical maximum. This corner leads onto the longest straight. You are losing approx 0.6s per lap here.',
-      action: 'Focus on progressive throttle application as steering unwinds. Feed power on smoothly rather than stabbing it.',
-      quote: '"The biggest gain in lap time comes from corner exit speed." — Going Faster!, Ch.1'
-    };
-
-    page.drawText(topRecommendation.title.toUpperCase(), {
-      x: this.margin + 16,
-      y: y - 30,
-      size: 8,
-      font: fonts.bold,
-      color: this.colors.textPrimary
-    });
-
-    this.drawWrappedText(page, topRecommendation.description, {
-      x: this.margin + 16,
-      y: y - 42,
-      maxWidth: contentW - 32,
-      font: fonts.regular,
-      fontSize: 7.5,
-      color: this.colors.textSecondary,
-      maxLines: 2,
-      lineHeight: 9.5
-    });
-
-    page.drawText('SKIP BARBER COACHING PRINCIPLE', {
-      x: this.margin + 16,
-      y: y - 66,
-      size: 7,
-      font: fonts.bold,
-      color: this.colors.textSecondary
-    });
-
-    this.drawWrappedText(page, topRecommendation.quote, {
-      x: this.margin + 16,
-      y: y - 76,
-      maxWidth: contentW - 32,
-      font: fonts.italic,
-      fontSize: 7,
-      color: this.colors.textMuted,
-      maxLines: 2,
-      lineHeight: 9
-    });
-
-    page.drawText('ACTION PLAN:', {
-      x: this.margin + 16,
-      y: y - 98,
-      size: 7,
+      y: y - 14,
+      size: 8.5,
       font: fonts.bold,
       color: this.colors.gold
     });
 
-    this.drawWrappedText(page, topRecommendation.action, {
-      x: this.margin + 68,
-      y: y - 98,
-      maxWidth: contentW - 84,
+    const tiers = [
+      {
+        tier: 'TIER 1: THE LINE',
+        desc: 'Nail apex clipping within 6 inches. Consistent placement replaces guesswork. Do not attempt speed increases on an erratic line.',
+        color: this.colors.textPrimary
+      },
+      {
+        tier: 'TIER 2: EXIT SPEED (LAUNCHPADS)',
+        desc: 'Focus power on the 2 key Type I corners leading onto long straights. Squeeze throttle as you unwind steering to eliminate tire scrub.',
+        color: this.colors.success
+      },
+      {
+        tier: 'TIER 3: BRAKING NIBBLES',
+        desc: 'Work braking in 1-meter (3-foot) steps ONLY after line and exit speed are locked. Never dive-bomb corner entries.',
+        color: this.colors.f1Red
+      }
+    ];
+
+    let ty = y - 26;
+    tiers.forEach(t => {
+      page.drawText(t.tier, { x: this.margin + 16, y: ty, size: 7.5, font: fonts.bold, color: t.color });
+      ty = this.drawWrappedText(page, t.desc, {
+        x: this.margin + 155,
+        y: ty,
+        maxWidth: contentW - 170,
+        font: fonts.regular,
+        fontSize: 7,
+        color: this.colors.textSecondary,
+        maxLines: 2,
+        lineHeight: 8.5
+      }) - 2;
+    });
+
+    y -= (tierH + 8);
+
+    // 5. BEWARE THE RED MIST WARNING (Going Faster Ch 8)
+    const mistH = 38;
+    page.drawRectangle({
+      x: this.margin,
+      y: y - mistH,
+      width: contentW,
+      height: mistH,
+      color: rgb(1, 0.96, 0.96),
+      borderColor: this.colors.f1Red,
+      borderWidth: 0.8
+    });
+
+    page.drawText('[ALERT] BEWARE THE "RED MIST" (GOING FASTER CH. 8)', {
+      x: this.margin + 12,
+      y: y - 12,
+      size: 7.5,
+      font: fonts.bold,
+      color: this.colors.f1Red
+    });
+
+
+    const mistText = 'When chasing lap time, resist the temptation to brake later everywhere. 70-80% of lap time is determined by corner exit acceleration onto straights. Shaving tenths at corner exits compounds every second down the straight; over-driving entries results in overslowing and spins.';
+    this.drawWrappedText(page, mistText, {
+      x: this.margin + 12,
+      y: y - 22,
+      maxWidth: contentW - 24,
       font: fonts.regular,
-      fontSize: 7,
+      fontSize: 6.5,
       color: this.colors.textPrimary,
       maxLines: 2,
-      lineHeight: 9
+      lineHeight: 8
     });
   }
+
 
   // --- Page 3: Stint Overview (Sectors + Lap Chart + 2D Map) ---
   drawStintOverviewPage(page, y, report, metadata, fonts) {
@@ -941,9 +946,9 @@ export class ApexPdfBuilder {
     page.drawCircle({ x: rightX + 148, y: legY, size: 3, color: this.colors.blue });
     page.drawText('Coasting/Lifting', { x: rightX + 154, y: legY - 2, size: 6, font: fonts.regular, color: this.colors.textSecondary });
 
-    // Stint Overview Description
+    // Stint Overview: Skip Barber Anti-Mistake Early Warning System (Going Faster Ch 2, 4, 5, 8)
     y -= 255;
-    const descH = 55;
+    const descH = 96;
     page.drawRectangle({
       x: this.margin,
       y: y - descH,
@@ -953,27 +958,39 @@ export class ApexPdfBuilder {
       borderColor: this.colors.border,
       borderWidth: 1
     });
+
+    page.drawRectangle({
+      x: this.margin,
+      y: y - descH,
+      width: 4,
+      height: descH,
+      color: this.colors.f1Red
+    });
     
-    page.drawText('STINT PERFORMANCE SYNTHESIS', {
+    page.drawText('SKIP BARBER NOVICE "ANTI-MISTAKE" EARLY WARNING SYSTEM', {
       x: this.margin + 12,
-      y: y - 14,
+      y: y - 13,
       size: 8,
       font: fonts.bold,
-      color: this.colors.textPrimary
+      color: this.colors.f1Red
     });
 
-    const stintDesc = 'The lap comparison chart confirms a structured stint sequence. Sector 2 is your highest priority segment where Turn 7 (Type II corner) causes entry decelerations to lose time. In Sector 3, Turn 9 (Type I carousel corner) suffers from delayed exit acceleration, costing compounding straightaway velocity.';
-    this.drawWrappedText(page, stintDesc, {
-      x: this.margin + 12,
-      y: y - 26,
-      maxWidth: contentW - 24,
-      font: fonts.regular,
-      fontSize: 7.5,
-      color: this.colors.textSecondary,
-      maxLines: 2,
-      lineHeight: 10
+    const mistakes = [
+      { name: '1. EARLY APEX', sym: 'Need to add steering lock past apex / car drifts wide', fix: 'Fix: Look deeper, turn in 1-2 car lengths later.' },
+      { name: '2. TTO (SNAP LIFT)', sym: 'Abrupt throttle chop in corner violently snaps rear out', fix: 'Fix: Breathe throttle smoothly, never snap/chop pedal.' },
+      { name: '3. BRAKE SLAM', sym: 'Instant front tire lockup before weight transfers forward', fix: 'Fix: Fast firm squeeze in 0.25s, not a hammer hit.' },
+      { name: '4. OVERSLOWING', sym: 'Dropping speed below limit between Turn-In & Apex', fix: 'Fix: Trail-brake with light bleed-off to roll speed.' }
+    ];
+
+    let my = y - 25;
+    mistakes.forEach(m => {
+      page.drawText(m.name, { x: this.margin + 12, y: my, size: 7, font: fonts.bold, color: this.colors.textPrimary });
+      page.drawText(m.sym, { x: this.margin + 105, y: my, size: 6.5, font: fonts.regular, color: this.colors.textSecondary });
+      page.drawText(m.fix, { x: this.margin + 340, y: my, size: 6.5, font: fonts.bold, color: this.colors.success });
+      my -= 16;
     });
   }
+
 
   // --- Lap-by-Lap & Turn-by-Turn Telemetry Analysis Methods ---
 
@@ -1689,8 +1706,8 @@ export class ApexPdfBuilder {
 
     y -= (tableH + 15);
 
-    // 3. Dynamic Educational Coaching Breakdown Panels
-    const coachH = 145;
+    // 3. Dynamic Educational Coaching Breakdown Panels & Physical Controls Translation (Hands, Feet, Eyes)
+    const coachH = 175;
     page.drawRectangle({
       x: this.margin,
       y: y - coachH,
@@ -1714,58 +1731,63 @@ export class ApexPdfBuilder {
     let rightText = '';
     let wrongText = '';
     let whyText = '';
-    let fixText = '';
+    let handsText = '';
+    let feetText = '';
+    let eyesText = '';
     let drillText = '';
-    let metricText = '';
     let quoteStr = '';
 
     if (cNum === 9 || cType === 'Type I') {
-      rightText = 'You\'re not over-slowing. Your minimum speed is near the limit.';
-      wrongText = `Turn 9 exit speed is ${(baseExitKmh - targExitKmh).toFixed(1)} km/h slower than your best lap. Your throttle application point is ${targTapM}m after the apex.`;
-      whyText = 'Drivers, in their never-ending attempt at maximizing exit speed, get greedy about putting the throttle down, unload the fronts and generate understeer. This unloads the front tires (weight transfers to the rear), causing understeer.';
-      fixText = 'Focus on "squeezing" the throttle. Apply the throttle AS you unwind the steering wheel. Think of the throttle pedal as a dimmer switch, not an on/off switch.';
-      drillText = 'Laps 3-4: Focus only on "squeezing" the throttle - count to 2. Laps 5-6: Focus only on earlier throttle application.';
-      metricText = 'Exit speed should increase by 3 km/h.';
-      quoteStr = '"The biggest gain in lap time comes from corner exit speed." — Chapter 1';
+      rightText = 'Your minimum speed (V_min) is stable. Apex clipping is within allowable track bounds.';
+      wrongText = `Turn ${cNum} exit speed is ${(baseExitKmh - targExitKmh).toFixed(1)} km/h down. Throttle application point is ${targTapM}m after apex.`;
+      whyText = 'Greedy throttle before unwinding steering unloads the front tires and causes power understeer. Stabbing power early forces a mid-corner throttle lift.';
+      handsText = 'HANDS: Hold smooth steering arc into apex. Unwind steering progressively as power increases (dimmer switch) to prevent tire scrub.';
+      feetText = 'RIGHT FOOT: Fast squeeze onto brakes -> light trail bleed-off (Block 3) -> progressive 0-100% throttle feed at apex (Block 4).';
+      eyesText = 'EYES: Look past the apex curb toward the track-out marker before turning the steering wheel.';
+      drillText = 'Laps 3-4: Focus on progressive throttle squeeze. Laps 5-6: Unwind steering to track-out edge.';
+      quoteStr = '"The biggest gain in lap time comes from corner exit speed." — Going Faster! Ch. 1';
     } else {
-      rightText = 'Your line is consistent. You hit the same apex lap after lap.';
-      wrongText = `You're braking ${Math.abs(targBrakeM - baseBrakeM)} meters too early. Your trail-brake overlap is only ${targOverlap}%.`;
-      whyText = 'The most common mistake that drivers make when they turn their attention to getting the last bit of lap time available at corner entries is to drive closer to the corner before braking - going deeper. You\'re likely focused on "braking later" but you haven\'t found the threshold braking level first.';
-      fixText = 'Find threshold braking. Move the brake point closer. Trail the brakes in - keep 15-20% brake pressure past the turn-in point.';
-      drillText = '"The Procedure": Run 3 laps braking HARDER at the same point. Run 3 laps moving the brake point 3 meters closer each lap.';
-      metricText = 'Braking distance should decrease by 5 meters.';
-      quoteStr = '"If you\'re braking at the 300 mark with no problem. Do you move the next spot to the 200? No way. You\'ve got to take small steps to find out where that limit is." — Danny Sullivan, Chapter 1';
+      rightText = 'Your line is consistent. You hit the same apex marker lap after lap.';
+      wrongText = `Braking onset starts ${Math.abs(targBrakeM - baseBrakeM)}m early. Trail-brake overlap into apex is only ${targOverlap}%.`;
+      whyText = 'Overslowing between turn-in and apex sacrifices speed before the corner is even made. The car can decelerate and turn simultaneously.';
+      handsText = 'HANDS: Turn steering wheel once smoothly at Turn-In. Do not jerk or pinch the steering wheel past the apex.';
+      feetText = 'RIGHT FOOT: Squeeze firmly to threshold (Block 2) -> bleed off 20-30% as you turn in (Block 3) -> transition smoothly to power.';
+      eyesText = 'EYES: Focus on the 100m brake board, then shift vision immediately down to the apex curb seam.';
+      drillText = '"The Procedure": 3 laps squeezing brakes harder; 3 laps moving brake point 1 meter (3 feet) closer.';
+      quoteStr = '"Take small steps to find the braking limit. Never jump 50 feet deeper all at once." — Danny Sullivan, Ch. 1';
     }
 
-    let cy = y - 14;
-    page.drawText('WHAT YOU\'RE DOING RIGHT [SUCCESS]', { x: this.margin + 14, y: cy, size: 7.5, font: fonts.bold, color: this.colors.success });
-    page.drawText(rightText, { x: this.margin + 14, y: cy - 10, size: 7.5, font: fonts.regular, color: this.colors.textPrimary });
+    let cy = y - 13;
+    page.drawText('WHAT YOU\'RE DOING RIGHT [SUCCESS]', { x: this.margin + 14, y: cy, size: 7, font: fonts.bold, color: this.colors.success });
+    page.drawText(rightText, { x: this.margin + 14, y: cy - 9, size: 7, font: fonts.regular, color: this.colors.textPrimary });
 
-    cy -= 23;
-    page.drawText('WHAT YOU\'RE DOING WRONG [ALERT]', { x: this.margin + 14, y: cy, size: 7.5, font: fonts.bold, color: this.colors.f1Red });
-    page.drawText(wrongText, { x: this.margin + 14, y: cy - 10, size: 7.5, font: fonts.regular, color: this.colors.textPrimary });
+    cy -= 21;
+    page.drawText('DIAGNOSTIC SHORTFALL & PHYSICS CAUSE', { x: this.margin + 14, y: cy, size: 7, font: fonts.bold, color: this.colors.f1Red });
+    page.drawText(`${wrongText} ${whyText}`, { x: this.margin + 14, y: cy - 9, size: 6.5, font: fonts.regular, color: this.colors.textSecondary });
 
-    cy -= 23;
-    page.drawText('WHY THIS HAPPENS (PHYSICS)', { x: this.margin + 14, y: cy, size: 7.5, font: fonts.bold, color: this.colors.textSecondary });
-    this.drawWrappedText(page, whyText, { x: this.margin + 14, y: cy - 10, maxWidth: contentW - 24, font: fonts.regular, fontSize: 7.5, color: this.colors.textSecondary, maxLines: 2, lineHeight: 9 });
+    cy -= 22;
+    page.drawText('PHYSICAL CONTROLS IN-CAR ACTION (HANDS, FEET, EYES)', { x: this.margin + 14, y: cy, size: 7, font: fonts.bold, color: this.colors.cyan });
+    cy -= 10;
+    page.drawText(handsText, { x: this.margin + 14, y: cy, size: 6.5, font: fonts.regular, color: this.colors.textPrimary });
+    cy -= 11;
+    page.drawText(feetText, { x: this.margin + 14, y: cy, size: 6.5, font: fonts.regular, color: this.colors.textPrimary });
+    cy -= 11;
+    page.drawText(eyesText, { x: this.margin + 14, y: cy, size: 6.5, font: fonts.regular, color: this.colors.textPrimary });
 
-    cy -= 23;
-    page.drawText('HOW TO FIX IT (TECHNIQUE)', { x: this.margin + 14, y: cy, size: 7.5, font: fonts.bold, color: this.colors.textSecondary });
-    page.drawText(fixText, { x: this.margin + 14, y: cy - 10, size: 7.5, font: fonts.regular, color: this.colors.textPrimary });
-
-    cy -= 23;
-    page.drawText('PRACTICE DRILL & SUCCESS METRIC', { x: this.margin + 14, y: cy, size: 7.5, font: fonts.bold, color: this.colors.gold });
-    page.drawText(`Drill: ${drillText} | Metric: ${metricText}`, { x: this.margin + 14, y: cy - 10, size: 7.5, font: fonts.monoBold, color: this.colors.gold });
+    cy -= 18;
+    page.drawText('NEXT STINT PRACTICE DRILL', { x: this.margin + 14, y: cy, size: 7, font: fonts.bold, color: this.colors.gold });
+    page.drawText(drillText, { x: this.margin + 14, y: cy - 9, size: 7, font: fonts.monoBold, color: this.colors.gold });
 
     // Floating quote inside graph
     page.drawText(quoteStr, {
       x: this.margin + 15,
       y: y + graphH - 12,
-      size: 7.5,
+      size: 7,
       font: fonts.italic,
       color: this.colors.textMuted
     });
   }
+
 
   // --- Page 7: Skill Analysis ---
   drawSkillAnalysisPage(page, y, report, fonts) {
@@ -1912,33 +1934,72 @@ export class ApexPdfBuilder {
   drawPracticePlanPage(page, y, report, metadata, fonts) {
     const contentW = this.width - (this.margin * 2);
 
-    // 1. Four Practice Sessions
-    const drills = [
-      { title: 'SESSION 1: THROTTLE CONTROL (Exit Speed Focus)', dur: '20 mins (10-12 laps)', focus: 'Turn 9 exit speed only', task: 'Laps 3-4: Focus on throttle squeeze (dimmer). Laps 5-6: Move throttle application earlier. Metric: Exit speed +3 km/h.' },
-      { title: 'SESSION 2: BRAKING (The Procedure)', dur: '20 mins (10-12 laps)', focus: 'Threshold & Trail-braking', task: 'Laps 3-4: Brake harder to find threshold. Laps 5-6: Move brake point 3 meters closer. Metric: Braking distance -5m.' },
-      { title: 'SESSION 3: LINE CONSISTENCY', dur: '15 mins (8-10 laps)', focus: 'Apex clipping', task: 'Laps 3-4: Focus strictly on visual apex marks. Laps 5-6: Focus on track-out curb. Metric: Apex variation < 0.3m.' },
-      { title: 'SESSION 4: FULL STINT (Practice Race)', dur: '30 mins (15-18 laps)', focus: 'Race pace simulation', task: 'Laps 3-8: Push to limit. Laps 9-14: Maintain pace consistency. Metric: Standard deviation < 0.8 seconds.' }
-    ];
-
-    const boxH = 45;
-    drills.forEach((drill, idx) => {
-      const cy = y - idx * (boxH + 8) - boxH;
-      page.drawRectangle({
-        x: this.margin,
-        y: cy,
-        width: contentW,
-        height: boxH,
-        color: this.colors.panel,
-        borderColor: this.colors.border,
-        borderWidth: 1
-      });
-
-      page.drawText(`${drill.title} — ${drill.dur}`, { x: this.margin + 12, y: cy + boxH - 12, size: 8, font: fonts.bold, color: this.colors.f1Red });
-      page.drawText(`Focus: ${drill.focus} | Drill: ${drill.task}`, { x: this.margin + 12, y: cy + boxH - 24, size: 7.5, font: fonts.regular, color: this.colors.textSecondary });
-      page.drawText(`Target Metric: ${drill.task.split('Metric: ')[1] || ''}`, { x: this.margin + 12, y: cy + 10, size: 7.5, font: fonts.monoBold, color: this.colors.gold });
+    // 1. NEXT STINT 5-LAP NOVICE DRILL CARD (Going Faster Ch 7 & 8)
+    const drillCardH = 160;
+    page.drawRectangle({
+      x: this.margin,
+      y: y - drillCardH,
+      width: contentW,
+      height: drillCardH,
+      color: this.colors.panel,
+      borderColor: this.colors.border,
+      borderWidth: 1
     });
 
-    y -= (drills.length * (boxH + 8) + 12);
+    page.drawRectangle({
+      x: this.margin,
+      y: y - drillCardH,
+      width: 4,
+      height: drillCardH,
+      color: this.colors.gold
+    });
+
+    page.drawText('NEXT STINT 5-LAP NOVICE DRILL CARD // PROGRESSIVE PROGRAM', {
+      x: this.margin + 14,
+      y: y - 14,
+      size: 8.5,
+      font: fonts.bold,
+      color: this.colors.gold
+    });
+
+    const stepDrills = [
+      {
+        step: 'LAPS 1–2: THE LINE & REPEATABLE LANDMARKS',
+        task: 'Drive at 80% pace. Focus entirely on clipping inside apex curbs within 6 inches. Establish rigid reference markers (boards, seams, shadows). Do not chase lap times.',
+        metric: 'Apex Variation < 0.2m',
+        color: this.colors.textPrimary
+      },
+      {
+        step: 'LAPS 3–4: EXIT SPEED & PROGRESSIVE UNWIND',
+        task: 'Focus on Type I launch corners. Squeeze throttle on like a dimmer switch as you unwind steering lock. Eliminate tire scrub and power understeer. Peek at tach at exit.',
+        metric: 'Exit Speed +3 to 5 km/h',
+        color: this.colors.success
+      },
+      {
+        step: 'LAPS 5+: BRAKING DEPTH (3-FOOT NIBBLES)',
+        task: '"The Procedure": Squeeze firmly to threshold. Once consistent, move braking point closer in 1-meter (3-foot) increments. If car overslows or misses apex, back up 3 feet.',
+        metric: 'Braking Precision ±1.5m',
+        color: this.colors.f1Red
+      }
+    ];
+
+    let dy = y - 30;
+    stepDrills.forEach((d, idx) => {
+      page.drawText(d.step, { x: this.margin + 14, y: dy, size: 7.5, font: fonts.bold, color: d.color });
+      page.drawText(`Target: ${d.metric}`, { x: this.width - this.margin - 140, y: dy, size: 7, font: fonts.monoBold, color: d.color });
+      dy = this.drawWrappedText(page, d.task, {
+        x: this.margin + 14,
+        y: dy - 11,
+        maxWidth: contentW - 28,
+        font: fonts.regular,
+        fontSize: 7,
+        color: this.colors.textSecondary,
+        maxLines: 2,
+        lineHeight: 9
+      }) - 8;
+    });
+
+    y -= (drillCardH + 12);
 
     // 2. Progress Tracker Table
     page.drawText('PROGRESS TRACKER SUMMARY', { x: this.margin, y: y, size: 9.5, font: fonts.bold, color: this.colors.textPrimary });
@@ -2019,6 +2080,7 @@ export class ApexPdfBuilder {
       page.drawText(chk, { x: this.margin + 24, y: rowY - 1, size: 7, font: fonts.regular, color: this.colors.textSecondary });
     });
   }
+
 
   // --- Dynamic Flagged Corners Selection ---
   selectFlaggedCorners(report) {
