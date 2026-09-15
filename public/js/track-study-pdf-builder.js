@@ -474,11 +474,6 @@ export class TrackStudyPdfBuilder {
         font: fontBold,
         color: cDark
       });
-        y: tableY - 14,
-        size: 8,
-        font: fontBold,
-        color: cDark
-      });
       page2.drawText(`Gear: G${t.targets?.targetGear || 3}`, {
         x: this.margin + 90,
         y: tableY - 24,

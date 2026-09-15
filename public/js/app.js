@@ -831,4 +831,3 @@ if (document.readyState === 'loading') {
 } else {
   bootstrapApexApp();
 }
-}
