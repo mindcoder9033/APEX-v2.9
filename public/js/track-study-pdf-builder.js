@@ -336,7 +336,7 @@ export class TrackStudyPdfBuilder {
       '• Order of Effort: Line placement first, corner exit speed second, threshold braking last.',
       '• Early Apex Prevention: If you must steer more past apex, you turned in too early. Correct by turning later next lap.',
       '• Steering Unwind: The earlier you unwind steering lock, the less tire scrub drag resists your straight acceleration.',
-      '• "The Procedure" for Braking: Establish threshold brake pressure first, then move the brake point in 3-foot increments.'
+      '• "The Procedure" for Braking: Establish threshold brake pressure first, then move the brake point in 1-meter increments.'
     ];
 
     stintRules.forEach((rule, idx) => {
@@ -465,9 +465,15 @@ export class TrackStudyPdfBuilder {
         color: cGray
       });
 
-      // Speed / Gear
-      page2.drawText(`${t.targets?.minApexSpeedMph || 0} mph`, {
+      // Speed / Gear (Metric: km/h)
+      const speedVal = t.targets?.minApexSpeedKmh || (t.targets?.minApexSpeedMph ? Math.round(t.targets.minApexSpeedMph * 1.60934) : 100);
+      page2.drawText(`${speedVal} km/h`, {
         x: this.margin + 90,
+        y: tableY - 14,
+        size: 8,
+        font: fontBold,
+        color: cDark
+      });
         y: tableY - 14,
         size: 8,
         font: fontBold,

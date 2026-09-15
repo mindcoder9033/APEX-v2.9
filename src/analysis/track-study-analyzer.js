@@ -3,6 +3,8 @@
  * Computes 4-Phase Circuit Study parameters based on the methodology in
  * "Going Faster! Mastering the Art of Race Driving" by Carl Lopez & Skip Barber Racing School.
  * 
+ * Uses pure Motorsport Metric units: km/h, meters/km, °C, bar, and kg.
+ * 
  * Classifies corners:
  * - Type I: Leads onto a major straight (Exit Speed Priority)
  * - Type II: End of a long straight (Entry & Trail-Braking Priority)
@@ -32,7 +34,7 @@ export class TrackStudyAnalyzer {
     const typeIIICount = enrichedTurns.filter(t => t.cornerType === 'Type III').length;
 
     const totalTrackLengthM = trackProfile.trackLengthMeters || 
-      (trackProfile.trackLengthKm ? trackProfile.trackLengthKm * 1000 : 4000);
+      (trackProfile.trackLengthKm ? Math.round(trackProfile.trackLengthKm * 1000) : 4000);
     
     // Calculate straight vs corner ratio (~70-80% acceleration/straights as per Going Faster)
     const accelerationRatio = 74; // percentage
@@ -43,6 +45,7 @@ export class TrackStudyAnalyzer {
       trackName: trackProfile.trackName,
       layoutName: trackProfile.layoutName || 'Grand Prix Circuit',
       trackLengthMeters: totalTrackLengthM,
+      trackLengthKm: (totalTrackLengthM / 1000).toFixed(3),
       bestLapTime: trackProfile.bestLapTime || 0,
       macroSummary: {
         totalCorners: enrichedTurns.length,
@@ -63,7 +66,7 @@ export class TrackStudyAnalyzer {
         },
         phase2: {
           title: 'Phase 2: Micro-Scouting & Surface Inspection',
-          concept: 'Evaluate road camber, elevation compression, and pavement transitions. Camber adds up to 10% cornering grip.',
+          concept: 'Evaluate road camber, elevation compression, and pavement transitions. Positive camber adds up to 10% cornering grip.',
           focus: 'Watch for off-camber falloffs, crests unweighting tires, and abrasive concrete vs polished asphalt.'
         },
         phase3: {
@@ -73,8 +76,8 @@ export class TrackStudyAnalyzer {
         },
         phase4: {
           title: 'Phase 4: Telemetry Target & Progressive Ladder',
-          concept: 'Build speed progressively: 1) Line precision -> 2) Exit speed & unwinding -> 3) Braking threshold nibbles.',
-          focus: 'Never jump straight to late braking. Target minimum apex speed and smooth throttle pickup first.'
+          concept: 'Build speed progressively: 1) Line precision -> 2) Exit speed & unwinding -> 3) Braking threshold nibbles in 1-meter steps.',
+          focus: 'Never jump straight to late braking. Target minimum apex speed (km/h) and smooth throttle pickup first.'
         }
       }
     };
@@ -92,7 +95,7 @@ export class TrackStudyAnalyzer {
     return turns.map((turn, index) => {
       const turnNum = turn.turnNumber || (index + 1);
 
-      // Estimate straight lengths before and after
+      // Estimate straight lengths before and after in meters
       const straightAfterM = turn.followingStraightMeters || 
         (turn.straightAfterLength || (turn.isKeyStraight ? 400 : 150));
       const straightBeforeM = turn.precedingStraightMeters || 
@@ -122,17 +125,29 @@ export class TrackStudyAnalyzer {
         typeRationale = 'Maintain smooth arc radius and minimize steering tire scrub.';
       }
 
-      // Speeds & Telemetry Targets
-      const minSpeedMph = turn.targetMinSpeedMph || turn.minSpeedMph || 
-        (turn.suggestedSpeedMph ? Math.round(turn.suggestedSpeedMph * 0.9) : 62);
-      const approachSpeedMph = turn.approachSpeedMph || Math.round(minSpeedMph * 1.5);
-      const targetGear = turn.gear || turn.suggestedGear || (minSpeedMph < 50 ? 2 : (minSpeedMph < 80 ? 3 : 4));
+      // Speeds & Telemetry Targets in pure Metric (km/h)
+      // If speed was in mph or raw m/s, convert to km/h
+      let minSpeedKmh = turn.targetMinSpeedKmh || turn.minSpeedKmh;
+      if (!minSpeedKmh) {
+        if (turn.minSpeedMph || turn.suggestedSpeedMph) {
+          minSpeedKmh = Math.round((turn.minSpeedMph || turn.suggestedSpeedMph) * 1.60934);
+        } else if (turn.suggestedSpeedKmh) {
+          minSpeedKmh = Math.round(turn.suggestedSpeedKmh * 0.9);
+        } else if (turn.apexSpeedMps) {
+          minSpeedKmh = Math.round(turn.apexSpeedMps * 3.6);
+        } else {
+          minSpeedKmh = 100;
+        }
+      }
+
+      const approachSpeedKmh = turn.approachSpeedKmh || Math.round(minSpeedKmh * 1.5);
+      const targetGear = turn.gear || turn.suggestedGear || (minSpeedKmh < 80 ? 2 : (minSpeedKmh < 130 ? 3 : 4));
 
       // Micro surface & camber cues
       const camber = turn.camber || (turn.isOffCamber ? 'Negative (-2°)' : (turn.isBanked ? 'Positive (+3°)' : 'Neutral / Flat'));
       const surfaceType = turn.surfaceType || (turnNum % 3 === 0 ? 'Concrete / Asphalt Seam' : 'Standard Asphalt');
       const elevationProfile = turn.elevationProfile || (turnNum % 4 === 0 ? 'Compression Dip' : (turnNum % 5 === 0 ? 'Blind Crest' : 'Level'));
-      const curbSeverity = turn.curbSeverity || (minSpeedMph < 55 ? 'High Serrated (Avoid Hitting)' : 'Flat Paint / Low Usable');
+      const curbSeverity = turn.curbSeverity || (minSpeedKmh < 90 ? 'High Serrated (Avoid Hitting)' : 'Flat Paint / Low Usable');
 
       return {
         turnIndex: index,
@@ -145,14 +160,14 @@ export class TrackStudyAnalyzer {
         isHeavyBraking: straightBeforeM >= 300 || turn.isHeavyBraking,
         followingStraightMeters: Math.round(straightAfterM),
         precedingStraightMeters: Math.round(straightBeforeM),
-        // Telemetry Targets
+        // Telemetry Targets (Metric)
         targets: {
-          approachSpeedMph,
-          minApexSpeedMph: minSpeedMph,
+          approachSpeedKmh,
+          minApexSpeedKmh: minSpeedKmh,
           targetGear,
           suggestedBrakePressurePct: cornerType === 'Type II' || straightBeforeM > 250 ? 95 : 70,
           trailBrakeDepthPct: cornerType === 'Type III' ? 65 : (cornerType === 'Type II' ? 45 : 25),
-          throttlePickUpPoint: cornerType === 'Type I' ? 'At or 10ft before Apex' : 'Past Apex during Unwind'
+          throttlePickUpPoint: cornerType === 'Type I' ? 'At or 3m before Apex' : 'Past Apex during Unwind'
         },
         // Micro & Physical Inspection
         microFeatures: {
@@ -191,7 +206,7 @@ export class TrackStudyAnalyzer {
       defaultTurns.push({
         turnNumber: i,
         name: isHairpin ? `Turn ${i} (Hairpin)` : (isFastSweeper ? `Turn ${i} (Sweeper)` : `Turn ${i}`),
-        suggestedSpeedMph: isHairpin ? 38 : (isFastSweeper ? 92 : 65),
+        suggestedSpeedKmh: isHairpin ? 60 : (isFastSweeper ? 150 : 105),
         suggestedGear: isHairpin ? 2 : (isFastSweeper ? 4 : 3),
         followingStraightMeters: isHairpin ? 420 : (isFastSweeper ? 180 : 120),
         precedingStraightMeters: isHairpin ? 350 : (isFastSweeper ? 200 : 100),

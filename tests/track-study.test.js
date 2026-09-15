@@ -60,7 +60,7 @@ test('TrackStudyAnalyzer correctly processes track profile and classifies corner
 
   // Turn 3 (Hairpin) has 360m braking before and 420m straight after -> Type I
   assert.equal(study.turns[2].cornerType, 'Type I');
-  assert.equal(study.turns[2].targets.minApexSpeedMph, 37); // computed from suggested speed
+  assert.equal(study.turns[2].targets.minApexSpeedKmh, 66); // 41 mph * 1.60934 = ~66 km/h
 
   // Macro Summary
   assert.equal(study.macroSummary.totalCorners, 3);

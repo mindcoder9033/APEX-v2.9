@@ -375,11 +375,11 @@ export class TrackStudyView {
           <h4 class="study-card-title">Telemetry Targets</h4>
           <div class="metric-row">
             <span class="metric-label">Target Min Apex Speed:</span>
-            <span class="metric-val" style="color: #00ff66; font-size: 16px;">${targets.minApexSpeedMph || 60} mph</span>
+            <span class="metric-val" style="color: #00ff66; font-size: 16px;">${targets.minApexSpeedKmh || 100} km/h</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Approach Entry Speed:</span>
-            <span class="metric-val">${targets.approachSpeedMph || 95} mph</span>
+            <span class="metric-val">${targets.approachSpeedKmh || 150} km/h</span>
           </div>
           <div class="metric-row">
             <span class="metric-label">Suggested Corner Gear:</span>
