@@ -55,7 +55,7 @@ export class CareerView {
             </div>
             <div class="stat-pill chamfer-all-corners" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 10px 18px; border-radius: 6px; text-align: center;">
               <div style="font-size: 10px; color: #718096; font-family: var(--font-mono, monospace);">MASTERY INDEX</div>
-              <div style="font-size: 18px; font-weight: 800; color: #00CC66;">${state.stats.highestMastery || 82}%</div>
+              <div style="font-size: 18px; font-weight: 800; color: #00CC66;">${state.stats.highestMastery ?? 0}%</div>
             </div>
           </div>
         </div>
@@ -76,12 +76,12 @@ export class CareerView {
 
             <!-- Skill Metrics List -->
             <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
-              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Line & Arc Radius</span><span style="font-weight: 700; color: #00CC66;">${state.stats.radar?.line || 82}%</span></div>
-              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Type I Exit Launch</span><span style="font-weight: 700; color: #0099FF;">${state.stats.radar?.exitSpeed || 78}%</span></div>
-              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Trail-Braking Transition</span><span style="font-weight: 700; color: #E5A910;">${state.stats.radar?.trailBraking || 72}%</span></div>
-              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Chassis Neutrality</span><span style="font-weight: 700; color: #9966FF;">${state.stats.radar?.balance || 85}%</span></div>
-              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Wet Weather Adaptation</span><span style="font-weight: 700; color: #00CC66;">${state.stats.radar?.wetControl || 65}%</span></div>
-              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Lap Consistency</span><span style="font-weight: 700; color: #E10600;">${state.stats.radar?.consistency || 80}%</span></div>
+              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Line & Arc Radius</span><span style="font-weight: 700; color: #00CC66;">${state.stats.radar?.line ?? 0}%</span></div>
+              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Type I Exit Launch</span><span style="font-weight: 700; color: #0099FF;">${state.stats.radar?.exitSpeed ?? 0}%</span></div>
+              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Trail-Braking Transition</span><span style="font-weight: 700; color: #E5A910;">${state.stats.radar?.trailBraking ?? 0}%</span></div>
+              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Chassis Neutrality</span><span style="font-weight: 700; color: #9966FF;">${state.stats.radar?.balance ?? 0}%</span></div>
+              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Wet Weather Adaptation</span><span style="font-weight: 700; color: #00CC66;">${state.stats.radar?.wetControl ?? 0}%</span></div>
+              <div style="display: flex; justify-content: space-between;"><span style="color: #8a99ad;">Lap Consistency</span><span style="font-weight: 700; color: #E10600;">${state.stats.radar?.consistency ?? 0}%</span></div>
             </div>
           </div>
 
@@ -153,12 +153,12 @@ export class CareerView {
     ctx.clearRect(0, 0, W, H);
 
     const axes = [
-      { name: 'Line', val: radarData.line || 75 },
-      { name: 'Exit Speed', val: radarData.exitSpeed || 70 },
-      { name: 'Trail Brake', val: radarData.trailBraking || 65 },
-      { name: 'Balance', val: radarData.balance || 75 },
-      { name: 'Wet Grip', val: radarData.wetControl || 60 },
-      { name: 'Consistency', val: radarData.consistency || 70 }
+      { name: 'Line', val: radarData.line ?? 0 },
+      { name: 'Exit Speed', val: radarData.exitSpeed ?? 0 },
+      { name: 'Trail Brake', val: radarData.trailBraking ?? 0 },
+      { name: 'Balance', val: radarData.balance ?? 0 },
+      { name: 'Wet Grip', val: radarData.wetControl ?? 0 },
+      { name: 'Consistency', val: radarData.consistency ?? 0 }
     ];
 
     const numAxes = axes.length;
@@ -202,36 +202,46 @@ export class CareerView {
       ctx.fillText(axes[i].name, labelX, labelY);
     }
 
-    // Draw Radar polygon
-    ctx.beginPath();
-    ctx.fillStyle = 'rgba(0, 204, 102, 0.25)';
-    ctx.strokeStyle = '#00CC66';
-    ctx.lineWidth = 2;
-
-    for (let i = 0; i < numAxes; i++) {
-      const angle = i * angleStep - Math.PI / 2;
-      const normalizedVal = Math.min(1.0, (axes[i].val || 70) / 100);
-      const curR = radius * normalizedVal;
-      const x = cx + Math.cos(angle) * curR;
-      const y = cy + Math.sin(angle) * curR;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // Draw vertex points
-    ctx.fillStyle = '#fff';
-    for (let i = 0; i < numAxes; i++) {
-      const angle = i * angleStep - Math.PI / 2;
-      const normalizedVal = Math.min(1.0, (axes[i].val || 70) / 100);
-      const curR = radius * normalizedVal;
-      const x = cx + Math.cos(angle) * curR;
-      const y = cy + Math.sin(angle) * curR;
+    // Draw Radar polygon if data has been recorded
+    const hasData = axes.some(a => (a.val || 0) > 0);
+    if (hasData) {
       ctx.beginPath();
-      ctx.arc(x, y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 204, 102, 0.25)';
+      ctx.strokeStyle = '#00CC66';
+      ctx.lineWidth = 2;
+
+      for (let i = 0; i < numAxes; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const normalizedVal = Math.max(0.05, Math.min(1.0, (axes[i].val || 0) / 100));
+        const curR = radius * normalizedVal;
+        const x = cx + Math.cos(angle) * curR;
+        const y = cy + Math.sin(angle) * curR;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
       ctx.fill();
+      ctx.stroke();
+
+      // Draw vertex points
+      ctx.fillStyle = '#fff';
+      for (let i = 0; i < numAxes; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        const normalizedVal = Math.max(0.05, Math.min(1.0, (axes[i].val || 0) / 100));
+        const curR = radius * normalizedVal;
+        const x = cx + Math.cos(angle) * curR;
+        const y = cy + Math.sin(angle) * curR;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else {
+      // Draw subtle empty state label
+      ctx.font = '10px Inter, sans-serif';
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('NO TELEMETRY LOGGED', cx, cy);
     }
   }
 }

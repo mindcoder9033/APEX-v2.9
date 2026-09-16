@@ -13,30 +13,75 @@ export class CareerStore {
   }
 
   _loadState() {
+    let state = null;
     try {
       const raw = localStorage.getItem(this.storageKey);
-      if (raw) return JSON.parse(raw);
+      if (raw) state = JSON.parse(raw);
     } catch (e) {
       console.warn('[CareerStore] Could not read localStorage:', e);
     }
-    return {
+
+    if (!state) {
+      state = {
+        unlockedTier: 1,
+        completedMilestones: [],
+        stats: {
+          totalStints: 0,
+          totalLaps: 0,
+          weatherConditionsDriven: [],
+          highestMastery: 0,
+          radar: {
+            line: 0,
+            exitSpeed: 0,
+            trailBraking: 0,
+            balance: 0,
+            wetControl: 0,
+            consistency: 0
+          }
+        }
+      };
+    } else {
+      // Clean / sanitize legacy mock data if no stints have actually been logged
+      if (!state.stats || state.stats.totalStints === 0) {
+        state.stats = {
+          totalStints: 0,
+          totalLaps: 0,
+          weatherConditionsDriven: [],
+          highestMastery: 0,
+          radar: {
+            line: 0,
+            exitSpeed: 0,
+            trailBraking: 0,
+            balance: 0,
+            wetControl: 0,
+            consistency: 0
+          }
+        };
+      }
+    }
+    return state;
+  }
+
+  reset() {
+    this.state = {
       unlockedTier: 1,
       completedMilestones: [],
       stats: {
         totalStints: 0,
         totalLaps: 0,
         weatherConditionsDriven: [],
-        highestMastery: 82,
+        highestMastery: 0,
         radar: {
-          line: 82,
-          exitSpeed: 78,
-          trailBraking: 72,
-          balance: 85,
-          wetControl: 65,
-          consistency: 80
+          line: 0,
+          exitSpeed: 0,
+          trailBraking: 0,
+          balance: 0,
+          wetControl: 0,
+          consistency: 0
         }
       }
     };
+    this.saveState();
   }
 
   saveState() {

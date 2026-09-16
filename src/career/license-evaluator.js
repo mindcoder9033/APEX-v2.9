@@ -19,23 +19,23 @@ export class LicenseEvaluator {
       stats: {
         totalStints: 0,
         totalLaps: 0,
-        weatherConditionsDriven: new Set(),
+        weatherConditionsDriven: [],
         highestMastery: 0,
         radar: {
-          line: 75,
-          exitSpeed: 70,
-          trailBraking: 65,
-          balance: 75,
-          wetControl: 60,
-          consistency: 70
+          line: 0,
+          exitSpeed: 0,
+          trailBraking: 0,
+          balance: 0,
+          wetControl: 0,
+          consistency: 0
         }
       }
     };
 
-    if (!stint || !stint.analysis) return state;
+    if (!stint || !stint.analysis) return { state, newlyUnlocked: [] };
 
     state.stats.totalStints = (state.stats.totalStints || 0) + 1;
-    state.stats.totalLaps = (state.stats.totalLaps || 0) + (stint.laps?.length || 1);
+    state.stats.totalLaps = (state.stats.totalLaps || 0) + (stint.laps?.length || stint.lapCount || 1);
 
     if (stint.weatherPreset) {
       if (!Array.isArray(state.stats.weatherConditionsDriven)) {
@@ -46,27 +46,29 @@ export class LicenseEvaluator {
       }
     }
 
-    const fcUtil = stint.analysis.frictionCircle?.utilization?.highUtilization || 70;
-    const consistency = stint.analysis.consistencyScore || 85;
-    const trailBrakeScore = stint.analysis.trailBraking?.score || stint.analysis.trailBrakingScore || 75;
-    const stability = stint.analysis.carBalance?.stabilityScore || 85;
-    const mastery = stint.analysis.masteryIndex || stint.analysis.goingFasterMasteryIndex || 80;
-    const peakLatG = stint.analysis.carBalance?.lateralGPeak || 1.20;
+    const fcUtil = stint.analysis.frictionCircle?.utilization?.highUtilization ?? 0;
+    const consistency = stint.analysis.consistencyScore ?? 0;
+    const trailBrakeScore = stint.analysis.trailBraking?.score ?? stint.analysis.trailBrakingScore ?? 0;
+    const stability = stint.analysis.carBalance?.stabilityScore ?? 0;
+    const mastery = stint.analysis.masteryIndex ?? stint.analysis.goingFasterMasteryIndex ?? 0;
+    const peakLatG = stint.analysis.carBalance?.lateralGPeak ?? 0;
 
     if (mastery > (state.stats.highestMastery || 0)) {
       state.stats.highestMastery = mastery;
     }
 
-    // Update Skill Radar
+    const hasExistingRadar = state.stats.radar && Object.values(state.stats.radar).some(v => v > 0);
+
+    // Update Skill Radar: If first stint, directly initialize from telemetry, else moving average (70% previous, 30% new)
     state.stats.radar = {
-      line: Math.min(99, Math.round((state.stats.radar?.line || 70) * 0.7 + (fcUtil * 0.3))),
-      exitSpeed: Math.min(99, Math.round((state.stats.radar?.exitSpeed || 70) * 0.7 + (mastery * 0.3))),
-      trailBraking: Math.min(99, Math.round((state.stats.radar?.trailBraking || 65) * 0.7 + (trailBrakeScore * 0.3))),
-      balance: Math.min(99, Math.round((state.stats.radar?.balance || 70) * 0.7 + (stability * 0.3))),
+      line: !hasExistingRadar ? Math.min(99, Math.round(fcUtil)) : Math.min(99, Math.round((state.stats.radar?.line || 0) * 0.7 + (fcUtil * 0.3))),
+      exitSpeed: !hasExistingRadar ? Math.min(99, Math.round(mastery)) : Math.min(99, Math.round((state.stats.radar?.exitSpeed || 0) * 0.7 + (mastery * 0.3))),
+      trailBraking: !hasExistingRadar ? Math.min(99, Math.round(trailBrakeScore)) : Math.min(99, Math.round((state.stats.radar?.trailBraking || 0) * 0.7 + (trailBrakeScore * 0.3))),
+      balance: !hasExistingRadar ? Math.min(99, Math.round(stability)) : Math.min(99, Math.round((state.stats.radar?.balance || 0) * 0.7 + (stability * 0.3))),
       wetControl: stint.weatherPreset?.toLowerCase().includes('rain')
-        ? Math.min(99, Math.round((state.stats.radar?.wetControl || 60) * 0.6 + (consistency * 0.4)))
-        : (state.stats.radar?.wetControl || 60),
-      consistency: Math.min(99, Math.round((state.stats.radar?.consistency || 70) * 0.7 + (consistency * 0.3)))
+        ? (!hasExistingRadar ? Math.min(99, Math.round(consistency)) : Math.min(99, Math.round((state.stats.radar?.wetControl || 0) * 0.6 + (consistency * 0.4))))
+        : (state.stats.radar?.wetControl || 0),
+      consistency: !hasExistingRadar ? Math.min(99, Math.round(consistency)) : Math.min(99, Math.round((state.stats.radar?.consistency || 0) * 0.7 + (consistency * 0.3)))
     };
 
     // Check Milestones
