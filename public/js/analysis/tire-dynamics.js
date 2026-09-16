@@ -1,11 +1,13 @@
 /**
- * APEX Tire Dynamics & Thermal State Management Engine (Browser Client)
+ * APEX Tire Dynamics & Thermal State Management Engine
+ * Ingests 4-corner tire telemetry (FL, FR, RL, RR) to assess temperature operating windows,
+ * longitudinal slip ratios, lateral grip saturation, wheelspin, and axle thermal balance.
  */
 
 export const TIRE_THERMAL_STATUS = {
-  COLD: 'COLD',
-  OPTIMAL: 'OPTIMAL',
-  OVERHEATED: 'OVERHEATED'
+  COLD: 'COLD',             // < 200°F
+  OPTIMAL: 'OPTIMAL',       // 200°F - 240°F
+  OVERHEATED: 'OVERHEATED'  // > 240°F
 };
 
 export const THERMAL_THRESHOLDS = {
@@ -19,6 +21,11 @@ export class TireDynamicsEngine {
     this.overheatThreshold = options.overheatThreshold || THERMAL_THRESHOLDS.OVERHEAT_MIN;
   }
 
+  /**
+   * Classifies a temperature value into thermal operating state
+   * @param {number} tempF Temperature in Fahrenheit
+   * @returns {string} One of TIRE_THERMAL_STATUS
+   */
   classifyThermalStatus(tempF) {
     if (!tempF || tempF < this.coldThreshold) {
       return TIRE_THERMAL_STATUS.COLD;
@@ -29,6 +36,11 @@ export class TireDynamicsEngine {
     return TIRE_THERMAL_STATUS.OPTIMAL;
   }
 
+  /**
+   * Performs full 4-corner tire dynamics and thermal analysis across stint samples
+   * @param {Array<Object>} samples 
+   * @returns {Object} Comprehensive 4-tire analysis summary
+   */
   analyzeTires(samples) {
     const corners = ['frontLeft', 'frontRight', 'rearLeft', 'rearRight'];
     const summary = {
@@ -42,7 +54,7 @@ export class TireDynamicsEngine {
         frontAvgTempF: 0,
         rearAvgTempF: 0,
         tempDeltaFrontVsRearF: 0,
-        thermalBias: 'NEUTRAL',
+        thermalBias: 'NEUTRAL', // 'FRONT_LIMITED', 'REAR_LIMITED', 'NEUTRAL'
         peakAxleSlip: { front: 0, rear: 0 }
       },
       findings: []
@@ -52,6 +64,9 @@ export class TireDynamicsEngine {
       return summary;
     }
 
+    const n = samples.length;
+
+    // Accumulate metrics
     for (const s of samples) {
       const tires = s.tires || {};
       const temps = tires.tempF || {};
@@ -82,6 +97,7 @@ export class TireDynamicsEngine {
       }
     }
 
+    // Compute averages and status for each corner
     let frontTempSum = 0;
     let frontTempCount = 0;
     let rearTempSum = 0;
@@ -141,6 +157,7 @@ export class TireDynamicsEngine {
       summary.balance.thermalBias = 'BALANCED';
     }
 
+    // Generate Tire Management Findings
     const overheatedTires = corners.filter(c => summary.tires[c].status === TIRE_THERMAL_STATUS.OVERHEATED);
     const coldTires = corners.filter(c => summary.tires[c].status === TIRE_THERMAL_STATUS.COLD);
     const overheatThresholdC = Math.round((this.overheatThreshold - 32) * (5 / 9));

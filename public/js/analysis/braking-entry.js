@@ -1,5 +1,5 @@
 /**
- * APEX 4-Block Corner Entry & Overslowing Diagnostic Engine (Client-Side)
+ * APEX 4-Block Corner Entry & Overslowing Diagnostic Engine
  * Implements Skip Barber 4-Block Corner Entry decomposition,
  * Apex overslowing time loss calculation, and downshift brake dip analysis.
  * Rooted in "Going Faster!" Ch. 5 (Braking and Entering) & Ch. 8 (Finding Lap Time).
@@ -7,11 +7,18 @@
 
 export class BrakingEntryEngine {
   constructor(options = {}) {
-    this.squeezeTimeMaxSec = options.squeezeTimeMaxSec || 0.35;
-    this.slamThresholdRate = options.slamThresholdRate || 5.0;
-    this.downshiftBrakeDipPct = options.downshiftBrakeDipPct || 0.20;
+    this.squeezeTimeMaxSec = options.squeezeTimeMaxSec || 0.35; // Target squeeze time to threshold
+    this.slamThresholdRate = options.slamThresholdRate || 5.0; // High rate without weight transfer
+    this.downshiftBrakeDipPct = options.downshiftBrakeDipPct || 0.20; // 20% brake drop during blip
   }
 
+  /**
+   * Analyze braking zones across detected corners
+   * @param {Array<Object>} samples - Telemetry samples of the lap/stint
+   * @param {Array<Object>} corners - Array of detected corner objects
+   * @param {Object} [optimalLap] - Optional best lap baseline for overslowing comparison
+   * @returns {Object} Comprehensive 4-block corner entry analysis
+   */
   analyze(samples, corners = [], optimalLap = null) {
     if (!samples || samples.length === 0 || !corners || corners.length === 0) {
       return this._getEmptyResult();
@@ -55,6 +62,7 @@ export class BrakingEntryEngine {
 
     if (cornerSamples.length < 5) return null;
 
+    // Find initial brake application point
     let brakeStartIdx = -1;
     let throttleReleaseIdx = -1;
 
@@ -76,6 +84,7 @@ export class BrakingEntryEngine {
     const tb = cornerSamples[brakeStartIdx].timestampMs || t0;
     const transitionLatencySec = Math.max(0, (tb - t0) / 1000);
 
+    // Peak brake and squeeze rate
     let peakBrake = 0;
     let peakBrakeIdx = brakeStartIdx;
     for (let i = brakeStartIdx; i < cornerSamples.length; i++) {
@@ -90,6 +99,7 @@ export class BrakingEntryEngine {
     const squeezeRate = peakBrake / squeezeDurationSec;
     const isHammerSlam = squeezeDurationSec < 0.08 && peakBrake > 0.8;
 
+    // Block 1: Throttle to Brake Transition
     const block1 = {
       transitionLatencySec: Number(transitionLatencySec.toFixed(3)),
       squeezeDurationSec: Number(squeezeDurationSec.toFixed(3)),
@@ -98,6 +108,7 @@ export class BrakingEntryEngine {
       quality: isHammerSlam ? 'Hammer Slam (Lockup Risk)' : (squeezeDurationSec <= this.squeezeTimeMaxSec ? 'Optimal Squeeze' : 'Lazy Transition')
     };
 
+    // Block 2: Straight-Line Deceleration & Threshold Probing
     let peakDecelG = 0;
     let thresholdSamples = 0;
     for (let i = brakeStartIdx; i < cornerSamples.length; i++) {
@@ -112,7 +123,9 @@ export class BrakingEntryEngine {
       thresholdBrakingUtilized: thresholdSamples > 3
     };
 
+    // Block 3: Trail-Braking / Decelerating while Turning
     let trailSamples = 0;
+    let brakeDropFromPeak = 0;
     for (let i = brakeStartIdx; i < cornerSamples.length; i++) {
       const s = cornerSamples[i];
       if (Math.abs(s.steer || 0) > 0.05 && s.brake > 0.05) {
@@ -129,6 +142,7 @@ export class BrakingEntryEngine {
       utilized: trailOverlapPct >= 15
     };
 
+    // Block 4: Brake to Throttle Transition
     let brakeReleaseIdx = -1;
     let throttleApplyIdx = -1;
 
@@ -155,6 +169,7 @@ export class BrakingEntryEngine {
       isAbruptTransition: pauseDurationSec < 0.03
     };
 
+    // Downshift Brake Dip Detection (Drop in brake pressure during gear change)
     let downshiftDipDetected = false;
     let maxDipPct = 0;
     for (let i = brakeStartIdx + 1; i < cornerSamples.length - 1; i++) {
@@ -174,6 +189,7 @@ export class BrakingEntryEngine {
       maxDipPct: Number(maxDipPct.toFixed(1))
     };
 
+    // Apex Overslowing & Straightaway Time Loss Attribution
     const driverApexSpeedMph = (corner.speed?.apexMph || cornerSamples[cornerSamples.length - 1].speed * 2.23694) || 0;
     let optimalApexSpeedMph = driverApexSpeedMph;
     if (optimalLap && optimalLap.corners) {
@@ -182,11 +198,12 @@ export class BrakingEntryEngine {
         optimalApexSpeedMph = optCorner.speed.apexMph;
       }
     } else {
+      // Theoretical target: 5% faster than current
       optimalApexSpeedMph = driverApexSpeedMph * 1.05;
     }
 
     const speedDeficitMph = Math.max(0, optimalApexSpeedMph - driverApexSpeedMph);
-    const followingStraightFt = corner.followingStraightFeet || 600;
+    const followingStraightFt = corner.followingStraightFeet || 600; // Default 600ft straight
     const vDriverFps = Math.max(10, driverApexSpeedMph * 1.46667);
     const vOptFps = Math.max(10, optimalApexSpeedMph * 1.46667);
     const straightawayTimeLossSec = speedDeficitMph > 1.0
@@ -201,6 +218,7 @@ export class BrakingEntryEngine {
       isOverslowed: speedDeficitMph >= 2.5
     };
 
+    // Calculate Corner Brake Score (0-100)
     let cornerBrakeScore = 100;
     if (isHammerSlam) cornerBrakeScore -= 15;
     if (downshiftDipDetected) cornerBrakeScore -= 12;
@@ -222,6 +240,7 @@ export class BrakingEntryEngine {
 
   _generateCoachingNotes(cornerEntries, totalOverslowLoss, totalDips, totalSlams) {
     const notes = [];
+
     if (totalOverslowLoss > 0.25) {
       notes.push({
         category: 'Apex Momentum',
@@ -231,6 +250,7 @@ export class BrakingEntryEngine {
         quote: '"The biggest chunk of time in data coaching is lost by over-slowing the car between turn-in and the apex." — Carl Lopez'
       });
     }
+
     if (totalDips > 0) {
       notes.push({
         category: 'Heel-and-Toe Footwork',
@@ -240,6 +260,7 @@ export class BrakingEntryEngine {
         quote: '"Drivers tend to release brake pressure when they blip for downshifts. That variation in brake pedal pressure adds car lengths." — Going Faster!'
       });
     }
+
     if (totalSlams > 0) {
       notes.push({
         category: 'Brake Technique',
@@ -249,6 +270,7 @@ export class BrakingEntryEngine {
         quote: '"You move your foot fast, but the buildup of pressure is a hard squeeze as opposed to a slam." — Skip Barber'
       });
     }
+
     return notes;
   }
 

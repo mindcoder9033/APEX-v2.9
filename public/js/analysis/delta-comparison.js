@@ -1,10 +1,12 @@
 /**
- * APEX Delta Lap Comparison Matrix & Corner Priority Ranking Engine (Browser Client)
+ * APEX Delta Lap Comparison Matrix & Corner Priority Ranking Engine
  * Implements Sprint 8 (Phase 3) comparative analytics:
  * - Best Lap vs Average Lap baseline delta traces (ΔSpeed, ΔThrottle, ΔBrake, ΔTime)
  * - Segment-by-segment time loss attribution (Braking/Entry, Mid-Corner, Exit, Straights)
  * - Skip Barber Type I/II/III corner categorization and coaching priority ranking
  */
+
+import { mpsToMph } from '../shared/telemetry-types.js';
 
 export const CORNER_TYPE = {
   TYPE_I: 'Type I',     // Leading onto a straightaway (Highest priority)
@@ -33,13 +35,9 @@ export const CORNER_TYPE_INFO = {
   }
 };
 
-export function mpsToMph(speedMps) {
-  return (speedMps || 0) * 2.236936;
-}
-
 export class DeltaComparisonEngine {
   constructor(options = {}) {
-    this.straightDistanceThresholdMeters = options.straightDistanceThresholdMeters || 120.0;
+    this.straightDistanceThresholdMeters = options.straightDistanceThresholdMeters || 120.0; // Straight length threshold
     this.numInterpolationPoints = options.numInterpolationPoints || 100;
   }
 
@@ -68,7 +66,7 @@ export class DeltaComparisonEngine {
       const prevCorner = i > 0 ? corners[i - 1] : corners[n - 1];
       const nextCorner = i < n - 1 ? corners[i + 1] : corners[0];
 
-      // 1. Preceding straight distance
+      // 1. Calculate preceding straight distance (exit of previous corner to entry of current)
       let precedingDist = 0;
       const prevExitIdx = prevCorner.indexes ? prevCorner.indexes.exit : 0;
       const currEntryIdx = currentCorner.indexes ? currentCorner.indexes.entry : 0;
@@ -76,11 +74,12 @@ export class DeltaComparisonEngine {
       if (currEntryIdx > prevExitIdx) {
         precedingDist = this._calculateDistanceBetween(samples, prevExitIdx, currEntryIdx);
       } else {
+        // Wrap around lap boundary
         precedingDist = this._calculateDistanceBetween(samples, prevExitIdx, samples.length - 1) +
                         this._calculateDistanceBetween(samples, 0, currEntryIdx);
       }
 
-      // 2. Succeeding straight distance
+      // 2. Calculate succeeding straight distance (exit of current corner to entry of next)
       let succeedingDist = 0;
       const currExitIdx = currentCorner.indexes ? currentCorner.indexes.exit : 0;
       const nextEntryIdx = nextCorner.indexes ? nextCorner.indexes.entry : 0;
@@ -88,11 +87,15 @@ export class DeltaComparisonEngine {
       if (nextEntryIdx > currExitIdx) {
         succeedingDist = this._calculateDistanceBetween(samples, currExitIdx, nextEntryIdx);
       } else {
+        // Wrap around lap boundary
         succeedingDist = this._calculateDistanceBetween(samples, currExitIdx, samples.length - 1) +
                          this._calculateDistanceBetween(samples, 0, nextEntryIdx);
       }
 
-      // 3. Skip Barber Classification
+      // 3. Skip Barber Classification Logic:
+      // - Type I: Succeeding straight is substantial (> threshold) and longer than preceding straight
+      // - Type II: Preceding straight is substantial (> threshold) and longer than succeeding straight
+      // - Type III: Both straights are short (< threshold) or relatively balanced compromise links
       let cornerType = CORNER_TYPE.TYPE_III;
       let reason = '';
 
@@ -103,6 +106,7 @@ export class DeltaComparisonEngine {
         cornerType = CORNER_TYPE.TYPE_II;
         reason = `Follows a high-speed straight (${Math.round(precedingDist)}m). Heavy threshold braking zone.`;
       } else if (succeedingDist >= this.straightDistanceThresholdMeters && precedingDist >= this.straightDistanceThresholdMeters) {
+        // Both straights are long: exit speed onto next straight still holds higher compounding value
         cornerType = CORNER_TYPE.TYPE_I;
         reason = `Connects two major straights (${Math.round(precedingDist)}m in, ${Math.round(succeedingDist)}m out). Prioritize exit drive.`;
       } else {
@@ -125,6 +129,10 @@ export class DeltaComparisonEngine {
 
   /**
    * Resamples and aligns telemetry traces between a baseline lap and comparison lap
+   * @param {Array<Object>} baselineSamples 
+   * @param {Array<Object>} targetSamples 
+   * @param {number} [numPoints=100] 
+   * @returns {Array<Object>} Aligned spatial points with telemetry deltas
    */
   alignLapTraces(baselineSamples, targetSamples, numPoints = this.numInterpolationPoints) {
     if (!baselineSamples || baselineSamples.length === 0 || !targetSamples || targetSamples.length === 0) {
@@ -138,7 +146,7 @@ export class DeltaComparisonEngine {
     const maxPoints = Math.max(10, numPoints);
 
     for (let i = 0; i <= maxPoints; i++) {
-      const progress = i / maxPoints;
+      const progress = i / maxPoints; // 0.0 to 1.0 (0% to 100%)
       const baseDistTarget = progress * baselineTotalDist[baselineTotalDist.length - 1];
       const targDistTarget = progress * targetTotalDist[targetTotalDist.length - 1];
 
@@ -180,7 +188,11 @@ export class DeltaComparisonEngine {
   }
 
   /**
-   * Deconstructs time loss across corner phases
+   * Deconstructs time loss across corner phases: Braking/Entry, Mid-Corner, and Exit
+   * @param {Object} baselineLap - Baseline lap object with samples & corners
+   * @param {Object} targetLap - Target lap object with samples & corners
+   * @param {Array<Object>} classifiedCorners - Skip Barber classified corners
+   * @returns {Object} Phase-by-phase time loss attribution
    */
   attributeSegmentTimeLoss(baselineLap, targetLap, classifiedCorners) {
     if (!classifiedCorners || classifiedCorners.length === 0) {
@@ -210,25 +222,30 @@ export class DeltaComparisonEngine {
       const tapIdx = idx.tap || apexIdx;
       const exitIdx = idx.exit || apexIdx;
 
+      // Extract normalized distance fractions for each phase landmark
       const entryDistFrac = (baseDistances[entryIdx] || 0) / baseTotalDist;
       const midDistFrac = (baseDistances[apexIdx] || 0) / baseTotalDist;
       const exitDistFrac = (baseDistances[exitIdx] || 0) / baseTotalDist;
 
+      // Calculate elapsed time in each phase for baseline lap
       const baseEntryTime = this._getElapsedTimeInRange(baseSamples, baseDistances, entryDistFrac, midDistFrac);
       const baseMidTime = this._getElapsedTimeInRange(baseSamples, baseDistances, midDistFrac, (baseDistances[tapIdx] || baseDistances[midDistFrac]) / baseTotalDist || midDistFrac);
       const baseExitTime = this._getElapsedTimeInRange(baseSamples, baseDistances, midDistFrac, exitDistFrac);
       const baseTotalCornerTime = this._getElapsedTimeInRange(baseSamples, baseDistances, entryDistFrac, exitDistFrac);
 
+      // Calculate elapsed time in each phase for target lap
       const targEntryTime = this._getElapsedTimeInRange(targSamples, targDistances, entryDistFrac, midDistFrac);
       const targMidTime = this._getElapsedTimeInRange(targSamples, targDistances, midDistFrac, (targDistances[tapIdx] || targDistances[midDistFrac]) / targTotalDist || midDistFrac);
       const targExitTime = this._getElapsedTimeInRange(targSamples, targDistances, midDistFrac, exitDistFrac);
       const targTotalCornerTime = this._getElapsedTimeInRange(targSamples, targDistances, entryDistFrac, exitDistFrac);
 
+      // Time deltas (positive means target lost time vs baseline)
       const brakingDeltaSec = Number((targEntryTime - baseEntryTime).toFixed(3));
       const midCornerDeltaSec = Number((targMidTime - baseMidTime).toFixed(3));
       const exitDeltaSec = Number((targExitTime - baseExitTime).toFixed(3));
       const totalCornerDeltaSec = Number((targTotalCornerTime - baseTotalCornerTime).toFixed(3));
 
+      // Speed deltas at key landmarks
       const baseEntrySpeed = mpsToMph(baseSamples[entryIdx]?.motion?.speedMps || 0);
       const targEntrySpeed = mpsToMph(this._interpolateSampleAtDistance(targSamples, targDistances, entryDistFrac * targTotalDist).speedMps);
       const baseApexSpeed = mpsToMph(baseSamples[apexIdx]?.motion?.speedMps || 0);
@@ -290,7 +307,7 @@ export class DeltaComparisonEngine {
       });
     }
 
-    // Straights
+    // Straight loss calculations between corners
     const straightLosses = [];
     let totalStraightTimeLoss = 0;
     const numCorners = classifiedCorners.length;
@@ -312,6 +329,7 @@ export class DeltaComparisonEngine {
         baseStraightTime = this._getElapsedTimeInRange(baseSamples, baseDistances, straightStartFrac, straightEndFrac);
         targStraightTime = this._getElapsedTimeInRange(targSamples, targDistances, straightStartFrac, straightEndFrac);
       } else {
+        // Across lap line
         baseStraightTime = this._getElapsedTimeInRange(baseSamples, baseDistances, straightStartFrac, 1.0) +
                            this._getElapsedTimeInRange(baseSamples, baseDistances, 0.0, straightEndFrac);
         targStraightTime = this._getElapsedTimeInRange(targSamples, targDistances, straightStartFrac, 1.0) +
@@ -341,7 +359,9 @@ export class DeltaComparisonEngine {
   }
 
   /**
-   * Ranks corner opportunities by projected lap time gain
+   * Ranks corner opportunities by projected lap time gain and Skip Barber corner type
+   * @param {Array<Object>} cornerLosses 
+   * @returns {Array<Object>} Sorted priority recommendations
    */
   rankCornerOpportunities(cornerLosses) {
     if (!cornerLosses || cornerLosses.length === 0) return [];
@@ -351,18 +371,24 @@ export class DeltaComparisonEngine {
       const brakingDelta = corner.phases.braking.deltaSec;
       const midDelta = corner.phases.midCorner.deltaSec;
       const exitDelta = corner.phases.exit.deltaSec;
-      const exitSpeedDelta = corner.phases.exit.exitSpeedDeltaMph;
+      const exitSpeedDelta = corner.phases.exit.exitSpeedDeltaMph; // negative means target was slower
       const straightMeters = corner.succeedingStraightMeters || 100;
 
+      // Skip Barber Compound Multiplier:
+      // Type I corners carry exit speed down the following straight:
+      // Projected Gain = Corner Delta + (Downstream Straight Velocity Loss Projection)
       let downstreamGainSec = 0;
       if (cornerType === CORNER_TYPE.TYPE_I && exitSpeedDelta < 0) {
+        // Loss of 1 mph exit speed over 200m straight loses ~0.08 - 0.15s down the chute
         const speedDeficit = Math.abs(exitSpeedDelta);
         downstreamGainSec = (speedDeficit / 10.0) * (straightMeters / 150.0) * 0.12;
       }
 
+      // Projected recoverable lap time gain
       const baseRecoverable = Math.max(0, corner.totalDeltaSec);
       const projectedGainSec = Number((baseRecoverable + downstreamGainSec).toFixed(3));
 
+      // Determine the primary fault zone & coaching recommendation
       let primaryFaultZone = 'Exit Drive';
       let tacticalAdvice = '';
       let badgeColor = 'blue';
@@ -370,14 +396,14 @@ export class DeltaComparisonEngine {
       const maxPhaseLoss = Math.max(brakingDelta, midDelta, exitDelta);
 
       if (cornerType === CORNER_TYPE.TYPE_I) {
-        badgeColor = 'gold';
+        badgeColor = 'gold'; // Top priority
         if (exitSpeedDelta < -2.0 || exitDelta > 0.05) {
           primaryFaultZone = 'Throttle Timing & Exit';
           const exitSpeedDeltaKmh = exitSpeedDelta * 1.60934;
           tacticalAdvice = `Type I Corner: Sacrificed exit speed (${exitSpeedDeltaKmh.toFixed(1)} km/h). Apply throttle progressively earlier at apex to carry top speed onto the ${Math.round(straightMeters)}m straight.`;
         } else if (midDelta > 0.05) {
           primaryFaultZone = 'Apex Roll Speed';
-          tacticalAdvice = `Type I Corner: Minimum apex speed too low. Release brake smoothly to avoid binding front tires before applying power.`;
+          tacticalAdvice = `Type I Corner: Minimum apex speed too low. Release brake smoothly to avoid binding the front tires before applying power.`;
         } else {
           primaryFaultZone = 'Braking Efficiency';
           tacticalAdvice = `Type I Corner: Solid exit drive, but braking entry can be cleaned up without sacrificing exit line.`;
@@ -414,6 +440,7 @@ export class DeltaComparisonEngine {
       };
     });
 
+    // Sort by projected lap time gain descending, then by Skip Barber priority ascending
     ranked.sort((a, b) => {
       if (b.projectedGainSec !== a.projectedGainSec) {
         return b.projectedGainSec - a.projectedGainSec;
@@ -421,6 +448,7 @@ export class DeltaComparisonEngine {
       return a.priority - b.priority;
     });
 
+    // Assign 1-indexed rank
     return ranked.map((item, index) => ({
       ...item,
       rank: index + 1
@@ -428,7 +456,11 @@ export class DeltaComparisonEngine {
   }
 
   /**
-   * Executes complete comparison
+   * Executes end-to-end Delta Lap Comparison between a baseline lap and comparison lap
+   * @param {Object} baselineLap 
+   * @param {Object} targetLap 
+   * @param {Array<Object>} [rawCorners=[]] 
+   * @returns {Object} Complete Delta Lap Comparison Matrix
    */
   compareLaps(baselineLap, targetLap, rawCorners = []) {
     if (!baselineLap || !targetLap) {
@@ -448,10 +480,19 @@ export class DeltaComparisonEngine {
       ? baselineLap.corners
       : rawCorners;
 
+    // 1. Classify corners using Skip Barber Type I/II/III methodology
     const classifiedCorners = this.classifyCorners(corners, baseSamples);
+
+    // 2. Align spatial telemetry traces for continuous delta graph
     const alignedTraces = this.alignLapTraces(baseSamples, targSamples, this.numInterpolationPoints);
+
+    // 3. Attribute time loss across corner phases and straights
     const attribution = this.attributeSegmentTimeLoss(baselineLap, targetLap, classifiedCorners);
+
+    // 4. Rank corner opportunities by projected lap time gain
     const rankedOpportunities = this.rankCornerOpportunities(attribution.cornerLosses);
+
+    // 5. Total stint potential gain
     const totalPotentialGainSec = rankedOpportunities.reduce((sum, r) => sum + r.projectedGainSec, 0);
 
     const baseLapTime = baselineLap.lapTime || (baseSamples[baseSamples.length - 1]?.timing?.currentLapTime || 0);
@@ -508,7 +549,7 @@ export class DeltaComparisonEngine {
       const dy = (p2.y || 0) - (p1.y || 0);
       const dz = (p2.z || 0) - (p1.z || 0);
       const step = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      total += (step > 0.0001 ? step : 0.5);
+      total += (step > 0.0001 ? step : 0.5); // Ensure monotonic progression even if stationary
       distances.push(total);
     }
     return distances;
@@ -539,6 +580,7 @@ export class DeltaComparisonEngine {
       };
     }
 
+    // Binary search for closest segment
     let low = 0;
     let high = cumulativeDistances.length - 1;
     while (low <= high) {

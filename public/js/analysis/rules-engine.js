@@ -1,7 +1,9 @@
 /**
- * APEX Rules Engine (Browser Client)
- * Evaluates corner and lap metrics against Skip Barber "Going Faster!" racecraft curriculum rules.
+ * APEX Rules Engine
+ * Implements the Skip Barber "Going Faster!" Racecraft Curriculum Rules (R-001 through R-012).
+ * Evaluates corner and lap metrics to generate tiered coaching feedback and actionable advice.
  */
+
 export const RULES_SPEC = {
   'R-001': {
     id: 'R-001',
@@ -90,11 +92,16 @@ export const RULES_SPEC = {
 };
 
 export class RulesEngine {
+  /**
+   * Evaluates an individual corner's telemetry features against Going Faster! rules
+   * @param {Object} corner CornerData from CornerExtractor
+   * @returns {Array<Object>} List of triggered rule violations / findings
+   */
   evaluateCorner(corner) {
     const findings = [];
-    const d = corner.dynamics || {};
-    const inp = corner.inputs || {};
-    const spd = corner.speed || {};
+    const d = corner.dynamics;
+    const inp = corner.inputs;
+    const spd = corner.speed;
 
     // R-001: Late Throttle Application (TAP > Apex + 15ft / 4.5m)
     if (d.tapDeltaFeet > 15.0 || d.tapDeltaMeters > 4.5) {
@@ -117,19 +124,19 @@ export class RulesEngine {
       });
     }
 
-    // R-003: Early Apex (Steering correction > 5° post-apex)
+    // R-003: Early Apex (Steering angle increase > 5° post-apex)
     if (d.isEarlyApex || d.postApexSteerCorrectionDeg > 5.0) {
       findings.push({
         ...RULES_SPEC['R-003'],
         cornerNumber: corner.cornerNumber,
-        metric: `Steering Correction: +${(d.postApexSteerCorrectionDeg || 0).toFixed(1)}° post-apex`,
-        details: `Steering angle tightened by +${(d.postApexSteerCorrectionDeg || 0).toFixed(1)}° post-apex to prevent drifting off-track.`
+        metric: `Steering Correction: +${d.postApexSteerCorrectionDeg.toFixed(1)}° post-apex`,
+        details: `Steering angle tightened by +${d.postApexSteerCorrectionDeg.toFixed(1)}° post-apex to prevent drifting off-track.`
       });
     }
 
     // R-004: Late Apex / Over-Conservative Line
     if (d.isLateApex) {
-      const speedDropKmh = spd.entryKmh && spd.apexKmh ? (spd.entryKmh - spd.apexKmh) : (((spd.entryMph || 0) - (spd.apexMph || 0)) * 1.60934);
+      const speedDropKmh = spd.entryKmh && spd.apexKmh ? (spd.entryKmh - spd.apexKmh) : ((spd.entryMph - spd.apexMph) * 1.60934);
       findings.push({
         ...RULES_SPEC['R-004'],
         cornerNumber: corner.cornerNumber,
@@ -139,7 +146,7 @@ export class RulesEngine {
     }
 
     // R-005: Trail-Braking Overlap (< 20%)
-    if (d.trailBrakingOverlapPercent < 20 && (inp.peakBrakePressure || 0) > 0.30) {
+    if (d.trailBrakingOverlapPercent < 20 && inp.peakBrakePressure > 0.30) {
       findings.push({
         ...RULES_SPEC['R-005'],
         cornerNumber: corner.cornerNumber,
@@ -158,7 +165,7 @@ export class RulesEngine {
       });
     }
 
-    // R-007: Gear Selected Too High
+    // R-007: Gear Selected Too High (Exit RPM < 60% max RPM)
     if (inp.maxRpm > 0 && inp.exitRpm > 0 && inp.exitRpm < (0.60 * inp.maxRpm)) {
       findings.push({
         ...RULES_SPEC['R-007'],
@@ -168,7 +175,7 @@ export class RulesEngine {
       });
     }
 
-    // R-008: Gear Selected Too Low
+    // R-008: Gear Selected Too Low (Exit RPM > 95% max RPM)
     if (inp.maxRpm > 0 && inp.exitRpm > (0.95 * inp.maxRpm)) {
       findings.push({
         ...RULES_SPEC['R-008'],
@@ -178,9 +185,19 @@ export class RulesEngine {
       });
     }
 
+    // R-009: Excessive Wheelspin (Tire Slip Ratio > 1.0)
+    if (d.maxTireSlipRatio > 1.0) {
+      findings.push({
+        ...RULES_SPEC['R-009'],
+        cornerNumber: corner.cornerNumber,
+        metric: `Tire Slip: ${d.maxTireSlipRatio.toFixed(2)}`,
+        details: `Excessive wheelspin detected on exit drive.`
+      });
+    }
+
     // R-010: Sub-Threshold Braking (peak deceleration < 0.95G during heavy braking zone)
-    const speedBleedKmh = (spd.entryKmh && spd.apexKmh) ? (spd.entryKmh - spd.apexKmh) : (((spd.entryMph || 0) - (spd.apexMph || 0)) * 1.60934);
-    if (d.peakDecelG > 0 && d.peakDecelG < 0.95 && (inp.peakBrakePressure || 0) > 0.25 && speedBleedKmh > 19.3) {
+    const speedBleedKmh = (spd.entryKmh && spd.apexKmh) ? (spd.entryKmh - spd.apexKmh) : ((spd.entryMph - spd.apexMph) * 1.60934);
+    if (d.peakDecelG > 0 && d.peakDecelG < 0.95 && inp.peakBrakePressure > 0.25 && speedBleedKmh > 19.3) {
       findings.push({
         ...RULES_SPEC['R-010'],
         cornerNumber: corner.cornerNumber,
@@ -190,10 +207,10 @@ export class RulesEngine {
     }
 
     // R-012: Parking Mid-Corner (Entry to Apex Delta > 16 km/h / 10 mph)
-    const entryKmhVal = spd.entryKmh ?? ((spd.entryMph || 0) * 1.60934);
-    const apexKmhVal = spd.apexKmh ?? ((spd.apexMph || 0) * 1.60934);
+    const entryKmhVal = spd.entryKmh ?? (spd.entryMph * 1.60934);
+    const apexKmhVal = spd.apexKmh ?? (spd.apexMph * 1.60934);
     const deltaEntryApexKmh = entryKmhVal - apexKmhVal;
-    if (deltaEntryApexKmh > 16.0 && (inp.entryBrakePressure || 0) > 0.5) {
+    if (deltaEntryApexKmh > 16.0 && inp.entryBrakePressure > 0.5) {
       findings.push({
         ...RULES_SPEC['R-012'],
         cornerNumber: corner.cornerNumber,
@@ -205,11 +222,17 @@ export class RulesEngine {
     return findings;
   }
 
+  /**
+   * Evaluates all corners for a complete lap
+   * @param {Array<Object>} corners 
+   * @returns {Array<Object>}
+   */
   evaluateLap(corners) {
-    const all = [];
-    for (const c of corners) {
-      all.push(...this.evaluateCorner(c));
+    const allFindings = [];
+    for (const corner of corners) {
+      const findings = this.evaluateCorner(corner);
+      allFindings.push(...findings);
     }
-    return all;
+    return allFindings;
   }
 }

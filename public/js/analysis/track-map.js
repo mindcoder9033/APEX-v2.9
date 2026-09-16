@@ -1,5 +1,5 @@
 /**
- * APEX 2D Vector Track Map & Line Analysis Engine (Browser ES Module)
+ * APEX 2D Vector Track Map & Line Analysis Engine
  * Generates normalized 2D circuit geometry, multi-color driving state paths,
  * turn annotations, and problem zone highlights per Skip Barber "Going Faster!".
  */
@@ -21,7 +21,7 @@ export const STATE_COLORS = {
 export class TrackMapGenerator {
   constructor(options = {}) {
     this.padding = options.padding || 30;
-    this.minSegmentDistance = options.minSegmentDistance || 0.5;
+    this.minSegmentDistance = options.minSegmentDistance || 0.5; // Filter microscopic jitters
   }
 
   /**
@@ -141,7 +141,7 @@ export class TrackMapGenerator {
       if (pt.state === currentSegment.state) {
         currentSegment.points.push(pt);
       } else {
-        // Close current segment and bridge to next
+        // Close current segment and bridge to the next segment so lines connect seamlessly
         currentSegment.points.push(pt);
         segments.push(currentSegment);
 
@@ -175,15 +175,18 @@ export class TrackMapGenerator {
     const pointCount = normalizedPoints.length;
 
     return corners.map((corner) => {
+      // Find matching normalized point near apex index
       let targetIndex = 0;
       if (corner.indices && typeof corner.indices.apexIndex === 'number') {
         targetIndex = Math.max(0, Math.min(pointCount - 1, corner.indices.apexIndex));
       } else {
+        // Fallback: distribute evenly
         targetIndex = Math.floor((corner.cornerNumber / (corners.length + 1)) * pointCount);
       }
 
       const apexPt = normalizedPoints[targetIndex] || normalizedPoints[0];
 
+      // Find any coaching rule findings for this corner
       const cornerFindings = (findings || []).filter(f => f.cornerNumber === corner.cornerNumber);
       const hasSevereFault = cornerFindings.some(f => f.severity === 'High');
       const hasMediumFault = cornerFindings.some(f => f.severity === 'Medium');
@@ -221,7 +224,7 @@ export class TrackMapGenerator {
     if (rawPoints.length < 2) {
       return `<svg viewBox="0 0 ${width} ${height}" class="track-map-svg" xmlns="http://www.w3.org/2000/svg">
         <rect width="${width}" height="${height}" fill="#0A0A0A" rx="8"/>
-        <text x="${width / 2}" y="${height / 2}" fill="#666" font-family="'JetBrains Mono', monospace" font-size="12" text-anchor="middle">
+        <text x="${width / 2}" y="${height / 2}" fill="#666" font-family="monospace" font-size="12" text-anchor="middle">
           Awaiting telemetry track coordinates...
         </text>
       </svg>`;
@@ -232,11 +235,13 @@ export class TrackMapGenerator {
     const turnOverlays = this.computeTurnOverlays(corners, points, findings);
     const startFinish = points[0];
 
+    // Build SVG Path strings for segments
     const pathElements = segments.map((seg, sIdx) => {
       const d = seg.points.map((p, idx) => `${idx === 0 ? 'M' : 'L'} ${p.normX.toFixed(1)} ${p.normY.toFixed(1)}`).join(' ');
       return `<path id="seg-${sIdx}" d="${d}" stroke="${seg.color.hex}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none" class="track-segment ${seg.state.toLowerCase()}" />`;
     }).join('\n');
 
+    // Build Turn Marker Pins
     const turnElements = turnOverlays.map(turn => {
       const isAlert = turn.status !== 'OPTIMAL';
       const pulseRing = isAlert ? `
@@ -249,11 +254,12 @@ export class TrackMapGenerator {
         <g class="turn-overlay-marker" data-turn="${turn.cornerNumber}" data-status="${turn.status}" transform="translate(0, 0)">
           ${pulseRing}
           <circle cx="${turn.x.toFixed(1)}" cy="${turn.y.toFixed(1)}" r="8" fill="#141414" stroke="${turn.badgeColor}" stroke-width="2" />
-          <text x="${turn.x.toFixed(1)}" y="${(turn.y + 3).toFixed(1)}" fill="#FFFFFF" font-family="'JetBrains Mono', monospace" font-size="8" font-weight="bold" text-anchor="middle">T${turn.cornerNumber}</text>
+          <text x="${turn.x.toFixed(1)}" y="${(turn.y + 3).toFixed(1)}" fill="#FFFFFF" font-family="Inter, sans-serif" font-size="8" font-weight="bold" text-anchor="middle">T${turn.cornerNumber}</text>
         </g>
       `;
     }).join('\n');
 
+    // Start/Finish Line Badge
     const sfElement = startFinish ? `
       <g class="start-finish-marker">
         <circle cx="${startFinish.normX.toFixed(1)}" cy="${startFinish.normY.toFixed(1)}" r="10" fill="#E10600" opacity="0.3"/>
@@ -262,7 +268,7 @@ export class TrackMapGenerator {
         <rect x="${startFinish.normX.toFixed(1)}" y="${(startFinish.normY - 3.5).toFixed(1)}" width="3" height="3.5" fill="#000000"/>
         <rect x="${(startFinish.normX - 3).toFixed(1)}" y="${startFinish.normY.toFixed(1)}" width="3" height="3.5" fill="#000000"/>
         <rect x="${startFinish.normX.toFixed(1)}" y="${(startFinish.normY + 3.5).toFixed(1)}" width="3" height="3.5" fill="#000000"/>
-        <text x="${(startFinish.normX + 12).toFixed(1)}" y="${(startFinish.normY + 4).toFixed(1)}" fill="#AAAAAA" font-family="'Rajdhani', sans-serif" font-size="10" font-weight="700">S/F</text>
+        <text x="${(startFinish.normX + 12).toFixed(1)}" y="${(startFinish.normY + 4).toFixed(1)}" fill="#AAAAAA" font-family="Inter, sans-serif" font-size="9" font-weight="600">S/F</text>
       </g>
     ` : '';
 
@@ -330,8 +336,10 @@ export class TrackMapGenerator {
       };
     }
 
+    // In PDF coordinates, Y runs bottom to top, so flipY = true
     const { points } = this.normalizeCoordinates(rawPoints, boxW, boxH, padding, true);
     
+    // Offset coordinates to target PDF position
     const pdfPoints = points.map(p => ({
       ...p,
       pdfX: originX + p.normX,
@@ -352,6 +360,7 @@ export class TrackMapGenerator {
       });
     }
 
+    // Turn markers for PDF
     const turnOverlays = this.computeTurnOverlays(corners, points, findings);
     const pdfTurnMarkers = turnOverlays.map(turn => ({
       ...turn,
@@ -359,6 +368,7 @@ export class TrackMapGenerator {
       pdfY: originY + turn.y
     }));
 
+    // Identified line issues summary
     const lineIssues = [];
     findings.forEach(f => {
       if (['R-001', 'R-002', 'R-003', 'R-004'].includes(f.ruleId)) {

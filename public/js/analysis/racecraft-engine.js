@@ -1,5 +1,5 @@
 /**
- * APEX Racecraft Engine & Skip Barber 14-Point Critique Card (Client-Side)
+ * APEX Racecraft Engine & Skip Barber 14-Point Critique Card
  * Implements Drivetrain sympathy, shift speed tracking, draft tow estimation,
  * and the complete 14-category post-session evaluation scorecard.
  * Rooted in "Going Faster!" Ch. 6, 9, 10 & 16.
@@ -7,9 +7,14 @@
 
 export class RacecraftEngine {
   constructor(options = {}) {
-    this.targetUpshiftTimeSec = options.targetUpshiftTimeSec || 0.20;
+    this.targetUpshiftTimeSec = options.targetUpshiftTimeSec || 0.20; // 0.2s target
   }
 
+  /**
+   * Analyze stint data across all 14 Skip Barber racecraft criteria
+   * @param {Object} stintContext - Context containing laps, samples, carControl, brakingEntry, chassis, shifting, surface
+   * @returns {Object} Comprehensive 14-point scorecard and racecraft analysis
+   */
   analyze(stintContext = {}) {
     const laps = stintContext.laps || [];
     const samples = stintContext.samples || [];
@@ -20,6 +25,7 @@ export class RacecraftEngine {
     const tireDynamics = stintContext.tireDynamics || {};
     const perfSummary = stintContext.perfSummary || {};
 
+    // 1. Evaluate 14 Skip Barber Categories
     const scorecard = this._compute14PointScorecard(
       laps,
       samples,
@@ -31,6 +37,7 @@ export class RacecraftEngine {
       perfSummary
     );
 
+    // Calculate Average Racecraft Score
     let sumScores = 0;
     scorecard.forEach(item => {
       sumScores += item.score;
@@ -51,19 +58,46 @@ export class RacecraftEngine {
     const lapTimes = validLaps.map(l => l.lapTime || 0).filter(t => t > 0);
     const lapVariance = this._calcVariance(lapTimes);
 
+    // 1. Pre-Pace & Warm-up
     const warmUpScore = tires.overallThermalBalance === 'Optimal' ? 95 : 82;
+
+    // 2. Pace Lap Discipline
     const paceScore = 90;
+
+    // 3. Start & Turn 1 Positioning
     const startScore = brakingEntry.totalSlamEvents > 0 ? 78 : 92;
+
+    // 4. Racing Line Precision & Consistency
     const lineScore = perf.componentScores?.lineQuality || (lapVariance < 0.5 ? 94 : 80);
+
+    // 5. Corner Exit Speed & Throttle Roll-on
     const exitScore = perf.componentScores?.exitSpeed || 85;
+
+    // 6. Braking Zone Efficiency
     const brakingScore = brakingEntry.brakingEntryScore || 88;
+
+    // 7. Shifting & Heel-and-Toe Rev Matching
     const shiftScore = shifting.shiftingScore || (brakingEntry.totalDownshiftDips > 0 ? 75 : 92);
+
+    // 8. Reading Car Dynamic Balance
     const balanceScore = carControl.carControlScore || 86;
+
+    // 9. Mechanical Sympathy
     const mechScore = (shifting.diagnostics?.summary?.overRevLimiterStrikes || 0) > 0 ? 70 : 94;
+
+    // 10. Mirror & Spatial Awareness
     const mirrorScore = surface.asymmetricDragEvents > 0 ? 80 : 92;
+
+    // 11. Broad Vision vs Tunnel Vision
     const visionScore = carControl.tankslapperEventsCount > 0 ? 72 : 90;
+
+    // 12. Concentration & Lap Variance
     const concentrationScore = lapVariance < 0.35 ? 96 : (lapVariance < 0.8 ? 85 : 72);
+
+    // 13. Approach to Going Faster ("The Procedure")
     const procedureScore = brakingEntry.totalOverslowTimeLossSec < 0.2 ? 92 : 78;
+
+    // 14. Passing & Defensive Line Discipline
     const passingScore = 90;
 
     const categories = [

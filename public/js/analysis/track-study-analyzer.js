@@ -1,5 +1,5 @@
 /**
- * APEX Track Study Analyzer (Browser-served bundle)
+ * APEX Track Study Analyzer (Node.js backend bundle)
  * Computes 4-Phase Circuit Study parameters based on the methodology in
  * "Going Faster! Mastering the Art of Race Driving" by Carl Lopez & Skip Barber Racing School.
  * 

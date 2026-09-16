@@ -1,5 +1,5 @@
 /**
- * APEX Vehicle Dynamics & Skid Control Engine (Client-Side)
+ * APEX Vehicle Dynamics & Skid Control Engine
  * Implements vehicle attitude tracking, Yaw vs Slip angle differential,
  * CPR (Correction-Pause-Recovery) oversteer state machine, and TTO detection.
  * Rooted in "Going Faster! Mastering the Art of Race Driving" (Ch. 4 & 11).
@@ -7,13 +7,19 @@
 
 export class CarControlEngine {
   constructor(options = {}) {
-    this.oversteerThresholdDeg = options.oversteerThresholdDeg || 5.0;
-    this.neutralSlipToleranceDeg = options.neutralSlipToleranceDeg || 1.5;
-    this.ttoThrottleDropRate = options.ttoThrottleDropRate || 0.6;
-    this.ttoLatGMin = options.ttoLatGMin || 0.6;
-    this.slowRecoveryThresholdSec = options.slowRecoveryThresholdSec || 0.18;
+    this.oversteerThresholdDeg = options.oversteerThresholdDeg || 5.0; // Degrees of yaw above optimum
+    this.neutralSlipToleranceDeg = options.neutralSlipToleranceDeg || 1.5; // Slip angle match window
+    this.ttoThrottleDropRate = options.ttoThrottleDropRate || 0.6; // Throttle drop per second
+    this.ttoLatGMin = options.ttoLatGMin || 0.6; // Min lateral G to trigger TTO
+    this.slowRecoveryThresholdSec = options.slowRecoveryThresholdSec || 0.18; // Max time to begin unwinding after pause
   }
 
+  /**
+   * Analyze complete lap/stint samples for vehicle dynamics, skid control, and CPR state metrics
+   * @param {Array<Object>} samples - Array of telemetry samples
+   * @param {Array<Object>} corners - Array of detected corners
+   * @returns {Object} Comprehensive car control analysis
+   */
   analyze(samples, corners = []) {
     if (!samples || samples.length === 0) {
       return this._getEmptyResult();
@@ -36,6 +42,7 @@ export class CarControlEngine {
       const prev = i > 0 ? samples[i - 1] : s;
       const dt = s.timestampMs && prev.timestampMs ? Math.max(0.001, (s.timestampMs - prev.timestampMs) / 1000) : 0.016;
 
+      // 1. Calculate Instantaneous Velocity Angle & Vehicle Yaw Angle
       const vx = s.velocityX || 0;
       const vz = s.velocityZ || 0;
       const speed = s.speed || 0;
@@ -45,8 +52,10 @@ export class CarControlEngine {
         velAngleRad = Math.atan2(vx, vz);
       }
 
+      // Yaw angle in degrees (difference between heading and travel velocity)
       const rawYawRad = s.yaw || 0;
       let yawAngleRad = rawYawRad - velAngleRad;
+      // Normalize to [-PI, PI]
       while (yawAngleRad > Math.PI) yawAngleRad -= 2 * Math.PI;
       while (yawAngleRad < -Math.PI) yawAngleRad += 2 * Math.PI;
       const yawAngleDeg = yawAngleRad * (180 / Math.PI);
@@ -55,6 +64,7 @@ export class CarControlEngine {
         maxYawAngleDeg = yawAngleDeg;
       }
 
+      // 2. Compute 4-Wheel Average Slip Angles & Differential
       const slipFL = Math.abs(s.tireSlipAngle?.frontLeft || 0);
       const slipFR = Math.abs(s.tireSlipAngle?.frontRight || 0);
       const slipRL = Math.abs(s.tireSlipAngle?.rearLeft || 0);
@@ -62,12 +72,13 @@ export class CarControlEngine {
 
       const avgFrontSlipDeg = ((slipFL + slipFR) / 2) * (180 / Math.PI);
       const avgRearSlipDeg = ((slipRL + slipRR) / 2) * (180 / Math.PI);
-      const slipDiffDeg = avgFrontSlipDeg - avgRearSlipDeg;
+      const slipDiffDeg = avgFrontSlipDeg - avgRearSlipDeg; // >0 Understeer, <0 Oversteer
 
       if (Math.abs(slipDiffDeg) > Math.abs(maxSlipDiffDeg)) {
         maxSlipDiffDeg = slipDiffDeg;
       }
 
+      // 3. Classify Handling State
       const latG = Math.abs(s.accelerationX || 0) / 9.80665;
       let balance = 'Neutral';
 
@@ -86,17 +97,19 @@ export class CarControlEngine {
         totalNeutralSamples++;
       }
 
+      // 4. CPR Skid State Machine Tracking
       const isSliding = balance === 'Oversteer' || Math.abs(yawAngleDeg) > this.oversteerThresholdDeg;
       const steerInput = s.steer || 0;
       const prevSteer = prev.steer || 0;
       const steerRate = (steerInput - prevSteer) / dt;
-      const yawRate = s.angularVelocityY || 0;
+      const yawRate = s.angularVelocityY || 0; // Rotational velocity around vertical axis
       const throttle = s.accel || 0;
       const prevThrottle = prev.accel || 0;
       const throttleRate = (throttle - prevThrottle) / dt;
 
       if (isSliding) {
         if (!currentSkid) {
+          // Onset of a new slide
           const isTTO = throttleRate < -this.ttoThrottleDropRate && latG >= this.ttoLatGMin;
           if (isTTO) ttoCount++;
 
@@ -118,6 +131,7 @@ export class CarControlEngine {
             prevYawRateSign: Math.sign(yawRate)
           };
         } else {
+          // Ongoing slide
           if (Math.abs(yawAngleDeg) > currentSkid.maxYawAngleDeg) {
             currentSkid.maxYawAngleDeg = Math.abs(yawAngleDeg);
           }
@@ -125,18 +139,21 @@ export class CarControlEngine {
             currentSkid.peakYawRate = Math.abs(yawRate);
           }
 
+          // Track oscillation reversals (Tankslapper / Death Wiggle)
           const currentSign = Math.sign(yawRate);
           if (currentSign !== 0 && currentSkid.prevYawRateSign !== 0 && currentSign !== currentSkid.prevYawRateSign) {
             currentSkid.oscillations++;
             currentSkid.prevYawRateSign = currentSign;
           }
 
+          // CPR Phase 1: Correction
           const isCountersteering = (yawAngleDeg > 0 && steerInput < -0.05) || (yawAngleDeg < 0 && steerInput > 0.05);
           if (isCountersteering && !currentSkid.phases.correction.detected) {
             currentSkid.phases.correction.detected = true;
             currentSkid.phases.correction.countersteerSpeed = Math.abs(steerRate);
           }
 
+          // CPR Phase 2: The Pause (Yaw velocity slows to ~0 at peak slide)
           if (currentSkid.phases.correction.detected && !currentSkid.phases.pause.detected) {
             if (Math.abs(yawRate) < 0.15) {
               currentSkid.phases.pause.detected = true;
@@ -145,6 +162,7 @@ export class CarControlEngine {
             }
           }
 
+          // CPR Phase 3: Recovery (Unwinding steering back toward center after pause)
           if (currentSkid.phases.pause.detected && !currentSkid.phases.recovery.detected) {
             const isUnwinding = (yawAngleDeg > 0 && steerRate > 0.2) || (yawAngleDeg < 0 && steerRate < -0.2);
             if (isUnwinding || Math.abs(steerInput) < 0.1) {
@@ -158,6 +176,7 @@ export class CarControlEngine {
         }
       } else {
         if (currentSkid) {
+          // Slide concluded
           currentSkid.endTimeMs = s.timestampMs || i * 16;
           currentSkid.durationSec = Math.max(0.05, (currentSkid.endTimeMs - currentSkid.startTimeMs) / 1000);
           currentSkid.isTankslapper = currentSkid.oscillations >= 2;
@@ -182,6 +201,7 @@ export class CarControlEngine {
       });
     }
 
+    // Close any open skid event
     if (currentSkid) {
       currentSkid.endTimeMs = samples[samples.length - 1].timestampMs || samples.length * 16;
       currentSkid.durationSec = Math.max(0.05, (currentSkid.endTimeMs - currentSkid.startTimeMs) / 1000);
@@ -196,6 +216,7 @@ export class CarControlEngine {
       oversteerPct: Number(((totalOversteerSamples / totalActive) * 100).toFixed(1))
     };
 
+    // Calculate Car Control & Skid Recovery Quality Score (0 - 100)
     let carControlScore = 100;
     carControlScore -= Math.min(30, skidEvents.length * 5);
     carControlScore -= Math.min(25, tankslapperCount * 12);
@@ -234,6 +255,7 @@ export class CarControlEngine {
 
   _generateCoachingNotes(skidEvents, balance, ttoCount, tankslappers) {
     const notes = [];
+
     if (tankslappers > 0) {
       notes.push({
         category: 'CPR Recovery',
@@ -243,6 +265,7 @@ export class CarControlEngine {
         quote: '"Slow recovery is what causes second-reaction spins. Get the wheel straight quickly at the pause." — Carl Lopez'
       });
     }
+
     if (ttoCount > 0) {
       notes.push({
         category: 'Throttle Control',
@@ -252,6 +275,7 @@ export class CarControlEngine {
         quote: '"Lifting off the throttle while near the cornering limit will create oversteer in direct proportion to the severity of the lift." — Going Faster!'
       });
     }
+
     if (balance.understeerPct > 35) {
       notes.push({
         category: 'Handling Balance',
@@ -261,6 +285,7 @@ export class CarControlEngine {
         quote: '"Adding more steering lock will not make the front end turn more when over the tire limit. Correct with throttle, not steering." — Terry Earwood'
       });
     }
+
     if (skidEvents.length === 0 && balance.neutralPct > 80) {
       notes.push({
         category: 'Mastery',
@@ -270,6 +295,7 @@ export class CarControlEngine {
         quote: '"Confidence in your car control comes from having the experience of sliding the car and bringing it back from the edge." — Danny Sullivan'
       });
     }
+
     return notes;
   }
 

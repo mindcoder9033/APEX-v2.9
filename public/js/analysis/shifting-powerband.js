@@ -1,5 +1,5 @@
 /**
- * APEX Shifting & Powerband Optimization Engine (Browser ES Module)
+ * APEX Shifting & Powerband Optimization Engine
  * Evaluates powertrain utilization, gear selection efficiency, engine powerband limits,
  * downshift throttle blip accuracy, and brake modulation stability during heel-and-toe events.
  */
@@ -107,6 +107,7 @@ export class ShiftingPowerbandEngine {
       const prevGear = samples[i - 1]?.inputs?.gear;
       const currGear = samples[i]?.inputs?.gear;
 
+      // Detect downshift: gear decremented and both are forward driving gears (1..8)
       if (typeof prevGear === 'number' && typeof currGear === 'number' &&
           prevGear > 1 && currGear > 0 && currGear < prevGear) {
         
@@ -115,6 +116,7 @@ export class ShiftingPowerbandEngine {
         const windowEnd = Math.min(n - 1, shiftIndex + this.shiftWindowSamples);
         const windowSamples = samples.slice(windowStart, windowEnd + 1);
 
+        // Analyze throttle blip in window
         let peakBlipThrottle = 0;
         let blipDetected = false;
         let blipDurationSamples = 0;
@@ -128,6 +130,7 @@ export class ShiftingPowerbandEngine {
           }
         }
 
+        // Analyze brake modulation stability during the shift window
         const brakePressures = windowSamples.map(s => s.inputs.brake || 0);
         const activeBrakes = brakePressures.filter(b => b >= this.brakeActiveThreshold);
         const isBraking = activeBrakes.length > 0;
@@ -138,8 +141,9 @@ export class ShiftingPowerbandEngine {
         if (isBraking && activeBrakes.length > 2) {
           const avgBrake = activeBrakes.reduce((a, b) => a + b, 0) / activeBrakes.length;
           const variance = activeBrakes.reduce((acc, b) => acc + Math.pow(b - avgBrake, 2), 0) / activeBrakes.length;
-          brakeVariance = Math.sqrt(variance);
+          brakeVariance = Math.sqrt(variance); // Standard deviation
 
+          // If standard deviation exceeds 0.05, penalize stability
           if (brakeVariance > 0.05) {
             brakeStabilityScore = Math.max(20, Math.round(100 - (brakeVariance * 250)));
           }
@@ -211,12 +215,18 @@ export class ShiftingPowerbandEngine {
       const minRpm = inp.minRpm || Math.round(maxRpm * 0.5);
       const exitRpm = inp.exitRpm || Math.round(maxRpm * 0.7);
 
+      // Usable powerband percentage at corner exit:
+      // (ExitRpm - IdleRpm) / UsablePowerband
       const exitPowerbandRatio = Math.max(0, Math.min(1.0, (exitRpm - idleRpm) / usablePowerband));
       const exitPowerbandPercent = Math.round(exitPowerbandRatio * 100);
 
+      // Bogging check: Exit RPM < 60% powerband (or exit RPM < 60% max RPM)
       const isBogging = (exitPowerbandRatio < 0.60) || (maxRpm > 0 && exitRpm < (0.60 * maxRpm));
+
+      // Over-rev / Limiter strike risk: Exit RPM > 95% redline
       const isOverrev = (exitPowerbandRatio > 0.95) || (maxRpm > 0 && exitRpm > (0.95 * maxRpm));
 
+      // Optimal powerband score calculation
       let powerbandScore = 95;
       let status = 'OPTIMAL';
       let suggestedGear = cornerGear;

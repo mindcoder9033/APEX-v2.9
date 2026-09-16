@@ -13,6 +13,10 @@ import { ClientPdfGenerator } from './pdf-generator.js';
 import { TelemetryCsvExporter } from './csv-exporter.js';
 import { StintMetadataModal } from './components/stint-modal.js';
 import { driverProfileStore } from './driver-profile-store.js';
+import { StintReview5PagePdfExporter } from './stint-review-5page-pdf.js';
+import { TrackDossierPdfExporter } from './track-dossier-pdf.js';
+import { globalPitWallHub } from './pitwall-hub.js';
+import { globalCareerStore } from './career-store.js';
 
 export class SessionManager {
   constructor() {
@@ -469,6 +473,66 @@ export class SessionManager {
           });
         } catch (driverErr) {
           console.warn('[DRIVER PROFILE] Stats update warning:', driverErr);
+        }
+      }
+
+      // =========================================================================
+      // APEX v3.0 AUTOMATED ECOSYSTEM PIPELINE (PIT WALL -> EXPORTS & CAREER)
+      // =========================================================================
+      if (this.recordedSamples && this.recordedSamples.length > 0) {
+        try {
+          const rawStint = {
+            id: `stint_${Date.now()}`,
+            timestamp: Date.now(),
+            driverName: this.currentStintMetadata?.driverName || this.settings.driverName || 'APEX Driver',
+            trackName: this.currentStintMetadata?.trackName || 'Circuit',
+            carName: this.currentStintMetadata?.carName || 'GT3 Racecar',
+            carClass: this.currentStintMetadata?.carClass || 'S',
+            carPI: this.currentStintMetadata?.carPI || 798,
+            weatherPreset: this.currentStintMetadata?.weatherPreset || 'Clear (Day)',
+            laps: report.laps || [],
+            bestLapTime: this.bestLapVal ? this.bestLapVal.textContent : '1:32.450',
+            samples: this.recordedSamples,
+            corners: report.corners || []
+          };
+
+          // 1. Process & Save into Pit Wall Vault
+          globalPitWallHub.processAndSaveStint(rawStint).then(async (savedStint) => {
+            // 2. Feature 1: Auto-Export 5-Page Stint Review PDF
+            try {
+              await StintReview5PagePdfExporter.export5PageReview(savedStint, true);
+            } catch (p1Err) {
+              console.warn('[AUTO-EXPORT] Stint Review 5-Page PDF error:', p1Err);
+            }
+
+            // 3. Feature 2: Auto-Export Track Dossier PDF
+            try {
+              const currentTrack = trackLibraryStore.getTrack(this.currentStintMetadata?.trackId || this.currentStintMetadata?.trackName) || {
+                trackName: rawStint.trackName,
+                corners: rawStint.corners
+              };
+              await TrackDossierPdfExporter.exportTrackDossier(currentTrack, true);
+            } catch (p2Err) {
+              console.warn('[AUTO-EXPORT] Track Dossier PDF error:', p2Err);
+            }
+
+            // 4. Feature 5: Career Mode Progression & Milestones
+            try {
+              const unlocked = globalCareerStore.processStint(savedStint);
+              if (window.PitToast) {
+                window.PitToast.success('Stint Saved // 5-Page PDF & Track Dossier Exported Automatically', 'PIT WALL');
+                if (unlocked && unlocked.length > 0) {
+                  unlocked.forEach(m => {
+                    window.PitToast.info(`Career Milestone: ${m.title}`, 'CAREER UNLOCKED');
+                  });
+                }
+              }
+            } catch (cErr) {
+              console.warn('[CAREER UPDATE] Career progression error:', cErr);
+            }
+          });
+        } catch (hubErr) {
+          console.warn('[PIT WALL PIPELINE] Error executing v3 pipeline:', hubErr);
         }
       }
     } catch (err) {

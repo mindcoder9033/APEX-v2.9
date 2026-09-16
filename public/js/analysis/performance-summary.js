@@ -1,5 +1,5 @@
 /**
- * APEX Performance Summary Engine & Recommendation Engine (Browser ES Module)
+ * APEX Performance Summary Engine & Recommendation Engine
  * Implements ANALYSIS.md §10.1 (Overall Performance Score) and §10.2 (Priority Recommendations).
  *
  * Based on "Going Faster!" by the Skip Barber Racing School.
@@ -111,11 +111,16 @@ export class PerformanceSummaryEngine {
     let totalScore = 0;
 
     for (const corner of this.corners) {
+      // Threshold % from braking analysis (if available)
       const bz = this.results.brakingAnalysis?.brakingZones?.find(
         b => b.cornerNumber === corner.cornerNumber
       );
       const thresholdPct = bz?.efficiency?.percent ?? (corner.dynamics?.peakDecelG > 0 ? 70 : 0);
+
+      // Trail-brake overlap
       const overlap = corner.dynamics?.trailBrakingOverlapPercent ?? 0;
+
+      // Score: threshold (50%) + trail-braking (50%), matching ANALYSIS.md §10.1 formula
       const cornerScore = Math.min(100, (thresholdPct / 80) * 50 + (overlap / 50) * 50);
       totalScore += cornerScore;
     }
@@ -134,6 +139,7 @@ export class PerformanceSummaryEngine {
     for (const corner of this.corners) {
       const efficiencyPct = corner.dynamics?.exitEfficiencyPercent ?? 0;
       const tapDeltaFt = Math.abs(corner.dynamics?.tapDeltaFeet ?? 0);
+      // TAP score: 100 at apex, -2 per foot of delay
       const tapScore = Math.max(0, 100 - tapDeltaFt * 2);
       const cornerScore = Math.min(100, efficiencyPct * 0.6 + tapScore * 0.4);
       totalScore += cornerScore;

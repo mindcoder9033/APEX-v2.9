@@ -1,5 +1,5 @@
 /**
- * APEX Braking Zone G-Force & Threshold Braking Engine (Browser Client)
+ * APEX Braking Zone G-Force & Threshold Braking Engine
  * Implements Sprint 9 (Phase 3) quantitative racecraft analytics:
  * - Threshold braking efficiency calculation (peak deceleration Gs vs car's theoretical max)
  * - Exact straight-line braking distance (ft & m) from brake onset to turn-in
@@ -8,13 +8,14 @@
  * - Skip Barber R-010 Sub-Threshold Braking fault diagnostics
  */
 
+import { mpsToMph, mpsToKmh, accelToG } from '../shared/telemetry-types.js';
+
 export const METERS_TO_FEET = 3.28084;
-export const MPS_TO_MPH = 2.236936;
 
-export function mpsToMph(speedMps) {
-  return (speedMps || 0) * MPS_TO_MPH;
-}
-
+/**
+ * Baseline theoretical maximum longitudinal deceleration capability (in Gs) by Car Class.
+ * Used as a reference benchmark when analyzing driver threshold compliance.
+ */
 export const CLASS_THEORETICAL_MAX_DECEL_G = {
   'E': 1.05,
   'D': 1.15,
@@ -28,6 +29,9 @@ export const CLASS_THEORETICAL_MAX_DECEL_G = {
   'UNKNOWN': 1.50
 };
 
+/**
+ * Threshold Braking Compliance Grading
+ */
 export const THRESHOLD_EFFICIENCY_GRADES = [
   { minPercent: 92, grade: 'A+', label: 'Optimal Threshold', color: '#00CC66' },
   { minPercent: 84, grade: 'A',  label: 'High Efficiency', color: '#00CC66' },
@@ -38,11 +42,18 @@ export const THRESHOLD_EFFICIENCY_GRADES = [
 
 export class BrakingZoneEngine {
   constructor(options = {}) {
-    this.brakeOnsetThreshold = options.brakeOnsetThreshold || 0.10;
-    this.steerOnsetThreshold = options.steerOnsetThreshold || 0.04;
-    this.interpolationPoints = options.interpolationPoints || 25;
+    this.brakeOnsetThreshold = options.brakeOnsetThreshold || 0.10; // 10% brake pressure
+    this.steerOnsetThreshold = options.steerOnsetThreshold || 0.04; // ~5 deg steering
+    this.interpolationPoints = options.interpolationPoints || 25;   // curve points for rendering
   }
 
+  /**
+   * Helper to calculate Euclidean travel distance (meters) between two sample indices
+   * @param {Array<Object>} samples 
+   * @param {number} startIdx 
+   * @param {number} endIdx 
+   * @returns {number} Distance in meters
+   */
   calculateDistanceBetween(samples, startIdx, endIdx) {
     if (!samples || startIdx >= endIdx || startIdx < 0 || endIdx >= samples.length) {
       return 0;
@@ -60,6 +71,13 @@ export class BrakingZoneEngine {
     return dist;
   }
 
+  /**
+   * Extracts single corner braking zone profile
+   * @param {Array<Object>} samples - Lap telemetry samples
+   * @param {Object} corner - Extracted corner object from CornerExtractor
+   * @param {number} carClassTheoreticalMaxG - Benchmark max G for car class
+   * @returns {Object} Comprehensive braking zone analysis
+   */
   extractCornerBrakingZone(samples, corner, carClassTheoreticalMaxG = 1.50) {
     const brakeIdx = corner.indexes?.brake ?? corner.indexes?.entry ?? 0;
     const turnInIdx = corner.indexes?.turnIn ?? corner.indexes?.apex ?? brakeIdx;
@@ -69,19 +87,24 @@ export class BrakingZoneEngine {
     const turnInSample = samples[turnInIdx] || samples[brakeIdx] || samples[0];
     const apexSample = samples[apexIdx] || turnInSample;
 
+    // 1. Speeds at key transition points
     const entrySpeedMph = mpsToMph(brakeStartSample.motion?.speedMps || 0);
     const turnInSpeedMph = mpsToMph(turnInSample.motion?.speedMps || 0);
     const apexSpeedMph = mpsToMph(apexSample.motion?.speedMps || 0);
     const speedBledMph = Math.max(0, entrySpeedMph - turnInSpeedMph);
 
+    // 2. Exact straight-line braking distance (onset to turn-in)
     const straightLineBrakeDistanceMeters = this.calculateDistanceBetween(samples, brakeIdx, turnInIdx);
     const straightLineBrakeDistanceFeet = straightLineBrakeDistanceMeters * METERS_TO_FEET;
 
+    // Total deceleration distance (onset to apex)
     const totalBrakeDistanceMeters = this.calculateDistanceBetween(samples, brakeIdx, apexIdx);
     const totalBrakeDistanceFeet = totalBrakeDistanceMeters * METERS_TO_FEET;
 
+    // Braking duration in seconds
     const brakeDurationSeconds = Math.max(0.01, (turnInIdx - brakeIdx) / 60.0);
 
+    // 3. Deceleration G-forces analysis in straight-line braking zone
     let peakDecelG = 0;
     let sumDecelG = 0;
     let countDecelSamples = 0;
@@ -96,6 +119,7 @@ export class BrakingZoneEngine {
         peakBrakePressure = brakeVal;
       }
 
+      // Longitudinal deceleration G (forward decel = positive magnitude)
       const decelG = Math.abs(s.motion?.acceleration?.longitudinalG || 0);
       if (decelG > peakDecelG) {
         peakDecelG = decelG;
@@ -105,6 +129,7 @@ export class BrakingZoneEngine {
       countDecelSamples++;
     }
 
+    // Measure time from brake onset to 90% peak pressure
     const targetPressure = peakBrakePressure * 0.90;
     for (let i = brakeIdx; i <= turnInIdx; i++) {
       const brakeVal = samples[i].inputs?.brake || 0;
@@ -117,9 +142,12 @@ export class BrakingZoneEngine {
 
     const avgDecelG = countDecelSamples > 0 ? (sumDecelG / countDecelSamples) : 0;
 
+    // 4. Threshold Braking Efficiency Calculation
+    // Ratio of driver's peak deceleration G to theoretical benchmark (capped at 100%)
     const efficiencyRatio = carClassTheoreticalMaxG > 0 ? (peakDecelG / carClassTheoreticalMaxG) : 0;
     const thresholdEfficiencyPercent = Math.min(100, Math.round(efficiencyRatio * 100));
 
+    // Grade assignment
     let gradeObj = THRESHOLD_EFFICIENCY_GRADES[THRESHOLD_EFFICIENCY_GRADES.length - 1];
     for (const g of THRESHOLD_EFFICIENCY_GRADES) {
       if (thresholdEfficiencyPercent >= g.minPercent) {
@@ -128,6 +156,7 @@ export class BrakingZoneEngine {
       }
     }
 
+    // 5. Deceleration Profile Curves (normalized 0..1 from brake start to apex)
     const curvePoints = [];
     const span = Math.max(1, apexIdx - brakeIdx);
     const step = span / (this.interpolationPoints - 1);
@@ -135,14 +164,13 @@ export class BrakingZoneEngine {
     for (let p = 0; p < this.interpolationPoints; p++) {
       const samplePos = brakeIdx + Math.round(p * step);
       const s = samples[Math.min(apexIdx, Math.max(brakeIdx, samplePos))];
-      const progress = p / (this.interpolationPoints - 1);
+      const progress = p / (this.interpolationPoints - 1); // 0.0 = brake onset, 1.0 = apex
 
       curvePoints.push({
         progress: Number(progress.toFixed(2)),
         decelG: Number(Math.abs(s.motion?.acceleration?.longitudinalG || 0).toFixed(2)),
         brakePressure: Number((s.inputs?.brake || 0).toFixed(2)),
         speedMph: Number(mpsToMph(s.motion?.speedMps || 0).toFixed(1)),
-        speedKmh: Number(((s.motion?.speedMps || 0) * 3.6).toFixed(1)),
         lateralG: Number(Math.abs(s.motion?.acceleration?.lateralG || 0).toFixed(2))
       });
     }
@@ -160,10 +188,10 @@ export class BrakingZoneEngine {
         turnInSpeedMph: Number(turnInSpeedMph.toFixed(1)),
         apexSpeedMph: Number(apexSpeedMph.toFixed(1)),
         speedBledMph: Number(speedBledMph.toFixed(1)),
-        entrySpeedKmh: Number(((brakeStartSample.motion?.speedMps || 0) * 3.6).toFixed(1)),
-        turnInSpeedKmh: Number(((turnInSample.motion?.speedMps || 0) * 3.6).toFixed(1)),
-        apexSpeedKmh: Number(((apexSample.motion?.speedMps || 0) * 3.6).toFixed(1)),
-        speedBledKmh: Number(Math.max(0, ((brakeStartSample.motion?.speedMps || 0) - (turnInSample.motion?.speedMps || 0)) * 3.6).toFixed(1))
+        entrySpeedKmh: Number(mpsToKmh(brakeStartSample.motion?.speedMps || 0).toFixed(1)),
+        turnInSpeedKmh: Number(mpsToKmh(turnInSample.motion?.speedMps || 0).toFixed(1)),
+        apexSpeedKmh: Number(mpsToKmh(apexSample.motion?.speedMps || 0).toFixed(1)),
+        speedBledKmh: Number(Math.max(0, mpsToKmh(brakeStartSample.motion?.speedMps || 0) - mpsToKmh(turnInSample.motion?.speedMps || 0)).toFixed(1))
       },
       distance: {
         straightLineBrakeFeet: Number(straightLineBrakeDistanceFeet.toFixed(1)),
@@ -190,6 +218,12 @@ export class BrakingZoneEngine {
     };
   }
 
+  /**
+   * Evaluates "The Procedure" discipline across multiple laps for all corners
+   * Tracks consistency of stepping brake markers deeper into braking zones
+   * @param {Array<Object>} laps - Analyzed laps with extracted corners
+   * @returns {Object} Stint-wide "The Procedure" consistency analytics
+   */
   evaluateTheProcedure(laps) {
     const validLaps = (laps || []).filter(l => l.isValid && l.corners && l.corners.length > 0);
     if (validLaps.length === 0) {
@@ -201,6 +235,7 @@ export class BrakingZoneEngine {
       };
     }
 
+    // Group braking distance and brake onset location by corner number across laps
     const cornerMap = new Map();
 
     for (const lap of validLaps) {
@@ -231,13 +266,17 @@ export class BrakingZoneEngine {
 
       const distances = lapData.map(d => d.brakeDistanceFeet);
       const avgDist = distances.reduce((a, b) => a + b, 0) / distances.length;
+      
+      // Calculate standard deviation in brake marker distance
       const variance = distances.reduce((sum, d) => sum + Math.pow(d - avgDist, 2), 0) / distances.length;
       const stdDevFeet = Math.sqrt(variance);
 
+      // Measure progressive step delta from first lap to best lap
       const firstLapDist = distances[0];
       const minLapDist = Math.min(...distances);
-      const stepProgressionFeet = firstLapDist - minLapDist;
+      const stepProgressionFeet = firstLapDist - minLapDist; // positive = stepped deeper
 
+      // Consistency Score per corner (100 = < 5ft std dev, drops as std dev increases)
       const consistencyScore = Math.max(0, Math.min(100, Math.round(100 - (stdDevFeet * 2.5))));
 
       totalVarianceSum += consistencyScore;
@@ -277,14 +316,24 @@ export class BrakingZoneEngine {
     };
   }
 
+  /**
+   * Performs end-to-end Braking Zone & G-Force Deep-Dive on a stint
+   * @param {Array<Object>} samples - Full stint or best lap samples
+   * @param {Array<Object>} laps - All segmented laps
+   * @param {Array<Object>} bestLapCorners - Analyzed corners for best lap
+   * @param {Object} vehicleMetadata - Vehicle info (carClass, etc.)
+   * @returns {Object} Stint braking analysis report
+   */
   analyzeBrakingZones(samples, laps = [], bestLapCorners = [], vehicleMetadata = {}) {
     const carClass = vehicleMetadata?.carClass || 'A';
     const classTheoreticalMaxG = CLASS_THEORETICAL_MAX_DECEL_G[carClass] || CLASS_THEORETICAL_MAX_DECEL_G['UNKNOWN'];
 
+    // 1. Analyze braking zones for each corner in the best lap (or default corners)
     const brakingZones = (bestLapCorners || []).map(corner => {
       return this.extractCornerBrakingZone(samples, corner, classTheoreticalMaxG);
     });
 
+    // 2. Calculate Stint-Wide Aggregate Braking Metrics
     let stintMaxDecelG = 0;
     let sumEfficiency = 0;
     let totalBrakingDistanceFeet = 0;
@@ -302,8 +351,11 @@ export class BrakingZoneEngine {
     }
 
     const avgEfficiencyPercent = brakingZones.length > 0 ? Math.round(sumEfficiency / brakingZones.length) : 0;
+
+    // 3. Evaluate "The Procedure" multi-lap stepping consistency
     const theProcedure = this.evaluateTheProcedure(laps);
 
+    // 4. Identify Heavy Braking Showcase Corners (Top Type II or highest speed-bleed corners)
     const showcaseCorners = [...brakingZones]
       .sort((a, b) => b.speed.speedBledMph - a.speed.speedBledMph)
       .slice(0, 3);

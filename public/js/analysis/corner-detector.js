@@ -1,10 +1,10 @@
 /**
- * APEX Deterministic Corner Detector (Client-Side)
+ * APEX Deterministic Corner Detector
  * Identifies track apexes and cornering zones using speed minima detection,
  * steering threshold validation, and lateral G-force confirmation.
  */
 
-const RAD_TO_DEG = 180 / Math.PI;
+import { RAD_TO_DEG } from '../shared/telemetry-types.js';
 
 export class CornerDetector {
   constructor(options = {}) {
@@ -15,7 +15,7 @@ export class CornerDetector {
   }
 
   /**
-   * Detects apexes across a lap's sample sequence
+   * Detects apexes across a lap's sample sequence dynamically
    * @param {Array<Object>} samples 
    * @returns {Array<{ cornerNumber: number, apexIndex: number, type: string, apexSample: Object }>}
    */
@@ -28,6 +28,7 @@ export class CornerDetector {
     const smoothedSpeed = this.smoothTrace(samples.map(s => s.motion?.speedMps ?? (s.speedMps || (s.speedKmh ? s.speedKmh / 3.6 : 0))));
     const potentialApexes = [];
 
+    // Find local minima in smoothed speed profile
     const pad = Math.floor(this.smoothWindow / 2) + 2;
     for (let i = pad; i < n - pad; i++) {
       const spd = smoothedSpeed[i];
@@ -42,6 +43,7 @@ export class CornerDetector {
         const steer = Math.abs(s.inputs?.steering ?? s.steering ?? 0);
         const latG = Math.abs(s.motion?.acceleration?.lateralG ?? s.accelY ?? s.lateralG ?? 0);
 
+        // Verify that vehicle is actively cornering (steering or lateral G)
         if (steer >= this.minSteeringAngleNorm || latG >= this.minLateralG) {
           potentialApexes.push({
             apexIndex: i,
@@ -55,8 +57,10 @@ export class CornerDetector {
       }
     }
 
+    // Merge and deduplicate nearby apex detections
     const merged = this.mergeAdjacentApexes(potentialApexes, samples);
 
+    // Classify corner type (Left, Right, Hairpin)
     return merged.map((item, idx) => {
       const type = this.classifyCornerType(item, samples);
       return {
@@ -72,6 +76,9 @@ export class CornerDetector {
     });
   }
 
+  /**
+   * Applies centered moving average smoothing to eliminate sensor noise
+   */
   smoothTrace(data) {
     const smoothed = new Array(data.length);
     const half = Math.floor(this.smoothWindow / 2);
@@ -91,6 +98,9 @@ export class CornerDetector {
     return smoothed;
   }
 
+  /**
+   * Merges multiple local minima that belong to the same corner
+   */
   mergeAdjacentApexes(apexes, samples) {
     if (apexes.length <= 1) return apexes;
 
@@ -128,6 +138,9 @@ export class CornerDetector {
     return result;
   }
 
+  /**
+   * Classifies corner into Left, Right, or Hairpin
+   */
   classifyCornerType(apex, samples) {
     const idx = apex.apexIndex;
     const preIdx = Math.max(0, idx - 25);

@@ -17,6 +17,7 @@ import { driverProfileStore } from './driver-profile-store.js';
 import { DriverDossierModal } from './components/driver-dossier-modal.js';
 import { DriverWizardModal } from './components/driver-wizard-modal.js';
 import { UiUpdater } from './components/ui-updater.js';
+import { globalCareerView } from './career-view.js';
 
 class ApexApp {
   constructor() {
@@ -27,6 +28,7 @@ class ApexApp {
     this.layoutManager = new GridLayoutManager();
     this.trackLibrary = new TrackLibraryView();
     this.stintsManager = new StintsManager();
+    this.careerView = globalCareerView;
     this.loopbackModal = new LoopbackModal();
     this.driverDossierModal = new DriverDossierModal();
     this.driverWizardModal = new DriverWizardModal();
@@ -70,11 +72,13 @@ class ApexApp {
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
     this.btnNavStints = document.getElementById('btn-nav-stints');
+    this.btnNavCareer = document.getElementById('btn-nav-career');
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
     this.viewStints = document.getElementById('view-stints');
+    this.viewCareer = document.getElementById('view-career');
 
     this.wsClient = new ApexWsClient({
       url: this.session.settings.wsUrl,
@@ -424,6 +428,12 @@ class ApexApp {
       });
     }
 
+    if (this.btnNavCareer) {
+      this.btnNavCareer.addEventListener('click', () => {
+        this.switchView('career');
+      });
+    }
+
 
     // Close on backdrop click
     if (this.modalBackdrop) {
@@ -465,6 +475,9 @@ class ApexApp {
       } else if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
         this.switchView('stints');
+      } else if (e.key === 'c' || e.key === 'C') {
+        e.preventDefault();
+        this.switchView('career');
       } else if (e.key === 's' || e.key === 'S') {
         e.preventDefault();
         this.openSettings();
@@ -738,11 +751,13 @@ class ApexApp {
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
     if (this.viewStints) this.viewStints.style.display = 'none';
+    if (this.viewCareer) this.viewCareer.style.display = 'none';
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
     if (this.btnNavStints) this.btnNavStints.classList.remove('active');
+    if (this.btnNavCareer) this.btnNavCareer.classList.remove('active');
 
     // 3. Activate selected view
     if (viewName === 'pitwall') {
@@ -756,6 +771,10 @@ class ApexApp {
       if (this.viewStints) this.viewStints.style.display = 'block';
       if (this.btnNavStints) this.btnNavStints.classList.add('active');
       if (this.stintsManager) this.stintsManager.onViewOpened();
+    } else if (viewName === 'career') {
+      if (this.viewCareer) this.viewCareer.style.display = 'block';
+      if (this.btnNavCareer) this.btnNavCareer.classList.add('active');
+      if (this.careerView) this.careerView.render();
     }
   }
 

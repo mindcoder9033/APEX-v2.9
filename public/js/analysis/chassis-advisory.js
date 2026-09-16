@@ -1,5 +1,5 @@
 /**
- * APEX Suspension Load Transfer & Chassis Setup Coach (Client-Side)
+ * APEX Suspension Load Transfer & Chassis Setup Coach
  * Implements 4-wheel suspension travel tracking, bottoming-out shock detection,
  * dynamic aerodynamic rake estimation, and prescriptive mechanical setup adjustments.
  * Rooted in "Going Faster!" Ch. 14 (Chassis Adjustments).
@@ -7,11 +7,17 @@
 
 export class ChassisAdvisoryEngine {
   constructor(options = {}) {
-    this.bottomingThreshold = options.bottomingThreshold || 0.96;
+    this.bottomingThreshold = options.bottomingThreshold || 0.96; // 96%+ suspension travel
     this.maxSafeRollDeg = options.maxSafeRollDeg || 4.5;
     this.maxSafePitchDeg = options.maxSafePitchDeg || 3.5;
   }
 
+  /**
+   * Analyze stint/lap suspension telemetry and generate setup recommendations
+   * @param {Array<Object>} samples - Telemetry samples
+   * @param {Object} [carControlData] - Optional car control analysis (for balance correlation)
+   * @returns {Object} Comprehensive suspension & chassis tuning report
+   */
   analyze(samples, carControlData = null) {
     if (!samples || samples.length === 0) {
       return this._getEmptyResult();
@@ -37,6 +43,15 @@ export class ChassisAdvisoryEngine {
     let highSpeedSamples = 0;
     let highSpeedRakeSum = 0;
 
+    const cornerWeightsDistribution = {
+      frontPct: 0,
+      rearPct: 0,
+      leftPct: 0,
+      rightPct: 0
+    };
+
+    let totalWeightSamples = 0;
+
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
       const speedMph = (s.speed || 0) * 2.23694;
@@ -48,6 +63,7 @@ export class ChassisAdvisoryEngine {
         rearRight: 0
       };
 
+      // 1. Peak travel & bottoming detection
       ['frontLeft', 'frontRight', 'rearLeft', 'rearRight'].forEach(pos => {
         const val = normTravel[pos] || 0;
         if (val > maxTravel[pos]) maxTravel[pos] = val;
@@ -57,15 +73,17 @@ export class ChassisAdvisoryEngine {
         }
       });
 
+      // 2. Pitch & Roll angles (deg)
       const rollDeg = Math.abs((s.roll || 0) * (180 / Math.PI));
       const pitchDeg = Math.abs((s.pitch || 0) * (180 / Math.PI));
       if (rollDeg > maxRollDeg) maxRollDeg = rollDeg;
       if (pitchDeg > maxPitchDeg) maxPitchDeg = pitchDeg;
 
+      // 3. Dynamic Rake at high speed (> 80 mph)
       if (speedMph > 80) {
         const frontAvg = ((normTravel.frontLeft + normTravel.frontRight) / 2);
         const rearAvg = ((normTravel.rearLeft + normTravel.rearRight) / 2);
-        const dynamicRakeIndex = rearAvg - frontAvg;
+        const dynamicRakeIndex = rearAvg - frontAvg; // Negative = nose low / rake positive
         highSpeedRakeSum += dynamicRakeIndex;
         highSpeedSamples++;
       }
@@ -75,6 +93,7 @@ export class ChassisAdvisoryEngine {
       ? Number((highSpeedRakeSum / highSpeedSamples).toFixed(3))
       : 0;
 
+    // Diagnose Handling Tendency
     const balance = carControlData?.balancePercentages || { neutralPct: 80, understeerPct: 10, oversteerPct: 10 };
 
     const setupAdjustments = this._diagnoseSetupAdjustments(
@@ -85,6 +104,7 @@ export class ChassisAdvisoryEngine {
       balance
     );
 
+    // Calculate Chassis Health Score (0 - 100)
     let chassisHealthScore = 100;
     chassisHealthScore -= Math.min(35, bottomingEvents.total * 3);
     if (maxRollDeg > this.maxSafeRollDeg) chassisHealthScore -= 10;
@@ -114,6 +134,7 @@ export class ChassisAdvisoryEngine {
   _diagnoseSetupAdjustments(bottoming, maxRoll, maxPitch, rakeIndex, balance) {
     const adjustments = [];
 
+    // Bottoming out fixes
     if (bottoming.total > 5) {
       const frontBottom = bottoming.frontLeft + bottoming.frontRight;
       const rearBottom = bottoming.rearLeft + bottoming.rearRight;
@@ -132,6 +153,7 @@ export class ChassisAdvisoryEngine {
       }
     }
 
+    // Excessive Roll / Pitch
     if (maxRoll > 4.5) {
       adjustments.push({
         component: 'Anti-Roll Bars (ARBs)',
@@ -140,6 +162,7 @@ export class ChassisAdvisoryEngine {
       });
     }
 
+    // Balance-specific tuning (Skip Barber Matrix)
     if (balance.understeerPct > 30) {
       adjustments.push({
         component: 'Front Anti-Roll Bar & Brake Bias',
@@ -167,6 +190,7 @@ export class ChassisAdvisoryEngine {
 
   _generateCoachingNotes(bottoming, maxRoll, adjustments) {
     const notes = [];
+
     if (bottoming.total > 0) {
       notes.push({
         category: 'Suspension Limit',
@@ -176,6 +200,7 @@ export class ChassisAdvisoryEngine {
         quote: '"If the chassis slams onto the track, the download on the tires suddenly falls and awful things happen to the handling." — Going Faster!'
       });
     }
+
     if (maxRoll > 4.5) {
       notes.push({
         category: 'Chassis Roll',
@@ -185,6 +210,7 @@ export class ChassisAdvisoryEngine {
         quote: '"A stiffer anti-roll bar increases resistance to roll, stabilizing the contact patch through the apex." — Carl Lopez'
       });
     }
+
     return notes;
   }
 
