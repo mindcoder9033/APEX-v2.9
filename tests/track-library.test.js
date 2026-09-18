@@ -245,3 +245,49 @@ test('TrackLibraryStore: Updates track dossier with new telemetry while preservi
   assert.equal(saved.corners[0].apexSpeedKmh, 105, 'Should update corner telemetry with new stint data');
 });
 
+test('TrackLibrarySynthesizer: Generates catalog baseline profiles with valid geometry, corners, and hazards', () => {
+  const baselines = TrackLibrarySynthesizer.generateAllCatalogBaselines();
+  assert.ok(baselines.length >= 20, 'Should generate baselines for all FM23 catalog circuits');
+  
+  const spa = baselines.find(b => b.trackName === 'Circuit de Spa-Francorchamps');
+  assert.ok(spa, 'Should contain Spa-Francorchamps baseline');
+  assert.equal(spa.trackType, 'Real');
+  assert.equal(spa.officialLength, '7.004 km');
+  assert.ok(spa.corners.length >= 10, 'Spa should have extracted baseline turns');
+  assert.ok(spa.vectorMap.points.length > 50, 'Spa should have vector map loop points');
+  assert.equal(spa.hasRecordedTelemetry, false, 'Baseline should initially have hasRecordedTelemetry=false');
+});
+
+test('TrackLibraryStore: Automatically populates full FM23 catalog upon instantiation', async () => {
+  const { TrackLibraryStore } = await import('../public/js/track-library-store.js');
+  const store = new TrackLibraryStore('apex_test_catalog_auto_pop_' + Date.now());
+
+  const allTracks = store.getAllTracks();
+  assert.ok(allTracks.length >= 20, 'Store should be automatically populated with all catalog circuits');
+  assert.ok(store.getTracksCount() >= 20);
+  assert.equal(store.getRecordedTracksCount(), 0, 'No tracks recorded initially');
+
+  // Verify finding by ID or Name
+  const mapleValley = store.getTrackById('maple-valley--full-circuit');
+  assert.ok(mapleValley);
+  assert.equal(mapleValley.trackName, 'Maple Valley');
+  assert.equal(mapleValley.trackType, 'Fictional');
+
+  // Record a live telemetry profile on Maple Valley
+  const synthesizer = new TrackLibrarySynthesizer();
+  const liveProfile = synthesizer.synthesize({
+    samples: generateStintSamples(120),
+    metadata: { trackName: 'Maple Valley', layoutName: 'Full Circuit', carName: '2023 Corvette Z06 GT3.R' }
+  });
+  liveProfile.bestLapTime = 84.150;
+
+  store.saveTrack(liveProfile);
+  const updated = store.getTrackById('maple-valley--full-circuit');
+  assert.ok(updated);
+  assert.equal(updated.hasRecordedTelemetry, true);
+  assert.equal(updated.bestLapTime, 84.150);
+  assert.equal(updated.carName, '2023 Corvette Z06 GT3.R');
+  assert.equal(store.getRecordedTracksCount(), 1, 'Should reflect 1 recorded track');
+});
+
+

@@ -315,6 +315,7 @@ export class TrackLibrarySynthesizer {
         originalSamplesCount: lapSamples.length,
         points: subsampledPoints
       },
+      hasRecordedTelemetry: true,
       setupAdvisories: {
         downforce: corners.length > 12 ? 'High Downforce' : (corners.length < 7 ? 'Low Drag' : 'Medium Downforce'),
         tireWearRisk: 'Front-Left sustained lateral scrub',
@@ -322,4 +323,168 @@ export class TrackLibrarySynthesizer {
       }
     };
   }
+
+  /**
+   * Generates a high-fidelity baseline circuit dossier for catalog tracks before live telemetry is recorded
+   * @param {Object} trackCatalogItem Catalog track item { name, type, layouts }
+   * @param {Object} layoutItem Catalog layout item { name, length }
+   * @returns {Object} Complete Baseline Track Profile
+   */
+  static generateBaselineProfile(trackCatalogItem, layoutItem) {
+    const trackName = trackCatalogItem.name || 'Circuit';
+    const layoutName = layoutItem.name || 'Full Circuit';
+    const trackType = trackCatalogItem.type || 'Real';
+    const officialLength = layoutItem.length || '4.500 km';
+    const trackId = TrackLibrarySynthesizer.generateTrackId(trackName, layoutName);
+
+    // Estimate turn count and characteristics from length
+    const lenMatch = officialLength.match(/([0-9.]+)/);
+    const lengthKm = lenMatch ? parseFloat(lenMatch[1]) : 4.5;
+    const turnCount = Math.max(6, Math.min(24, Math.round(lengthKm * 2.8)));
+
+    // Generate baseline corners
+    const corners = [];
+    const cornerTypes = ['Type I', 'Type II', 'Type III'];
+    for (let i = 1; i <= turnCount; i++) {
+      const typeIdx = (i * 3 + Math.floor(lengthKm)) % 3;
+      const cType = cornerTypes[typeIdx];
+      let apexSpd = 95 + ((i * 17) % 85);
+      let entrySpd = apexSpd + 45 + ((i * 11) % 50);
+      let targetGear = apexSpd < 90 ? 2 : (apexSpd < 135 ? 3 : (apexSpd < 170 ? 4 : 5));
+      let brakingMarker = cType === 'Type II' ? 120 : (cType === 'Type I' ? 85 : 50);
+
+      let notes = 'Prioritize exit drive onto the ensuing acceleration zone. Smooth throttle commitment.';
+      if (cType === 'Type II') {
+        notes = 'Heavy deceleration zone. Maximize straight-line threshold braking before trailing off into turn-in.';
+      } else if (cType === 'Type III') {
+        notes = 'High-speed flowing corner. Maintain aerodynamic platform stability and smooth steering cadence.';
+      }
+
+      corners.push({
+        turnNumber: i,
+        name: `Turn ${i}`,
+        cornerType: cType,
+        apexIndex: i * 20,
+        entrySpeedKmh: entrySpd,
+        apexSpeedKmh: apexSpd,
+        exitSpeedKmh: apexSpd + 35,
+        targetGear,
+        brakingMarkerMeters: brakingMarker,
+        maxDecelG: cType === 'Type II' ? 1.45 : 0.85,
+        verticalG: 1.0,
+        kerbHit: (i % 3 === 0),
+        coachingNotes: notes
+      });
+    }
+
+    // Generate baseline hazards
+    const hazards = [
+      {
+        title: `Turn 1 Entry Deceleration Zone`,
+        turnRef: 'Turn 1',
+        type: 'Heavy Threshold Braking',
+        severity: 'Medium',
+        description: `Rapid transition from top speed. Anchor braking prior to the ${corners[0]?.brakingMarkerMeters || 100}m marker.`
+      },
+      {
+        title: `Mid-Sector High-G Sequence`,
+        turnRef: `Turn ${Math.max(2, Math.floor(turnCount / 2))}`,
+        type: 'Platform Stability & Lateral Scrub',
+        severity: 'Low',
+        description: 'Sustained lateral forces. Avoid excessive steering angle beyond tire slip optimum.'
+      }
+    ];
+
+    if (turnCount > 10) {
+      hazards.push({
+        title: `Turn ${turnCount - 2} Off-Camber Apex`,
+        turnRef: `Turn ${turnCount - 2}`,
+        type: 'Lateral Grip Loss Risk',
+        severity: 'High',
+        description: 'Track falloff reduces contact patch load. Trail braking required to maintain front axle bite.'
+      });
+    }
+
+    // Generate vector loop points (parametric circuit path)
+    const points = [];
+    const numPoints = 120;
+    const rx = 350 + (lengthKm * 20);
+    const rz = 220 + (lengthKm * 15);
+    for (let i = 0; i < numPoints; i++) {
+      const angle = (i / numPoints) * 2 * Math.PI;
+      // Introduce track-like organic curvature with harmonic perturbations
+      const mod = 1 + 0.22 * Math.sin(2 * angle) + 0.12 * Math.cos(3 * angle) + 0.08 * Math.sin(5 * angle);
+      const px = Math.round((Math.cos(angle) * rx * mod) * 10) / 10;
+      const pz = Math.round((Math.sin(angle) * rz * mod) * 10) / 10;
+
+      let state = 'full-throttle';
+      let speed = 180 + Math.round(50 * Math.sin(angle));
+      if (i % 15 >= 0 && i % 15 <= 3) {
+        state = 'braking';
+        speed = 110;
+      } else if (i % 15 >= 4 && i % 15 <= 7) {
+        state = 'apex-coasting';
+        speed = 125;
+      } else if (i % 15 >= 8 && i % 15 <= 10) {
+        state = 'partial-throttle';
+        speed = 155;
+      }
+
+      points.push({
+        x: px,
+        z: pz,
+        speedKmh: speed,
+        state
+      });
+    }
+
+    return {
+      trackId,
+      trackName,
+      layoutName,
+      trackType,
+      officialLength,
+      bestLapTime: 0,
+      bestLapNumber: 0,
+      hasRecordedTelemetry: false,
+      carName: 'Ready for Telemetry',
+      carClass: 'S Class',
+      driverName: 'APEX Driver',
+      updatedAt: new Date().toISOString(),
+      stintsRecordedCount: 0,
+      totalLapsDriven: 0,
+      cornersCount: corners.length,
+      corners,
+      hazards,
+      vectorMap: {
+        pointsCount: points.length,
+        originalSamplesCount: points.length,
+        points
+      },
+      setupAdvisories: {
+        downforce: corners.length > 12 ? 'High Downforce' : (corners.length < 7 ? 'Low Drag' : 'Medium Downforce'),
+        tireWearRisk: 'Front-Left sustained lateral scrub',
+        brakingBias: '54% Front / 46% Rear recommended'
+      }
+    };
+  }
+
+  /**
+   * Generates all baseline track profiles for the full FM23 catalog
+   * @returns {Array<Object>} List of all catalog baseline track profiles
+   */
+  static generateAllCatalogBaselines() {
+    const profiles = [];
+    if (!FM23_TRACKS || !Array.isArray(FM23_TRACKS)) return profiles;
+
+    for (const track of FM23_TRACKS) {
+      if (track.layouts && Array.isArray(track.layouts)) {
+        for (const layout of track.layouts) {
+          profiles.push(TrackLibrarySynthesizer.generateBaselineProfile(track, layout));
+        }
+      }
+    }
+    return profiles;
+  }
 }
+

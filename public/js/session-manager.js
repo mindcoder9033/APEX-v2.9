@@ -30,6 +30,11 @@ export class SessionManager {
     this.lastLapTime = null;
     this.recordedSamples = [];
 
+    // Always-on Track Dossier Continuous Telemetry Buffer
+    this.passiveLapSamples = [];
+    this.lastDossierLap = 1;
+    this.lastDossierSynthesisTime = 0;
+
     this.analysisEngine = new AnalysisEngine();
     this.pdfGenerator = new ClientPdfGenerator();
     this.stintModal = new StintMetadataModal();
@@ -1051,6 +1056,7 @@ export class SessionManager {
   processSample(sample) {
     if (!sample) return;
 
+    // 1. Manual Recording Buffer (Explicit Stint Recording)
     if (this.isRecording) {
       this.recordedSamples.push(sample);
       const countEl = document.getElementById('samples-count-val') || this.samplesCountVal;
@@ -1059,6 +1065,10 @@ export class SessionManager {
       }
     }
 
+    // 2. Always-On Continuous Telemetry Recording for Track Dossier
+    this._processContinuousTrackDossierTelemetry(sample);
+
+    // 3. Lap Timing & HUD State Counters
     if (sample.timing) {
       let lap = sample.timing.lapNumber !== undefined ? sample.timing.lapNumber : 1;
       if (lap === 0) lap = 1;
@@ -1084,6 +1094,85 @@ export class SessionManager {
         if (lastLapEl) {
           lastLapEl.textContent = this.formatLapTime(this.lastLapTime);
         }
+      }
+    }
+  }
+
+  /**
+   * Continuous background telemetry processing that automatically synthesizes and updates
+   * the active circuit's Track Dossier, personal bests, and weather matrices.
+   * @param {Object} sample Telemetry sample
+   */
+  _processContinuousTrackDossierTelemetry(sample) {
+    if (!this.passiveLapSamples) {
+      this.passiveLapSamples = [];
+    }
+    this.passiveLapSamples.push(sample);
+
+    // Keep rolling window of samples per lap (max 5000 samples)
+    if (this.passiveLapSamples.length > 5000) {
+      this.passiveLapSamples.shift();
+    }
+
+    const currentLap = sample.timing?.lapNumber || 1;
+    if (this.lastDossierLap === undefined) {
+      this.lastDossierLap = currentLap;
+    }
+
+    const lapChanged = (currentLap !== this.lastDossierLap && currentLap > 0);
+    const now = Date.now();
+    const hasEnoughSamples = this.passiveLapSamples.length >= 60;
+    const shouldPeriodicSynthesize = (now - (this.lastDossierSynthesisTime || 0) > 8000) && hasEnoughSamples;
+
+    if (lapChanged || shouldPeriodicSynthesize) {
+      this.lastDossierSynthesisTime = now;
+      if (lapChanged) {
+        this.lastDossierLap = currentLap;
+      }
+
+      try {
+        const synthesizer = new TrackLibrarySynthesizer();
+        const activeProfile = driverProfileStore?.getActiveProfile ? driverProfileStore.getActiveProfile() : null;
+        
+        const trackProfile = synthesizer.synthesize({
+          samples: this.passiveLapSamples,
+          metadata: {
+            trackName: this.currentStintMetadata?.trackName || this.settings.trackName || this.settings.sessionName,
+            layoutName: this.currentStintMetadata?.layout || this.currentStintMetadata?.layoutName,
+            carName: this.currentStintMetadata?.carName || (activeProfile ? activeProfile.car : null) || 'Current Vehicle',
+            driverName: activeProfile?.name || this.settings.driverName || 'APEX Driver'
+          }
+        });
+
+        if (sample.timing?.bestLapTime > 0) {
+          trackProfile.bestLapTime = sample.timing.bestLapTime;
+        }
+
+        trackLibraryStore.saveTrack(trackProfile);
+
+        // Auto-simulate 18 weather matrices
+        try {
+          const simulator = new WeatherSimulator();
+          const weatherProfiles = simulator.simulateAll(trackProfile);
+          weatherProfileStore.saveProfiles(trackProfile.trackId, weatherProfiles);
+        } catch (wErr) {
+          // ignore
+        }
+
+        // Notify Track Dossier View if mounted
+        if (window.apexApp && window.apexApp.trackLibrary) {
+          if (typeof window.apexApp.trackLibrary.onLiveTelemetryUpdate === 'function') {
+            window.apexApp.trackLibrary.onLiveTelemetryUpdate(trackProfile, sample);
+          } else if (typeof window.apexApp.trackLibrary.refresh === 'function') {
+            window.apexApp.trackLibrary.refresh();
+          }
+        }
+      } catch (err) {
+        // Non-blocking background synthesis
+      }
+
+      if (lapChanged) {
+        this.passiveLapSamples = this.passiveLapSamples.slice(-30);
       }
     }
   }

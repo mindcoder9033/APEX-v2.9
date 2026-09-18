@@ -118,6 +118,13 @@ export class TrackLibraryView {
 
   refresh() {
     const tracks = trackLibraryStore.getAllTracks();
+    const countBadge = document.getElementById('track-library-count-badge');
+    if (countBadge) {
+      const total = trackLibraryStore.getTracksCount();
+      const recorded = trackLibraryStore.getRecordedTracksCount();
+      countBadge.textContent = `${total} CIRCUITS (${recorded} RECORDED)`;
+    }
+
     if (tracks.length === 0) {
       if (this.emptyStateContainer) this.emptyStateContainer.style.display = 'flex';
       if (this.trackDetailContainer) this.trackDetailContainer.style.display = 'none';
@@ -134,6 +141,31 @@ export class TrackLibraryView {
 
     this.renderTrackList();
     this.renderTrackDetails(this.selectedTrackId);
+  }
+
+  /**
+   * Handles continuous live telemetry streaming updates
+   * @param {Object} trackProfile Updated synthesized track profile
+   * @param {Object} sample Current live telemetry packet
+   */
+  onLiveTelemetryUpdate(trackProfile, sample) {
+    if (!trackProfile) return;
+    this.activeStreamingTrackId = trackProfile.trackId;
+
+    // If currently viewing Track Dossier tab, auto-refresh active track details
+    if (this.viewTrackLibrary && this.viewTrackLibrary.style.display !== 'none') {
+      const countBadge = document.getElementById('track-library-count-badge');
+      if (countBadge) {
+        const total = trackLibraryStore.getTracksCount();
+        const recorded = trackLibraryStore.getRecordedTracksCount();
+        countBadge.textContent = `${total} CIRCUITS (${recorded} RECORDED)`;
+      }
+
+      if (this.selectedTrackId === trackProfile.trackId) {
+        this.renderTrackDetails(trackProfile.trackId);
+      }
+      this.renderTrackList();
+    }
   }
 
   renderTrackList() {
@@ -171,24 +203,36 @@ export class TrackLibraryView {
       card.className = `track-library-card chamfer-all-corners ${isSelected ? 'selected' : ''}`;
       
       const formatTime = (sec) => {
-        if (!sec || isNaN(sec)) return '--:--.---';
+        if (!sec || isNaN(sec) || sec <= 0) return 'READY';
         const m = Math.floor(sec / 60);
         const s = (sec % 60).toFixed(3);
         return `${m}:${s < 10 ? '0' : ''}${s}`;
       };
 
+      const hasTelemetry = t.hasRecordedTelemetry || (t.bestLapTime > 0) || (t.stintsRecordedCount > 0);
+      const isLive = (this.activeStreamingTrackId === t.trackId);
+
+      const statusBadge = isLive
+        ? `<span class="badge" style="background: rgba(225,6,0,0.2); border: 1px solid var(--color-f1-red); color: var(--color-f1-red); font-size: 9px; font-weight: 700; animation: pulse 1s infinite;">● LIVE TELEMETRY</span>`
+        : (hasTelemetry
+          ? `<span class="badge" style="background: rgba(0,204,102,0.15); border: 1px solid var(--color-success); color: var(--color-success); font-size: 9px; font-weight: 700;">● TELEMETRY RECORDED</span>`
+          : `<span class="badge" style="background: rgba(255,255,255,0.06); border: 1px solid var(--color-border); color: var(--color-text-secondary); font-size: 9px;">CATALOG</span>`);
+
       card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 6px;">
           <div>
             <div class="track-card-title">${t.trackName}</div>
             <div class="track-card-layout">${t.layoutName}</div>
           </div>
-          <span class="badge ${t.trackType === 'Fictional' ? 'badge-fictional' : 'badge-real'}">${t.trackType || 'Real'}</span>
+          <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+            <span class="badge ${t.trackType === 'Fictional' ? 'badge-fictional' : 'badge-real'}">${t.trackType || 'Real'}</span>
+            ${statusBadge}
+          </div>
         </div>
-        <div class="track-card-stats-grid">
+        <div class="track-card-stats-grid" style="margin-top: 8px;">
           <div>
             <span class="track-stat-lbl">BEST LAP</span>
-            <span class="track-stat-val accent">${formatTime(t.bestLapTime)}</span>
+            <span class="track-stat-val ${hasTelemetry ? 'accent' : ''}" style="${!hasTelemetry ? 'color: var(--color-text-secondary);' : ''}">${formatTime(t.bestLapTime)}</span>
           </div>
           <div>
             <span class="track-stat-lbl">TURNS</span>
@@ -231,13 +275,16 @@ export class TrackLibraryView {
     const carEl = document.getElementById('detail-track-car');
     const stintsCountEl = document.getElementById('detail-track-stints-count');
 
+    const hasTelemetry = track.hasRecordedTelemetry || (track.bestLapTime > 0) || (track.stintsRecordedCount > 0);
+
     if (titleEl) titleEl.textContent = track.trackName;
     if (layoutEl) layoutEl.textContent = track.layoutName;
     if (typeBadge) typeBadge.textContent = `${track.trackType || 'Real'} Circuit`;
     if (lengthEl) lengthEl.textContent = track.officialLength || '4.500 km';
-    if (bestLapEl) bestLapEl.textContent = formatTime(track.bestLapTime);
-    if (carEl) carEl.textContent = track.carName || '2023 Porsche 911 GT3 R';
-    if (stintsCountEl) stintsCountEl.textContent = `${track.stintsRecordedCount || 1} Stints (${track.totalLapsDriven || 1} Laps)`;
+    if (bestLapEl) bestLapEl.textContent = hasTelemetry ? formatTime(track.bestLapTime) : 'READY';
+    if (carEl) carEl.textContent = track.carName || (hasTelemetry ? '2023 Porsche 911 GT3 R' : 'Ready for Telemetry');
+    if (stintsCountEl) stintsCountEl.textContent = hasTelemetry ? `${track.stintsRecordedCount} Stints (${track.totalLapsDriven || 1} Laps)` : 'Catalog Baseline';
+
 
     // 2. Vector SVG Track Map
     const mapSvgContainer = document.getElementById('detail-track-map-svg');
