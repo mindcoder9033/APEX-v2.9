@@ -93,7 +93,6 @@ class ApexApp {
     this.bindEvents();
     this.initDesktopWindowControls();
     this.connectBridge();
-    this._cleanupTrackStudyStorage();
     this._migrateWeatherProfiles();
     await this.initDriverProfiles();
   }
@@ -340,23 +339,7 @@ class ApexApp {
     }
   }
 
-  /**
-   * One-time cleanup for legacy Track Study storage keys
-   */
-  _cleanupTrackStudyStorage() {
-    try {
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith('apex_track_study_') || key === 'apex_track_study_store')) {
-          keysToRemove.push(key);
-        }
-      }
-      keysToRemove.forEach(k => localStorage.removeItem(k));
-    } catch (e) {
-      // Ignore localStorage access errors
-    }
-  }
+
 
   populateSettingsForm() {
     const s = this.session.settings;

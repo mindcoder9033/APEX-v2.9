@@ -8,7 +8,6 @@ import { trackLibraryStore } from './track-library-store.js';
 import { PreStintPdfBuilder } from './pre-stint-pdf-builder.js';
 import { WeatherIntelView } from './weather-intel-view.js';
 import { weatherProfileStore } from './weather-profile-store.js';
-import { trackStudyView } from './track-study-view.js';
 
 export class TrackLibraryView {
   constructor() {
@@ -30,7 +29,6 @@ export class TrackLibraryView {
     this.emptyStateContainer = document.getElementById('track-library-empty-state');
     
     this.btnExportPdf = document.getElementById('btn-export-pre-stint-pdf');
-    this.btnOpenTrackStudy = document.getElementById('btn-open-track-study');
     this.filterPills = document.querySelectorAll('.track-filter-pill');
 
     this.bindEvents();
@@ -72,20 +70,6 @@ export class TrackLibraryView {
     if (this.btnExportPdf) {
       this.btnExportPdf.addEventListener('click', () => {
         this.exportPreStintPdf();
-      });
-    }
-
-    // Track Study 4-Phase Modal Launcher
-    if (this.btnOpenTrackStudy) {
-      this.btnOpenTrackStudy.addEventListener('click', () => {
-        if (!this.selectedTrackId) {
-          alert('Please select a circuit from the library first.');
-          return;
-        }
-        const track = trackLibraryStore.getTrackById(this.selectedTrackId);
-        if (track) {
-          trackStudyView.open(track);
-        }
       });
     }
   }
