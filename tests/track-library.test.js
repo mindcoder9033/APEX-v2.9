@@ -154,7 +154,7 @@ test('AnalysisEngine: Exposes trackSynthesizer and integrates with analysis pipe
   assert.equal(profile.officialLength, '1.944 km');
 });
 
-test('PreStintPdfBuilder: Compiles full 2-page Pre-Stint Driver Briefing PDF', async () => {
+test('PreStintPdfBuilder: Compiles full 2-page Pre-Stint Driver Briefing PDF and max 5-page PDF with weather', async () => {
   const synthesizer = new TrackLibrarySynthesizer();
   const samples = generateStintSamples(200);
   const profile = synthesizer.synthesize({
@@ -175,6 +175,40 @@ test('PreStintPdfBuilder: Compiles full 2-page Pre-Stint Driver Briefing PDF', a
   // Verify PDF header magic bytes '%PDF'
   const header = String.fromCharCode(...pdfBytes.slice(0, 4));
   assert.equal(header, '%PDF', 'Buffer should contain valid PDF signature');
+
+  const { PDFDocument } = await import('pdf-lib');
+  const loadedDoc2Page = await PDFDocument.load(pdfBytes);
+  assert.equal(loadedDoc2Page.getPageCount(), 2, 'Default briefing should be 2 pages');
+
+  // Test full 18-weather conditions export: must not exceed 5 pages
+  const mockWeatherProfiles = {
+    'clear': { conditionSlug: 'clear', gripLossPct: 0, brakingIncreasePct: 0, speedReductionPct: 0, visibilityPct: 100, hydroRisk: false, confidencePct: 90, corners: [] },
+    'heavy-rain': {
+      conditionSlug: 'heavy-rain',
+      gripLossPct: 62,
+      brakingIncreasePct: 48,
+      speedReductionPct: 31,
+      visibilityPct: 40,
+      hydroRisk: true,
+      confidencePct: 85,
+      hydroplaningCorners: [1, 5],
+      corners: profile.corners.map(c => ({
+        ...c,
+        dryBrakingMarkerMeters: c.brakingMarkerMeters,
+        wetBrakingMarkerMeters: Math.round(c.brakingMarkerMeters * 1.5),
+        dryApexSpeedKmh: c.apexSpeedKmh,
+        wetApexSpeedKmh: Math.round(c.apexSpeedKmh * 0.7),
+        dryTargetGear: c.targetGear,
+        wetTargetGear: Math.max(1, c.targetGear - 1),
+        hydroplaningFlag: c.turnNumber === 1 || c.turnNumber === 5
+      }))
+    }
+  };
+
+  const pdf5PageBytes = await pdfBuilder.generate(profile, mockWeatherProfiles);
+  const loadedDoc5Page = await PDFDocument.load(pdf5PageBytes);
+  assert.ok(loadedDoc5Page.getPageCount() <= 5, 'Weather dossier PDF must never exceed 5 pages');
+  assert.equal(loadedDoc5Page.getPageCount(), 5, 'Full dossier should compile to exactly 5 pages');
 });
 
 test('TrackLibrarySynthesizer: Correctly resolves Brands Hatch (Grad Prix Circuit) with typo tolerance and parenthesized layout', () => {
