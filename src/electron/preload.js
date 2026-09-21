@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('apexDesktop', {
   // Native Save File Dialog
   saveFile: (options) => ipcRenderer.invoke('dialog:save-file', options),
 
-  // Auto-Archive to Documents/APEX v2.9/user/
+  // Auto-Archive to Documents/APEX/user/
   autoArchive: (data) => ipcRenderer.invoke('file:auto-archive', data),
   openReportsFolder: () => ipcRenderer.invoke('system:open-reports-folder'),
 

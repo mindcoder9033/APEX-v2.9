@@ -45,7 +45,7 @@ The **Skills Hub** transforms Skip Barber's *Going Faster!* racing principles in
 
 ```
 +--------------------------------------------------------------------------------------------------+
-| APEX // PIT-WALL TELEMETRY [v2.9]        [PIT WALL] [TRACK DOSSIER] [CAREER MODE] [★ SKILLS HUB] |
+| APEX // PIT-WALL TELEMETRY               [PIT WALL] [TRACK DOSSIER] [CAREER MODE] [★ SKILLS HUB] |
 +--------------------------------------------------------------------------------------------------+
 | CHAPTER SELECTOR: [ Chapter 1: A Plan of Attack ▼ ]            DRIVER: [ #01 APEX Driver (CLUB) ] |
 +------------------------------------+-------------------------------------------------------------+
@@ -69,7 +69,7 @@ The **Skills Hub** transforms Skip Barber's *Going Faster!* racing principles in
 ## 5. File Structure & Changes
 
 ```
-APEX v2.9/
+APEX/
 ├── public/
 │   ├── index.html                                 [MODIFY: Add Skills Hub Nav Tab & #view-skills container]
 │   ├── css/

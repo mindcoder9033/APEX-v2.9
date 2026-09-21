@@ -3532,7 +3532,7 @@ export class ClientPdfGenerator {
       }
       const base64 = btoa(binary);
 
-      // Auto-archive automatically to Documents/APEX v2.9/user/
+      // Auto-archive automatically to Documents/APEX/user/
       window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
 
       // Native save dialog

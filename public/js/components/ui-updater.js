@@ -84,7 +84,7 @@ export class UiUpdater {
               <div class="version-arrow">&rarr;</div>
               <div class="version-step">
                 <span class="version-label">AVAILABLE UPGRADE</span>
-                <span id="updater-target-ver" class="version-value target">v2.9.1</span>
+                <span id="updater-target-ver" class="version-value target">--</span>
               </div>
               <div class="version-meta">
                 <span id="updater-release-date" class="version-meta-item">RELEASE DATE: --</span>
@@ -249,7 +249,7 @@ export class UiUpdater {
     const changelogEl = document.getElementById('updater-changelog-content');
 
     if (currVerEl) currVerEl.textContent = `v${updateInfo.currentVersion || '1.0.0'}`;
-    if (targetVerEl) targetVerEl.textContent = updateInfo.tagName || `v${updateInfo.latestVersion || '2.9'}`;
+    if (targetVerEl) targetVerEl.textContent = updateInfo.tagName || (updateInfo.latestVersion ? `v${updateInfo.latestVersion}` : '--');
 
     if (releaseDateEl) {
       const dateStr = updateInfo.publishedAt ? new Date(updateInfo.publishedAt).toLocaleDateString() : 'RECENT';

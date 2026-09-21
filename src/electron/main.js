@@ -130,7 +130,7 @@ function registerIpcHandlers() {
 
     try {
       const docsDir = app.getPath('documents');
-      const defaultUserDir = path.join(docsDir, 'APEX v2.9', 'user');
+      const defaultUserDir = path.join(docsDir, 'APEX', 'user');
       await fs.promises.mkdir(defaultUserDir, { recursive: true });
 
       const defaultSavePath = options.defaultPath || (options.suggestedName ? path.join(defaultUserDir, options.suggestedName) : defaultUserDir);
@@ -163,11 +163,11 @@ function registerIpcHandlers() {
     }
   });
 
-  // Auto-Archive Stint Reports to Documents/APEX v2.9/user/
+  // Auto-Archive Stint Reports to Documents/APEX/user/
   ipcMain.handle('file:auto-archive', async (_event, fileData = {}) => {
     try {
       const docsDir = app.getPath('documents');
-      const archiveDir = path.join(docsDir, 'APEX v2.9', 'user');
+      const archiveDir = path.join(docsDir, 'APEX', 'user');
       await fs.promises.mkdir(archiveDir, { recursive: true });
 
       const fileName = fileData.fileName || `APEX_Report_${Date.now()}.${fileData.extension || 'pdf'}`;
@@ -189,7 +189,7 @@ function registerIpcHandlers() {
   ipcMain.handle('system:open-reports-folder', async () => {
     try {
       const docsDir = app.getPath('documents');
-      const archiveDir = path.join(docsDir, 'APEX v2.9', 'user');
+      const archiveDir = path.join(docsDir, 'APEX', 'user');
       await fs.promises.mkdir(archiveDir, { recursive: true });
       await shell.openPath(archiveDir);
       return { success: true, path: archiveDir };
@@ -203,7 +203,7 @@ function registerIpcHandlers() {
   // ==========================================
   const getProfilesDir = async () => {
     const docsDir = app.getPath('documents');
-    const profilesDir = path.join(docsDir, 'APEX v2.9', 'user', 'Profiles');
+    const profilesDir = path.join(docsDir, 'APEX', 'user', 'Profiles');
     await fs.promises.mkdir(profilesDir, { recursive: true });
     return profilesDir;
   };

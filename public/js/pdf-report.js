@@ -494,7 +494,7 @@ function wrapText(text, font, fontSize, maxWidth) {
         }
         const base64 = btoa(binary);
 
-        // Auto-archive automatically to Documents/APEX v2.9/user/
+        // Auto-archive automatically to Documents/APEX/user/
         window.apexDesktop.autoArchive?.({ fileName: defaultFilename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
 
         await window.apexDesktop.saveFile({

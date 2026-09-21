@@ -949,7 +949,7 @@ export class GridLayoutManager {
     const layout = this.getCurrentLayoutState();
     const data = {
       app: 'APEX Motorsport Telemetry',
-      version: '2.9',
+      version: '1.0',
       exportedAt: new Date().toISOString(),
       layout
     };

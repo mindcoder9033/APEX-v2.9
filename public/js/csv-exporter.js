@@ -96,7 +96,7 @@ export class TelemetryCsvExporter {
     if (typeof window !== 'undefined' && window.apexDesktop?.saveFile) {
       const base64 = btoa(unescape(encodeURIComponent(csvContent)));
 
-      // Auto-archive automatically to Documents/APEX v2.9/user/
+      // Auto-archive automatically to Documents/APEX/user/
       window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'csv' });
 
       // Native save dialog

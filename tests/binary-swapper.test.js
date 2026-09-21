@@ -136,13 +136,13 @@ describe('Electron Updater: Binary Swapper & Download Engine', () => {
   test('buildSwapPowerShellScript: contains valid ASCII commands and proper escaping', () => {
     const script = buildSwapPowerShellScript({
       targetPid: 9876,
-      targetExePath: 'D:\\AI Workspace\\APEX v2.9\\APEX.exe',
+      targetExePath: 'D:\\AI Workspace\\APEX\\APEX.exe',
       stagedExePath: 'C:\\Temp\\stage.exe',
       scriptLogPath: 'C:\\Temp\\log.txt'
     });
 
     assert.ok(script.includes('$targetPid = 9876'), 'Should contain PID');
-    assert.ok(script.includes('D:\\AI Workspace\\APEX v2.9\\APEX.exe'), 'Should contain target path');
+    assert.ok(script.includes('D:\\AI Workspace\\APEX\\APEX.exe'), 'Should contain target path');
     assert.ok(script.includes('Get-Process -Id $targetPid'), 'Should poll process termination');
     assert.ok(script.includes('Copy-Item'), 'Should perform file copy');
     assert.ok(script.includes('Start-Process'), 'Should relaunch new process');
