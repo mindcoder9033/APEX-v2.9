@@ -61,18 +61,25 @@ export class SkillsEvaluator {
     const overallScore = targetChapter === 2 ? ch2Score : ch1Score;
     const grade = this._scoreToGrade(overallScore);
 
-    return {
-      timestamp: Date.now(),
-      cornerId: options.cornerId || 'T1',
-      cornerName: options.cornerName || 'Corner',
-      cornerType: options.cornerType || 'Type I (Exit Priority)',
-      overallScore,
-      grade,
-      chapterScores: {
-        ch1: ch1Score,
-        ch2: ch2Score
-      },
-      skills: {
+    let skillsMap = {};
+    if (options.onlySelectedChapter) {
+      if (targetChapter === 2) {
+        skillsMap = {
+          'ch2-line-geometry-15gr': lineGeometry15GRSkill,
+          'ch2-balance-slide-control': balanceSlideControlSkill,
+          'ch2-four-block-entry': fourBlockEntrySkill
+        };
+      } else {
+        skillsMap = {
+          'ch1-exit-speed': exitSpeedSkill,
+          'ch1-the-line': theLineSkill,
+          'ch1-threshold-braking': thresholdBrakingSkill,
+          'ch1-combined-entry': combinedEntrySkill,
+          'ch1-platform-stability': platformStabilitySkill
+        };
+      }
+    } else {
+      skillsMap = {
         // Chapter 1
         'ch1-exit-speed': exitSpeedSkill,
         'ch1-the-line': theLineSkill,
@@ -83,7 +90,22 @@ export class SkillsEvaluator {
         'ch2-line-geometry-15gr': lineGeometry15GRSkill,
         'ch2-balance-slide-control': balanceSlideControlSkill,
         'ch2-four-block-entry': fourBlockEntrySkill
+      };
+    }
+
+    return {
+      timestamp: Date.now(),
+      cornerId: options.cornerId || 'T1',
+      cornerName: options.cornerName || 'Corner',
+      cornerType: options.cornerType || 'Type I (Exit Priority)',
+      chapterNumber: targetChapter,
+      overallScore,
+      grade,
+      chapterScores: {
+        ch1: ch1Score,
+        ch2: ch2Score
       },
+      skills: skillsMap,
       summary: this._generateCornerSummary(overallScore, {
         exitSpeedSkill,
         theLineSkill,

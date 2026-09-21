@@ -259,4 +259,57 @@ describe('Skills Hub // Live Telemetry & Stint Recording Visual Feedback', () =>
     assert.ok(ch2StintStats.skills['ch2-line-geometry-15gr'].currentScore > 0);
     assert.ok(ch2StintStats.skills['ch2-four-block-entry'].currentScore > 0);
   });
+
+  test('SkillsEvaluator: When onlySelectedChapter is true, only records the selected chapter pillars', async () => {
+    const { SkillsEvaluator } = await import('../public/js/analysis/going-faster/skills-evaluator.js');
+
+    const mockSamples = [];
+    for (let i = 0; i < 25; i++) {
+      mockSamples.push({
+        motion: { speedMps: 28, acceleration: { lateralG: 0.9, longitudinalG: -0.5 }, position: { x: i, y: 0, z: 0 } },
+        inputs: { brake: 0.5, throttle: 0, steering: 0.2 },
+        engine: { currentRpm: 5000, maxRpm: 8000 }
+      });
+    }
+
+    // 1. Evaluate with Chapter 1 selected
+    const ch1Eval = SkillsEvaluator.evaluateCorner(mockSamples, {
+      chapterNumber: 1,
+      onlySelectedChapter: true,
+      cornerId: 'T1'
+    });
+    assert.equal(ch1Eval.chapterNumber, 1);
+    assert.ok(ch1Eval.skills['ch1-exit-speed'], 'Chapter 1 skills should be present');
+    assert.ok(ch1Eval.skills['ch1-the-line'], 'Chapter 1 skills should be present');
+    assert.equal(ch1Eval.skills['ch2-line-geometry-15gr'], undefined, 'Chapter 2 skills should NOT be present when Chapter 1 is selected');
+    assert.equal(ch1Eval.skills['ch2-balance-slide-control'], undefined, 'Chapter 2 skills should NOT be present when Chapter 1 is selected');
+
+    // 2. Evaluate with Chapter 2 selected
+    const ch2Eval = SkillsEvaluator.evaluateCorner(mockSamples, {
+      chapterNumber: 2,
+      onlySelectedChapter: true,
+      cornerId: 'T2'
+    });
+    assert.equal(ch2Eval.chapterNumber, 2);
+    assert.ok(ch2Eval.skills['ch2-line-geometry-15gr'], 'Chapter 2 skills should be present');
+    assert.ok(ch2Eval.skills['ch2-four-block-entry'], 'Chapter 2 skills should be present');
+    assert.equal(ch2Eval.skills['ch1-exit-speed'], undefined, 'Chapter 1 skills should NOT be present when Chapter 2 is selected');
+    assert.equal(ch2Eval.skills['ch1-the-line'], undefined, 'Chapter 1 skills should NOT be present when Chapter 2 is selected');
+  });
+
+  test('SkillsView: Live HUD card renders Start/Stop Recording and Reset Stint buttons', () => {
+    const view = new SkillsView('view-skills');
+    const hudHtml = view._renderLiveHudCard();
+
+    assert.match(hudHtml, /id="btn-skills-record-toggle"/i);
+    assert.match(hudHtml, /id="btn-skills-reset-stint"/i);
+    assert.match(hudHtml, /START RECORDING/i);
+    assert.match(hudHtml, /RESET/i);
+
+    // Simulate active recording mode
+    view.isRecording = true;
+    const recordingHudHtml = view._renderLiveHudCard();
+    assert.match(recordingHudHtml, /STOP RECORDING/i);
+    assert.match(recordingHudHtml, /skills-rec-pulse/i);
+  });
 });

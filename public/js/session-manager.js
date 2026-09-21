@@ -563,6 +563,7 @@ export class SessionManager {
               const car = rawStint.carName || 'GT3 Racecar';
               const stintId = rawStint.id;
               const sessionName = this.currentStintMetadata?.sessionName || `${track} Stint`;
+              const activeChapter = (window.apexApp && window.apexApp.skillsView && window.apexApp.skillsView.selectedChapterNumber) || 1;
 
               if (report.laps && report.laps.length > 0) {
                 report.laps.forEach(lap => {
@@ -574,6 +575,8 @@ export class SessionManager {
 
                       if (cornerSamples.length >= 5) {
                         const evalData = SkillsEvaluator.evaluateCorner(cornerSamples, {
+                          chapterNumber: activeChapter,
+                          onlySelectedChapter: true,
                           cornerId: corner.cornerId || `T${corner.cornerNumber || corner.number || 1}`,
                           cornerName: corner.name || `Turn ${corner.cornerNumber || corner.number || 1}`,
                           cornerType: corner.type || 'Type I (Exit Priority)',
@@ -608,6 +611,8 @@ export class SessionManager {
                     const cornerSamples = corner.samples || this.recordedSamples.slice(Math.max(0, entryIdx), Math.min(this.recordedSamples.length, exitIdx + 1));
                     if (cornerSamples.length >= 5) {
                       const evalData = SkillsEvaluator.evaluateCorner(cornerSamples, {
+                        chapterNumber: activeChapter,
+                        onlySelectedChapter: true,
                         cornerId: `T${corner.cornerNumber || 1}`,
                         cornerName: corner.name || `Turn ${corner.cornerNumber || 1}`,
                         cornerType: corner.type || 'Type I (Exit Priority)',

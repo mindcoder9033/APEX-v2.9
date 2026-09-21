@@ -155,6 +155,7 @@ export class SkillsView {
           const cornerId = `T${turnNum}`;
           const evalResult = SkillsEvaluator.evaluateCorner(this.liveCornerBuffer, {
             chapterNumber: this.selectedChapterNumber,
+            onlySelectedChapter: true,
             cornerId: cornerId,
             cornerName: `Turn ${turnNum}`,
             trackName: stintInfo?.sessionName || 'Live Stint Circuit',
@@ -289,6 +290,22 @@ export class SkillsView {
       phasePill.className = `live-phase-pill ${phaseInfo.className}`;
       phasePill.style.borderColor = phaseInfo.color;
       phasePill.style.color = phaseInfo.color;
+    }
+
+    const recBtn = document.getElementById('btn-skills-record-toggle');
+    if (recBtn) {
+      if (this.isRecording) {
+        recBtn.className = 'btn btn-danger btn-xs chamfer-br skills-hud-rec-btn skills-rec-pulse';
+        recBtn.innerHTML = '<span>⏹ STOP RECORDING</span>';
+      } else {
+        recBtn.className = 'btn btn-primary btn-xs chamfer-br skills-hud-rec-btn';
+        recBtn.innerHTML = '<span>⏺ START RECORDING</span>';
+      }
+    }
+
+    const hudTitle = document.getElementById('skills-live-hud-title-text');
+    if (hudTitle) {
+      hudTitle.textContent = this.isRecording ? 'LIVE STINT IN PROGRESS // 60HZ TELEMETRY INGESTION' : (this.liveSample ? 'LIVE TELEMETRY STREAM ACTIVE // READY TO RECORD' : 'TELEMETRY STANDBY // AWAITING FORZA LINK');
     }
   }
 
@@ -728,13 +745,21 @@ export class SkillsView {
         <div class="skills-live-hud-header">
           <div class="skills-live-hud-badge-group">
             <span class="live-status-dot ${this.isRecording ? 'pulse-red' : (this.liveSample ? 'pulse-green' : 'dim-white')}"></span>
-            <span class="skills-live-hud-title">
+            <span class="skills-live-hud-title" id="skills-live-hud-title-text">
               ${this.isRecording ? 'LIVE STINT IN PROGRESS // 60HZ TELEMETRY INGESTION' : (this.liveSample ? 'LIVE TELEMETRY STREAM ACTIVE // READY TO RECORD' : 'TELEMETRY STANDBY // AWAITING FORZA LINK')}
             </span>
           </div>
           <div class="skills-live-hud-meta">
             <span class="skills-live-hud-stat">BUFFER: <strong id="skills-live-hud-buf">${this.liveCornerBuffer.length}</strong> FRAMES</span>
             <span class="skills-live-hud-stat">STREAM: <strong id="skills-live-hud-rate">${this.liveFpsTracker.rate || 60}</strong> HZ</span>
+            <div class="skills-hud-btn-group">
+              <button id="btn-skills-record-toggle" class="btn ${this.isRecording ? 'btn-danger skills-rec-pulse' : 'btn-primary'} btn-xs chamfer-br skills-hud-rec-btn" title="Toggle Stint Recording">
+                <span>${this.isRecording ? '⏹ STOP RECORDING' : '⏺ START RECORDING'}</span>
+              </button>
+              <button id="btn-skills-reset-stint" class="btn btn-secondary btn-xs chamfer-br skills-hud-reset-btn" title="Reset Stint Samples & Stopwatch">
+                <span>↺ RESET</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1424,6 +1449,34 @@ export class SkillsView {
           this.selectedAttemptForInspect = null;
           this.selectedCompareIds.clear();
           this.render();
+        }
+      });
+    }
+
+    // Start / Stop Recording toggle button in Live Clinic HUD
+    const btnRecordToggle = document.getElementById('btn-skills-record-toggle');
+    if (btnRecordToggle) {
+      btnRecordToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const sessionManager = window.apexApp?.sessionManager;
+        if (sessionManager) {
+          if (sessionManager.isRecording) {
+            sessionManager.stopRecording();
+          } else {
+            sessionManager.startRecording();
+          }
+        }
+      });
+    }
+
+    // Reset Stint button in Live Clinic HUD
+    const btnResetStint = document.getElementById('btn-skills-reset-stint');
+    if (btnResetStint) {
+      btnResetStint.addEventListener('click', (e) => {
+        e.preventDefault();
+        const sessionManager = window.apexApp?.sessionManager;
+        if (sessionManager) {
+          sessionManager.resetStint();
         }
       });
     }
