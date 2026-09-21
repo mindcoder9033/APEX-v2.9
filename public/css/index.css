@@ -93,6 +93,50 @@ html, body {
   overflow-x: hidden;
 }
 
+/* ==========================================================================
+   APEX Custom Motorsport Scrollbars (F1 Pit-Wall Signature)
+   7px High-Visibility Red Accent with Dynamic Glow
+   ========================================================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(225, 6, 0, 0.45) rgba(10, 12, 15, 0.9);
+}
+
+/* WebKit Custom Scrollbars (Chrome, Edge, Safari, Electron) */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(10, 12, 15, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(225, 6, 0, 0.38);
+  border: 1px solid rgba(225, 6, 0, 0.6);
+  border-radius: 3px;
+  transition: background 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-f1-red, #E10600);
+  border-color: #FF4D4D;
+  box-shadow: 0 0 8px rgba(225, 6, 0, 0.6);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #FF2A1A;
+  border-color: #FFAAAA;
+  box-shadow: 0 0 12px rgba(225, 6, 0, 0.9);
+}
+
+::-webkit-scrollbar-corner {
+  background: rgba(10, 12, 15, 0.95);
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
   font-weight: 700;
