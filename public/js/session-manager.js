@@ -17,6 +17,8 @@ import { StintReview5PagePdfExporter } from './stint-review-5page-pdf.js';
 import { TrackDossierPdfExporter } from './track-dossier-pdf.js';
 import { globalPitWallHub } from './pitwall-hub.js';
 import { globalCareerStore } from './career-store.js';
+import { CornerDetector } from './analysis/corner-detector.js';
+import { CornerExtractor } from './analysis/corner-extractor.js';
 import { SkillsEvaluator } from './analysis/going-faster/skills-evaluator.js';
 import { skillsStore } from './skills-store.js';
 import { getIcon } from './icons.js';
@@ -554,25 +556,36 @@ export class SessionManager {
               console.warn('[CAREER UPDATE] Career progression error:', cErr);
             }
 
-            // 5. Feature 6: Going Faster Skills Hub Corner Scoring
+            // 5. Feature 6: Going Faster Skills Hub Corner Scoring & Stint Persistence
             try {
+              let evaluatedCount = 0;
+              const track = rawStint.trackName || 'Circuit';
+              const car = rawStint.carName || 'GT3 Racecar';
+              const stintId = rawStint.id;
+              const sessionName = this.currentStintMetadata?.sessionName || `${track} Stint`;
+
               if (report.laps && report.laps.length > 0) {
-                let evaluatedCount = 0;
                 report.laps.forEach(lap => {
                   if (lap.corners && lap.corners.length > 0) {
                     lap.corners.forEach(corner => {
-                      if (corner.samples && corner.samples.length >= 5) {
-                        const evalData = SkillsEvaluator.evaluateCorner(corner.samples, {
-                          cornerId: corner.cornerId || `T${corner.number || 1}`,
-                          cornerName: corner.name || `Turn ${corner.number || 1}`,
+                      const entryIdx = corner.indexes?.entry ?? corner.indexes?.brake ?? corner.startIndex ?? 0;
+                      const exitIdx = corner.indexes?.exit ?? corner.endIndex ?? (lap.samples ? lap.samples.length - 1 : 0);
+                      const cornerSamples = corner.samples || (lap.samples ? lap.samples.slice(Math.max(0, entryIdx), Math.min(lap.samples.length, exitIdx + 1)) : []);
+
+                      if (cornerSamples.length >= 5) {
+                        const evalData = SkillsEvaluator.evaluateCorner(cornerSamples, {
+                          cornerId: corner.cornerId || `T${corner.cornerNumber || corner.number || 1}`,
+                          cornerName: corner.name || `Turn ${corner.cornerNumber || corner.number || 1}`,
                           cornerType: corner.type || 'Type I (Exit Priority)',
-                          trackName: rawStint.trackName,
-                          carName: rawStint.carName,
+                          trackName: track,
+                          carName: car,
                           lapNumber: lap.lapNumber || 1
                         });
                         skillsStore.recordAttempt(evalData, {
-                          trackName: rawStint.trackName,
-                          carName: rawStint.carName,
+                          stintId: stintId,
+                          sessionName: sessionName,
+                          trackName: track,
+                          carName: car,
                           lapNumber: lap.lapNumber || 1
                         });
                         evaluatedCount++;
@@ -580,8 +593,47 @@ export class SessionManager {
                     });
                   }
                 });
-                if (evaluatedCount > 0 && window.PitToast) {
-                  window.PitToast.info(`${evaluatedCount} Corner Attempts Evaluated in Skills Hub`, 'GOING FASTER COACH');
+              }
+
+              // Fallback: If no laps were segmented or no lap corners were found, evaluate corners directly from recorded samples
+              if (evaluatedCount === 0 && this.recordedSamples && this.recordedSamples.length >= 20) {
+                const detector = new CornerDetector();
+                const extractor = new CornerExtractor();
+                const detectedApexes = detector.detectApexes(this.recordedSamples);
+                if (detectedApexes && detectedApexes.length > 0) {
+                  const corners = extractor.extractAll(this.recordedSamples, detectedApexes);
+                  corners.forEach(corner => {
+                    const entryIdx = corner.indexes?.entry ?? corner.indexes?.brake ?? 0;
+                    const exitIdx = corner.indexes?.exit ?? (this.recordedSamples.length - 1);
+                    const cornerSamples = corner.samples || this.recordedSamples.slice(Math.max(0, entryIdx), Math.min(this.recordedSamples.length, exitIdx + 1));
+                    if (cornerSamples.length >= 5) {
+                      const evalData = SkillsEvaluator.evaluateCorner(cornerSamples, {
+                        cornerId: `T${corner.cornerNumber || 1}`,
+                        cornerName: corner.name || `Turn ${corner.cornerNumber || 1}`,
+                        cornerType: corner.type || 'Type I (Exit Priority)',
+                        trackName: track,
+                        carName: car,
+                        lapNumber: 1
+                      });
+                      skillsStore.recordAttempt(evalData, {
+                        stintId: stintId,
+                        sessionName: sessionName,
+                        trackName: track,
+                        carName: car,
+                        lapNumber: 1
+                      });
+                      evaluatedCount++;
+                    }
+                  });
+                }
+              }
+
+              if (evaluatedCount > 0) {
+                if (window.apexApp && window.apexApp.skillsView && typeof window.apexApp.skillsView.render === 'function') {
+                  window.apexApp.skillsView.render();
+                }
+                if (window.PitToast) {
+                  window.PitToast.info(`${evaluatedCount} Corner Attempts & Pillar Scores Saved in Skills Hub`, 'GOING FASTER COACH');
                 }
               }
             } catch (skErr) {

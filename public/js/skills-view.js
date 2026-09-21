@@ -164,9 +164,10 @@ export class SkillsView {
 
           if (isRecording) {
             const recorded = skillsStore.recordAttempt(evalResult, {
-              stintId: `live_stint_${stintInfo.driverName || 'driver'}`,
-              trackName: stintInfo?.sessionName || 'Live Stint Circuit',
-              carName: 'Active Vehicle',
+              stintId: stintInfo?.stintId || `live_stint_${stintInfo?.sessionName || 'session'}_${stintInfo?.driverName || 'driver'}`,
+              sessionName: stintInfo?.sessionName || 'Live Stint Recording',
+              trackName: stintInfo?.sessionName || stintInfo?.trackName || 'Live Stint Circuit',
+              carName: stintInfo?.carName || 'Active Vehicle',
               lapNumber: stintInfo?.currentLap || 1
             });
             this.latestAttempt = recorded;
@@ -377,9 +378,9 @@ export class SkillsView {
     const sidebarScrollTop = prevSidebar ? prevSidebar.scrollTop : 0;
 
     const chapter = getChapter(this.selectedChapterNumber);
-    const masteryStats = skillsStore.getMasteryStats(this.selectedChapterNumber);
+    const masteryStats = skillsStore.getMasteryStats(this.selectedChapterNumber, { stintId: this.selectedStintId });
     const stintsList = skillsStore.getStintsList();
-    const habitInsights = skillsStore.getHabitDiagnostics(this.selectedChapterNumber);
+    const habitInsights = skillsStore.getHabitDiagnostics(this.selectedChapterNumber, { stintId: this.selectedStintId });
 
     const attempts = skillsStore.getAttempts({
       stintId: this.selectedStintId,
@@ -447,10 +448,10 @@ export class SkillsView {
               ${stintsList.map(st => {
                 const isSelected = this.selectedStintId === st.stintId;
                 return `
-                  <button class="skills-stint-btn ${isSelected ? 'active' : ''}" data-stint="${st.stintId}" title="${st.trackName}">
+                  <button class="skills-stint-btn ${isSelected ? 'active' : ''}" data-stint="${st.stintId}" title="${st.sessionName || st.trackName}">
                     <span class="skills-sidebar-icon">${getIcon('gauge', { size: 14 })}</span>
                     <div class="skills-sidebar-item-info">
-                      <span class="skills-sidebar-item-name">${st.trackName}</span>
+                      <span class="skills-sidebar-item-name">${st.sessionName || st.trackName}</span>
                       <span class="skills-sidebar-item-sub">${st.attemptsCount} attempts · Avg ${st.avgScore}%</span>
                     </div>
                   </button>

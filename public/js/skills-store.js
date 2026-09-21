@@ -67,6 +67,7 @@ export class SkillsStore {
     const attemptRecord = {
       id: `att_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       stintId: metadata.stintId || `stint_${new Date().toISOString().slice(0, 10)}`,
+      sessionName: metadata.sessionName || metadata.trackName || 'Recorded Stint',
       timestamp: Date.now(),
       driverId: this.currentDriverId,
       trackName: metadata.trackName || 'Sebring International Raceway',
@@ -77,6 +78,10 @@ export class SkillsStore {
       cornerType: evaluation.cornerType || 'Type I (Exit Priority)',
       overallScore: evaluation.overallScore || 0,
       grade: evaluation.grade || 'C',
+      chapterScores: evaluation.chapterScores || {
+        ch1: evaluation.overallScore || 0,
+        ch2: evaluation.overallScore || 0
+      },
       skills: evaluation.skills,
       summary: evaluation.summary || ''
     };
@@ -132,9 +137,10 @@ export class SkillsStore {
       if (!stintMap.has(sId)) {
         stintMap.set(sId, {
           stintId: sId,
-          trackName: a.trackName,
-          carName: a.carName,
-          timestamp: a.timestamp,
+          sessionName: a.sessionName || a.trackName || 'Recorded Stint',
+          trackName: a.trackName || 'Circuit',
+          carName: a.carName || 'Vehicle',
+          timestamp: a.timestamp || Date.now(),
           attemptsCount: 0,
           totalScore: 0,
           bestScore: 0
@@ -142,21 +148,23 @@ export class SkillsStore {
       }
       const item = stintMap.get(sId);
       item.attemptsCount++;
-      item.totalScore += a.overallScore;
-      if (a.overallScore > item.bestScore) item.bestScore = a.overallScore;
+      item.totalScore += (a.overallScore || 0);
+      if ((a.overallScore || 0) > item.bestScore) item.bestScore = a.overallScore;
+      if (a.timestamp && a.timestamp > item.timestamp) item.timestamp = a.timestamp;
     });
 
     return Array.from(stintMap.values()).map(s => ({
       ...s,
-      avgScore: Math.round(s.totalScore / s.attemptsCount)
-    }));
+      avgScore: Math.round(s.totalScore / (s.attemptsCount || 1))
+    })).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
   }
 
   /**
    * Calculate cumulative mastery scores (0-100) and progression stats for active Chapter skills
    * @param {number} chapterNumber - 1 or 2
+   * @param {Object} filter - Optional { stintId } filter
    */
-  getMasteryStats(chapterNumber = 1) {
+  getMasteryStats(chapterNumber = 1, filter = {}) {
     const isCh2 = chapterNumber === 2;
     const skillKeys = isCh2
       ? [
@@ -172,11 +180,19 @@ export class SkillsStore {
           'ch1-platform-stability'
         ];
 
+    let targetAttempts = this.attempts;
+    if (filter.stintId && filter.stintId !== 'ALL') {
+      const matched = this.attempts.filter(a => (a.stintId === filter.stintId || a.trackName === filter.stintId));
+      if (matched.length > 0) {
+        targetAttempts = matched;
+      }
+    }
+
     const stats = {};
-    const totalAttemptsCount = this.attempts.length;
+    const totalAttemptsCount = targetAttempts.length;
 
     skillKeys.forEach(k => {
-      const skillAttempts = this.attempts.filter(a => a.skills && a.skills[k]);
+      const skillAttempts = targetAttempts.filter(a => a.skills && a.skills[k]);
       if (skillAttempts.length === 0) {
         stats[k] = {
           currentScore: 0,
@@ -190,20 +206,20 @@ export class SkillsStore {
         return;
       }
 
-      const scores = skillAttempts.map(a => a.skills[k].score);
+      const scores = skillAttempts.map(a => a.skills[k].score || 0);
       const bestScore = Math.max(...scores);
       const recent5 = scores.slice(0, 5);
       const recent20 = scores.slice(0, 20);
 
-      const avg5 = Math.round(recent5.reduce((a, b) => a + b, 0) / recent5.length);
-      const avg20 = Math.round(recent20.reduce((a, b) => a + b, 0) / recent20.length);
+      const avg5 = Math.round(recent5.reduce((a, b) => a + b, 0) / (recent5.length || 1));
+      const avg20 = Math.round(recent20.reduce((a, b) => a + b, 0) / (recent20.length || 1));
 
       // Trend calculation (recent 5 vs prior 5)
       let trend = 'neutral';
       let delta = 0;
       if (scores.length >= 10) {
         const prior5 = scores.slice(5, 10);
-        const avgPrior5 = Math.round(prior5.reduce((a, b) => a + b, 0) / prior5.length);
+        const avgPrior5 = Math.round(prior5.reduce((a, b) => a + b, 0) / (prior5.length || 1));
         delta = avg5 - avgPrior5;
         if (delta > 2) trend = 'improving';
         else if (delta < -2) trend = 'declining';
@@ -249,9 +265,18 @@ export class SkillsStore {
   /**
    * Compute Habit Diagnostics & Coach Feedback for active Chapter
    * @param {number} chapterNumber
+   * @param {Object} filter - Optional { stintId } filter
    */
-  getHabitDiagnostics(chapterNumber = 1) {
-    if (this.attempts.length < 3) {
+  getHabitDiagnostics(chapterNumber = 1, filter = {}) {
+    let targetAttempts = this.attempts;
+    if (filter.stintId && filter.stintId !== 'ALL') {
+      const matched = this.attempts.filter(a => (a.stintId === filter.stintId || a.trackName === filter.stintId));
+      if (matched.length > 0) {
+        targetAttempts = matched;
+      }
+    }
+
+    if (targetAttempts.length < 3) {
       return [
         { type: 'info', title: 'Telemetry Calibration', message: 'Complete at least 3 corner attempts in live session or replay to unlock habit evolution analytics.' }
       ];
@@ -261,9 +286,9 @@ export class SkillsStore {
 
     if (chapterNumber === 2) {
       // --- Chapter 2 Habits ---
-      const line15grAttempts = this.attempts.filter(a => a.skills && a.skills['ch2-line-geometry-15gr']);
-      const balanceAttempts = this.attempts.filter(a => a.skills && a.skills['ch2-balance-slide-control']);
-      const fourBlockAttempts = this.attempts.filter(a => a.skills && a.skills['ch2-four-block-entry']);
+      const line15grAttempts = targetAttempts.filter(a => a.skills && a.skills['ch2-line-geometry-15gr']);
+      const balanceAttempts = targetAttempts.filter(a => a.skills && a.skills['ch2-balance-slide-control']);
+      const fourBlockAttempts = targetAttempts.filter(a => a.skills && a.skills['ch2-four-block-entry']);
 
       // 1. Check Early Apex habit
       if (line15grAttempts.length >= 4) {
@@ -331,9 +356,9 @@ export class SkillsStore {
     }
 
     // --- Chapter 1 Habits ---
-    const exitSpeedAttempts = this.attempts.filter(a => a.skills && a.skills['ch1-exit-speed']);
-    const stabilityAttempts = this.attempts.filter(a => a.skills && a.skills['ch1-platform-stability']);
-    const brakingAttempts = this.attempts.filter(a => a.skills && a.skills['ch1-threshold-braking']);
+    const exitSpeedAttempts = targetAttempts.filter(a => a.skills && a.skills['ch1-exit-speed']);
+    const stabilityAttempts = targetAttempts.filter(a => a.skills && a.skills['ch1-platform-stability']);
+    const brakingAttempts = targetAttempts.filter(a => a.skills && a.skills['ch1-threshold-braking']);
 
     // Check throttle hesitation habit
     if (exitSpeedAttempts.length >= 5) {

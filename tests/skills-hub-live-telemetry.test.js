@@ -176,4 +176,87 @@ describe('Skills Hub // Live Telemetry & Stint Recording Visual Feedback', () =>
     assert.ok(view.cornerEvaluationToast !== null);
     assert.equal(view.cornerEvaluationToast.title, 'Turn 1 Evaluated Live');
   });
+
+  test('SkillsStore: Persists stint records and scores across all 8 pillars for Chapter 1 & 2', async () => {
+    const { skillsStore } = await import('../public/js/skills-store.js');
+    const { SkillsEvaluator } = await import('../public/js/analysis/going-faster/skills-evaluator.js');
+
+    // Create a mock corner telemetry slice
+    const mockCornerSamples = [];
+    for (let i = 0; i < 30; i++) {
+      mockCornerSamples.push({
+        motion: {
+          speedMps: 30 + (i > 15 ? (i - 15) * 1.5 : -(i * 0.8)),
+          acceleration: {
+            lateralG: i < 15 ? 0.3 + (i * 0.06) : 1.2 - ((i - 15) * 0.05),
+            longitudinalG: i < 10 ? -1.1 : (i > 15 ? 0.6 : 0.0)
+          },
+          position: { x: i * 5, y: 0, z: i * 2 }
+        },
+        inputs: {
+          brake: i < 10 ? 0.85 - (i * 0.06) : 0,
+          throttle: i > 15 ? (i - 15) * 0.06 : 0,
+          steering: i < 15 ? (i * 0.03) : (0.45 - ((i - 15) * 0.03))
+        },
+        engine: { currentRpm: 6200, maxRpm: 8500 }
+      });
+    }
+
+    // Evaluate corner with SkillsEvaluator
+    const evalResult = SkillsEvaluator.evaluateCorner(mockCornerSamples, {
+      cornerId: 'T3',
+      cornerName: 'Turn 3 (Hairpin)',
+      cornerType: 'Type I (Exit Priority)',
+      trackName: 'Road Atlanta',
+      carName: 'Corvette C8.R',
+      lapNumber: 2
+    });
+
+    assert.ok(evalResult.skills['ch1-exit-speed']);
+    assert.ok(evalResult.skills['ch1-the-line']);
+    assert.ok(evalResult.skills['ch1-threshold-braking']);
+    assert.ok(evalResult.skills['ch1-combined-entry']);
+    assert.ok(evalResult.skills['ch1-platform-stability']);
+    assert.ok(evalResult.skills['ch2-line-geometry-15gr']);
+    assert.ok(evalResult.skills['ch2-balance-slide-control']);
+    assert.ok(evalResult.skills['ch2-four-block-entry']);
+
+    // Record into SkillsStore
+    const testStintId = `stint_test_${Date.now()}`;
+    const recorded = skillsStore.recordAttempt(evalResult, {
+      stintId: testStintId,
+      sessionName: 'Road Atlanta Qualifying',
+      trackName: 'Road Atlanta',
+      carName: 'Corvette C8.R',
+      lapNumber: 2
+    });
+
+    assert.equal(recorded.stintId, testStintId);
+    assert.equal(recorded.trackName, 'Road Atlanta');
+    assert.equal(recorded.carName, 'Corvette C8.R');
+    assert.equal(recorded.cornerId, 'T3');
+    assert.ok(recorded.overallScore > 0);
+
+    // Verify Stints list includes the recorded stint
+    const stints = skillsStore.getStintsList();
+    const foundStint = stints.find(s => s.stintId === testStintId);
+    assert.ok(foundStint, 'Recorded stint should appear in getStintsList()');
+    assert.equal(foundStint.trackName, 'Road Atlanta');
+    assert.ok(foundStint.attemptsCount >= 1);
+    assert.ok(foundStint.avgScore > 0);
+
+    // Verify Chapter 1 Mastery Stats for the specific stint
+    const ch1StintStats = skillsStore.getMasteryStats(1, { stintId: testStintId });
+    assert.equal(ch1StintStats.chapterNumber, 1);
+    assert.ok(ch1StintStats.overallMasteryScore > 0);
+    assert.ok(ch1StintStats.skills['ch1-exit-speed'].currentScore > 0);
+    assert.ok(ch1StintStats.skills['ch1-threshold-braking'].currentScore > 0);
+
+    // Verify Chapter 2 Mastery Stats for the specific stint
+    const ch2StintStats = skillsStore.getMasteryStats(2, { stintId: testStintId });
+    assert.equal(ch2StintStats.chapterNumber, 2);
+    assert.ok(ch2StintStats.overallMasteryScore > 0);
+    assert.ok(ch2StintStats.skills['ch2-line-geometry-15gr'].currentScore > 0);
+    assert.ok(ch2StintStats.skills['ch2-four-block-entry'].currentScore > 0);
+  });
 });
