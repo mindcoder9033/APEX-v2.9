@@ -1,6 +1,7 @@
 /**
  * APEX Skills Hub View Controller
  * Interactive Going Faster Coaching Academy, Collapsible Sidebar & Stint Evolution Matrix
+ * Supports Chapter 1 (A Plan of Attack) and Chapter 2 (The Three Basics: Line, Exit Speed, Braking)
  */
 
 import { GOING_FASTER_CHAPTERS, getChapter, getSkill } from './skills-curriculum.js';
@@ -83,7 +84,10 @@ export class SkillsView {
    * Process a corner slice from active telemetry or session manager
    */
   processCornerSlice(cornerSamples, metadata = {}) {
-    const evaluation = SkillsEvaluator.evaluateCorner(cornerSamples, metadata);
+    const evaluation = SkillsEvaluator.evaluateCorner(cornerSamples, {
+      ...metadata,
+      chapterNumber: this.selectedChapterNumber
+    });
     const recorded = skillsStore.recordAttempt(evaluation, metadata);
     this.latestAttempt = recorded;
 
@@ -96,9 +100,9 @@ export class SkillsView {
     if (!this.container) return;
 
     const chapter = getChapter(this.selectedChapterNumber);
-    const masteryStats = skillsStore.getMasteryStats();
+    const masteryStats = skillsStore.getMasteryStats(this.selectedChapterNumber);
     const stintsList = skillsStore.getStintsList();
-    const habitInsights = skillsStore.getHabitDiagnostics();
+    const habitInsights = skillsStore.getHabitDiagnostics(this.selectedChapterNumber);
 
     const attempts = skillsStore.getAttempts({
       stintId: this.selectedStintId,
@@ -131,17 +135,17 @@ export class SkillsView {
             <div class="skills-sidebar-section-title">Curriculum Chapters</div>
             <div class="skills-chapter-list">
               ${GOING_FASTER_CHAPTERS.map(ch => {
-      const isSelected = this.selectedChapterNumber === ch.chapterNumber;
-      return `
+                const isSelected = this.selectedChapterNumber === ch.chapterNumber;
+                return `
                   <button class="skills-chapter-btn ${isSelected ? 'active' : ''}" data-chapter="${ch.chapterNumber}" title="${ch.title}">
                     <span class="skills-sidebar-icon">${ch.icon}</span>
                     <div class="skills-sidebar-item-info">
                       <span class="skills-sidebar-item-name">${ch.shortTitle}</span>
-                      <span class="skills-sidebar-item-sub">${ch.status === 'active' ? 'ACTIVE // 5 SKILLS' : 'COMING SOON'}</span>
+                      <span class="skills-sidebar-item-sub">${ch.status === 'active' ? `ACTIVE // ${ch.skills.length} SKILLS` : 'COMING SOON'}</span>
                     </div>
                   </button>
                 `;
-    }).join('')}
+              }).join('')}
             </div>
 
             <!-- Section 2: Recorded Stints / Sessions -->
@@ -155,9 +159,8 @@ export class SkillsView {
                 </div>
               </button>
               ${stintsList.map(st => {
-      const isSelected = this.selectedStintId === st.stintId;
-      const timeStr = new Date(st.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' });
-      return `
+                const isSelected = this.selectedStintId === st.stintId;
+                return `
                   <button class="skills-stint-btn ${isSelected ? 'active' : ''}" data-stint="${st.stintId}" title="${st.trackName}">
                     <span class="skills-sidebar-icon">⏱️</span>
                     <div class="skills-sidebar-item-info">
@@ -166,7 +169,7 @@ export class SkillsView {
                     </div>
                   </button>
                 `;
-    }).join('')}
+              }).join('')}
             </div>
           </div>
         </aside>
@@ -189,8 +192,10 @@ export class SkillsView {
             </div>
 
             <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; font-family: var(--font-mono);">
-              <span style="color: #64748B;">DRIVER:</span>
-              <strong style="color: #00e5ff;">#01 APEX Driver</strong>
+              <span style="color: #64748B;">CURRICULUM:</span>
+              <strong style="color: #00e5ff;">Chapter ${chapter.chapterNumber}</strong>
+              <span style="color: #64748B; margin-left: 8px;">DRIVER:</span>
+              <strong style="color: #00ff88;">#01 APEX Driver</strong>
             </div>
           </nav>
 
@@ -227,7 +232,7 @@ export class SkillsView {
             <div class="skills-hero-stats-panel">
               <div class="skills-stat-box">
                 <span class="skills-stat-val ${this._getGradeClass(masteryStats.grade)}">${masteryStats.overallMasteryScore}%</span>
-                <span class="skills-stat-lbl">Mastery Index</span>
+                <span class="skills-stat-lbl">Mastery Index (Ch ${chapter.chapterNumber})</span>
               </div>
               <div class="skills-stat-box">
                 <span class="skills-stat-val ${this._getGradeClass(masteryStats.grade)}">${masteryStats.grade}</span>
@@ -248,23 +253,23 @@ export class SkillsView {
         <!-- MAIN 2-COLUMN GRID: PLAYBOOK & LIVE CLINIC -->
         <div class="skills-grid-layout">
           
-          <!-- LEFT: CHAPTER 1 SKILLS PLAYBOOK -->
+          <!-- LEFT: CHAPTER SKILLS PLAYBOOK -->
           <section class="skills-card">
             <div class="skills-card-header">
               <h2 class="skills-card-title">
-                <span>📚</span> Chapter 1 Skills Playbook
+                <span>📚</span> Chapter ${chapter.chapterNumber} Skills Playbook
               </h2>
-              <span style="font-family: var(--font-mono); font-size: 11px; color: #8899A6;">5 Core Telemetry Pillars</span>
+              <span style="font-family: var(--font-mono); font-size: 11px; color: #8899A6;">${chapter.skills.length} Core Telemetry Pillars</span>
             </div>
 
             <div class="skills-playbook-list">
               ${chapter.skills.map(sk => {
-      const stat = masteryStats.skills[sk.id] || { currentScore: 0, bestScore: 0, trend: 'neutral' };
-      const isActive = this.selectedSkillId === sk.id;
-      const trendIcon = stat.trend === 'improving' ? '▲' : (stat.trend === 'declining' ? '▼' : '▬');
-      const trendColor = stat.trend === 'improving' ? '#00ff88' : (stat.trend === 'declining' ? '#ff3366' : '#8899A6');
+                const stat = masteryStats.skills[sk.id] || { currentScore: 0, bestScore: 0, trend: 'neutral' };
+                const isActive = this.selectedSkillId === sk.id;
+                const trendIcon = stat.trend === 'improving' ? '▲' : (stat.trend === 'declining' ? '▼' : '▬');
+                const trendColor = stat.trend === 'improving' ? '#00ff88' : (stat.trend === 'declining' ? '#ff3366' : '#8899A6');
 
-      return `
+                return `
                   <div class="skill-playbook-item ${isActive ? 'active' : ''}" data-skill-id="${sk.id}" style="border-left-color: ${sk.color};">
                     <div class="skill-item-header">
                       <div class="skill-item-name">
@@ -291,7 +296,7 @@ export class SkillsView {
                     </div>
                   </div>
                 `;
-    }).join('')}
+              }).join('')}
             </div>
           </section>
 
@@ -301,7 +306,7 @@ export class SkillsView {
               <h2 class="skills-card-title">
                 <span>🎯</span> Live Corner Clinic & Diagnostics
               </h2>
-              <span style="font-family: var(--font-mono); font-size: 11px; color: #00ff88;">REAL-TIME SCORING</span>
+              <span style="font-family: var(--font-mono); font-size: 11px; color: #00ff88;">REAL-TIME PHYSICS SCORING</span>
             </div>
 
             <div class="live-clinic-box">
@@ -320,13 +325,13 @@ export class SkillsView {
                   </div>
                 </div>
 
+                <!-- Subskill breakdown for active chapter -->
                 <div class="clinic-skill-breakdown">
-                  ${Object.keys(activeAttempt.skills).map(skId => {
-      const skData = activeAttempt.skills[skId];
-      const skDef = getSkill(skId);
-      if (!skDef) return '';
+                  ${chapter.skills.map(skDef => {
+                    const skData = activeAttempt.skills?.[skDef.id];
+                    if (!skData) return '';
 
-      return `
+                    return `
                       <div class="clinic-subskill-item">
                         <div class="clinic-subskill-top">
                           <span>${skDef.name}</span>
@@ -335,8 +340,12 @@ export class SkillsView {
                         <div class="clinic-subskill-feedback">${skData.feedback}</div>
                       </div>
                     `;
-    }).join('')}
+                  }).join('')}
                 </div>
+
+                <!-- Chapter 2 Specialized Visualizers -->
+                ${chapter.chapterNumber === 2 ? this._renderChapter2Diagnostics(activeAttempt) : ''}
+
               ` : `
                 <div style="padding: 30px; text-align: center; color: #64748B; font-size: 13px;">
                   No telemetry corner attempt recorded yet. Run laps in Live Telemetry or load a session to evaluate.
@@ -366,8 +375,146 @@ export class SkillsView {
     `;
   }
 
+  /**
+   * Render Chapter 2 Specialized Interactive Diagnostic Visualizers
+   */
+  _renderChapter2Diagnostics(activeAttempt) {
+    const lineSkill = activeAttempt.skills?.['ch2-line-geometry-15gr'] || {};
+    const balanceSkill = activeAttempt.skills?.['ch2-balance-slide-control'] || {};
+    const fourBlockSkill = activeAttempt.skills?.['ch2-four-block-entry'] || {};
+
+    const lineMetrics = lineSkill.metrics || {};
+    const balanceMetrics = balanceSkill.metrics || {};
+    const fourBlockMetrics = fourBlockSkill.metrics || {};
+
+    const apexType = lineMetrics.apexType || 'Geometric Optimal';
+    const isEarlyApex = apexType.includes('Early');
+    const isLateApex = apexType.includes('Late');
+
+    const correctionMs = balanceMetrics.correctionLatencyMs || 110;
+    const pauseMs = balanceMetrics.pauseDurationMs || 160;
+    const recoveryMs = 120;
+    const totalCpr = correctionMs + pauseMs + recoveryMs;
+
+    const corrPct = Math.round((correctionMs / totalCpr) * 100);
+    const pausePct = Math.round((pauseMs / totalCpr) * 100);
+    const recPct = 100 - corrPct - pausePct;
+
+    const blockScores = fourBlockMetrics.blockScores || { b1: 90, b2: 85, b3: 88, b4: 92 };
+
+    return `
+      <div class="ch2-diagnostics-container">
+        
+        <!-- WIDGET 1: 15GR RADIUS & SPEED GAUGE -->
+        <div class="ch2-widget-card gauge-15gr">
+          <div class="ch2-widget-header">
+            <div class="ch2-widget-title">
+              <span>📐</span> 15GR Radius & Kinematic Arc Gauge
+            </div>
+            <span class="ch2-badge ${isEarlyApex ? 'danger' : (isLateApex ? 'warning' : 'optimal')}">
+              ${apexType}
+            </span>
+          </div>
+
+          <div class="ch2-15gr-grid">
+            <div class="ch2-metric-stat-box">
+              <span class="ch2-metric-stat-lbl">Achieved Radius R</span>
+              <span class="ch2-metric-stat-val">${lineMetrics.achievedRadiusMeters ?? 48}m (${lineMetrics.achievedRadiusFeet ?? 158}ft)</span>
+            </div>
+            <div class="ch2-metric-stat-box">
+              <span class="ch2-metric-stat-lbl">Actual vs 15GR Vmax</span>
+              <span class="ch2-metric-stat-val">${lineMetrics.actualApexSpeedKmh ?? 72} / ${lineMetrics.theoreticalVmaxKmh ?? 78} <span style="font-size: 10px; color:#8899A6;">km/h</span></span>
+            </div>
+            <div class="ch2-metric-stat-box">
+              <span class="ch2-metric-stat-lbl">Arc Radius Efficiency</span>
+              <span class="ch2-metric-stat-val" style="color: ${(lineMetrics.radiusEfficiencyPct || 90) >= 90 ? '#00ff88' : '#ffb800'};">
+                ${lineMetrics.radiusEfficiencyPct ?? 92}%
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WIDGET 2: CORRECTION, PAUSE, RECOVERY (CPR) TIMELINE -->
+        <div class="ch2-widget-card timeline-cpr">
+          <div class="ch2-widget-header">
+            <div class="ch2-widget-title">
+              <span>🔄</span> Slide Control: Correction, Pause, Recovery (CPR)
+            </div>
+            <span class="ch2-badge ${balanceMetrics.snapbackDetected ? 'danger' : (balanceMetrics.trailingThrottleLift ? 'warning' : 'optimal')}">
+              ${balanceMetrics.balanceState || 'Neutral / High Grip'}
+            </span>
+          </div>
+
+          <div class="cpr-timeline-track">
+            <div class="cpr-phase-seg phase-correction" style="width: ${corrPct}%;" title="Phase 1: Countersteer Correction (${correctionMs}ms)">
+              CORRECTION (${correctionMs}ms)
+            </div>
+            <div class="cpr-phase-seg phase-pause" style="width: ${pausePct}%;" title="Phase 2: Pause at Peak Yaw (${pauseMs}ms)">
+              PAUSE (${pauseMs}ms)
+            </div>
+            <div class="cpr-phase-seg phase-recovery" style="width: ${recPct}%;" title="Phase 3: Recovery Unwind">
+              RECOVERY
+            </div>
+          </div>
+
+          <div class="cpr-legend-row">
+            <span>⚡ Latency: <strong>${correctionMs}ms</strong> ${correctionMs <= 150 ? '✅ Fast' : '⚠️ Slow'}</span>
+            <span>⏸️ Slide Pause: <strong>${pauseMs}ms</strong></span>
+            <span>🔁 Snapback Risk: <strong>${balanceMetrics.snapbackDetected ? '⚠️ HIGH' : '✅ LOW'}</strong></span>
+          </div>
+        </div>
+
+        <!-- WIDGET 3: 4-BLOCK CORNER ENTRY STAGES -->
+        <div class="ch2-widget-card four-block">
+          <div class="ch2-widget-header">
+            <div class="ch2-widget-title">
+              <span>🛑</span> 4-Block Corner Entry & Dynamic Weight Transfer
+            </div>
+            <span class="ch2-badge ${fourBlockMetrics.b2LockupDetected ? 'danger' : 'optimal'}">
+              ${fourBlockMetrics.b2LockupDetected ? 'LOCKUP DETECTED' : '65% FRONT LOAD TRANSFER'}
+            </span>
+          </div>
+
+          <div class="four-block-grid">
+            <div class="four-block-col">
+              <span class="four-block-num">BLOCK 1</span>
+              <span class="four-block-name">Throttle-Brake</span>
+              <span class="four-block-val">${fourBlockMetrics.b1TransitionTimeMs ?? 140}ms</span>
+              <span style="font-size: 10px; font-family: var(--font-mono); color: #8899A6;">Score: ${blockScores.b1}%</span>
+            </div>
+
+            <div class="four-block-col ${fourBlockMetrics.b2LockupDetected ? 'has-lockup' : ''}">
+              <span class="four-block-num">BLOCK 2</span>
+              <span class="four-block-name">Straight Decel</span>
+              <span class="four-block-val" style="color: ${fourBlockMetrics.b2LockupDetected ? '#ff3366' : '#00ff88'};">
+                -${fourBlockMetrics.b2PeakDecelG ?? 1.35}G
+              </span>
+              <span style="font-size: 10px; font-family: var(--font-mono); color: #8899A6;">Score: ${blockScores.b2}%</span>
+            </div>
+
+            <div class="four-block-col">
+              <span class="four-block-num">BLOCK 3</span>
+              <span class="four-block-name">Brake-Turn</span>
+              <span class="four-block-val">${fourBlockMetrics.b3TrailOverlapPct ?? 38}% trail</span>
+              <span style="font-size: 10px; font-family: var(--font-mono); color: #8899A6;">Score: ${blockScores.b3}%</span>
+            </div>
+
+            <div class="four-block-col">
+              <span class="four-block-num">BLOCK 4</span>
+              <span class="four-block-name">Throttle Handoff</span>
+              <span class="four-block-val">${fourBlockMetrics.b4HandoffGapMs ?? 70}ms gap</span>
+              <span style="font-size: 10px; font-family: var(--font-mono); color: #8899A6;">Score: ${blockScores.b4}%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    `;
+  }
+
   _renderHistorySubtab(attempts, inspectedAttempt, masteryStats) {
     const compareList = Array.from(this.selectedCompareIds).map(id => skillsStore.attempts.find(a => a.id === id)).filter(Boolean);
+    const chapter = getChapter(this.selectedChapterNumber);
 
     return `
       <div class="skills-subtab-viewport">
@@ -386,12 +533,10 @@ export class SkillsView {
             </select>
 
             <select id="skills-filter-skill" class="skills-select">
-              <option value="ALL" ${this.filterSkill === 'ALL' ? 'selected' : ''}>All Skills</option>
-              <option value="ch1-exit-speed" ${this.filterSkill === 'ch1-exit-speed' ? 'selected' : ''}>Exit Speed</option>
-              <option value="ch1-the-line" ${this.filterSkill === 'ch1-the-line' ? 'selected' : ''}>The Line</option>
-              <option value="ch1-threshold-braking" ${this.filterSkill === 'ch1-threshold-braking' ? 'selected' : ''}>Threshold Braking</option>
-              <option value="ch1-combined-entry" ${this.filterSkill === 'ch1-combined-entry' ? 'selected' : ''}>Combined Entry</option>
-              <option value="ch1-platform-stability" ${this.filterSkill === 'ch1-platform-stability' ? 'selected' : ''}>Platform Stability</option>
+              <option value="ALL" ${this.filterSkill === 'ALL' ? 'selected' : ''}>All Skills (Ch ${chapter.chapterNumber})</option>
+              ${chapter.skills.map(sk => `
+                <option value="${sk.id}" ${this.filterSkill === sk.id ? 'selected' : ''}>${sk.name}</option>
+              `).join('')}
             </select>
 
             <select id="skills-filter-grade" class="skills-select">
@@ -431,42 +576,79 @@ export class SkillsView {
               </div>
             </div>
 
-            <!-- Telemetry Metrics Grid (SI Metric Calibration) -->
+            <!-- Telemetry Metrics Grid (Chapter Responsive) -->
             <div class="telemetry-metrics-grid">
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Exit Speed Gain</span>
-                <span class="telemetry-metric-value">+${inspectedAttempt.skills?.['ch1-exit-speed']?.metrics?.speedGainKmh ?? 0} km/h</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Min Apex Speed</span>
-                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-the-line']?.metrics?.minApexSpeedKmh ?? 0} km/h</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Braking Distance</span>
-                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.brakeDistanceMeters ?? 45.2} m</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Brake Rise Time</span>
-                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.rampTimeSec ?? 0.22}s</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Peak Decel G</span>
-                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.peakDecelG ?? 1.3}G</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Peak Combined G</span>
-                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-combined-entry']?.metrics?.peakCombinedG ?? 1.4}G</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Steering Fluctuation</span>
-                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-the-line']?.metrics?.steeringFluctuation ?? 0.04} rad</span>
-              </div>
-              <div class="telemetry-metric-cell">
-                <span class="telemetry-metric-label">Mid-Corner Lifts</span>
-                <span class="telemetry-metric-value" style="color: ${(inspectedAttempt.skills?.['ch1-platform-stability']?.metrics?.throttleLifts || 0) > 0 ? '#ff3366' : '#00ff88'};">
-                  ${inspectedAttempt.skills?.['ch1-platform-stability']?.metrics?.throttleLifts ?? 0}
-                </span>
-              </div>
+              ${chapter.chapterNumber === 2 ? `
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">15GR Achieved Radius</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-line-geometry-15gr']?.metrics?.achievedRadiusMeters ?? 48} m</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Theoretical Vmax</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-line-geometry-15gr']?.metrics?.theoreticalVmaxKmh ?? 78} km/h</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Radius Efficiency</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-line-geometry-15gr']?.metrics?.radiusEfficiencyPct ?? 92}%</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Apex Classification</span>
+                  <span class="telemetry-metric-value" style="font-size: 12px; color: #00e5ff;">
+                    ${inspectedAttempt.skills?.['ch2-line-geometry-15gr']?.metrics?.apexType ?? 'Optimal'}
+                  </span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">CPR Correction Latency</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-balance-slide-control']?.metrics?.correctionLatencyMs ?? 110} ms</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">CPR Slide Pause</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-balance-slide-control']?.metrics?.pauseDurationMs ?? 160} ms</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">B1 Throttle-Brake Time</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-four-block-entry']?.metrics?.b1TransitionTimeMs ?? 140} ms</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">B2 Peak Decel G</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch2-four-block-entry']?.metrics?.b2PeakDecelG ?? 1.35} G</span>
+                </div>
+              ` : `
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Exit Speed Gain</span>
+                  <span class="telemetry-metric-value">+${inspectedAttempt.skills?.['ch1-exit-speed']?.metrics?.speedGainKmh ?? 0} km/h</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Min Apex Speed</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-the-line']?.metrics?.minApexSpeedKmh ?? 0} km/h</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Braking Distance</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.brakeDistanceMeters ?? 45.2} m</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Brake Rise Time</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.rampTimeSec ?? 0.22}s</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Peak Decel G</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.peakDecelG ?? 1.3}G</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Peak Combined G</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-combined-entry']?.metrics?.peakCombinedG ?? 1.4}G</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Steering Fluctuation</span>
+                  <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-the-line']?.metrics?.steeringFluctuation ?? 0.04} rad</span>
+                </div>
+                <div class="telemetry-metric-cell">
+                  <span class="telemetry-metric-label">Mid-Corner Lifts</span>
+                  <span class="telemetry-metric-value" style="color: ${(inspectedAttempt.skills?.['ch1-platform-stability']?.metrics?.throttleLifts || 0) > 0 ? '#ff3366' : '#00ff88'};">
+                    ${inspectedAttempt.skills?.['ch1-platform-stability']?.metrics?.throttleLifts ?? 0}
+                  </span>
+                </div>
+              `}
             </div>
 
             <p style="margin: 0; font-size: 12px; color: #CBD5E1; font-style: italic; background: rgba(0,0,0,0.3); padding: 8px 12px; border-left: 2px solid #00ff88; border-radius: 2px;">
@@ -509,11 +691,11 @@ export class SkillsView {
               </thead>
               <tbody>
                 ${attempts.length > 0 ? attempts.map(att => {
-      const timeStr = new Date(att.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const isChecked = this.selectedCompareIds.has(att.id);
-      const isInspected = inspectedAttempt?.id === att.id;
+                  const timeStr = new Date(att.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                  const isChecked = this.selectedCompareIds.has(att.id);
+                  const isInspected = inspectedAttempt?.id === att.id;
 
-      return `
+                  return `
                     <tr class="skills-attempt-row ${isInspected ? 'inspected-row' : ''}" data-attempt-id="${att.id}" style="cursor: pointer; ${isInspected ? 'background: rgba(0, 255, 136, 0.08);' : ''}">
                       <td onclick="event.stopPropagation();">
                         <input type="checkbox" class="attempt-compare-checkbox" data-attempt-id="${att.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
@@ -534,7 +716,7 @@ export class SkillsView {
                       </td>
                     </tr>
                   `;
-    }).join('') : `
+                }).join('') : `
                   <tr>
                     <td colspan="9" style="text-align: center; padding: 24px; color: #64748B;">
                       No attempt records matching current filter.
@@ -573,9 +755,15 @@ export class SkillsView {
               <span class="score-chip ${this._getGradeClass(attA.grade)}">${attA.overallScore} (${attA.grade})</span>
             </div>
             <div style="font-size: 11px; color: #8899A6;">
-              Exit Speed: <strong>${attA.skills?.['ch1-exit-speed']?.score ?? 0}</strong> · 
-              Braking: <strong>${attA.skills?.['ch1-threshold-braking']?.score ?? 0}</strong> · 
-              Trail: <strong>${attA.skills?.['ch1-combined-entry']?.score ?? 0}</strong>
+              ${this.selectedChapterNumber === 2 ? `
+                15GR Arc: <strong>${attA.skills?.['ch2-line-geometry-15gr']?.score ?? 0}</strong> · 
+                CPR Balance: <strong>${attA.skills?.['ch2-balance-slide-control']?.score ?? 0}</strong> · 
+                4-Block Entry: <strong>${attA.skills?.['ch2-four-block-entry']?.score ?? 0}</strong>
+              ` : `
+                Exit Speed: <strong>${attA.skills?.['ch1-exit-speed']?.score ?? 0}</strong> · 
+                Braking: <strong>${attA.skills?.['ch1-threshold-braking']?.score ?? 0}</strong> · 
+                Trail: <strong>${attA.skills?.['ch1-combined-entry']?.score ?? 0}</strong>
+              `}
             </div>
             <div style="font-size: 11px; color: #CBD5E1;">${attA.summary}</div>
           </div>
@@ -587,9 +775,15 @@ export class SkillsView {
               <span class="score-chip ${this._getGradeClass(attB.grade)}">${attB.overallScore} (${attB.grade})</span>
             </div>
             <div style="font-size: 11px; color: #8899A6;">
-              Exit Speed: <strong>${attB.skills?.['ch1-exit-speed']?.score ?? 0}</strong> · 
-              Braking: <strong>${attB.skills?.['ch1-threshold-braking']?.score ?? 0}</strong> · 
-              Trail: <strong>${attB.skills?.['ch1-combined-entry']?.score ?? 0}</strong>
+              ${this.selectedChapterNumber === 2 ? `
+                15GR Arc: <strong>${attB.skills?.['ch2-line-geometry-15gr']?.score ?? 0}</strong> · 
+                CPR Balance: <strong>${attB.skills?.['ch2-balance-slide-control']?.score ?? 0}</strong> · 
+                4-Block Entry: <strong>${attB.skills?.['ch2-four-block-entry']?.score ?? 0}</strong>
+              ` : `
+                Exit Speed: <strong>${attB.skills?.['ch1-exit-speed']?.score ?? 0}</strong> · 
+                Braking: <strong>${attB.skills?.['ch1-threshold-braking']?.score ?? 0}</strong> · 
+                Trail: <strong>${attB.skills?.['ch1-combined-entry']?.score ?? 0}</strong>
+              `}
             </div>
             <div style="font-size: 11px; color: #CBD5E1;">${attB.summary}</div>
           </div>
@@ -666,8 +860,13 @@ export class SkillsView {
     this.container.querySelectorAll('.skills-chapter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const ch = parseInt(btn.getAttribute('data-chapter'), 10);
-        if (ch === 1) {
+        if (ch === 1 || ch === 2) {
           this.selectedChapterNumber = ch;
+          const chapterObj = getChapter(ch);
+          if (chapterObj && chapterObj.skills.length > 0) {
+            this.selectedSkillId = chapterObj.skills[0].id;
+          }
+          this.filterSkill = 'ALL';
           this.render();
         }
       });

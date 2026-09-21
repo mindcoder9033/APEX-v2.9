@@ -819,3 +819,191 @@
 .score-chip.grade-b { background: rgba(0, 229, 255, 0.2); color: #00e5ff; }
 .score-chip.grade-c { background: rgba(255, 184, 0, 0.2); color: #ffb800; }
 .score-chip.grade-d { background: rgba(255, 51, 102, 0.2); color: #ff3366; }
+
+/* ==========================================================================
+   CHAPTER 2 DIAGNOSTIC VISUALIZERS (15GR Gauge, CPR Timeline, 4-Block Bar)
+   ========================================================================== */
+.ch2-diagnostics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.ch2-widget-card {
+  background: rgba(13, 15, 18, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(8px);
+}
+
+.ch2-widget-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+}
+
+.ch2-widget-card.gauge-15gr::before { background: #00e5ff; }
+.ch2-widget-card.timeline-cpr::before { background: #00ff88; }
+.ch2-widget-card.four-block::before { background: #ffb800; }
+
+.ch2-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ch2-widget-title {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ch2-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.ch2-badge.optimal { background: rgba(0, 255, 136, 0.15); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.3); }
+.ch2-badge.warning { background: rgba(255, 184, 0, 0.15); color: #ffb800; border: 1px solid rgba(255, 184, 0, 0.3); }
+.ch2-badge.danger { background: rgba(255, 51, 102, 0.15); color: #ff3366; border: 1px solid rgba(255, 51, 102, 0.3); }
+
+/* 15GR Radius Gauge */
+.ch2-15gr-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ch2-metric-stat-box {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 6px 10px;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ch2-metric-stat-lbl {
+  font-size: 9px;
+  color: #64748B;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+
+.ch2-metric-stat-val {
+  font-size: 14px;
+  font-weight: 700;
+  color: #00e5ff;
+  font-family: var(--font-mono);
+  margin-top: 1px;
+}
+
+/* CPR Timeline */
+.cpr-timeline-track {
+  display: flex;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.cpr-phase-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #000;
+  transition: width 300ms ease;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+.cpr-phase-seg.phase-correction {
+  background: #00e5ff;
+}
+
+.cpr-phase-seg.phase-pause {
+  background: #ffb800;
+}
+
+.cpr-phase-seg.phase-recovery {
+  background: #00ff88;
+}
+
+.cpr-legend-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: #8899A6;
+  padding: 0 2px;
+}
+
+/* 4-Block Entry Stages */
+.four-block-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.four-block-col {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.four-block-col.has-lockup {
+  border-color: rgba(255, 51, 102, 0.4);
+  background: rgba(255, 51, 102, 0.06);
+}
+
+.four-block-num {
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #ffb800;
+  text-transform: uppercase;
+}
+
+.four-block-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1.2;
+}
+
+.four-block-val {
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: #00ff88;
+  margin-top: 2px;
+}

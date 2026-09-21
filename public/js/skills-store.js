@@ -153,16 +153,24 @@ export class SkillsStore {
   }
 
   /**
-   * Calculate cumulative mastery scores (0-100) and progression stats for all Chapter 1 skills
+   * Calculate cumulative mastery scores (0-100) and progression stats for active Chapter skills
+   * @param {number} chapterNumber - 1 or 2
    */
-  getMasteryStats() {
-    const skillKeys = [
-      'ch1-exit-speed',
-      'ch1-the-line',
-      'ch1-threshold-braking',
-      'ch1-combined-entry',
-      'ch1-platform-stability'
-    ];
+  getMasteryStats(chapterNumber = 1) {
+    const isCh2 = chapterNumber === 2;
+    const skillKeys = isCh2
+      ? [
+          'ch2-line-geometry-15gr',
+          'ch2-balance-slide-control',
+          'ch2-four-block-entry'
+        ]
+      : [
+          'ch1-exit-speed',
+          'ch1-the-line',
+          'ch1-threshold-braking',
+          'ch1-combined-entry',
+          'ch1-platform-stability'
+        ];
 
     const stats = {};
     const totalAttemptsCount = this.attempts.length;
@@ -212,15 +220,25 @@ export class SkillsStore {
       };
     });
 
-    const overallRolling = Math.round(
-      (stats['ch1-exit-speed'].rollingAvg5 * 0.35) +
-      (stats['ch1-the-line'].rollingAvg5 * 0.25) +
-      (stats['ch1-threshold-braking'].rollingAvg5 * 0.15) +
-      (stats['ch1-combined-entry'].rollingAvg5 * 0.15) +
-      (stats['ch1-platform-stability'].rollingAvg5 * 0.10)
-    );
+    let overallRolling = 0;
+    if (isCh2) {
+      overallRolling = Math.round(
+        ((stats['ch2-line-geometry-15gr']?.rollingAvg5 || 0) * 0.35) +
+        ((stats['ch2-balance-slide-control']?.rollingAvg5 || 0) * 0.35) +
+        ((stats['ch2-four-block-entry']?.rollingAvg5 || 0) * 0.30)
+      );
+    } else {
+      overallRolling = Math.round(
+        ((stats['ch1-exit-speed']?.rollingAvg5 || 0) * 0.35) +
+        ((stats['ch1-the-line']?.rollingAvg5 || 0) * 0.25) +
+        ((stats['ch1-threshold-braking']?.rollingAvg5 || 0) * 0.15) +
+        ((stats['ch1-combined-entry']?.rollingAvg5 || 0) * 0.15) +
+        ((stats['ch1-platform-stability']?.rollingAvg5 || 0) * 0.10)
+      );
+    }
 
     return {
+      chapterNumber,
       totalAttempts: totalAttemptsCount,
       overallMasteryScore: overallRolling,
       grade: this._scoreToGrade(overallRolling),
@@ -229,9 +247,10 @@ export class SkillsStore {
   }
 
   /**
-   * Compute Habit Diagnostics & Coach Feedback
+   * Compute Habit Diagnostics & Coach Feedback for active Chapter
+   * @param {number} chapterNumber
    */
-  getHabitDiagnostics() {
+  getHabitDiagnostics(chapterNumber = 1) {
     if (this.attempts.length < 3) {
       return [
         { type: 'info', title: 'Telemetry Calibration', message: 'Complete at least 3 corner attempts in live session or replay to unlock habit evolution analytics.' }
@@ -239,6 +258,79 @@ export class SkillsStore {
     }
 
     const insights = [];
+
+    if (chapterNumber === 2) {
+      // --- Chapter 2 Habits ---
+      const line15grAttempts = this.attempts.filter(a => a.skills && a.skills['ch2-line-geometry-15gr']);
+      const balanceAttempts = this.attempts.filter(a => a.skills && a.skills['ch2-balance-slide-control']);
+      const fourBlockAttempts = this.attempts.filter(a => a.skills && a.skills['ch2-four-block-entry']);
+
+      // 1. Check Early Apex habit
+      if (line15grAttempts.length >= 4) {
+        const earlyApexCount = line15grAttempts.slice(0, 5).filter(a => a.skills['ch2-line-geometry-15gr'].metrics?.apexType?.includes('Early')).length;
+        if (earlyApexCount >= 2) {
+          insights.push({
+            type: 'danger',
+            title: 'Early Apex Pinching Habit',
+            message: `Early apex detected in ${earlyApexCount} of last 5 attempts. Turning in too early shrinks exit radius (p. 23) and forces a slow exit pinch. Aim for a later geometric apex.`
+          });
+        } else {
+          insights.push({
+            type: 'positive',
+            title: '15GR Arc Geometry Disciplined',
+            message: 'Consistent turn-in and geometric apex positioning. Maximizing corner radius for top exit speed.'
+          });
+        }
+      }
+
+      // 2. Check Trailing-Throttle Oversteer & Snapback
+      if (balanceAttempts.length >= 4) {
+        const trailingLifts = balanceAttempts.slice(0, 5).filter(a => a.skills['ch2-balance-slide-control'].metrics?.trailingThrottleLift).length;
+        const snapbacks = balanceAttempts.slice(0, 5).filter(a => a.skills['ch2-balance-slide-control'].metrics?.snapbackDetected).length;
+
+        if (trailingLifts >= 2) {
+          insights.push({
+            type: 'danger',
+            title: 'Trailing-Throttle Lift Spikes',
+            message: 'Abruptly lifting off the throttle mid-corner unweights the rear tires. Maintain steady maintenance throttle through corner arcs.'
+          });
+        }
+        if (snapbacks >= 1) {
+          insights.push({
+            type: 'warning',
+            title: 'Slide Snapback Risk',
+            message: 'Slow steering unwind during slide recovery. Unwind countersteer during the Pause phase before the rear pendulum swings back.'
+          });
+        }
+      }
+
+      // 3. Check 4-Block Entry Gaps & Lockup
+      if (fourBlockAttempts.length >= 4) {
+        const lockups = fourBlockAttempts.slice(0, 5).filter(a => a.skills['ch2-four-block-entry'].metrics?.b2LockupDetected).length;
+        const avgB1Time = Math.round(
+          fourBlockAttempts.slice(0, 5).reduce((acc, a) => acc + (a.skills['ch2-four-block-entry'].metrics?.b1TransitionTimeMs || 150), 0) / 5
+        );
+
+        if (lockups >= 1) {
+          insights.push({
+            type: 'warning',
+            title: 'Block 2 Tire Lockup Warning',
+            message: 'Exceeded tire traction limit in straight deceleration, losing 30% of tractive grip. Modulate pedal right at the threshold.'
+          });
+        }
+        if (avgB1Time <= 180) {
+          insights.push({
+            type: 'positive',
+            title: 'Crisp Block 1 Transition',
+            message: `Average Throttle-to-Brake transition time is ${avgB1Time}ms. Zero coasting delay before straight deceleration.`
+          });
+        }
+      }
+
+      return insights;
+    }
+
+    // --- Chapter 1 Habits ---
     const exitSpeedAttempts = this.attempts.filter(a => a.skills && a.skills['ch1-exit-speed']);
     const stabilityAttempts = this.attempts.filter(a => a.skills && a.skills['ch1-platform-stability']);
     const brakingAttempts = this.attempts.filter(a => a.skills && a.skills['ch1-threshold-braking']);
@@ -307,11 +399,14 @@ export class SkillsStore {
       'Corner Type',
       'Overall Score',
       'Grade',
-      'Exit Speed Score',
-      'The Line Score',
-      'Threshold Braking Score',
-      'Combined Entry Score',
-      'Platform Stability Score',
+      'Ch1 Exit Speed',
+      'Ch1 The Line',
+      'Ch1 Threshold Braking',
+      'Ch1 Combined Entry',
+      'Ch1 Platform Stability',
+      'Ch2 15GR Line Geometry',
+      'Ch2 Balance & Slide Control',
+      'Ch2 4-Block Entry',
       'Coaching Summary'
     ];
 
@@ -331,6 +426,9 @@ export class SkillsStore {
       a.skills?.['ch1-threshold-braking']?.score ?? '',
       a.skills?.['ch1-combined-entry']?.score ?? '',
       a.skills?.['ch1-platform-stability']?.score ?? '',
+      a.skills?.['ch2-line-geometry-15gr']?.score ?? '',
+      a.skills?.['ch2-balance-slide-control']?.score ?? '',
+      a.skills?.['ch2-four-block-entry']?.score ?? '',
       `"${(a.summary || '').replace(/"/g, '""')}"`
     ]);
 
@@ -373,15 +471,16 @@ export class SkillsStore {
     ];
 
     const baseScores = [
-      { exit: 88, line: 84, brake: 90, trail: 82, stab: 95 },
-      { exit: 78, line: 80, brake: 72, trail: 75, stab: 70 },
-      { exit: 92, line: 89, brake: 88, trail: 86, stab: 100 },
-      { exit: 84, line: 82, brake: 85, trail: 80, stab: 90 }
+      { exit: 88, line: 84, brake: 90, trail: 82, stab: 95, ch2_15gr: 88, ch2_cpr: 92, ch2_4blk: 86 },
+      { exit: 78, line: 80, brake: 72, trail: 75, stab: 70, ch2_15gr: 74, ch2_cpr: 76, ch2_4blk: 72 },
+      { exit: 92, line: 89, brake: 88, trail: 86, stab: 100, ch2_15gr: 94, ch2_cpr: 96, ch2_4blk: 90 },
+      { exit: 84, line: 82, brake: 85, trail: 80, stab: 90, ch2_15gr: 85, ch2_cpr: 88, ch2_4blk: 84 }
     ];
 
     seedCorners.forEach((c, idx) => {
       const s = baseScores[idx];
       const overall = Math.round(s.exit * 0.35 + s.line * 0.25 + s.brake * 0.15 + s.trail * 0.15 + s.stab * 0.10);
+      const ch2Overall = Math.round(s.ch2_15gr * 0.35 + s.ch2_cpr * 0.35 + s.ch2_4blk * 0.30);
       this.attempts.push({
         id: `seed_${idx}`,
         stintId: 'stint_sebring_demo_01',
@@ -395,6 +494,10 @@ export class SkillsStore {
         cornerType: c.type,
         overallScore: overall,
         grade: this._scoreToGrade(overall),
+        chapterScores: {
+          ch1: overall,
+          ch2: ch2Overall
+        },
         skills: {
           'ch1-exit-speed': {
             score: s.exit,
@@ -425,9 +528,27 @@ export class SkillsStore {
             grade: this._scoreToGrade(s.stab),
             feedback: 'Stable chassis balance with no mid-corner throttle lifting.',
             metrics: { throttleLifts: 0, maxJerkGPerSec: 6.8 }
+          },
+          'ch2-line-geometry-15gr': {
+            score: s.ch2_15gr,
+            grade: this._scoreToGrade(s.ch2_15gr),
+            feedback: 'Geometric arc with 92% 15GR radius utilization.',
+            metrics: { achievedRadiusMeters: 48.2, achievedRadiusFeet: 158, theoreticalVmaxKmh: 78.4, actualApexSpeedKmh: 72.1, radiusEfficiencyPct: 92, apexType: 'Geometric Optimal' }
+          },
+          'ch2-balance-slide-control': {
+            score: s.ch2_cpr,
+            grade: this._scoreToGrade(s.ch2_cpr),
+            feedback: 'Instant countersteer correction (110ms) and fluid recovery.',
+            metrics: { slideDetected: true, balanceState: 'Oversteer (Managed)', correctionLatencyMs: 110, pauseDurationMs: 180, trailingThrottleLift: false, snapbackDetected: false }
+          },
+          'ch2-four-block-entry': {
+            score: s.ch2_4blk,
+            grade: this._scoreToGrade(s.ch2_4blk),
+            feedback: 'Continuous 4-Block entry flow with -1.35G peak deceleration.',
+            metrics: { b1TransitionTimeMs: 140, b2PeakDecelG: 1.35, b2LockupDetected: false, b3TrailOverlapPct: 38, b4HandoffGapMs: 70, blockScores: { b1: 95, b2: 90, b3: 88, b4: 92 } }
           }
         },
-        summary: 'Solid execution of Chapter 1 fundamentals.'
+        summary: 'Solid execution of Chapter 1 & 2 vehicle dynamics.'
       });
     });
 

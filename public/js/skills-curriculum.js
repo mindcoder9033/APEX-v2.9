@@ -90,15 +90,62 @@ export const GOING_FASTER_CHAPTERS = [
   },
   {
     chapterNumber: 2,
-    id: 'ch2-traction-circle',
-    title: 'Chapter 2: The Traction Circle',
-    shortTitle: 'Ch 2: Traction Circle',
-    subtitle: 'Managing the Friction Circle & Grip Budget',
-    status: 'coming-soon',
-    icon: '⭕',
-    quote: '"The friction circle allows you to think about what happens to one ability of the tire as you increase demands for another." — Skip Barber',
-    description: 'Understanding the tire grip limits, combined G loads, and staying on the edge of the circle.',
-    skills: []
+    id: 'ch2-three-basics',
+    title: 'Chapter 2: The Three Basics: Line, Corner Exit Speed, Braking',
+    shortTitle: 'Ch 2: The Three Basics',
+    subtitle: 'Vehicle Dynamics, 15GR Geometry & The 4 Blocks of Corner Entry',
+    status: 'active',
+    icon: '⚖️',
+    quote: '"There are three basic problems to solve in race driving: 1) driving on the best path, 2) carrying speed through corners and onto straights, and 3) efficiently slowing the car at the entry to corners." — Skip Barber',
+    description: 'Mastering the fundamental physics of race driving: calculating optimum arcs with the 15GR law (5% extra distance for 37% speed gain), managing throttle-induced weight transfer and slide recovery (Correction, Pause, Recovery), and executing the 4 distinct blocks of corner entry with dynamic brake balance.',
+    keyRules: [
+      'The 15GR radius equation (15 * G * R = mph²) dictates maximum cornering speed.',
+      'Driving on the true racing line adds ~5% distance but allows 37% higher cornering speed.',
+      'Turning in too early (early apex) forces a tight, speed-killing radius at corner exit.',
+      'Correction, Pause, Recovery: countersteer into the slide, pause at peak yaw, and unwind before snapback.',
+      'Corner entry comprises 4 distinct blocks: Transition, Straight Decel, Brake-Turn, and Throttle Pickup.'
+    ],
+    skills: [
+      {
+        id: 'ch2-line-geometry-15gr',
+        name: 'Line Geometry & 15GR Arc Optimization',
+        tagline: 'Maximizing Radius & Apex Precision',
+        priority: 'P1 (Kinematic Limit)',
+        icon: '📐',
+        color: '#00e5ff',
+        concept: 'Driving the true geometric arc with maximum radius R to achieve maximum cornering speed (15*G*R = mph² / V = √(R*g*μ)). Hitting turn-in, apex, and track-out within inches avoids the devastating exit pinch of early apexing.',
+        telemetryFocus: 'Achieved corner radius R (m), apex minimum speed vs theoretical 15GR Vmax, steering stability, absence of early-apex exit pinch.',
+        targetThreshold: 'Radius efficiency >= 90% of theoretical maximum; apex timing within 0.15s of geometric optimal.',
+        commonMistake: 'Turning in too early and clipping an early apex, forcing an emergency late steering pinch down to a tiny 75ft radius.',
+        skipBarberQuote: '"Driving on the line results in driving further, but in this case roughly 5% further at 37% greater speed — a very good trade-off."'
+      },
+      {
+        id: 'ch2-balance-slide-control',
+        name: 'Throttle Balance & Slide Recovery (CPR)',
+        tagline: 'Correction, Pause, and Recovery',
+        priority: 'P2 (Vehicle Dynamics)',
+        icon: '🔄',
+        color: '#00ff88',
+        concept: 'Controlling chassis balance through subtle throttle modulation and executing the 3-phase slide recovery rule: 1) Immediate countersteer correction, 2) Brief pause as slide halts, 3) Smooth recovery unwind before the rear swings back.',
+        telemetryFocus: 'Yaw rate deviation, countersteer reaction latency (<0.15s), pause stability, recovery unwind timing, zero trailing-throttle lift spikes.',
+        targetThreshold: 'Correction latency < 150ms, zero snapback oscillations, smooth throttle support during oversteer.',
+        commonMistake: 'Panicking with abrupt throttle lift causing trailing-throttle oversteer, or being too slow to unwind the countersteer during recovery.',
+        skipBarberQuote: '"Every tail-out slide should be dealt with by making a correction, then using the pause as a cue for beginning the recovery. If you\'re slow to take out steering correction, momentum will snap the car in the opposite direction."'
+      },
+      {
+        id: 'ch2-four-block-entry',
+        name: '4-Block Corner Entry & Dynamic Load Transfer',
+        tagline: 'The 4 Phases of Corner Entry',
+        priority: 'P3 (Entry Mastery)',
+        icon: '🛑',
+        color: '#ffb800',
+        concept: 'Seamlessly linking the 4 entry blocks: Block 1 (Throttle-Brake transition), Block 2 (Straight-line threshold deceleration & 65% front load transfer), Block 3 (Brake-turn trail braking), and Block 4 (Brake-to-throttle pickup with zero dead-coast delay).',
+        telemetryFocus: 'Block 1 transition speed (<0.20s), Block 2 peak deceleration stability (avoiding the 30% grip drop lockup), Block 3 trail overlap, Block 4 seamless throttle handoff.',
+        targetThreshold: '100% phase continuity through all 4 blocks, firm initial load transfer, zero wheel lockup.',
+        commonMistake: 'Coasting between off-throttle and braking (Block 1 gap), or locking the inside front/rear tire and losing 30% of tractive force.',
+        skipBarberQuote: '"We can break the whole process down into four major blocks: 1) Throttle-Brake Transition, 2) Straight-Line Deceleration, 3) Brake-Turn, and 4) Brake-Throttle Transition."'
+      }
+    ]
   },
   {
     chapterNumber: 3,
