@@ -286,18 +286,18 @@ export class StintReview5PagePdfExporter {
     // Strengths
     page5.drawRectangle({ x: 36, y: y - 90, width: W - 72, height: 90, fill: cCard, borderColor: cBorder, borderWidth: 1 });
     page5.drawText('WHAT YOU NAILED (GOING FASTER! PRINCIPLES)', { x: 46, y: y - 18, size: 8.5, font: fontBold, color: cSuccess });
-    page5.drawText('✓ High Friction Circle Utilization: Maintained >75% lateral/longitudinal grip envelope.', { x: 46, y: y - 36, size: 8.5, font: fontRegular, color: cTextDark });
-    page5.drawText('✓ Type I Straight Launch: Early throttle application achieved on primary straightaways.', { x: 46, y: y - 52, size: 8.5, font: fontRegular, color: cTextDark });
-    page5.drawText('✓ Clean Chassis Stability: Zero severe trailing throttle oversteer (TTO) snap slides.', { x: 46, y: y - 68, size: 8.5, font: fontRegular, color: cTextDark });
+    page5.drawText('+ High Friction Circle Utilization: Maintained >75% lateral/longitudinal grip envelope.', { x: 46, y: y - 36, size: 8.5, font: fontRegular, color: cTextDark });
+    page5.drawText('+ Type I Straight Launch: Early throttle application achieved on primary straightaways.', { x: 46, y: y - 52, size: 8.5, font: fontRegular, color: cTextDark });
+    page5.drawText('+ Clean Chassis Stability: Zero severe trailing throttle oversteer (TTO) snap slides.', { x: 46, y: y - 68, size: 8.5, font: fontRegular, color: cTextDark });
 
     y -= 105;
 
     // Refinement Areas
     page5.drawRectangle({ x: 36, y: y - 90, width: W - 72, height: 90, fill: cCard, borderColor: cBorder, borderWidth: 1 });
     page5.drawText('AREAS NEEDING REFINEMENT', { x: 46, y: y - 18, size: 8.5, font: fontBold, color: cWarning });
-    page5.drawText('▲ Type II Deep Braking: Releasing brake pedal ~10 feet too early into slow hairpins.', { x: 46, y: y - 36, size: 8.5, font: fontRegular, color: cTextDark });
-    page5.drawText('▲ Steering Scrub: Excess steering lock applied on entry causing mild front scrub.', { x: 46, y: y - 52, size: 8.5, font: fontRegular, color: cTextDark });
-    page5.drawText('▲ Connecting Corners: Sacrifice Type III apex speed to optimize subsequent full-throttle drive.', { x: 46, y: y - 68, size: 8.5, font: fontRegular, color: cTextDark });
+    page5.drawText('- Type II Deep Braking: Releasing brake pedal ~10 feet too early into slow hairpins.', { x: 46, y: y - 36, size: 8.5, font: fontRegular, color: cTextDark });
+    page5.drawText('- Steering Scrub: Excess steering lock applied on entry causing mild front scrub.', { x: 46, y: y - 52, size: 8.5, font: fontRegular, color: cTextDark });
+    page5.drawText('- Connecting Corners: Sacrifice Type III apex speed to optimize subsequent full-throttle drive.', { x: 46, y: y - 68, size: 8.5, font: fontRegular, color: cTextDark });
 
     y -= 105;
 

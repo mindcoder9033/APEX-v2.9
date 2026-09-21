@@ -303,7 +303,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 14px;
+}
+
+.nav-tab-icon svg {
+  display: block;
+}
+
+.apex-icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+  transition: stroke 0.15s ease, transform 0.15s ease;
 }
 
 .header-status-group {

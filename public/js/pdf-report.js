@@ -21,7 +21,7 @@ export class PdfReportGenerator {
       // Strict Enforcement: DO NOT generate PDF if telemetry data is not received
       if (!samples || samples.length === 0) {
         if (!evalResult || !evalResult.hasTelemetry || (evalResult.telemetryKPIs && evalResult.telemetryKPIs.samplesCount === 0)) {
-          alert('⚠️ Cannot generate PDF: No telemetry data was received from Forza Motorsport.\n\nPlease connect the APEX telemetry bridge and drive on track to record telemetry before generating a report.');
+          alert('Cannot generate PDF: No telemetry data was received from Forza Motorsport.\n\nPlease connect the APEX telemetry bridge and drive on track to record telemetry before generating a report.');
           return;
         }
       }
@@ -38,7 +38,7 @@ export class PdfReportGenerator {
         : StintDiagnostics.evaluate(stintData, samples, evalResult || {});
 
       if (!diagnosis || !diagnosis.hasTelemetry) {
-        alert('⚠️ Cannot generate PDF: No telemetry data recorded for this stint.');
+        alert('Cannot generate PDF: No telemetry data recorded for this stint.');
         return;
       }
 

@@ -96,7 +96,7 @@ export class LiveHudRenderer {
 
     // Strict Enforcement: DO NOT proceed or generate PDF if telemetry data is not received
     if (!this.sessionSamples || this.sessionSamples.length === 0) {
-      alert('⚠️ No telemetry data received for this stint.\n\nPlease ensure Forza Motorsport is running with UDP data output enabled (127.0.0.1:9999) and the APEX bridge is connected before completing a stint.');
+      alert('No telemetry data received for this stint.\n\nPlease ensure Forza Motorsport is running with UDP data output enabled (127.0.0.1:9999) and the APEX bridge is connected before completing a stint.');
       return;
     }
 
@@ -104,7 +104,7 @@ export class LiveHudRenderer {
     const evaluation = StintDiagnostics.evaluate(stintRef, this.sessionSamples, this.telemetryStats);
 
     if (!evaluation || !evaluation.hasTelemetry) {
-      alert('⚠️ Insufficient telemetry samples recorded to evaluate stint or generate PDF debrief.');
+      alert('Insufficient telemetry samples recorded to evaluate stint or generate PDF debrief.');
       return;
     }
 
@@ -257,7 +257,7 @@ export class LiveHudRenderer {
             </div>
           </div>
           <div id="hud-understeer-alert" class="hud-less-grip-alert" style="display: none; margin-top: 6px;">
-            ⚠️ MORE STEERING = LESS GRIP! BREATHE THROTTLE TO 60-70% TO SETTLE NOSE
+            [ALERT] MORE STEERING = LESS GRIP! BREATHE THROTTLE TO 60-70% TO SETTLE NOSE
           </div>
         `;
 

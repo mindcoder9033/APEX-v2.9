@@ -19,6 +19,7 @@ import { globalPitWallHub } from './pitwall-hub.js';
 import { globalCareerStore } from './career-store.js';
 import { SkillsEvaluator } from './analysis/going-faster/skills-evaluator.js';
 import { skillsStore } from './skills-store.js';
+import { getIcon } from './icons.js';
 
 export class SessionManager {
   constructor() {
@@ -279,7 +280,7 @@ export class SessionManager {
     } finally {
       const btnPdf = document.getElementById('btn-download-pdf') || this.btnDownloadPdf;
       if (btnPdf) {
-        btnPdf.innerHTML = '<span>📄</span> DOWNLOAD PDF REPORT';
+        btnPdf.innerHTML = `${getIcon('file-text', { size: 13 })} DOWNLOAD PDF REPORT`;
         btnPdf.disabled = false;
       }
     }
@@ -338,14 +339,14 @@ export class SessionManager {
     if (btnRecord) {
       btnRecord.classList.remove('btn-danger', 'recording-pulse');
       btnRecord.classList.add('btn-primary');
-      btnRecord.innerHTML = '<span>⏺</span> START RECORDING';
+      btnRecord.innerHTML = `${getIcon('play', { size: 12 })} START RECORDING`;
     }
 
     // Visual feedback on Reset button
     const btnReset = document.getElementById('btn-reset-stint') || this.btnResetStint;
     if (btnReset) {
-      const originalHtml = '<span>↺</span> RESET';
-      btnReset.innerHTML = '<span>✓</span> RESET';
+      const originalHtml = `${getIcon('refresh', { size: 12 })} RESET`;
+      btnReset.innerHTML = `${getIcon('check', { size: 12 })} RESET`;
       btnReset.style.borderColor = 'var(--color-success, #00CC66)';
       btnReset.style.color = 'var(--color-success, #00CC66)';
       setTimeout(() => {
@@ -619,15 +620,15 @@ export class SessionManager {
 
       if (lineFindings.length === 0) {
         this.trackMapIssuesTags.innerHTML = `
-          <span class="issue-tag-pill" style="color: var(--color-success); border-color: rgba(0, 204, 102, 0.4); background: rgba(0, 204, 102, 0.08);">
-            ✓ Optimal Geometry & Driving Line Maintained
+          <span class="issue-tag-pill" style="color: var(--color-success); border-color: rgba(0, 204, 102, 0.4); background: rgba(0, 204, 102, 0.08); display: inline-flex; align-items: center; gap: 4px;">
+            ${getIcon('check', { size: 12, color: 'var(--color-success)' })} Optimal Geometry & Driving Line Maintained
           </span>
         `;
       } else {
         lineFindings.forEach(f => {
           const pill = document.createElement('span');
           pill.className = `issue-tag-pill ${f.severity === 'High' ? 'severity-high' : 'severity-medium'}`;
-          pill.innerHTML = `⚠️ <strong>T${f.cornerNumber}</strong>: ${f.name}`;
+          pill.innerHTML = `<span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('alert', { size: 11, color: f.severity === 'High' ? 'var(--color-f1-red)' : 'var(--color-warning)' })} <strong>T${f.cornerNumber}</strong>: ${f.name}</span>`;
           this.trackMapIssuesTags.appendChild(pill);
         });
       }
@@ -1066,7 +1067,7 @@ export class SessionManager {
             <td style="color: #00CCFF; font-family: var(--font-mono); font-weight: bold;">${(cs.exitRpm || 0).toLocaleString()} RPM</td>
             <td style="color: ${statusColor}; font-weight: bold;">${cs.exitPowerbandPercent}%</td>
             <td style="${suggestedDiff ? 'color: var(--color-warning); font-weight: bold;' : 'color: var(--color-text-secondary);'}">
-              ${suggestedDiff ? `Gear ${cs.suggestedGear} ⚠️` : `Gear ${cs.gear}`}
+              ${suggestedDiff ? `Gear ${cs.suggestedGear} ${getIcon('alert', { size: 11, color: 'var(--color-warning)' })}` : `Gear ${cs.gear}`}
             </td>
             <td style="color: ${statusColor}; font-weight: bold; font-size: 11px;">${cs.status}</td>
           `;
@@ -1643,7 +1644,7 @@ export class SessionManager {
     if (!surface) return;
 
     if (this.surfaceConditionBadge) {
-      this.surfaceConditionBadge.textContent = surface.isWetSession ? '🌧️ WET TRACK CONDITIONS' : '☀️ DRY TRACK CONDITIONS';
+      this.surfaceConditionBadge.innerHTML = surface.isWetSession ? `<span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('droplet', { size: 11, color: '#00BFFF' })} WET TRACK CONDITIONS</span>` : `<span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('zap', { size: 11, color: 'var(--color-success)' })} DRY TRACK CONDITIONS</span>`;
       this.surfaceConditionBadge.style.color = surface.isWetSession ? '#00BFFF' : 'var(--color-success)';
       this.surfaceConditionBadge.style.borderColor = surface.isWetSession ? '#00BFFF' : 'var(--color-success)';
     }

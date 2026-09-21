@@ -7,6 +7,7 @@
 
 import { weatherProfileStore } from './weather-profile-store.js';
 import { WEATHER_CONDITIONS, WEATHER_CATEGORIES, WeatherSimulator } from './analysis/weather-simulator.js';
+import { getIcon } from './icons.js';
 
 // Category accent colors
 const CATEGORY_COLORS = {
@@ -168,7 +169,9 @@ export class WeatherIntelView {
         <div style="margin-top: 6px;">
           <span style="font-size: 8px; font-family: var(--font-mono); font-weight: 700;
             color: #00D8F4; background: rgba(0,216,244,0.1); border: 1px solid rgba(0,216,244,0.3);
-            padding: 1px 5px; border-radius: 2px;">💧 HYDRO RISK</span>
+            padding: 1px 5px; border-radius: 2px; display: inline-flex; align-items: center; gap: 4px;">
+            ${getIcon('droplet', { size: 9, color: '#00D8F4' })} HYDRO RISK
+          </span>
         </div>
       ` : ''}
     `;
@@ -209,9 +212,9 @@ export class WeatherIntelView {
       this.detailPanel.style.display = 'block';
       this.detailPanel.innerHTML = `
         <div style="padding: 20px; text-align: center; color: var(--color-text-muted);
-          font-family: var(--font-mono); font-size: 11px;">
-          ⚠️ Weather simulation data not yet generated for this track.
-          Record a new stint to unlock Weather Intelligence.
+          font-family: var(--font-mono); font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          ${getIcon('alert', { size: 14, color: '#FFB800' })}
+          <span>Weather simulation data not yet generated for this track. Record a new stint to unlock Weather Intelligence.</span>
         </div>
       `;
       return;
@@ -239,7 +242,7 @@ export class WeatherIntelView {
             ${confidence.confidencePct}% CONFIDENCE — ${confStyle.label}
           </span>
           <span title="Confidence improves as you record more sessions in wet conditions" style="cursor: help;
-            font-size: 11px; color: var(--color-text-muted);">ℹ️</span>
+            display: inline-flex; align-items: center; color: var(--color-text-muted);">${getIcon('info', { size: 13, color: 'var(--color-text-muted)' })}</span>
         </div>
       </div>
 
@@ -279,16 +282,20 @@ export class WeatherIntelView {
         border-top: 1px solid var(--color-border);">
         <div>
           <div style="font-family: var(--font-display); font-size: 10px; font-weight: 700;
-            color: ${catColors.text}; letter-spacing: 1px; margin-bottom: 8px;">🎯 STRATEGY</div>
+            color: ${catColors.text}; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            ${getIcon('target', { size: 12, color: catColors.text })} STRATEGY
+          </div>
           ${this._strategyLine('Line', profile.strategy.line)}
           ${this._strategyLine('Tires', profile.strategy.tires)}
           ${this._strategyLine('Throttle', profile.strategy.throttle)}
           ${this._strategyLine('Braking', profile.strategy.braking)}
-          ${profile.strategy.hydroNote ? this._strategyLine('⚠️ Aquaplane', profile.strategy.hydroNote, '#00D8F4') : ''}
+          ${profile.strategy.hydroNote ? this._strategyLine(`${getIcon('alert', { size: 10, color: '#00D8F4' })} Aquaplane`, profile.strategy.hydroNote, '#00D8F4') : ''}
         </div>
         <div>
           <div style="font-family: var(--font-display); font-size: 10px; font-weight: 700;
-            color: ${catColors.text}; letter-spacing: 1px; margin-bottom: 8px;">✅ PRE-STINT CHECKLIST</div>
+            color: ${catColors.text}; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            ${getIcon('check-circle', { size: 12, color: catColors.text })} PRE-STINT CHECKLIST
+          </div>
           ${profile.checklist.map(item => `
             <div style="display: flex; gap: 8px; align-items: flex-start; margin-bottom: 5px;">
               <span style="color: var(--color-text-muted); margin-top: 1px; flex-shrink: 0;">□</span>
@@ -337,7 +344,7 @@ export class WeatherIntelView {
         ${showHydro ? `
           <td>
             ${hydroFlag
-              ? `<span class="aquaplaning-risk-badge">⚠️ HIGH RISK</span>`
+              ? `<span class="aquaplaning-risk-badge" style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('alert', { size: 10, color: '#E10600' })} HIGH RISK</span>`
               : `<span style="font-size: 9px; color: var(--color-text-muted); font-family: var(--font-mono);">LOW</span>`
             }
           </td>

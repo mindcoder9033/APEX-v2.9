@@ -8,6 +8,7 @@ import { trackLibraryStore } from './track-library-store.js';
 import { PreStintPdfBuilder } from './pre-stint-pdf-builder.js';
 import { WeatherIntelView } from './weather-intel-view.js';
 import { weatherProfileStore } from './weather-profile-store.js';
+import { getIcon } from './icons.js';
 
 export class TrackLibraryView {
   constructor() {
@@ -312,7 +313,7 @@ export class TrackLibraryView {
       if (hazards.length === 0) {
         hazardsFeed.innerHTML = `
           <div class="hazard-brief-card chamfer-all-corners">
-            <div style="font-weight: 700; color: var(--color-success);">✓ No Critical Surface Hazards Detected</div>
+            <div style="font-weight: 700; color: var(--color-success); display: flex; align-items: center; gap: 6px;">${getIcon('check', { size: 13, color: 'var(--color-success)' })} No Critical Surface Hazards Detected</div>
             <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">Standard racing line with consistent grip coefficients throughout circuit.</div>
           </div>
         `;
@@ -322,7 +323,7 @@ export class TrackLibraryView {
           hCard.className = `hazard-brief-card chamfer-all-corners ${h.severity === 'High' ? 'severity-high' : 'severity-med'}`;
           hCard.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 700; font-size: 12px; color: var(--color-text-primary);">⚠️ ${h.title}</span>
+              <span style="font-weight: 700; font-size: 12px; color: var(--color-text-primary); display: inline-flex; align-items: center; gap: 6px;">${getIcon('alert', { size: 13, color: '#FFB800' })} ${h.title}</span>
               <span class="badge" style="font-size: 9px; background: rgba(225,6,0,0.15); border: 1px solid var(--color-f1-red); color: var(--color-f1-red);">${h.type}</span>
             </div>
             <div style="font-size: 11px; color: var(--color-text-secondary); margin-top: 6px; line-height: 1.4;">
@@ -458,8 +459,8 @@ export class TrackLibraryView {
     const btn = this.btnExportPdf;
     if (btn) {
       btn.innerHTML = allWeatherProfiles
-        ? '<span>⏳</span> COMPILING WEATHER BRIEFING...'
-        : '<span>⏳</span> COMPILING BRIEFING...';
+        ? `${getIcon('loader', { size: 13, className: 'spin' })} COMPILING WEATHER BRIEFING...`
+        : `${getIcon('loader', { size: 13, className: 'spin' })} COMPILING BRIEFING...`;
       btn.disabled = true;
     }
 
@@ -477,7 +478,7 @@ export class TrackLibraryView {
       alert('Failed to generate Pre-Stint PDF: ' + err.message);
     } finally {
       if (btn) {
-        btn.innerHTML = '<span>📄</span> EXPORT PRE-STINT PREP PDF';
+        btn.innerHTML = `${getIcon('file-text', { size: 13 })} EXPORT PRE-STINT PREP PDF`;
         btn.disabled = false;
       }
     }

@@ -6,6 +6,7 @@
 
 import { LiveHudRenderer } from './hud.js';
 import { PdfReportGenerator } from './pdf-report.js';
+import { getIcon } from './icons.js';
 
 export const STINTS_DATABASE = [
   // --- TIER 1: THE 3 BASICS & FUNDAMENTALS ---
@@ -351,7 +352,7 @@ export class StintsManager {
     if (this.btnDebriefDownloadPdf) {
       this.btnDebriefDownloadPdf.addEventListener('click', () => {
         if (!this.lastStintSamples || this.lastStintSamples.length === 0 || !this.lastStintEvaluation?.hasTelemetry) {
-          alert('⚠️ Cannot generate PDF: No telemetry data was recorded for this stint.\n\nPlease connect the APEX telemetry bridge and drive on track.');
+          alert('Cannot generate PDF: No telemetry data was recorded for this stint.\n\nPlease connect the APEX telemetry bridge and drive on track.');
           return;
         }
         if (this.lastStintRef && this.lastStintEvaluation) {
@@ -401,8 +402,9 @@ export class StintsManager {
 
     if (filtered.length === 0) {
       this.stintsListContainer.innerHTML = `
-        <div style="padding: 24px 12px; text-align: center; color: var(--color-text-muted); font-size: 11.5px; font-family: var(--font-mono);">
-          <span>🔍 No practice modules found matching "${query}"</span>
+        <div style="padding: 24px 12px; text-align: center; color: var(--color-text-muted); font-size: 11.5px; font-family: var(--font-mono); display: flex; align-items: center; justify-content: center; gap: 6px;">
+          ${getIcon('search', { size: 13, color: 'var(--color-text-muted)' })}
+          <span>No practice modules found matching "${query}"</span>
         </div>
       `;
       return;
@@ -426,8 +428,8 @@ export class StintsManager {
           ${stint.focus}
         </div>
         <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 9px; color: var(--color-text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 5px;">
-          <span>🏎️ ${stint.prescribedCar.split(' ')[1] || stint.prescribedCar}</span>
-          <span>📍 ${stint.prescribedTrack.split(' ')[0] || stint.prescribedTrack}</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('car', { size: 10, color: 'var(--color-text-muted)' })} ${stint.prescribedCar.split(' ')[1] || stint.prescribedCar}</span>
+          <span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('pin', { size: 10, color: 'var(--color-text-muted)' })} ${stint.prescribedTrack.split(' ')[0] || stint.prescribedTrack}</span>
         </div>
       `;
 
@@ -477,8 +479,8 @@ export class StintsManager {
 
         <!-- Skip Barber Master Principle Card -->
         <div class="stint-quote-card chamfer-all-corners">
-          <div class="stint-quote-label">
-            <span>📖</span> Skip Barber "Going Faster!" Master Racecraft Principle
+          <div class="stint-quote-label" style="display: flex; align-items: center; gap: 6px;">
+            ${getIcon('book', { size: 13, color: 'var(--color-gold)' })} <span>Skip Barber "Going Faster!" Master Racecraft Principle</span>
           </div>
           <div class="stint-quote-text">
             ${stint.quote}
@@ -487,8 +489,8 @@ export class StintsManager {
 
         <!-- Tactical Briefing & Stepping Stones -->
         <div>
-          <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">
-            🎯 Tactical Briefing & Stepping Stone Objectives
+          <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+            ${getIcon('target', { size: 13, color: 'var(--color-text-secondary)' })} Tactical Briefing & Stepping Stone Objectives
           </div>
           <p style="font-size: 12.5px; color: var(--color-text-secondary); line-height: 1.6; margin: 0 0 12px 0;">
             ${stint.briefing}
@@ -497,8 +499,8 @@ export class StintsManager {
 
         <!-- 3-Step Action Plan -->
         <div>
-          <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
-            📋 Driver Directives & Execution Plan
+          <div style="font-family: var(--font-display); font-size: 12px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            ${getIcon('clipboard', { size: 13, color: 'var(--color-text-secondary)' })} Driver Directives & Execution Plan
           </div>
           <ul class="stint-action-plan-list">
             ${stint.actionPlan.map((step, idx) => `
@@ -517,8 +519,8 @@ export class StintsManager {
       this.stintSessionRight.innerHTML = `
         <!-- Target Mastery KPI Card -->
         <div class="stint-kpi-target-card chamfer-all-corners">
-          <div class="stint-kpi-target-label">
-            🏆 Target Mastery Benchmark
+          <div class="stint-kpi-target-label" style="display: flex; align-items: center; gap: 6px;">
+            ${getIcon('trophy', { size: 13, color: 'var(--color-gold)' })} <span>Target Mastery Benchmark</span>
           </div>
           <div class="stint-kpi-target-value">
             ${stint.targetMetric}
@@ -527,8 +529,8 @@ export class StintsManager {
 
         <!-- Prescribed Session Parameters -->
         <div>
-          <div style="font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
-            🔒 Prescribed Session Config
+          <div style="font-family: var(--font-display); font-size: 11.5px; font-weight: 700; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            ${getIcon('lock', { size: 12, color: 'var(--color-text-secondary)' })} Prescribed Session Config
           </div>
           <div class="stint-params-grid">
             <div class="stint-param-row chamfer-all-corners">
@@ -572,8 +574,8 @@ export class StintsManager {
         </div>
 
         <!-- Launch Button -->
-        <button id="btn-launch-stint" class="btn btn-primary stint-launch-cta-btn chamfer-br">
-          <span>🚀</span> LAUNCH LIVE COCKPIT HUD
+        <button id="btn-launch-stint" class="btn btn-primary stint-launch-cta-btn chamfer-br" style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+          ${getIcon('rocket', { size: 14 })} <span>LAUNCH LIVE COCKPIT HUD</span>
         </button>
       `;
 
@@ -673,7 +675,7 @@ export class StintsManager {
     this.isStintActive = false;
     if (!evaluation || !evaluation.hasTelemetry || !samples || samples.length === 0) {
       this.renderSelectedStintDossier();
-      alert('⚠️ No live telemetry data was received during this stint.\n\nPlease ensure Forza Motorsport is streaming UDP telemetry to 127.0.0.1:9999 and the APEX bridge is running.');
+      alert('No live telemetry data was received during this stint.\n\nPlease ensure Forza Motorsport is streaming UDP telemetry to 127.0.0.1:9999 and the APEX bridge is running.');
       return;
     }
 
@@ -711,7 +713,7 @@ export class StintsManager {
     const elGate = document.getElementById('debrief-stint-gate-status');
     if (elGate) {
       if (evaluation.scorecard?.isCapped) {
-        elGate.textContent = `⚠️ Capped: ${evaluation.scorecard.capReason}`;
+        elGate.textContent = `[CAPPED] ${evaluation.scorecard.capReason}`;
         elGate.style.color = 'var(--color-f1-red)';
       } else {
         elGate.textContent = 'Formula: 50% Disc + 30% Smooth + 20% Pace';

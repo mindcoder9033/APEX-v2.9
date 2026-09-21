@@ -7,6 +7,7 @@
 import { GOING_FASTER_CHAPTERS, getChapter, getSkill } from './skills-curriculum.js';
 import { skillsStore } from './skills-store.js';
 import { SkillsEvaluator } from './analysis/going-faster/skills-evaluator.js';
+import { getIcon } from './icons.js';
 
 export class SkillsView {
   constructor(containerId = 'view-skills') {
@@ -128,7 +129,7 @@ export class SkillsView {
         <aside class="skills-sidebar ${this.sidebarCollapsed ? 'collapsed' : ''}">
           <div class="skills-sidebar-header">
             <div class="skills-sidebar-title-group">
-              <span style="color: #00ff88; font-size: 14px;">⚡</span>
+              <span style="color: #00ff88; font-size: 14px;">${getIcon('zap', { size: 14, color: '#00ff88' })}</span>
               <span class="skills-sidebar-title">SKILLS ACADEMY</span>
             </div>
             <button id="btn-toggle-skills-sidebar" class="btn-sidebar-toggle" title="Toggle Sidebar (B)">
@@ -144,7 +145,7 @@ export class SkillsView {
                 const isSelected = this.selectedChapterNumber === ch.chapterNumber;
                 return `
                   <button class="skills-chapter-btn ${isSelected ? 'active' : ''}" data-chapter="${ch.chapterNumber}" title="${ch.title}">
-                    <span class="skills-sidebar-icon">${ch.icon}</span>
+                    <span class="skills-sidebar-icon">${getIcon(ch.icon, { size: 14 })}</span>
                     <div class="skills-sidebar-item-info">
                       <span class="skills-sidebar-item-name">${ch.shortTitle}</span>
                       <span class="skills-sidebar-item-sub">${ch.status === 'active' ? `ACTIVE // ${ch.skills.length} SKILLS` : 'COMING SOON'}</span>
@@ -158,7 +159,7 @@ export class SkillsView {
             <div class="skills-sidebar-section-title" style="margin-top: 10px;">Recorded Stints</div>
             <div class="skills-stint-list">
               <button class="skills-stint-btn ${this.selectedStintId === 'ALL' ? 'active' : ''}" data-stint="ALL">
-                <span class="skills-sidebar-icon">🏁</span>
+                <span class="skills-sidebar-icon">${getIcon('flag', { size: 14 })}</span>
                 <div class="skills-sidebar-item-info">
                   <span class="skills-sidebar-item-name">All Stints & Laps</span>
                   <span class="skills-sidebar-item-sub">${masteryStats.totalAttempts} total attempts</span>
@@ -168,7 +169,7 @@ export class SkillsView {
                 const isSelected = this.selectedStintId === st.stintId;
                 return `
                   <button class="skills-stint-btn ${isSelected ? 'active' : ''}" data-stint="${st.stintId}" title="${st.trackName}">
-                    <span class="skills-sidebar-icon">⏱️</span>
+                    <span class="skills-sidebar-icon">${getIcon('gauge', { size: 14 })}</span>
                     <div class="skills-sidebar-item-info">
                       <span class="skills-sidebar-item-name">${st.trackName}</span>
                       <span class="skills-sidebar-item-sub">${st.attemptsCount} attempts · Avg ${st.avgScore}%</span>
@@ -187,11 +188,11 @@ export class SkillsView {
           <nav class="skills-subtabs-bar">
             <div class="skills-subtabs-group">
               <button class="skills-subtab-btn ${this.activeSubtab === 'clinic' ? 'active' : ''}" data-subtab="clinic">
-                <span>🎯</span>
+                <span>${getIcon('target', { size: 14 })}</span>
                 <span>Coaching & Playbook</span>
               </button>
               <button class="skills-subtab-btn ${this.activeSubtab === 'history' ? 'active' : ''}" data-subtab="history">
-                <span>📈</span>
+                <span>${getIcon('trend-up', { size: 14 })}</span>
                 <span>Attempt History & Matrix</span>
                 <span class="skills-subtab-badge">${attempts.length}</span>
               </button>
@@ -239,7 +240,7 @@ export class SkillsView {
           <div class="skills-hero-top">
             <div class="skills-hero-titles">
               <div class="skills-hero-badge">
-                <span>⚡</span> GOING FASTER! COACHING HUB // ${chapter.title.toUpperCase()}
+                <span>${getIcon('zap', { size: 12, color: '#00ff88' })}</span> GOING FASTER! COACHING HUB // ${chapter.title.toUpperCase()}
               </div>
               <h1 class="skills-hero-title">${chapter.subtitle}</h1>
               <p class="skills-hero-subtitle">${chapter.description}</p>
@@ -273,7 +274,7 @@ export class SkillsView {
           <section class="skills-card">
             <div class="skills-card-header">
               <h2 class="skills-card-title">
-                <span>📚</span> Chapter ${chapter.chapterNumber} Skills Playbook
+                <span>${getIcon('book', { size: 14 })}</span> Chapter ${chapter.chapterNumber} Skills Playbook
               </h2>
               <span style="font-family: var(--font-mono); font-size: 11px; color: #8899A6;">${chapter.skills.length} Core Telemetry Pillars</span>
             </div>
@@ -289,7 +290,7 @@ export class SkillsView {
                   <div class="skill-playbook-item ${isActive ? 'active' : ''}" data-skill-id="${sk.id}" style="border-left-color: ${sk.color};">
                     <div class="skill-item-header">
                       <div class="skill-item-name">
-                        <span>${sk.icon}</span>
+                        <span>${getIcon(sk.icon, { size: 14, color: sk.color })}</span>
                         <span>${sk.name}</span>
                       </div>
                       <span class="skill-priority-tag" style="background: ${sk.color}22; color: ${sk.color}; border: 1px solid ${sk.color}44;">
@@ -320,7 +321,7 @@ export class SkillsView {
           <section class="skills-card">
             <div class="skills-card-header">
               <h2 class="skills-card-title">
-                <span>🎯</span> Live Corner Clinic & Diagnostics
+                <span>${getIcon('target', { size: 14 })}</span> Live Corner Clinic & Diagnostics
               </h2>
               <span style="font-family: var(--font-mono); font-size: 11px; color: #00ff88;">REAL-TIME PHYSICS SCORING</span>
             </div>
@@ -370,18 +371,22 @@ export class SkillsView {
 
               <!-- Habit Evolution & Diagnostics Box -->
               <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
-                <span style="font-size: 11px; font-family: var(--font-mono); color: #8899A6; text-transform: uppercase; letter-spacing: 0.05em;">
-                  🧠 Habit Evolution & Adaptive Coach Insights
+                <span style="font-size: 11px; font-family: var(--font-mono); color: #8899A6; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px;">
+                  ${getIcon('target', { size: 12, color: '#8899A6' })} Habit Evolution & Adaptive Coach Insights
                 </span>
-                ${habitInsights.map(h => `
-                  <div class="habit-alert-card ${h.type || 'positive'}">
-                    <span style="font-size: 14px;">${h.type === 'danger' ? '⚠️' : (h.type === 'warning' ? '⚡' : '✅')}</span>
-                    <div>
-                      ${h.title ? `<strong>${h.title}: </strong>` : ''}
-                      ${h.message}
+                ${habitInsights.map(h => {
+                  const iconName = h.type === 'danger' ? 'alert' : (h.type === 'warning' ? 'zap' : 'check-circle');
+                  const iconColor = h.type === 'danger' ? '#ff3366' : (h.type === 'warning' ? '#ffb800' : '#00ff88');
+                  return `
+                    <div class="habit-alert-card ${h.type || 'positive'}">
+                      <span style="display: flex; align-items: center;">${getIcon(iconName, { size: 14, color: iconColor })}</span>
+                      <div>
+                        ${h.title ? `<strong>${h.title}: </strong>` : ''}
+                        ${h.message}
+                      </div>
                     </div>
-                  </div>
-                `).join('')}
+                  `;
+                }).join('')}
               </div>
             </div>
           </section>
@@ -424,8 +429,8 @@ export class SkillsView {
         <!-- WIDGET 1: 15GR RADIUS & SPEED GAUGE -->
         <div class="ch2-widget-card gauge-15gr">
           <div class="ch2-widget-header">
-            <div class="ch2-widget-title">
-              <span>📐</span> 15GR Radius & Kinematic Arc Gauge
+            <div class="ch2-widget-title" style="display: flex; align-items: center; gap: 6px;">
+              ${getIcon('arc', { size: 14 })} 15GR Radius & Kinematic Arc Gauge
             </div>
             <span class="ch2-badge ${isEarlyApex ? 'danger' : (isLateApex ? 'warning' : 'optimal')}">
               ${apexType}
@@ -453,8 +458,8 @@ export class SkillsView {
         <!-- WIDGET 2: CORRECTION, PAUSE, RECOVERY (CPR) TIMELINE -->
         <div class="ch2-widget-card timeline-cpr">
           <div class="ch2-widget-header">
-            <div class="ch2-widget-title">
-              <span>🔄</span> Slide Control: Correction, Pause, Recovery (CPR)
+            <div class="ch2-widget-title" style="display: flex; align-items: center; gap: 6px;">
+              ${getIcon('refresh', { size: 14 })} Slide Control: Correction, Pause, Recovery (CPR)
             </div>
             <span class="ch2-badge ${balanceMetrics.snapbackDetected ? 'danger' : (balanceMetrics.trailingThrottleLift ? 'warning' : 'optimal')}">
               ${balanceMetrics.balanceState || 'Neutral / High Grip'}
@@ -474,17 +479,17 @@ export class SkillsView {
           </div>
 
           <div class="cpr-legend-row">
-            <span>⚡ Latency: <strong>${correctionMs}ms</strong> ${correctionMs <= 150 ? '✅ Fast' : '⚠️ Slow'}</span>
-            <span>⏸️ Slide Pause: <strong>${pauseMs}ms</strong></span>
-            <span>🔁 Snapback Risk: <strong>${balanceMetrics.snapbackDetected ? '⚠️ HIGH' : '✅ LOW'}</strong></span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('zap', { size: 12, color: '#00e5ff' })} Latency: <strong>${correctionMs}ms</strong> ${correctionMs <= 150 ? `<span style="color: #00ff88;">[PASS]</span>` : `<span style="color: #ffb800;">[WARN]</span>`}</span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('gauge', { size: 12 })} Slide Pause: <strong>${pauseMs}ms</strong></span>
+            <span style="display: inline-flex; align-items: center; gap: 4px;">${getIcon('refresh', { size: 12 })} Snapback Risk: <strong>${balanceMetrics.snapbackDetected ? `<span style="color: #ff3366;">HIGH</span>` : `<span style="color: #00ff88;">LOW</span>`}</strong></span>
           </div>
         </div>
 
         <!-- WIDGET 3: 4-BLOCK CORNER ENTRY STAGES -->
         <div class="ch2-widget-card four-block">
           <div class="ch2-widget-header">
-            <div class="ch2-widget-title">
-              <span>🛑</span> 4-Block Corner Entry & Dynamic Weight Transfer
+            <div class="ch2-widget-title" style="display: flex; align-items: center; gap: 6px;">
+              ${getIcon('brake', { size: 14 })} 4-Block Corner Entry & Dynamic Weight Transfer
             </div>
             <span class="ch2-badge ${fourBlockMetrics.b2LockupDetected ? 'danger' : 'optimal'}">
               ${fourBlockMetrics.b2LockupDetected ? 'LOCKUP DETECTED' : '65% FRONT LOAD TRANSFER'}
@@ -566,11 +571,11 @@ export class SkillsView {
           </div>
 
           <div style="display: flex; gap: 8px; align-items: center;">
-            <button id="btn-skills-export-csv" class="btn btn-secondary btn-xs chamfer-br">
-              <span>📥</span> EXPORT CSV
+            <button id="btn-skills-export-csv" class="btn btn-secondary btn-xs chamfer-br" style="display: inline-flex; align-items: center; gap: 5px;">
+              ${getIcon('download', { size: 12 })} EXPORT CSV
             </button>
-            <button id="btn-skills-reset-history" class="btn btn-secondary btn-xs chamfer-br" title="Clear attempt history">
-              <span>↺</span> RESET
+            <button id="btn-skills-reset-history" class="btn btn-secondary btn-xs chamfer-br" title="Clear attempt history" style="display: inline-flex; align-items: center; gap: 4px;">
+              ${getIcon('refresh', { size: 12 })} RESET
             </button>
           </div>
         </div>
@@ -667,8 +672,8 @@ export class SkillsView {
               `}
             </div>
 
-            <p style="margin: 0; font-size: 12px; color: #CBD5E1; font-style: italic; background: rgba(0,0,0,0.3); padding: 8px 12px; border-left: 2px solid #00ff88; border-radius: 2px;">
-              💡 <strong>Coach Note:</strong> ${inspectedAttempt.summary}
+            <p style="margin: 0; font-size: 12px; color: #CBD5E1; font-style: italic; background: rgba(0,0,0,0.3); padding: 8px 12px; border-left: 2px solid #00ff88; border-radius: 2px; display: flex; align-items: center; gap: 6px;">
+              ${getIcon('lightbulb', { size: 14, color: '#00ff88' })} <strong>Coach Note:</strong> ${inspectedAttempt.summary}
             </p>
           </div>
         ` : ''}
@@ -677,7 +682,7 @@ export class SkillsView {
         <div class="skills-card">
           <div class="skills-card-header">
             <h2 class="skills-card-title">
-              <span>📋</span> Driver Learning Progression & Attempt History
+              <span>${getIcon('clipboard', { size: 14 })}</span> Driver Learning Progression & Attempt History
             </h2>
             <span style="font-family: var(--font-mono); font-size: 11px; color: #64748B;">
               Click row to inspect · Select checkboxes to compare 2 attempts
@@ -755,7 +760,7 @@ export class SkillsView {
       <div class="attempt-comparator-box">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,229,255,0.2); padding-bottom: 6px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="color: #00e5ff; font-size: 16px;">⚖️</span>
+            <span style="color: #00e5ff; font-size: 16px;">${getIcon('balance', { size: 16, color: '#00e5ff' })}</span>
             <strong style="color: #FFF; font-size: 14px; text-transform: uppercase;">Side-by-Side Attempt Comparator</strong>
           </div>
           <span style="font-family: var(--font-mono); font-size: 12px; color: ${deltaScore >= 0 ? '#00ff88' : '#ff3366'};">
