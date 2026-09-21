@@ -10,7 +10,6 @@ import { TrackLibraryView } from './track-library-view.js';
 import { trackLibraryStore } from './track-library-store.js';
 import { weatherProfileStore } from './weather-profile-store.js';
 import { WeatherSimulator } from './analysis/weather-simulator.js';
-import { StintsManager } from './stints.js';
 import { IsometricTrackMap } from './components/isometric-track-map.js';
 import { LoopbackModal } from './components/loopback-modal.js';
 import { driverProfileStore } from './driver-profile-store.js';
@@ -27,7 +26,6 @@ class ApexApp {
     this.session = new SessionManager();
     this.layoutManager = new GridLayoutManager();
     this.trackLibrary = new TrackLibraryView();
-    this.stintsManager = new StintsManager();
     this.careerView = globalCareerView;
     this.loopbackModal = new LoopbackModal();
     this.driverDossierModal = new DriverDossierModal();
@@ -71,13 +69,11 @@ class ApexApp {
     // Primary Navigation Tab Buttons
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
-    this.btnNavStints = document.getElementById('btn-nav-stints');
     this.btnNavCareer = document.getElementById('btn-nav-career');
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
-    this.viewStints = document.getElementById('view-stints');
     this.viewCareer = document.getElementById('view-career');
 
     this.wsClient = new ApexWsClient({
@@ -405,12 +401,6 @@ class ApexApp {
       });
     }
 
-    if (this.btnNavStints) {
-      this.btnNavStints.addEventListener('click', () => {
-        this.switchView('stints');
-      });
-    }
-
     if (this.btnNavCareer) {
       this.btnNavCareer.addEventListener('click', () => {
         this.switchView('career');
@@ -455,9 +445,6 @@ class ApexApp {
       } else if (e.key === 't' || e.key === 'T') {
         e.preventDefault();
         this.switchView('track-library');
-      } else if (e.key === 'l' || e.key === 'L') {
-        e.preventDefault();
-        this.switchView('stints');
       } else if (e.key === 'c' || e.key === 'C') {
         e.preventDefault();
         this.switchView('career');
@@ -536,9 +523,6 @@ class ApexApp {
       this.setStatus('connected', 'Live 60Hz');
       this.hud.update(sample, this.session.settings.speedUnit);
       this.session.processSample(sample);
-      if (this.stintsManager) {
-        this.stintsManager.updateTelemetry(sample);
-      }
 
       if (this.trackMap3D) {
         this.trackMap3D.updateLiveTelemetry(sample, this.session.recordedSamples);
@@ -733,13 +717,11 @@ class ApexApp {
     // 1. Hide all views
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
-    if (this.viewStints) this.viewStints.style.display = 'none';
     if (this.viewCareer) this.viewCareer.style.display = 'none';
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
-    if (this.btnNavStints) this.btnNavStints.classList.remove('active');
     if (this.btnNavCareer) this.btnNavCareer.classList.remove('active');
 
     // 3. Activate selected view
@@ -750,10 +732,6 @@ class ApexApp {
       if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
       if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.add('active');
       if (this.trackLibrary) this.trackLibrary.refresh();
-    } else if (viewName === 'stints') {
-      if (this.viewStints) this.viewStints.style.display = 'block';
-      if (this.btnNavStints) this.btnNavStints.classList.add('active');
-      if (this.stintsManager) this.stintsManager.onViewOpened();
     } else if (viewName === 'career') {
       if (this.viewCareer) this.viewCareer.style.display = 'block';
       if (this.btnNavCareer) this.btnNavCareer.classList.add('active');
