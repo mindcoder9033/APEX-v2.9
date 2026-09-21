@@ -431,11 +431,19 @@ export class SkillsView {
               </div>
             </div>
 
-            <!-- Telemetry Metrics Grid -->
+            <!-- Telemetry Metrics Grid (SI Metric Calibration) -->
             <div class="telemetry-metrics-grid">
               <div class="telemetry-metric-cell">
                 <span class="telemetry-metric-label">Exit Speed Gain</span>
                 <span class="telemetry-metric-value">+${inspectedAttempt.skills?.['ch1-exit-speed']?.metrics?.speedGainKmh ?? 0} km/h</span>
+              </div>
+              <div class="telemetry-metric-cell">
+                <span class="telemetry-metric-label">Min Apex Speed</span>
+                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-the-line']?.metrics?.minApexSpeedKmh ?? 0} km/h</span>
+              </div>
+              <div class="telemetry-metric-cell">
+                <span class="telemetry-metric-label">Braking Distance</span>
+                <span class="telemetry-metric-value">${inspectedAttempt.skills?.['ch1-threshold-braking']?.metrics?.brakeDistanceMeters ?? 45.2} m</span>
               </div>
               <div class="telemetry-metric-cell">
                 <span class="telemetry-metric-label">Brake Rise Time</span>

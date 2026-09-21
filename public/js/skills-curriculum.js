@@ -28,8 +28,8 @@ export const GOING_FASTER_CHAPTERS = [
         priority: 'P1 (Highest Return)',
         icon: '🚀',
         color: '#00ff88',
-        concept: 'Squeezing throttle progressively as steering unwinds onto straightaway. A 2 mph exit gain carries all the way down the straight.',
-        telemetryFocus: 'Throttle ramp linearity, time-to-100%, steering unwind synchronization, exit speed delta.',
+        concept: 'Squeezing throttle progressively as steering unwinds onto straightaway. A 3–5 km/h exit speed gain carries all the way down the following straight.',
+        telemetryFocus: 'Throttle ramp linearity, time-to-100%, steering unwind synchronization, exit speed delta (km/h).',
         targetThreshold: 'Score >= 85 (Smooth throttle squeeze without hesitation or pinched steering)',
         commonMistake: 'Pinching exit (tightening wheel while on throttle) or hesitating at apex.',
         skipBarberQuote: '"Since the greatest part of a lap is spent on corner exits and straights, any speed improvements on this portion have the greatest effect on decreasing lap time."'
