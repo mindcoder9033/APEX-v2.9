@@ -27,8 +27,8 @@ export class SkillsView {
     if (typeof localStorage !== 'undefined') {
       savedSidebar = localStorage.getItem('apex_skills_sidebar_collapsed');
     }
-    this.sidebarCollapsed = savedSidebar !== null 
-      ? savedSidebar === 'true' 
+    this.sidebarCollapsed = savedSidebar !== null
+      ? savedSidebar === 'true'
       : (typeof window !== 'undefined' ? window.innerWidth < 1200 : false);
 
     // Subscribe to store updates
@@ -131,8 +131,8 @@ export class SkillsView {
             <div class="skills-sidebar-section-title">Curriculum Chapters</div>
             <div class="skills-chapter-list">
               ${GOING_FASTER_CHAPTERS.map(ch => {
-                const isSelected = this.selectedChapterNumber === ch.chapterNumber;
-                return `
+      const isSelected = this.selectedChapterNumber === ch.chapterNumber;
+      return `
                   <button class="skills-chapter-btn ${isSelected ? 'active' : ''}" data-chapter="${ch.chapterNumber}" title="${ch.title}">
                     <span class="skills-sidebar-icon">${ch.icon}</span>
                     <div class="skills-sidebar-item-info">
@@ -141,7 +141,7 @@ export class SkillsView {
                     </div>
                   </button>
                 `;
-              }).join('')}
+    }).join('')}
             </div>
 
             <!-- Section 2: Recorded Stints / Sessions -->
@@ -155,9 +155,9 @@ export class SkillsView {
                 </div>
               </button>
               ${stintsList.map(st => {
-                const isSelected = this.selectedStintId === st.stintId;
-                const timeStr = new Date(st.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' });
-                return `
+      const isSelected = this.selectedStintId === st.stintId;
+      const timeStr = new Date(st.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' });
+      return `
                   <button class="skills-stint-btn ${isSelected ? 'active' : ''}" data-stint="${st.stintId}" title="${st.trackName}">
                     <span class="skills-sidebar-icon">⏱️</span>
                     <div class="skills-sidebar-item-info">
@@ -166,7 +166,7 @@ export class SkillsView {
                     </div>
                   </button>
                 `;
-              }).join('')}
+    }).join('')}
             </div>
           </div>
         </aside>
@@ -179,7 +179,7 @@ export class SkillsView {
             <div class="skills-subtabs-group">
               <button class="skills-subtab-btn ${this.activeSubtab === 'clinic' ? 'active' : ''}" data-subtab="clinic">
                 <span>🎯</span>
-                <span>Coaching Clinic & Playbook</span>
+                <span>Coaching & Playbook</span>
               </button>
               <button class="skills-subtab-btn ${this.activeSubtab === 'history' ? 'active' : ''}" data-subtab="history">
                 <span>📈</span>
@@ -194,7 +194,7 @@ export class SkillsView {
             </div>
           </nav>
 
-          <!-- SUBTAB 1: COACHING CLINIC & PLAYBOOK -->
+          <!-- SUBTAB 1: COACHING & PLAYBOOK -->
           ${this.activeSubtab === 'clinic' ? this._renderClinicSubtab(chapter, masteryStats, habitInsights, activeAttempt) : ''}
 
           <!-- SUBTAB 2: ATTEMPT HISTORY & MATRIX -->
@@ -259,12 +259,12 @@ export class SkillsView {
 
             <div class="skills-playbook-list">
               ${chapter.skills.map(sk => {
-                const stat = masteryStats.skills[sk.id] || { currentScore: 0, bestScore: 0, trend: 'neutral' };
-                const isActive = this.selectedSkillId === sk.id;
-                const trendIcon = stat.trend === 'improving' ? '▲' : (stat.trend === 'declining' ? '▼' : '▬');
-                const trendColor = stat.trend === 'improving' ? '#00ff88' : (stat.trend === 'declining' ? '#ff3366' : '#8899A6');
+      const stat = masteryStats.skills[sk.id] || { currentScore: 0, bestScore: 0, trend: 'neutral' };
+      const isActive = this.selectedSkillId === sk.id;
+      const trendIcon = stat.trend === 'improving' ? '▲' : (stat.trend === 'declining' ? '▼' : '▬');
+      const trendColor = stat.trend === 'improving' ? '#00ff88' : (stat.trend === 'declining' ? '#ff3366' : '#8899A6');
 
-                return `
+      return `
                   <div class="skill-playbook-item ${isActive ? 'active' : ''}" data-skill-id="${sk.id}" style="border-left-color: ${sk.color};">
                     <div class="skill-item-header">
                       <div class="skill-item-name">
@@ -291,7 +291,7 @@ export class SkillsView {
                     </div>
                   </div>
                 `;
-              }).join('')}
+    }).join('')}
             </div>
           </section>
 
@@ -322,11 +322,11 @@ export class SkillsView {
 
                 <div class="clinic-skill-breakdown">
                   ${Object.keys(activeAttempt.skills).map(skId => {
-                    const skData = activeAttempt.skills[skId];
-                    const skDef = getSkill(skId);
-                    if (!skDef) return '';
+      const skData = activeAttempt.skills[skId];
+      const skDef = getSkill(skId);
+      if (!skDef) return '';
 
-                    return `
+      return `
                       <div class="clinic-subskill-item">
                         <div class="clinic-subskill-top">
                           <span>${skDef.name}</span>
@@ -335,7 +335,7 @@ export class SkillsView {
                         <div class="clinic-subskill-feedback">${skData.feedback}</div>
                       </div>
                     `;
-                  }).join('')}
+    }).join('')}
                 </div>
               ` : `
                 <div style="padding: 30px; text-align: center; color: #64748B; font-size: 13px;">
@@ -509,11 +509,11 @@ export class SkillsView {
               </thead>
               <tbody>
                 ${attempts.length > 0 ? attempts.map(att => {
-                  const timeStr = new Date(att.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                  const isChecked = this.selectedCompareIds.has(att.id);
-                  const isInspected = inspectedAttempt?.id === att.id;
+      const timeStr = new Date(att.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const isChecked = this.selectedCompareIds.has(att.id);
+      const isInspected = inspectedAttempt?.id === att.id;
 
-                  return `
+      return `
                     <tr class="skills-attempt-row ${isInspected ? 'inspected-row' : ''}" data-attempt-id="${att.id}" style="cursor: pointer; ${isInspected ? 'background: rgba(0, 255, 136, 0.08);' : ''}">
                       <td onclick="event.stopPropagation();">
                         <input type="checkbox" class="attempt-compare-checkbox" data-attempt-id="${att.id}" ${isChecked ? 'checked' : ''} style="cursor: pointer;">
@@ -534,7 +534,7 @@ export class SkillsView {
                       </td>
                     </tr>
                   `;
-                }).join('') : `
+    }).join('') : `
                   <tr>
                     <td colspan="9" style="text-align: center; padding: 24px; color: #64748B;">
                       No attempt records matching current filter.
