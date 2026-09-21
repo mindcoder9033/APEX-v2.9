@@ -7,6 +7,8 @@
 import { GOING_FASTER_CHAPTERS, getChapter, getSkill } from './skills-curriculum.js';
 import { skillsStore } from './skills-store.js';
 import { SkillsEvaluator } from './analysis/going-faster/skills-evaluator.js';
+import { SkillsCoachPdfExporter } from './skills-coach-pdf.js';
+import { driverProfileStore } from './driver-profile-store.js';
 import { getIcon } from './icons.js';
 
 export class SkillsView {
@@ -498,11 +500,15 @@ export class SkillsView {
             <!-- LIVE RECORDING & TELEMETRY CAPSULE -->
             ${this._renderLiveStatusCapsule()}
 
-            <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; font-family: var(--font-mono);">
-              <span style="color: #64748B;">CURRICULUM:</span>
-              <strong style="color: #00e5ff;">Chapter ${chapter.chapterNumber}</strong>
-              <span style="color: #64748B; margin-left: 8px;">DRIVER:</span>
-              <strong style="color: #00ff88;">#01 APEX Driver</strong>
+            <div class="skills-subtabs-right-group" style="display: flex; align-items: center; gap: 12px;">
+              <button id="btn-export-skills-pdf" class="btn btn-primary btn-sm chamfer-br btn-skills-pdf-export" title="Export 2-Page Light-Mode Coaching Debrief PDF">
+                <span>📄</span>
+                <span>EXPORT COACHING PDF</span>
+              </button>
+              <div style="display: flex; align-items: center; gap: 8px; font-size: 11px; font-family: var(--font-mono);">
+                <span style="color: #64748B;">CH:</span>
+                <strong style="color: #00e5ff;">Ch ${chapter.chapterNumber}</strong>
+              </div>
             </div>
           </nav>
 
@@ -1465,6 +1471,52 @@ export class SkillsView {
           } else {
             sessionManager.startRecording();
           }
+        }
+      });
+    }
+
+    // Export Skills Coaching PDF (2-Page Light-Mode Debrief)
+    const btnExportPdf = document.getElementById('btn-export-skills-pdf');
+    if (btnExportPdf) {
+      btnExportPdf.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const origHtml = btnExportPdf.innerHTML;
+        btnExportPdf.disabled = true;
+        btnExportPdf.innerHTML = '<span>⏳ GENERATING PDF...</span>';
+
+        try {
+          const activeProfile = driverProfileStore.getActiveProfile();
+          const masteryStats = skillsStore.getMasteryStats(this.selectedChapterNumber, { stintId: this.selectedStintId });
+          const habitDiagnostics = skillsStore.getHabitDiagnostics(this.selectedChapterNumber, { stintId: this.selectedStintId });
+          const attempts = skillsStore.getAttempts({
+            stintId: this.selectedStintId,
+            limit: 50
+          });
+          const sessionManager = window.apexApp?.sessionManager;
+          const currentTrack = sessionManager?.trackName || sessionManager?.currentTrackName || 'Forza Motorsport Circuit';
+          const car = sessionManager?.carName || 'Race Spec';
+
+          await SkillsCoachPdfExporter.exportDebrief({
+            chapterNumber: this.selectedChapterNumber,
+            driverProfile: activeProfile,
+            masteryStats,
+            habitDiagnostics,
+            attempts,
+            selectedSkillId: this.activeSubtab === 'clinic' ? this.selectedSkillId : null,
+            trackName: currentTrack,
+            car,
+            stintId: this.selectedStintId
+          }, true);
+        } catch (err) {
+          console.error('[SkillsView] PDF export failed:', err);
+          if (window.PitToast && typeof window.PitToast.error === 'function') {
+            window.PitToast.error(`PDF export error: ${err.message}`, 'COACHING PDF');
+          } else {
+            alert(`PDF export error: ${err.message}`);
+          }
+        } finally {
+          btnExportPdf.disabled = false;
+          btnExportPdf.innerHTML = origHtml;
         }
       });
     }
