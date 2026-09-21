@@ -30,25 +30,26 @@ export class SkillsStore {
    */
   loadDriverAttempts(driverId) {
     try {
-      const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${driverId}`);
-      if (raw) {
-        this.attempts = JSON.parse(raw);
-      } else {
-        this.attempts = [];
-        this._generateInitialSeedAttempts(driverId);
+      if (typeof localStorage !== 'undefined') {
+        const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${driverId}`);
+        if (raw) {
+          this.attempts = JSON.parse(raw);
+          return;
+        }
       }
+      this.attempts = [];
+      this._generateInitialSeedAttempts(driverId);
     } catch (e) {
       console.warn('[SkillsStore] Failed to parse stored attempts:', e);
       this.attempts = [];
     }
   }
 
-  /**
-   * Save attempts to localStorage
-   */
   save() {
     try {
-      localStorage.setItem(`${STORAGE_KEY_PREFIX}${this.currentDriverId}`, JSON.stringify(this.attempts));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(`${STORAGE_KEY_PREFIX}${this.currentDriverId}`, JSON.stringify(this.attempts));
+      }
       this._notifyListeners();
     } catch (e) {
       console.error('[SkillsStore] Failed to save attempts:', e);
@@ -65,6 +66,7 @@ export class SkillsStore {
 
     const attemptRecord = {
       id: `att_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      stintId: metadata.stintId || `stint_${new Date().toISOString().slice(0, 10)}`,
       timestamp: Date.now(),
       driverId: this.currentDriverId,
       trackName: metadata.trackName || 'Sebring International Raceway',
@@ -92,16 +94,22 @@ export class SkillsStore {
 
   /**
    * Get all attempts with optional filtering
-   * @param {Object} filter - { skillId, cornerId, trackName, limit }
+   * @param {Object} filter - { skillId, cornerId, trackName, stintId, grade, limit }
    */
   getAttempts(filter = {}) {
     let list = [...this.attempts];
 
+    if (filter.stintId && filter.stintId !== 'ALL') {
+      list = list.filter(a => (a.stintId === filter.stintId || a.trackName === filter.stintId));
+    }
     if (filter.cornerId && filter.cornerId !== 'ALL') {
       list = list.filter(a => a.cornerId === filter.cornerId);
     }
     if (filter.trackName && filter.trackName !== 'ALL') {
       list = list.filter(a => a.trackName.toLowerCase().includes(filter.trackName.toLowerCase()));
+    }
+    if (filter.grade && filter.grade !== 'ALL') {
+      list = list.filter(a => a.grade === filter.grade);
     }
     if (filter.skillId && filter.skillId !== 'ALL') {
       list = list.filter(a => a.skills && a.skills[filter.skillId]);
@@ -111,6 +119,37 @@ export class SkillsStore {
     }
 
     return list;
+  }
+
+  /**
+   * Extract distinct stints recorded in the attempts history
+   */
+  getStintsList() {
+    const stintMap = new Map();
+
+    this.attempts.forEach(a => {
+      const sId = a.stintId || a.trackName || 'General Stint';
+      if (!stintMap.has(sId)) {
+        stintMap.set(sId, {
+          stintId: sId,
+          trackName: a.trackName,
+          carName: a.carName,
+          timestamp: a.timestamp,
+          attemptsCount: 0,
+          totalScore: 0,
+          bestScore: 0
+        });
+      }
+      const item = stintMap.get(sId);
+      item.attemptsCount++;
+      item.totalScore += a.overallScore;
+      if (a.overallScore > item.bestScore) item.bestScore = a.overallScore;
+    });
+
+    return Array.from(stintMap.values()).map(s => ({
+      ...s,
+      avgScore: Math.round(s.totalScore / s.attemptsCount)
+    }));
   }
 
   /**
@@ -195,7 +234,7 @@ export class SkillsStore {
   getHabitDiagnostics() {
     if (this.attempts.length < 3) {
       return [
-        { type: 'info', message: 'Complete at least 3 corner attempts in live session or replay to unlock habit evolution analytics.' }
+        { type: 'info', title: 'Telemetry Calibration', message: 'Complete at least 3 corner attempts in live session or replay to unlock habit evolution analytics.' }
       ];
     }
 
@@ -252,6 +291,53 @@ export class SkillsStore {
   }
 
   /**
+   * Generate CSV content for exporting attempts
+   * @param {Object} filter
+   */
+  exportCsv(filter = {}) {
+    const attempts = this.getAttempts(filter);
+    const headers = [
+      'Timestamp',
+      'Date Time',
+      'Track',
+      'Car',
+      'Lap',
+      'Corner ID',
+      'Corner Name',
+      'Corner Type',
+      'Overall Score',
+      'Grade',
+      'Exit Speed Score',
+      'The Line Score',
+      'Threshold Braking Score',
+      'Combined Entry Score',
+      'Platform Stability Score',
+      'Coaching Summary'
+    ];
+
+    const rows = attempts.map(a => [
+      a.timestamp,
+      `"${new Date(a.timestamp).toISOString()}"`,
+      `"${a.trackName}"`,
+      `"${a.carName}"`,
+      a.lapNumber,
+      `"${a.cornerId}"`,
+      `"${a.cornerName}"`,
+      `"${a.cornerType}"`,
+      a.overallScore,
+      `"${a.grade}"`,
+      a.skills?.['ch1-exit-speed']?.score ?? '',
+      a.skills?.['ch1-the-line']?.score ?? '',
+      a.skills?.['ch1-threshold-braking']?.score ?? '',
+      a.skills?.['ch1-combined-entry']?.score ?? '',
+      a.skills?.['ch1-platform-stability']?.score ?? '',
+      `"${(a.summary || '').replace(/"/g, '""')}"`
+    ]);
+
+    return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  }
+
+  /**
    * Clear attempts for current driver
    */
   clearAttempts() {
@@ -279,7 +365,6 @@ export class SkillsStore {
   }
 
   _generateInitialSeedAttempts(driverId) {
-    // Generate realistic initial practice attempts based on Sebring Turn 9 & Hairpin
     const seedCorners = [
       { id: 'T9', name: 'Turn 9 (Carousel)', type: 'Type I (Exit Priority)' },
       { id: 'T10', name: 'Turn 10 (Hairpin)', type: 'Type I (Exit Priority)' },
@@ -299,6 +384,7 @@ export class SkillsStore {
       const overall = Math.round(s.exit * 0.35 + s.line * 0.25 + s.brake * 0.15 + s.trail * 0.15 + s.stab * 0.10);
       this.attempts.push({
         id: `seed_${idx}`,
+        stintId: 'stint_sebring_demo_01',
         timestamp: Date.now() - ((4 - idx) * 120000),
         driverId,
         trackName: 'Sebring International Raceway',
@@ -310,11 +396,36 @@ export class SkillsStore {
         overallScore: overall,
         grade: this._scoreToGrade(overall),
         skills: {
-          'ch1-exit-speed': { score: s.exit, grade: this._scoreToGrade(s.exit), feedback: 'Progressive throttle squeeze down the straight.' },
-          'ch1-the-line': { score: s.line, grade: this._scoreToGrade(s.line), feedback: 'Consistent cornering arc through apex.' },
-          'ch1-threshold-braking': { score: s.brake, grade: this._scoreToGrade(s.brake), feedback: 'Firm initial deceleration.' },
-          'ch1-combined-entry': { score: s.trail, grade: this._scoreToGrade(s.trail), feedback: 'Smooth brake bleed off on turn-in.' },
-          'ch1-platform-stability': { score: s.stab, grade: this._scoreToGrade(s.stab), feedback: 'Stable chassis balance with no mid-corner throttle lifting.' }
+          'ch1-exit-speed': {
+            score: s.exit,
+            grade: this._scoreToGrade(s.exit),
+            feedback: 'Progressive throttle squeeze down the straight.',
+            metrics: { speedGainKmh: 14.2, timeToFullThrottleSec: 0.38, throttleHesitations: 0 }
+          },
+          'ch1-the-line': {
+            score: s.line,
+            grade: this._scoreToGrade(s.line),
+            feedback: 'Consistent cornering arc through apex.',
+            metrics: { minApexSpeedKmh: 68.4, steeringFluctuation: 0.042 }
+          },
+          'ch1-threshold-braking': {
+            score: s.brake,
+            grade: this._scoreToGrade(s.brake),
+            feedback: 'Firm initial deceleration.',
+            metrics: { peakBrakePressurePercent: 88, peakDecelG: 1.34, rampTimeSec: 0.22, lockupDetected: false }
+          },
+          'ch1-combined-entry': {
+            score: s.trail,
+            grade: this._scoreToGrade(s.trail),
+            feedback: 'Smooth brake bleed off on turn-in.',
+            metrics: { peakCombinedG: 1.42, trailBrakingOverlapPercent: 42 }
+          },
+          'ch1-platform-stability': {
+            score: s.stab,
+            grade: this._scoreToGrade(s.stab),
+            feedback: 'Stable chassis balance with no mid-corner throttle lifting.',
+            metrics: { throttleLifts: 0, maxJerkGPerSec: 6.8 }
+          }
         },
         summary: 'Solid execution of Chapter 1 fundamentals.'
       });

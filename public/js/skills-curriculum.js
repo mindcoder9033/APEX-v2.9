@@ -1,7 +1,6 @@
 /**
  * APEX Skills Hub - Going Faster Curriculum Model
  * Based on Skip Barber "Going Faster! Mastering the Art of Race Driving"
- * Chapter 1: "A Plan of Attack"
  */
 
 export const GOING_FASTER_CHAPTERS = [
@@ -9,7 +8,10 @@ export const GOING_FASTER_CHAPTERS = [
     chapterNumber: 1,
     id: 'ch1-plan-of-attack',
     title: 'Chapter 1: A Plan of Attack',
+    shortTitle: 'Ch 1: Plan of Attack',
     subtitle: 'The Three-Tiered Approach to Fast Laps',
+    status: 'active',
+    icon: '⚡',
     quote: '"Confronted with a twisty piece of asphalt, you need to figure out how to drive around it in the shortest possible time. That\'s it. It\'s a problem of minimizing time." — Skip Barber',
     description: 'Straightaways make up 70% to 80% of any racetrack. Minimizing lap time begins by prioritizing exit speed onto the straights, finding the maximum radius line, and mastering straight-line threshold braking before attempting late-braking heroism.',
     keyRules: [
@@ -85,6 +87,42 @@ export const GOING_FASTER_CHAPTERS = [
         skipBarberQuote: '"An abrupt snap off the gas upsets this balance and can steal traction from the rear tires, causing a spin. Small, smooth, and subtle changes are the best bet."'
       }
     ]
+  },
+  {
+    chapterNumber: 2,
+    id: 'ch2-traction-circle',
+    title: 'Chapter 2: The Traction Circle',
+    shortTitle: 'Ch 2: Traction Circle',
+    subtitle: 'Managing the Friction Circle & Grip Budget',
+    status: 'coming-soon',
+    icon: '⭕',
+    quote: '"The friction circle allows you to think about what happens to one ability of the tire as you increase demands for another." — Skip Barber',
+    description: 'Understanding the tire grip limits, combined G loads, and staying on the edge of the circle.',
+    skills: []
+  },
+  {
+    chapterNumber: 3,
+    id: 'ch3-types-of-corners',
+    title: 'Chapter 3: Types of Corners',
+    shortTitle: 'Ch 3: Corner Typology',
+    subtitle: 'Type I, Type II, and Type III Strategies',
+    status: 'coming-soon',
+    icon: '🏁',
+    quote: '"Not all corners are created equal. You must know which corner leads to the straightaway and which corner must be sacrificed." — Skip Barber',
+    description: 'Classifying corners into exit priority (Type I), entry priority (Type II), and sacrifice corners (Type III).',
+    skills: []
+  },
+  {
+    chapterNumber: 4,
+    id: 'ch4-braking-entering',
+    title: 'Chapter 4: Braking and Entering',
+    shortTitle: 'Ch 4: Braking & Entering',
+    subtitle: 'Deep Trail Braking & Downshifting Mastery',
+    status: 'coming-soon',
+    icon: '📉',
+    quote: '"Braking is the last thing you should try to do faster, but when mastered, it is what separates the champions." — Skip Barber',
+    description: 'Mastering heel-and-toe rev matching and trailing off brakes right down to the apex.',
+    skills: []
   }
 ];
 
