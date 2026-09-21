@@ -9,37 +9,44 @@ import { globalCareerStore } from './career-store.js';
 import { CAREER_TIERS } from './career-curriculum.js';
 
 export class CareerView {
-  constructor(containerId = 'view-career') {
-    this.container = document.getElementById(containerId);
+  constructor(containerId = 'dossier-tab-career') {
+    this.containerId = containerId;
+    this.container = null;
     this.radarCanvas = null;
   }
 
+  getContainer() {
+    return document.getElementById(this.containerId) || document.getElementById('dossier-tab-career') || document.getElementById('view-career');
+  }
+
   init() {
-    if (!this.container) return;
     this.render();
   }
 
-  render() {
-    if (!this.container) return;
+  render(targetContainer = null) {
+    const container = targetContainer || this.getContainer();
+    if (!container) return;
+    this.container = container;
+
     const state = globalCareerStore.getState();
     const currentTierObj = CAREER_TIERS.find(t => t.tier === state.unlockedTier) || CAREER_TIERS[0];
 
     this.container.innerHTML = `
-      <div class="career-hub-container" style="padding: 24px; max-width: 1400px; margin: 0 auto; color: var(--color-text, #fff); font-family: var(--font-sans, 'Inter', sans-serif);">
+      <div class="career-hub-container" style="padding: 0; width: 100%; color: var(--color-text, #fff); font-family: var(--font-sans, 'Inter', sans-serif);">
         
         <!-- TOP HEADER: DRIVER LICENSE BANNER -->
-        <div class="career-license-banner chamfer-tl-br" style="background: linear-gradient(135deg, rgba(20,24,33,0.95), rgba(12,15,20,0.98)); border: 1px solid rgba(255,255,255,0.08); padding: 24px; border-radius: 8px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
-          <div style="display: flex; align-items: center; gap: 20px;">
-            <div class="license-badge chamfer-all-corners" style="width: 68px; height: 68px; border: 2px solid ${currentTierObj.color}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.5);">
-              <span style="font-family: var(--font-mono, monospace); font-size: 11px; color: #888;">TIER</span>
-              <span style="font-size: 26px; font-weight: 900; color: ${currentTierObj.color};">T${currentTierObj.tier}</span>
+        <div class="career-license-banner chamfer-tl-br" style="background: linear-gradient(135deg, rgba(20,24,33,0.95), rgba(12,15,20,0.98)); border: 1px solid rgba(255,255,255,0.08); padding: 18px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 8px 32px rgba(0,0,0,0.4); flex-wrap: wrap; gap: 16px;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div class="license-badge chamfer-all-corners" style="width: 58px; height: 58px; border: 2px solid ${currentTierObj.color}; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); flex-shrink: 0;">
+              <span style="font-family: var(--font-mono, monospace); font-size: 10px; color: #888;">TIER</span>
+              <span style="font-size: 22px; font-weight: 900; color: ${currentTierObj.color};">T${currentTierObj.tier}</span>
             </div>
             <div>
               <div style="display: flex; align-items: center; gap: 10px;">
-                <h1 style="font-size: 22px; font-weight: 800; letter-spacing: 0.5px; margin: 0;">${currentTierObj.license}</h1>
-                <span class="badge chamfer-all-corners" style="background: ${currentTierObj.color}22; color: ${currentTierObj.color}; border: 1px solid ${currentTierObj.color}44; padding: 2px 10px; font-size: 11px; font-weight: 700; border-radius: 4px;">ACTIVE</span>
+                <h3 style="font-size: 18px; font-weight: 800; letter-spacing: 0.5px; margin: 0;">${currentTierObj.license}</h3>
+                <span class="badge chamfer-all-corners" style="background: ${currentTierObj.color}22; color: ${currentTierObj.color}; border: 1px solid ${currentTierObj.color}44; padding: 2px 8px; font-size: 10px; font-weight: 700; border-radius: 4px;">ACTIVE</span>
               </div>
-              <p style="margin: 6px 0 0 0; font-size: 13px; color: #8a99ad;">${currentTierObj.description}</p>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #8a99ad;">${currentTierObj.description}</p>
             </div>
           </div>
 
@@ -61,7 +68,7 @@ export class CareerView {
         </div>
 
         <!-- MAIN TWO-COLUMN GRID: RADAR + TIERS -->
-        <div style="display: grid; grid-template-columns: 380px 1fr; gap: 24px;">
+        <div style="display: grid; grid-template-columns: minmax(280px, 320px) 1fr; gap: 20px;" class="career-modal-grid">
           
           <!-- LEFT: DRIVER SKILL RADAR -->
           <div class="pit-card chamfer-tl-br" style="background: rgba(18,22,30,0.9); border: 1px solid rgba(255,255,255,0.08); padding: 20px; border-radius: 8px;">

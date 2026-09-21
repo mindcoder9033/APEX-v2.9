@@ -73,13 +73,11 @@ class ApexApp {
     // Primary Navigation Tab Buttons
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
-    this.btnNavCareer = document.getElementById('btn-nav-career');
     this.btnNavSkills = document.getElementById('btn-nav-skills');
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
-    this.viewCareer = document.getElementById('view-career');
     this.viewSkills = document.getElementById('view-skills');
 
     this.wsClient = new ApexWsClient({
@@ -409,12 +407,6 @@ class ApexApp {
       });
     }
 
-    if (this.btnNavCareer) {
-      this.btnNavCareer.addEventListener('click', () => {
-        this.switchView('career');
-      });
-    }
-
     if (this.btnNavSkills) {
       this.btnNavSkills.addEventListener('click', () => {
         this.switchView('skills');
@@ -461,7 +453,7 @@ class ApexApp {
         this.switchView('track-library');
       } else if (e.key === 'c' || e.key === 'C') {
         e.preventDefault();
-        this.switchView('career');
+        this.driverDossierModal.open(null, 'career');
       } else if (e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         this.switchView('skills');
@@ -743,16 +735,21 @@ class ApexApp {
       appContainer.classList.remove('tab-view-transitioning');
     }, 180);
 
+    if (viewName === 'career') {
+      if (this.driverDossierModal) {
+        this.driverDossierModal.open(null, 'career');
+      }
+      return;
+    }
+
     // 1. Hide all views
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
-    if (this.viewCareer) this.viewCareer.style.display = 'none';
     if (this.viewSkills) this.viewSkills.style.display = 'none';
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
-    if (this.btnNavCareer) this.btnNavCareer.classList.remove('active');
     if (this.btnNavSkills) this.btnNavSkills.classList.remove('active');
 
     // 3. Activate selected view
@@ -763,10 +760,6 @@ class ApexApp {
       if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'block';
       if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.add('active');
       if (this.trackLibrary) this.trackLibrary.refresh();
-    } else if (viewName === 'career') {
-      if (this.viewCareer) this.viewCareer.style.display = 'block';
-      if (this.btnNavCareer) this.btnNavCareer.classList.add('active');
-      if (this.careerView) this.careerView.render();
     } else if (viewName === 'skills') {
       if (this.viewSkills) this.viewSkills.style.display = 'block';
       if (this.btnNavSkills) this.btnNavSkills.classList.add('active');

@@ -6,6 +6,7 @@
  */
 
 import { driverProfileStore } from '../driver-profile-store.js';
+import { globalCareerView } from '../career-view.js';
 
 export class DriverDossierModal {
   constructor(containerId = 'modal-driver-dossier-container') {
@@ -68,6 +69,7 @@ export class DriverDossierModal {
           <!-- Dossier Tabs -->
           <div class="dossier-tabs-nav">
             <button type="button" class="dossier-tab-btn active" data-tab="identity">Identity & Setup</button>
+            <button type="button" class="dossier-tab-btn" data-tab="career">Career Mode</button>
             <button type="button" class="dossier-tab-btn" data-tab="stats">Career Stats & PBs</button>
             <button type="button" class="dossier-tab-btn" data-tab="preferences">Preferences</button>
             <button type="button" class="dossier-tab-btn" data-tab="manage">Switch & Manage</button>
@@ -114,6 +116,11 @@ export class DriverDossierModal {
                 </div>
               </div>
             </form>
+          </div>
+
+          <!-- Tab 2: Career Mode -->
+          <div class="dossier-tab-content" id="dossier-tab-career">
+            <!-- Rendered dynamically by CareerView -->
           </div>
 
           <!-- Tab 2: Career Stats & PBs -->
@@ -359,10 +366,21 @@ export class DriverDossierModal {
 
     if (tabKey === 'manage') {
       this.renderProfileList();
+    } else if (tabKey === 'career') {
+      this.renderCareerTab();
+    } else if (tabKey === 'stats') {
+      this.renderStatsTab();
     }
   }
 
-  async open(profileId = null) {
+  renderCareerTab() {
+    const careerTab = document.getElementById('dossier-tab-career');
+    if (careerTab) {
+      globalCareerView.render(careerTab);
+    }
+  }
+
+  async open(profileId = null, initialTab = null) {
     let active = null;
     if (profileId) {
       active = await driverProfileStore.getProfileById(profileId);
@@ -377,7 +395,7 @@ export class DriverDossierModal {
     // Clone to edit safely
     this.editingProfile = JSON.parse(JSON.stringify(active));
     this.populateFields();
-    this.switchTab(this.currentTab || 'identity');
+    this.switchTab(initialTab || this.currentTab || 'identity');
 
     const backdrop = document.getElementById('modal-driver-dossier');
     if (backdrop) backdrop.classList.remove('hidden');
