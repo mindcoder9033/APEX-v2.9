@@ -33,6 +33,24 @@ export class SkillsView {
       ? savedSidebar === 'true'
       : (typeof window !== 'undefined' ? window.innerWidth < 1200 : false);
 
+    // Live Telemetry & Recording State
+    this.isRecording = false;
+    this.liveSample = null;
+    this.liveStintInfo = {
+      sampleCount: 0,
+      currentLap: 1,
+      durationMs: 0,
+      bestLapTime: null,
+      sessionName: '',
+      driverName: ''
+    };
+    this.liveCornerBuffer = [];
+    this.isCornering = false;
+    this.liveCornerCount = 0;
+    this.cornerEvaluationToast = null;
+    this.liveFpsTracker = { count: 0, lastTime: Date.now(), rate: 60 };
+    this._liveUpdateRequested = false;
+
     // Subscribe to store updates
     skillsStore.subscribe(() => {
       if (this.isVisible()) {
@@ -50,6 +68,258 @@ export class SkillsView {
 
   isVisible() {
     return this.container && this.container.style.display !== 'none';
+  }
+
+  /**
+   * Called when recording starts, stops, or resets
+   * @param {boolean} isRecording 
+   */
+  onRecordingStateChange(isRecording) {
+    const prev = this.isRecording;
+    this.isRecording = Boolean(isRecording);
+    if (!this.isRecording) {
+      this.liveCornerBuffer = [];
+      this.isCornering = false;
+    }
+    if (this.isVisible()) {
+      if (prev !== this.isRecording) {
+        this.render();
+      } else {
+        this._updateLiveDOM(this.liveSample || {});
+      }
+    }
+  }
+
+  /**
+   * Continuous 60Hz live telemetry ingestion from wsClient / SessionManager
+   * @param {Object} sample Telemetry frame
+   * @param {boolean} isRecording Whether active stint recording is in progress
+   * @param {Object} stintInfo Current stint counters
+   */
+  onLiveTelemetry(sample, isRecording, stintInfo = {}) {
+    if (!sample) return;
+    this.liveSample = sample;
+    this.isRecording = Boolean(isRecording);
+    this.liveStintInfo = { ...this.liveStintInfo, ...stintInfo };
+
+    // Rate tracker
+    this.liveFpsTracker.count++;
+    const now = Date.now();
+    if (now - this.liveFpsTracker.lastTime >= 1000) {
+      this.liveFpsTracker.rate = this.liveFpsTracker.count;
+      this.liveFpsTracker.count = 0;
+      this.liveFpsTracker.lastTime = now;
+    }
+
+    // Process real-time corner physics & detection
+    this._processLiveCornerDetection(sample, isRecording, stintInfo);
+
+    // High-performance direct DOM updates when visible
+    if (this.isVisible() && !this._liveUpdateRequested) {
+      this._liveUpdateRequested = true;
+      const raf = (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function')
+        ? window.requestAnimationFrame
+        : (typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (cb) => cb());
+      raf(() => {
+        this._liveUpdateRequested = false;
+        this._updateLiveDOM(sample);
+      });
+    }
+  }
+
+  /**
+   * Real-time kinematic corner detector & live physics scoring
+   */
+  _processLiveCornerDetection(sample, isRecording, stintInfo) {
+    const latG = Math.abs(sample.motion?.acceleration?.lateralG ?? sample.physics?.lateralG ?? 0);
+    const steer = Math.abs(sample.inputs?.steering ?? sample.steer ?? sample.steering ?? 0);
+    const brake = sample.inputs?.brake ?? sample.brake ?? 0;
+    const yawRate = Math.abs(sample.motion?.angularVelocity?.yaw ?? 0);
+
+    const inCorner = (latG > 0.40 || steer > 0.08 || (brake > 0.25 && (yawRate > 0.12 || latG > 0.25)));
+
+    if (inCorner) {
+      if (!this.isCornering) {
+        this.isCornering = true;
+      }
+      this.liveCornerBuffer.push(sample);
+      if (this.liveCornerBuffer.length > 600) {
+        this.liveCornerBuffer.shift();
+      }
+    } else {
+      if (this.isCornering) {
+        this.isCornering = false;
+        if (this.liveCornerBuffer.length >= 18) {
+          this.liveCornerCount++;
+          const turnNum = ((this.liveCornerCount - 1) % 16) + 1;
+          const cornerId = `T${turnNum}`;
+          const evalResult = SkillsEvaluator.evaluateCorner(this.liveCornerBuffer, {
+            chapterNumber: this.selectedChapterNumber,
+            cornerId: cornerId,
+            cornerName: `Turn ${turnNum}`,
+            trackName: stintInfo?.sessionName || 'Live Stint Circuit',
+            carName: 'Active Vehicle',
+            lapNumber: stintInfo?.currentLap || 1
+          });
+
+          if (isRecording) {
+            const recorded = skillsStore.recordAttempt(evalResult, {
+              stintId: `live_stint_${stintInfo.driverName || 'driver'}`,
+              trackName: stintInfo?.sessionName || 'Live Stint Circuit',
+              carName: 'Active Vehicle',
+              lapNumber: stintInfo?.currentLap || 1
+            });
+            this.latestAttempt = recorded;
+          } else {
+            this.latestAttempt = {
+              ...evalResult,
+              trackName: stintInfo?.sessionName || 'Live Telemetry',
+              lapNumber: stintInfo?.currentLap || 1,
+              cornerName: `Turn ${turnNum}`
+            };
+          }
+
+          // Trigger live evaluation toast notification
+          this.cornerEvaluationToast = {
+            title: `Turn ${turnNum} Evaluated Live`,
+            grade: evalResult.grade || 'B',
+            score: evalResult.overallScore || 75,
+            message: evalResult.summary || 'Live kinematic corner slice processed.',
+            timestamp: Date.now()
+          };
+
+          // Auto-dismiss toast after 6 seconds
+          setTimeout(() => {
+            if (this.cornerEvaluationToast && Date.now() - this.cornerEvaluationToast.timestamp >= 5500) {
+              this.cornerEvaluationToast = null;
+              if (this.isVisible()) this.render();
+            }
+          }, 6000);
+
+          if (this.isVisible()) {
+            this.render();
+          }
+        }
+        this.liveCornerBuffer = [];
+      }
+    }
+  }
+
+  /**
+   * Direct high-speed DOM updates for real-time telemetry gauges and status capsules
+   */
+  _updateLiveDOM(sample) {
+    if (!this.container) return;
+
+    // 1. Top Subtabs Capsule elements
+    const recBadge = document.getElementById('skills-live-rec-badge');
+    const lapEl = document.getElementById('skills-live-lap-counter');
+    const timerEl = document.getElementById('skills-live-timer-val');
+    const samplesEl = document.getElementById('skills-live-samples-count');
+    const rateEl = document.getElementById('skills-live-rate-badge');
+    const capsuleEl = document.getElementById('skills-live-capsule');
+
+    if (capsuleEl) {
+      capsuleEl.className = `skills-live-recording-capsule ${this.isRecording ? 'recording' : (this.liveSample ? 'live' : 'standby')}`;
+    }
+    if (recBadge) {
+      recBadge.textContent = this.isRecording ? 'REC // STINT IN PROGRESS' : (this.liveSample ? 'LIVE TELEMETRY' : 'STANDBY');
+    }
+    if (lapEl) {
+      lapEl.textContent = `LAP ${String(this.liveStintInfo?.currentLap || 1).padStart(2, '0')}`;
+    }
+    if (timerEl) {
+      timerEl.textContent = this.formatDuration(this.liveStintInfo?.durationMs || 0);
+    }
+    if (samplesEl) {
+      samplesEl.textContent = `${(this.liveStintInfo?.sampleCount || 0).toLocaleString()} PKTS`;
+    }
+    if (rateEl) {
+      rateEl.textContent = `${this.liveFpsTracker.rate || 60}Hz`;
+    }
+
+    // 2. Sidebar Live Stint element
+    const sidebarLiveSamples = document.getElementById('skills-sidebar-live-samples');
+    if (sidebarLiveSamples) {
+      sidebarLiveSamples.textContent = `${(this.liveStintInfo?.sampleCount || 0).toLocaleString()} samples streaming`;
+    }
+
+    // 3. Live Clinic Telemetry HUD elements
+    const hudBuf = document.getElementById('skills-live-hud-buf');
+    const hudRate = document.getElementById('skills-live-hud-rate');
+    const speedVal = document.getElementById('skills-live-speed-val');
+    const gearBadge = document.getElementById('skills-live-gear-badge');
+    const thrVal = document.getElementById('skills-live-thr-val');
+    const brkVal = document.getElementById('skills-live-brk-val');
+    const thrBar = document.getElementById('skills-live-thr-bar');
+    const brkBar = document.getElementById('skills-live-brk-bar');
+    const steerVal = document.getElementById('skills-live-steer-val');
+    const steerIndicator = document.getElementById('skills-live-steer-indicator');
+    const phasePill = document.getElementById('skills-live-phase-pill');
+    const cornerBufState = document.getElementById('skills-live-corner-buf-state');
+
+    const thrPct = Math.round((sample.inputs?.throttle ?? sample.throttle ?? 0) * 100);
+    const brkPct = Math.round((sample.inputs?.brake ?? sample.brake ?? 0) * 100);
+    const steerRaw = (sample.inputs?.steering ?? sample.steer ?? sample.steering ?? 0);
+    const steerDeg = (steerRaw * 45).toFixed(1);
+    const latG = (sample.motion?.acceleration?.lateralG ?? sample.physics?.lateralG ?? 0);
+    const spdKmh = Math.round(sample.speedKmh ?? (sample.motion?.speedMs ? sample.motion.speedMs * 3.6 : (sample.speedMph ? sample.speedMph * 1.60934 : 0)));
+    const gear = sample.inputs?.gear ?? sample.gear ?? 0;
+
+    if (hudBuf) hudBuf.textContent = String(this.liveCornerBuffer.length);
+    if (hudRate) hudRate.textContent = String(this.liveFpsTracker.rate || 60);
+    if (speedVal) speedVal.textContent = String(spdKmh);
+    if (gearBadge) gearBadge.textContent = gear === 0 ? 'R' : (gear === -1 ? 'N' : `G${gear}`);
+    if (thrVal) thrVal.textContent = `THR ${thrPct}%`;
+    if (brkVal) brkVal.textContent = `BRK ${brkPct}%`;
+    if (thrBar) thrBar.style.width = `${thrPct}%`;
+    if (brkBar) brkBar.style.width = `${brkPct}%`;
+    if (steerVal) steerVal.textContent = `${steerDeg}° · ${latG.toFixed(2)}G`;
+    if (steerIndicator) steerIndicator.style.transform = `translateX(${Math.max(-48, Math.min(48, steerRaw * 48))}px)`;
+
+    if (cornerBufState) {
+      cornerBufState.textContent = this.isCornering ? `CORNER DETECTED (${this.liveCornerBuffer.length}f)` : 'TRACK STRAIGHT';
+      cornerBufState.style.color = this.isCornering ? '#00FF88' : '#8899A6';
+    }
+
+    if (phasePill) {
+      const phaseInfo = this._getLiveCornerPhase(sample);
+      phasePill.textContent = phaseInfo.name;
+      phasePill.className = `live-phase-pill ${phaseInfo.className}`;
+      phasePill.style.borderColor = phaseInfo.color;
+      phasePill.style.color = phaseInfo.color;
+    }
+  }
+
+  formatDuration(ms) {
+    if (!ms || ms <= 0) return '00:00.0';
+    const min = Math.floor(ms / 60000);
+    const sec = Math.floor((ms % 60000) / 1000);
+    const tenths = Math.floor((ms % 1000) / 100);
+    return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${tenths}`;
+  }
+
+  _getLiveCornerPhase(sample) {
+    const latG = Math.abs(sample.motion?.acceleration?.lateralG ?? sample.physics?.lateralG ?? 0);
+    const brake = sample.inputs?.brake ?? sample.brake ?? 0;
+    const throttle = sample.inputs?.throttle ?? sample.throttle ?? 0;
+
+    if (brake > 0.4 && latG < 0.35) {
+      return { name: 'ZONE 1: THRESHOLD BRAKING', className: 'braking', color: '#FF3366' };
+    }
+    if (brake > 0.1 && latG >= 0.3) {
+      return { name: 'ZONE 2: TRAIL-BRAKING / APEX', className: 'trail', color: '#FFB800' };
+    }
+    if (latG >= 0.4 && brake <= 0.1 && throttle < 0.5) {
+      return { name: 'ZONE 2: PURE LATERAL APEX', className: 'apex', color: '#00E5FF' };
+    }
+    if (latG >= 0.25 && throttle >= 0.5) {
+      return { name: 'ZONE 3: THROTTLE UNWIND / EXIT', className: 'exit', color: '#00FF88' };
+    }
+    if (throttle >= 0.75 && latG < 0.25) {
+      return { name: 'STRAIGHTAWAY (FULL THROTTLE)', className: 'straight', color: '#00FF88' };
+    }
+    return { name: 'TRANSITION / COASTING', className: 'coasting', color: '#8899A6' };
   }
 
   toggleSidebar() {
@@ -158,6 +428,15 @@ export class SkillsView {
             <!-- Section 2: Recorded Stints / Sessions -->
             <div class="skills-sidebar-section-title" style="margin-top: 10px;">Recorded Stints</div>
             <div class="skills-stint-list">
+              ${this.isRecording ? `
+                <div id="skills-sidebar-live-stint-pill" class="skills-sidebar-live-stint active" title="Active Stint Recording">
+                  <span class="live-rec-dot"></span>
+                  <div class="skills-sidebar-item-info">
+                    <span class="skills-sidebar-item-name" style="color: #FF1744;">RECORDING STINT</span>
+                    <span class="skills-sidebar-item-sub" id="skills-sidebar-live-samples">${(this.liveStintInfo?.sampleCount || 0).toLocaleString()} samples streaming</span>
+                  </div>
+                </div>
+              ` : ''}
               <button class="skills-stint-btn ${this.selectedStintId === 'ALL' ? 'active' : ''}" data-stint="ALL">
                 <span class="skills-sidebar-icon">${getIcon('flag', { size: 14 })}</span>
                 <div class="skills-sidebar-item-info">
@@ -197,6 +476,9 @@ export class SkillsView {
                 <span class="skills-subtab-badge">${attempts.length}</span>
               </button>
             </div>
+
+            <!-- LIVE RECORDING & TELEMETRY CAPSULE -->
+            ${this._renderLiveStatusCapsule()}
 
             <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; font-family: var(--font-mono);">
               <span style="color: #64748B;">CURRICULUM:</span>
@@ -323,10 +605,15 @@ export class SkillsView {
               <h2 class="skills-card-title">
                 <span>${getIcon('target', { size: 14 })}</span> Live Corner Clinic & Diagnostics
               </h2>
-              <span style="font-family: var(--font-mono); font-size: 11px; color: #00ff88;">REAL-TIME PHYSICS SCORING</span>
+              <span style="font-family: var(--font-mono); font-size: 11px; color: ${this.isRecording ? '#FF1744' : '#00ff88'};">
+                ${this.isRecording ? 'LIVE STINT RECORDING' : 'REAL-TIME PHYSICS SCORING'}
+              </span>
             </div>
 
             <div class="live-clinic-box">
+              <!-- LIVE TELEMETRY & PHYSICS STREAM HUD -->
+              ${this._renderLiveHudCard()}
+
               ${activeAttempt ? `
                 <div class="clinic-corner-hero">
                   <div class="clinic-corner-info">
@@ -392,6 +679,141 @@ export class SkillsView {
           </section>
 
         </div>
+      </div>
+    `;
+  }
+
+  _renderLiveStatusCapsule() {
+    const isRec = this.isRecording;
+    const isLive = Boolean(this.liveSample);
+    const capsuleClass = isRec ? 'recording' : (isLive ? 'live' : 'standby');
+    const label = isRec ? 'REC // STINT IN PROGRESS' : (isLive ? 'LIVE TELEMETRY' : 'STANDBY');
+    const lapStr = `LAP ${String(this.liveStintInfo?.currentLap || 1).padStart(2, '0')}`;
+    const timerStr = this.formatDuration(this.liveStintInfo?.durationMs || 0);
+    const pktsStr = `${(this.liveStintInfo?.sampleCount || 0).toLocaleString()} PKTS`;
+    const rateStr = `${this.liveFpsTracker.rate || 60}Hz`;
+
+    return `
+      <div id="skills-live-capsule" class="skills-live-recording-capsule ${capsuleClass}">
+        <span class="capsule-pulse-dot"></span>
+        <span id="skills-live-rec-badge" class="capsule-rec-label">${label}</span>
+        <span class="capsule-divider">|</span>
+        <span class="capsule-stint-stats">
+          <span id="skills-live-lap-counter">${lapStr}</span> · 
+          <span id="skills-live-timer-val">${timerStr}</span> · 
+          <span id="skills-live-samples-count">${pktsStr}</span> · 
+          <span id="skills-live-rate-badge">${rateStr}</span>
+        </span>
+      </div>
+    `;
+  }
+
+  _renderLiveHudCard() {
+    const sample = this.liveSample || {};
+    const thrPct = Math.round((sample.inputs?.throttle ?? sample.throttle ?? 0) * 100);
+    const brkPct = Math.round((sample.inputs?.brake ?? sample.brake ?? 0) * 100);
+    const steerRaw = (sample.inputs?.steering ?? sample.steer ?? sample.steering ?? 0);
+    const steerDeg = (steerRaw * 45).toFixed(1);
+    const latG = (sample.motion?.acceleration?.lateralG ?? sample.physics?.lateralG ?? 0);
+    const spdKmh = Math.round(sample.speedKmh ?? (sample.motion?.speedMs ? sample.motion.speedMs * 3.6 : (sample.speedMph ? sample.speedMph * 1.60934 : 0)));
+    const gear = sample.inputs?.gear ?? sample.gear ?? 0;
+    const gearStr = gear === 0 ? 'R' : (gear === -1 ? 'N' : `G${gear}`);
+    const phaseInfo = this._getLiveCornerPhase(sample);
+
+    const modeClass = this.isRecording ? 'recording-mode' : (this.liveSample ? 'live-mode' : 'standby-mode');
+
+    return `
+      <div class="skills-live-hud-card ${modeClass}">
+        <div class="skills-live-hud-header">
+          <div class="skills-live-hud-badge-group">
+            <span class="live-status-dot ${this.isRecording ? 'pulse-red' : (this.liveSample ? 'pulse-green' : 'dim-white')}"></span>
+            <span class="skills-live-hud-title">
+              ${this.isRecording ? 'LIVE STINT IN PROGRESS // 60HZ TELEMETRY INGESTION' : (this.liveSample ? 'LIVE TELEMETRY STREAM ACTIVE // READY TO RECORD' : 'TELEMETRY STANDBY // AWAITING FORZA LINK')}
+            </span>
+          </div>
+          <div class="skills-live-hud-meta">
+            <span class="skills-live-hud-stat">BUFFER: <strong id="skills-live-hud-buf">${this.liveCornerBuffer.length}</strong> FRAMES</span>
+            <span class="skills-live-hud-stat">STREAM: <strong id="skills-live-hud-rate">${this.liveFpsTracker.rate || 60}</strong> HZ</span>
+          </div>
+        </div>
+
+        <!-- Real-Time Metrics & Physics Gauges Grid -->
+        <div class="skills-live-gauges-grid">
+          <!-- 1. Velocity & Gear -->
+          <div class="skills-live-gauge-box">
+            <div class="live-gauge-header">
+              <span class="live-gauge-label">SPEED & GEAR</span>
+              <span class="live-gear-badge" id="skills-live-gear-badge">${gearStr}</span>
+            </div>
+            <div class="live-speed-val-group">
+              <span class="live-speed-number" id="skills-live-speed-val">${spdKmh}</span>
+              <span class="live-speed-unit">KM/H</span>
+            </div>
+          </div>
+
+          <!-- 2. Dual Pedal Telemetry (Throttle & Brake) -->
+          <div class="skills-live-gauge-box pedal-box">
+            <div class="live-gauge-header">
+              <span class="live-gauge-label">PEDAL MODULATION</span>
+              <span class="live-pedal-numeric">
+                <span style="color: #00FF88;" id="skills-live-thr-val">THR ${thrPct}%</span> · 
+                <span style="color: #FF3366;" id="skills-live-brk-val">BRK ${brkPct}%</span>
+              </span>
+            </div>
+            <div class="live-pedal-bars-wrapper">
+              <div class="live-pedal-bar-row">
+                <span class="live-bar-icon" style="color: #00FF88;">T</span>
+                <div class="live-bar-track">
+                  <div id="skills-live-thr-bar" class="live-bar-fill throttle" style="width: ${thrPct}%;"></div>
+                </div>
+              </div>
+              <div class="live-pedal-bar-row">
+                <span class="live-bar-icon" style="color: #FF3366;">B</span>
+                <div class="live-bar-track">
+                  <div id="skills-live-brk-bar" class="live-bar-fill brake" style="width: ${brkPct}%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Steering & Lateral Dynamics -->
+          <div class="skills-live-gauge-box steer-box">
+            <div class="live-gauge-header">
+              <span class="live-gauge-label">STEER & LATERAL G</span>
+              <span class="live-steer-numeric" id="skills-live-steer-val">${steerDeg}° · ${latG.toFixed(2)}G</span>
+            </div>
+            <div class="live-steer-track-wrapper">
+              <div class="live-steer-center-mark"></div>
+              <div id="skills-live-steer-indicator" class="live-steer-indicator" style="transform: translateX(${Math.max(-48, Math.min(48, steerRaw * 48))}px);"></div>
+            </div>
+          </div>
+
+          <!-- 4. Corner Kinematic Phase Radar -->
+          <div class="skills-live-gauge-box phase-box">
+            <div class="live-gauge-header">
+              <span class="live-gauge-label">CORNER PHASE</span>
+              <span class="live-corner-buf-indicator" id="skills-live-corner-buf-state" style="color: ${this.isCornering ? '#00FF88' : '#8899A6'};">
+                ${this.isCornering ? `CORNER DETECTED (${this.liveCornerBuffer.length}f)` : 'TRACK STRAIGHT'}
+              </span>
+            </div>
+            <div class="live-phase-display" id="skills-live-phase-display">
+              <span class="live-phase-pill ${phaseInfo.className}" id="skills-live-phase-pill" style="border-color: ${phaseInfo.color}; color: ${phaseInfo.color};">
+                ${phaseInfo.name}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        ${this.cornerEvaluationToast ? `
+          <div class="skills-live-corner-toast chamfer-all-corners">
+            <span class="toast-icon">✨</span>
+            <div class="toast-content">
+              <span class="toast-title">${this.cornerEvaluationToast.title}</span>
+              <span class="toast-desc">${this.cornerEvaluationToast.message}</span>
+            </div>
+            <span class="score-chip ${this._getGradeClass(this.cornerEvaluationToast.grade)}">${this.cornerEvaluationToast.grade} (${this.cornerEvaluationToast.score}%)</span>
+          </div>
+        ` : ''}
       </div>
     `;
   }

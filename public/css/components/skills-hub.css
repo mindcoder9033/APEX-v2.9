@@ -1007,3 +1007,454 @@
   color: #00ff88;
   margin-top: 2px;
 }
+
+/* ==========================================================================
+   LIVE STINT RECORDING & TELEMETRY STREAM VISUAL FEEDBACK
+   ========================================================================== */
+
+/* --- Top Subtabs Live Status Capsule --- */
+.skills-live-recording-capsule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: all 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  backdrop-filter: blur(8px);
+}
+
+.skills-live-recording-capsule.recording {
+  background: rgba(255, 23, 68, 0.12);
+  border: 1px solid rgba(255, 23, 68, 0.6);
+  color: #FFFFFF;
+  box-shadow: 0 0 16px rgba(255, 23, 68, 0.25), inset 0 0 8px rgba(255, 23, 68, 0.08);
+}
+
+.skills-live-recording-capsule.live {
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.35);
+  color: #E2E8F0;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.1);
+}
+
+.skills-live-recording-capsule.standby {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8899A6;
+}
+
+.capsule-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.skills-live-recording-capsule.recording .capsule-pulse-dot {
+  background: #FF1744;
+  box-shadow: 0 0 8px #FF1744;
+  animation: liveDotPulseRed 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.skills-live-recording-capsule.live .capsule-pulse-dot {
+  background: #00FF88;
+  box-shadow: 0 0 6px #00FF88;
+}
+
+.skills-live-recording-capsule.standby .capsule-pulse-dot {
+  background: #64748B;
+}
+
+.capsule-rec-label {
+  font-weight: 700;
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.skills-live-recording-capsule.recording .capsule-rec-label {
+  color: #FF1744;
+}
+
+.skills-live-recording-capsule.live .capsule-rec-label {
+  color: #00FF88;
+}
+
+.capsule-divider {
+  color: rgba(255, 255, 255, 0.15);
+  font-weight: 300;
+}
+
+.capsule-stint-stats {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #CBD5E1;
+}
+
+@keyframes liveDotPulseRed {
+  0%, 100% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 4px #FF1744; }
+  50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 12px #FF1744; }
+}
+
+/* --- Left Sidebar Live Stint Highlight --- */
+.skills-sidebar-live-stint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 23, 68, 0.08);
+  border: 1px solid rgba(255, 23, 68, 0.45);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  animation: fadeInLiveStint 220ms ease;
+  box-shadow: 0 0 12px rgba(255, 23, 68, 0.15);
+}
+
+.skills-sidebar.collapsed .skills-sidebar-live-stint {
+  padding: 8px;
+  justify-content: center;
+}
+
+.live-rec-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #FF1744;
+  box-shadow: 0 0 8px #FF1744;
+  animation: liveDotPulseRed 1.2s infinite ease-in-out;
+  flex-shrink: 0;
+}
+
+@keyframes fadeInLiveStint {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Live Telemetry & Physics Stream HUD Card (Clinic Subtab) --- */
+.skills-live-hud-card {
+  background: rgba(13, 15, 18, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(12px);
+  transition: all 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.skills-live-hud-card.recording-mode {
+  border-color: rgba(255, 23, 68, 0.45);
+  box-shadow: 0 0 18px rgba(255, 23, 68, 0.12), inset 0 0 12px rgba(255, 23, 68, 0.04);
+  background: linear-gradient(180deg, rgba(255, 23, 68, 0.07) 0%, rgba(13, 15, 18, 0.95) 100%);
+}
+
+.skills-live-hud-card.live-mode {
+  border-color: rgba(0, 255, 136, 0.3);
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.06);
+}
+
+.skills-live-hud-card.standby-mode {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.skills-live-hud-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 8px;
+}
+
+.skills-live-hud-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.live-status-dot.pulse-red {
+  background: #FF1744;
+  box-shadow: 0 0 8px #FF1744;
+  animation: liveDotPulseRed 1.2s infinite ease-in-out;
+}
+
+.live-status-dot.pulse-green {
+  background: #00FF88;
+  box-shadow: 0 0 6px #00FF88;
+}
+
+.live-status-dot.dim-white {
+  background: #64748B;
+}
+
+.skills-live-hud-title {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #FFFFFF;
+  text-transform: uppercase;
+}
+
+.skills-live-hud-card.recording-mode .skills-live-hud-title {
+  color: #FF3366;
+}
+
+.skills-live-hud-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 11px;
+  color: #8899A6;
+}
+
+.skills-live-hud-stat strong {
+  color: #00E5FF;
+}
+
+/* Gauges Grid */
+.skills-live-gauges-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1.2fr 1.5fr;
+  gap: 10px;
+}
+
+@media (max-width: 1400px) {
+  .skills-live-gauges-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.skills-live-gauge-box {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 58px;
+}
+
+.live-gauge-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.live-gauge-label {
+  font-size: 9px;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-weight: 700;
+  color: #8899A6;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.live-gear-badge {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: #00E5FF;
+  background: rgba(0, 229, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+}
+
+.live-speed-val-group {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.live-speed-number {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 22px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1;
+}
+
+.live-speed-unit {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: #64748B;
+  font-weight: 600;
+}
+
+.live-pedal-numeric {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.live-pedal-bars-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.live-pedal-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.live-bar-icon {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  width: 10px;
+  text-align: center;
+}
+
+.live-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.live-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 60ms linear;
+}
+
+.live-bar-fill.throttle {
+  background: #00FF88;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
+
+.live-bar-fill.brake {
+  background: #FF1744;
+  box-shadow: 0 0 6px rgba(255, 23, 68, 0.5);
+}
+
+.live-steer-numeric {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: #00E5FF;
+}
+
+.live-steer-track-wrapper {
+  position: relative;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.live-steer-center-mark {
+  position: absolute;
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.live-steer-indicator {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00E5FF;
+  box-shadow: 0 0 6px #00E5FF;
+  transition: transform 60ms linear;
+}
+
+.live-corner-buf-indicator {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.live-phase-display {
+  display: flex;
+  align-items: center;
+  margin-top: 2px;
+}
+
+.live-phase-pill {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Corner Evaluation Live Toast Notification */
+.skills-live-corner-toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  border-radius: 4px;
+  animation: fadeInToast 240ms ease;
+  box-shadow: 0 0 14px rgba(0, 255, 136, 0.15);
+}
+
+.toast-icon {
+  font-size: 16px;
+}
+
+.toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.toast-title {
+  font-family: var(--font-display, 'Rajdhani', sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  color: #00FF88;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.toast-desc {
+  font-size: 11px;
+  color: #CBD5E1;
+}
+
+@keyframes fadeInToast {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

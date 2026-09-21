@@ -356,6 +356,11 @@ export class SessionManager {
       }, 1200);
     }
 
+    // Notify Skills Hub view of reset/stop
+    if (window.apexApp && window.apexApp.skillsView) {
+      window.apexApp.skillsView.onRecordingStateChange(false);
+    }
+
     return true;
   }
 
@@ -367,6 +372,11 @@ export class SessionManager {
     this.bestLapTime = null;
     this.lastLapTime = null;
     this.currentLap = 1;
+
+    // Notify Skills Hub view that recording has started
+    if (window.apexApp && window.apexApp.skillsView) {
+      window.apexApp.skillsView.onRecordingStateChange(true);
+    }
 
     const btn = document.getElementById('btn-record') || this.btnRecord;
     if (btn) {
@@ -390,6 +400,11 @@ export class SessionManager {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+    }
+
+    // Notify Skills Hub view that recording has stopped
+    if (window.apexApp && window.apexApp.skillsView) {
+      window.apexApp.skillsView.onRecordingStateChange(false);
     }
 
     const btn = document.getElementById('btn-record') || this.btnRecord;

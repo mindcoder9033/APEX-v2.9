@@ -549,6 +549,18 @@ class ApexApp {
       }
       this.requestTrackMapRender();
 
+      // Feed live telemetry to Skills Hub View
+      if (this.skillsView) {
+        this.skillsView.onLiveTelemetry(sample, this.session.isRecording, {
+          durationMs: this.session.stintDurationMs,
+          currentLap: this.session.currentLap,
+          sampleCount: this.session.recordedSamples?.length || 0,
+          bestLapTime: this.session.bestLapTime,
+          driverName: this.session.settings?.driverName || 'APEX Driver',
+          sessionName: this.session.settings?.sessionName || 'Track Day Session'
+        });
+      }
+
       if (this.rateText) {
         this.rateText.textContent = `${this.wsClient.stats.packetsPerSecond} pkt/s`;
       }
@@ -758,7 +770,10 @@ class ApexApp {
     } else if (viewName === 'skills') {
       if (this.viewSkills) this.viewSkills.style.display = 'block';
       if (this.btnNavSkills) this.btnNavSkills.classList.add('active');
-      if (this.skillsView) this.skillsView.render();
+      if (this.skillsView) {
+        this.skillsView.onRecordingStateChange(this.session?.isRecording || false);
+        this.skillsView.render();
+      }
     }
   }
 
