@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="css/index.css">
   <link rel="stylesheet" href="css/components/updater.css">
   <link rel="stylesheet" href="css/components/pit-toast.css">
+  <link rel="stylesheet" href="css/components/skills-hub.css">
 </head>
 <body>
   <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
@@ -109,6 +110,10 @@
         <button id="btn-nav-career" class="nav-tab-btn chamfer-br" title="Going Faster Career Mode (C)">
           <span class="nav-tab-icon">🏆</span>
           <span class="nav-tab-label">CAREER MODE</span>
+        </button>
+        <button id="btn-nav-skills" class="nav-tab-btn chamfer-br" title="Going Faster Skills Hub (K)">
+          <span class="nav-tab-icon">⚡</span>
+          <span class="nav-tab-label">SKILLS HUB</span>
         </button>
       </nav>
 
@@ -1274,6 +1279,11 @@
     <!-- CAREER MODE VIEW CONTAINER -->
     <div id="view-career" class="view-container view-career" style="display: none;">
       <!-- Populated dynamically by CareerView -->
+    </div>
+
+    <!-- SKILLS HUB VIEW CONTAINER -->
+    <div id="view-skills" class="view-container view-skills" style="display: none;">
+      <!-- Populated dynamically by SkillsView -->
     </div>
 
   </div> <!-- /.app-container -->

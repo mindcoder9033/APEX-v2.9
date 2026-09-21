@@ -19,6 +19,7 @@ import { CornerDynamics3DEngine, APEX_TYPE, CORNER_PHASE } from './corner-dynami
 import { TrackLibrarySynthesizer } from './track-library-synthesizer.js';
 import { WeatherSimulator, weatherSimulator, WEATHER_CONDITIONS, WEATHER_CATEGORIES } from './weather-simulator.js';
 import { StintDiagnostics } from './stint-diagnostics.js';
+import { SkillsEvaluator } from './going-faster/skills-evaluator.js';
 
 export class AnalysisEngine {
   constructor(options = {}) {
@@ -250,6 +251,7 @@ export {
   WeatherSimulator,
   weatherSimulator,
   StintDiagnostics,
+  SkillsEvaluator,
   WEATHER_CONDITIONS,
   WEATHER_CATEGORIES,
   DRIVING_STATE,

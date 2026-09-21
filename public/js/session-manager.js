@@ -17,6 +17,8 @@ import { StintReview5PagePdfExporter } from './stint-review-5page-pdf.js';
 import { TrackDossierPdfExporter } from './track-dossier-pdf.js';
 import { globalPitWallHub } from './pitwall-hub.js';
 import { globalCareerStore } from './career-store.js';
+import { SkillsEvaluator } from './analysis/going-faster/skills-evaluator.js';
+import { skillsStore } from './skills-store.js';
 
 export class SessionManager {
   constructor() {
@@ -534,6 +536,40 @@ export class SessionManager {
               }
             } catch (cErr) {
               console.warn('[CAREER UPDATE] Career progression error:', cErr);
+            }
+
+            // 5. Feature 6: Going Faster Skills Hub Corner Scoring
+            try {
+              if (report.laps && report.laps.length > 0) {
+                let evaluatedCount = 0;
+                report.laps.forEach(lap => {
+                  if (lap.corners && lap.corners.length > 0) {
+                    lap.corners.forEach(corner => {
+                      if (corner.samples && corner.samples.length >= 5) {
+                        const evalData = SkillsEvaluator.evaluateCorner(corner.samples, {
+                          cornerId: corner.cornerId || `T${corner.number || 1}`,
+                          cornerName: corner.name || `Turn ${corner.number || 1}`,
+                          cornerType: corner.type || 'Type I (Exit Priority)',
+                          trackName: rawStint.trackName,
+                          carName: rawStint.carName,
+                          lapNumber: lap.lapNumber || 1
+                        });
+                        skillsStore.recordAttempt(evalData, {
+                          trackName: rawStint.trackName,
+                          carName: rawStint.carName,
+                          lapNumber: lap.lapNumber || 1
+                        });
+                        evaluatedCount++;
+                      }
+                    });
+                  }
+                });
+                if (evaluatedCount > 0 && window.PitToast) {
+                  window.PitToast.info(`${evaluatedCount} Corner Attempts Evaluated in Skills Hub`, 'GOING FASTER COACH');
+                }
+              }
+            } catch (skErr) {
+              console.warn('[SKILLS HUB] Error evaluating corner skills:', skErr);
             }
           });
         } catch (hubErr) {
