@@ -99,6 +99,12 @@ export class SkillsView {
   render() {
     if (!this.container) return;
 
+    // Save scroll positions before DOM update
+    const prevViewport = this.container.querySelector('.skills-subtab-viewport');
+    const viewportScrollTop = prevViewport ? prevViewport.scrollTop : 0;
+    const prevSidebar = this.container.querySelector('.skills-sidebar-body');
+    const sidebarScrollTop = prevSidebar ? prevSidebar.scrollTop : 0;
+
     const chapter = getChapter(this.selectedChapterNumber);
     const masteryStats = skillsStore.getMasteryStats(this.selectedChapterNumber);
     const stintsList = skillsStore.getStintsList();
@@ -208,6 +214,16 @@ export class SkillsView {
         </main>
       </div>
     `;
+
+    // Restore scroll positions immediately after DOM replacement
+    const newViewport = this.container.querySelector('.skills-subtab-viewport');
+    if (newViewport && viewportScrollTop > 0) {
+      newViewport.scrollTop = viewportScrollTop;
+    }
+    const newSidebar = this.container.querySelector('.skills-sidebar-body');
+    if (newSidebar && sidebarScrollTop > 0) {
+      newSidebar.scrollTop = sidebarScrollTop;
+    }
 
     this.bindDOMEvents();
     if (this.activeSubtab === 'history') {
@@ -880,11 +896,18 @@ export class SkillsView {
       });
     });
 
-    // Skill card selection
+    // Skill card / pillar selection (toggles active state in place without resetting scroll)
     this.container.querySelectorAll('.skill-playbook-item').forEach(el => {
-      el.addEventListener('click', () => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
         this.selectedSkillId = el.getAttribute('data-skill-id');
-        this.render();
+        this.container.querySelectorAll('.skill-playbook-item').forEach(item => {
+          if (item.getAttribute('data-skill-id') === this.selectedSkillId) {
+            item.classList.add('active');
+          } else {
+            item.classList.remove('active');
+          }
+        });
       });
     });
 
