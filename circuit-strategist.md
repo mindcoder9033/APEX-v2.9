@@ -114,13 +114,13 @@
 
 ## 🧪 Phase X: Verification & Quality Assurance Checklist
 
-- [ ] **Physics Accuracy**:
-  - [ ] Corner radius formula matches Going Faster benchmarks across multiple corner speeds ($30, 60, 100\text{ mph}$).
-  - [ ] Late Apex line produces larger exit radius $R_{exit}$ and earlier TAP than geometric line.
-  - [ ] Downhill crest reduces normal force $F_N$ and reduces sustainable lateral Gs.
-  - [ ] Compounding straightaway calculation matches $\Delta t \approx -\frac{\Delta v \cdot D}{\bar{v}^2}$.
-- [ ] **Dual-Environment Codebase Sync**:
-  - [ ] Files created in `src/analysis/` are mirrored in `public/js/analysis/` per project convention.
+- [x] **Physics Accuracy**:
+  - [x] Corner radius formula matches Going Faster benchmarks across multiple corner speeds ($30, 60, 100\text{ mph}$).
+  - [x] Late Apex line produces larger exit radius $R_{exit}$ and earlier TAP than geometric line.
+  - [x] Downhill crest reduces normal force $F_N$ and reduces sustainable lateral Gs.
+  - [x] Compounding straightaway calculation matches $\Delta t \approx -\frac{\Delta v \cdot D}{\bar{v}^2}$.
+- [x] **Dual-Environment Codebase Sync**:
+  - [x] Files created in `src/analysis/` are mirrored in `public/js/analysis/` per project convention.
 - [ ] **Interactive UI Performance**:
   - [ ] Draggable landmark pins move smoothly at 60fps without lag on canvas.
   - [ ] Telemetry graphs and delta ticker recalculate in $<16\text{ms}$ upon pin drag.
@@ -129,5 +129,5 @@
 - [ ] **Persistence & Hotkeys**:
   - [ ] Hotkey `C` switches to Circuit Strategist; `P` switches to Pit Wall; `T` to Track Dossier; `K` to Skills Hub.
   - [ ] Saved strategy profiles persist across browser reloads.
-- [ ] **Automated Test Suite**:
-  - [ ] Run `npm test` to ensure all existing analysis and new strategist unit tests pass with zero regressions.
+- [x] **Automated Test Suite**:
+  - [x] Run `npm test` to ensure all existing analysis and new strategist unit tests pass with zero regressions.
