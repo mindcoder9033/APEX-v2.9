@@ -8,6 +8,7 @@ import { CircuitStrategistEngine, CORNER_STRATEGY_TYPE } from './analysis/circui
 import { LINE_ARCHETYPE } from './analysis/optimal-line-engine.js';
 import { TOPOGRAPHY_RISK } from './analysis/elevation-dynamics.js';
 import { trackLibraryStore } from './track-library-store.js';
+import { StrategyPdfExporter } from './strategy-pdf-exporter.js';
 import { getIcon } from './icons.js';
 
 const STORAGE_PROFILES_KEY = 'apex_circuit_strategy_profiles_v1';
@@ -70,6 +71,7 @@ export class CircuitStrategistView {
     this.btnPrevCorner = document.getElementById('btn-prev-corner');
     this.btnNextCorner = document.getElementById('btn-next-corner');
     this.btnResetStrategist = document.getElementById('btn-reset-strategist');
+    this.btnExportPdf = document.getElementById('btn-export-strategy-pdf');
     this.btnReturnPitwall = document.getElementById('btn-return-pitwall-from-strategist');
 
     // Save Profile Modal Elements
@@ -202,6 +204,13 @@ export class CircuitStrategistView {
     if (this.btnCloseSaveProfileModal) {
       this.btnCloseSaveProfileModal.addEventListener('click', () => {
         this.closeSaveProfileModal();
+      });
+    }
+
+    // Export Strategy PDF Button
+    if (this.btnExportPdf) {
+      this.btnExportPdf.addEventListener('click', () => {
+        this.exportStrategyPdf();
       });
     }
 
@@ -1266,4 +1275,45 @@ export class CircuitStrategistView {
       this.onCanvasMouseMove(e);
     }
   }
+
+  async exportStrategyPdf() {
+    if (!this.currentTrack) return;
+    const corner = this.getCurrentCornerData();
+    const samples = this.generateSyntheticCornerSamples(corner);
+    const simulationResult = this.engine.simulateCorner(
+      corner,
+      this.adjustments,
+      samples,
+      {
+        followingStraightMeters: corner.followingStraightMeters || 320,
+        precedingStraightMeters: corner.precedingStraightMeters || 180,
+        isLinked: corner.isLinked || false
+      }
+    );
+    const activeProfileName = this.activeProfileId === 'default'
+      ? 'Default Baseline Strategy'
+      : (this.getStoredProfiles()[this.currentTrack.trackId]?.find(p => p.id === this.activeProfileId)?.name || 'Custom Strategy');
+    const activeNotes = this.activeProfileId === 'default'
+      ? ''
+      : (this.getStoredProfiles()[this.currentTrack.trackId]?.find(p => p.id === this.activeProfileId)?.notes || '');
+
+    if (window.PitToast) window.PitToast.info('Compiling 2-Page Strategy Dossier PDF...', 'PDF EXPORTER');
+    try {
+      await StrategyPdfExporter.exportStrategyDossier({
+        track: this.currentTrack,
+        selectedCornerIndex: this.currentCornerIndex,
+        profileName: activeProfileName,
+        profileNotes: activeNotes,
+        archetype: this.adjustments.archetype,
+        adjustments: this.adjustments,
+        simulationResult,
+        driverProfile: window.apexApp?.driverStore?.getActiveProfile() || null
+      }, true);
+      if (window.PitToast) window.PitToast.success('Strategy Dossier PDF downloaded!', 'PDF EXPORTER');
+    } catch (err) {
+      console.error('[CIRCUIT STRATEGIST] PDF export error:', err);
+      if (window.PitToast) window.PitToast.error('Failed to export Strategy PDF', 'PDF EXPORTER');
+    }
+  }
 }
+
