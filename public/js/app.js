@@ -19,6 +19,7 @@ import { UiUpdater } from './components/ui-updater.js';
 import { globalCareerView } from './career-view.js';
 import { globalSkillsView } from './skills-view.js';
 import { skillsStore } from './skills-store.js';
+import { CircuitStrategistView } from './circuit-strategist-view.js';
 
 class ApexApp {
   constructor() {
@@ -31,6 +32,7 @@ class ApexApp {
     this.careerView = globalCareerView;
     this.skillsView = globalSkillsView;
     this.skillsStore = skillsStore;
+    this.circuitStrategist = new CircuitStrategistView();
     this.loopbackModal = new LoopbackModal();
     this.driverDossierModal = new DriverDossierModal();
     this.driverWizardModal = new DriverWizardModal();
@@ -74,11 +76,13 @@ class ApexApp {
     this.btnNavPitwall = document.getElementById('btn-nav-pitwall');
     this.btnNavTrackLibrary = document.getElementById('btn-nav-track-library');
     this.btnNavSkills = document.getElementById('btn-nav-skills');
+    this.btnNavCircuitStrategist = document.getElementById('btn-nav-circuit-strategist');
 
     // Primary View Containers
     this.viewPitwall = document.getElementById('view-pitwall');
     this.viewTrackLibrary = document.getElementById('view-track-library');
     this.viewSkills = document.getElementById('view-skills');
+    this.viewCircuitStrategist = document.getElementById('view-circuit-strategist');
 
     this.wsClient = new ApexWsClient({
       url: this.session.settings.wsUrl,
@@ -413,6 +417,12 @@ class ApexApp {
       });
     }
 
+    if (this.btnNavCircuitStrategist) {
+      this.btnNavCircuitStrategist.addEventListener('click', () => {
+        this.switchView('circuit-strategist');
+      });
+    }
+
 
     // Close on backdrop click
     if (this.modalBackdrop) {
@@ -453,7 +463,7 @@ class ApexApp {
         this.switchView('track-library');
       } else if (e.key === 'c' || e.key === 'C') {
         e.preventDefault();
-        this.driverDossierModal.open(null, 'career');
+        this.switchView('circuit-strategist');
       } else if (e.key === 'k' || e.key === 'K') {
         e.preventDefault();
         this.switchView('skills');
@@ -746,11 +756,13 @@ class ApexApp {
     if (this.viewPitwall) this.viewPitwall.style.display = 'none';
     if (this.viewTrackLibrary) this.viewTrackLibrary.style.display = 'none';
     if (this.viewSkills) this.viewSkills.style.display = 'none';
+    if (this.viewCircuitStrategist) this.viewCircuitStrategist.style.display = 'none';
 
     // 2. Deactivate all top navigation tab buttons
     if (this.btnNavPitwall) this.btnNavPitwall.classList.remove('active');
     if (this.btnNavTrackLibrary) this.btnNavTrackLibrary.classList.remove('active');
     if (this.btnNavSkills) this.btnNavSkills.classList.remove('active');
+    if (this.btnNavCircuitStrategist) this.btnNavCircuitStrategist.classList.remove('active');
 
     // 3. Activate selected view
     if (viewName === 'pitwall') {
@@ -766,6 +778,12 @@ class ApexApp {
       if (this.skillsView) {
         this.skillsView.onRecordingStateChange(this.session?.isRecording || false);
         this.skillsView.render();
+      }
+    } else if (viewName === 'circuit-strategist') {
+      if (this.viewCircuitStrategist) this.viewCircuitStrategist.style.display = 'block';
+      if (this.btnNavCircuitStrategist) this.btnNavCircuitStrategist.classList.add('active');
+      if (this.circuitStrategist) {
+        this.circuitStrategist.render();
       }
     }
   }

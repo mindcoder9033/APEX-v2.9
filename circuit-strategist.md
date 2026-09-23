@@ -121,13 +121,13 @@
   - [x] Compounding straightaway calculation matches $\Delta t \approx -\frac{\Delta v \cdot D}{\bar{v}^2}$.
 - [x] **Dual-Environment Codebase Sync**:
   - [x] Files created in `src/analysis/` are mirrored in `public/js/analysis/` per project convention.
-- [ ] **Interactive UI Performance**:
-  - [ ] Draggable landmark pins move smoothly at 60fps without lag on canvas.
-  - [ ] Telemetry graphs and delta ticker recalculate in $<16\text{ms}$ upon pin drag.
-  - [ ] Switching between corners (T1, T2, T3...) is instantaneous.
-  - [ ] Responsive layout adapts cleanly from 1080p to 4K displays.
-- [ ] **Persistence & Hotkeys**:
-  - [ ] Hotkey `C` switches to Circuit Strategist; `P` switches to Pit Wall; `T` to Track Dossier; `K` to Skills Hub.
-  - [ ] Saved strategy profiles persist across browser reloads.
+- [x] **Interactive UI Performance**:
+  - [x] Draggable landmark pins move smoothly at 60fps without lag on canvas.
+  - [x] Telemetry graphs and delta ticker recalculate in $<16\text{ms}$ upon pin drag.
+  - [x] Switching between corners (T1, T2, T3...) is instantaneous.
+  - [x] Responsive layout adapts cleanly from 1080p to 4K displays.
+- [x] **Persistence & Hotkeys**:
+  - [x] Hotkey `C` switches to Circuit Strategist; `P` switches to Pit Wall; `T` to Track Dossier; `K` to Skills Hub.
+  - [x] Saved strategy profiles persist across browser reloads.
 - [x] **Automated Test Suite**:
   - [x] Run `npm test` to ensure all existing analysis and new strategist unit tests pass with zero regressions.

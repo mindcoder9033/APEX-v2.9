@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="css/components/updater.css">
   <link rel="stylesheet" href="css/components/pit-toast.css">
   <link rel="stylesheet" href="css/components/skills-hub.css">
+  <link rel="stylesheet" href="css/components/circuit-strategist.css">
 </head>
 <body>
   <!-- Dedicated APEX Motorsport Windows App Header / Titlebar -->
@@ -117,6 +118,12 @@
             <svg class="apex-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
           </span>
           <span class="nav-tab-label">SKILLS HUB</span>
+        </button>
+        <button id="btn-nav-circuit-strategist" class="nav-tab-btn chamfer-br" title="Circuit Strategist & Driving Line Studio (C)">
+          <span class="nav-tab-icon">
+            <svg class="apex-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 A18 18 0 0 1 21 3"></path><path d="M15 3h6v6"></path><circle cx="12" cy="12" r="2"></circle></svg>
+          </span>
+          <span class="nav-tab-label">CIRCUIT STRATEGIST</span>
         </button>
       </nav>
 
@@ -1291,6 +1298,267 @@
     <div id="view-skills" class="view-container view-skills" style="display: none;">
       <!-- Populated dynamically by SkillsView -->
     </div>
+
+    <!-- CIRCUIT STRATEGIST VIEW CONTAINER -->
+    <div id="view-circuit-strategist" class="view-container view-circuit-strategist" style="display: none;">
+      <div class="circuit-strategist-container">
+        
+        <!-- Header Command Bar -->
+        <header class="strategist-header-bar chamfer-br">
+          <div class="strategist-title-group">
+            <div class="strategist-title-icon chamfer-br">
+              <svg class="apex-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21 A18 18 0 0 1 21 3"></path>
+                <path d="M15 3h6v6"></path>
+                <circle cx="12" cy="12" r="2"></circle>
+              </svg>
+            </div>
+            <div>
+              <div class="strategist-title-text">
+                CIRCUIT STRATEGIST <span style="color: var(--color-gold);">//</span> RACECRAFT STUDIO
+              </div>
+              <div class="strategist-title-sub">
+                Interactive "What-If" Driving Line Sculptor & Skip Barber Physics Simulator
+              </div>
+            </div>
+          </div>
+
+          <!-- Selectors: Circuit & Corner -->
+          <div class="strategist-selectors-group">
+            <select id="strategist-track-select" class="strategist-select chamfer-br" title="Select Circuit"></select>
+            <div class="corner-nav-btn-group">
+              <button id="btn-prev-corner" class="corner-nav-btn chamfer-bl" title="Previous Corner">◀ PREV</button>
+              <select id="strategist-corner-select" class="strategist-select" title="Select Corner"></select>
+              <button id="btn-next-corner" class="corner-nav-btn chamfer-br" title="Next Corner">NEXT ▶</button>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="strategist-actions-group">
+            <button id="btn-reset-strategist" class="btn btn-secondary btn-sm chamfer-br" title="Revert to Baseline Telemetry">
+              <span>↺</span> RESET TO BASELINE
+            </button>
+            <button id="btn-return-pitwall-from-strategist" class="btn btn-primary btn-sm chamfer-br" title="Return to Pit Wall (P)">
+              <span>⮌</span> PIT WALL
+            </button>
+          </div>
+        </header>
+
+        <!-- Live Delta Ticker Bar -->
+        <section class="strategist-ticker-bar">
+          <div class="ticker-card chamfer-br">
+            <div class="ticker-label">
+              <span>RACE STRATEGY TYPE</span>
+              <span class="badge" style="background: rgba(255,255,255,0.08);">CLASSIFICATION</span>
+            </div>
+            <div style="margin-top: 4px;">
+              <span id="ticker-corner-type" class="corner-type-badge type-1">TYPE 1 // EXIT PRIORITY</span>
+            </div>
+            <div class="ticker-subtext">Skip Barber Chapter 2 Corner Priority</div>
+          </div>
+
+          <div class="ticker-card ticker-card-highlight chamfer-br">
+            <div class="ticker-label">
+              <span>SIMULATED LAP DELTA</span>
+              <span style="color: var(--color-gold); font-family: var(--font-mono);">Δt</span>
+            </div>
+            <div class="ticker-value gain-positive" id="ticker-lap-delta">-0.428s</div>
+            <div class="ticker-subtext">Compounding straightaway time gain</div>
+          </div>
+
+          <div class="ticker-card chamfer-br">
+            <div class="ticker-label">
+              <span>EXIT SPEED & DELTA</span>
+              <span style="font-family: var(--font-mono); color: var(--color-cyan);">v_exit</span>
+            </div>
+            <div class="ticker-value" id="ticker-exit-speed">
+              134.2 <span class="ticker-unit">km/h</span>
+              <span id="ticker-exit-delta" class="gain-positive" style="font-size: 13px;">+4.8 km/h</span>
+            </div>
+            <div class="ticker-subtext">Carried down following straight</div>
+          </div>
+
+          <div class="ticker-card chamfer-br">
+            <div class="ticker-label">
+              <span>SIMULATED CORNER RADIUS</span>
+              <span style="font-family: var(--font-mono); color: var(--color-gold);">R = v²/15G</span>
+            </div>
+            <div class="ticker-value gain-gold" id="ticker-radius">68.5m</div>
+            <div class="ticker-subtext">Effective grip: <span id="ticker-effective-g" style="color: #FFF; font-weight: 700;">1.16G</span></div>
+          </div>
+        </section>
+
+        <!-- Main Workbench Split -->
+        <main class="strategist-workbench">
+          
+          <!-- LEFT COLUMN: Canvas Track Spline Studio -->
+          <div class="canvas-panel-card chamfer-tl-br">
+            <div class="canvas-header">
+              <div class="canvas-title">
+                <svg class="apex-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold)" stroke-width="1.6"><circle cx="12" cy="12" r="10"></circle><polygon points="12 8 8 12 12 16 12 8"></polygon></svg>
+                <span>Interactive Corner Spline Sculptor</span>
+              </div>
+              <div class="canvas-legend">
+                <div class="legend-item"><span class="legend-dot baseline"></span> Baseline Line</div>
+                <div class="legend-item"><span class="legend-dot optimal"></span> Simulated Optimal Spline</div>
+                <div class="legend-item"><span class="legend-dot curb"></span> FIA Kerbing</div>
+              </div>
+            </div>
+
+            <!-- Canvas Viewport -->
+            <div class="track-canvas-viewport">
+              <canvas id="strategist-track-canvas"></canvas>
+
+              <!-- Floating Zoom & Pan Controls -->
+              <div class="canvas-floating-toolbar">
+                <button id="btn-canvas-zoom-in" class="canvas-tool-btn chamfer-br" title="Zoom In">+</button>
+                <button id="btn-canvas-zoom-out" class="canvas-tool-btn chamfer-br" title="Zoom Out">−</button>
+                <button id="btn-canvas-reset-view" class="canvas-tool-btn chamfer-br" title="Reset Camera">⌖</button>
+              </div>
+
+              <!-- HUD Coordinates / Interaction Hint -->
+              <div class="canvas-info-hud">
+                <span>DRAG PINS: <strong>[B] Brake · [I] Turn-In · [A] Apex · [T] TAP · [O] Track-Out</strong></span>
+                <span>PAN: <strong>Click & Drag Canvas</strong></span>
+                <span>ZOOM: <strong>Mouse Wheel</strong></span>
+              </div>
+            </div>
+
+            <!-- Pins Controller Bar -->
+            <div class="pins-controller-strip">
+              <button class="pin-badge-btn chamfer-br" data-pin="B">
+                <span class="pin-icon-tag pin-tag-b">B</span>
+                <span>Braking Point</span>
+              </button>
+              <button class="pin-badge-btn chamfer-br" data-pin="I">
+                <span class="pin-icon-tag pin-tag-i">I</span>
+                <span>Turn-In</span>
+              </button>
+              <button class="pin-badge-btn chamfer-br" data-pin="A">
+                <span class="pin-icon-tag pin-tag-a">A</span>
+                <span>Late Apex</span>
+              </button>
+              <button class="pin-badge-btn chamfer-br" data-pin="T">
+                <span class="pin-icon-tag pin-tag-t">T</span>
+                <span>Throttle Onset (TAP)</span>
+              </button>
+              <button class="pin-badge-btn chamfer-br" data-pin="O">
+                <span class="pin-icon-tag pin-tag-o">O</span>
+                <span>Track-Out</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Telemetry, Physics, & Strategy Controls -->
+          <div class="strategist-sidebar">
+            
+            <!-- Strategy Presets -->
+            <div class="presets-panel-card chamfer-tl-br">
+              <div class="pit-card-header" style="margin-bottom: 2px;">
+                <h4 class="pit-card-title" style="font-size: 11px;">RACING LINE ARCHETYPE PRESETS</h4>
+              </div>
+              <div class="presets-grid">
+                <button class="preset-chip active chamfer-br" data-archetype="LATE_APEX">Late Apex (Exit)</button>
+                <button class="preset-chip chamfer-br" data-archetype="GEOMETRIC">Geometric Radius</button>
+                <button class="preset-chip chamfer-br" data-archetype="DEEP_BRAKE">Deep Braking (Def)</button>
+                <button class="preset-chip chamfer-br" data-archetype="COMPROMISE_S">S-Curve Compromise</button>
+                <button class="preset-chip chamfer-br" data-archetype="RAIN_LINE">Wet / Low Grip</button>
+              </div>
+            </div>
+
+            <!-- Synchronized Multi-Channel Telemetry Strip -->
+            <div class="telemetry-strip-card chamfer-tl-br">
+              <div class="pit-card-header" style="margin-bottom: 4px;">
+                <h4 class="pit-card-title" style="font-size: 11px; display: flex; justify-content: space-between; width: 100%;">
+                  <span>SYNCHRONIZED TELEMETRY OVERLAY</span>
+                  <span style="font-size: 10px; color: var(--color-text-muted);">SPEED · THROTTLE · BRAKE</span>
+                </h4>
+              </div>
+              <div class="telemetry-chart-viewport">
+                <canvas id="strategist-telemetry-canvas"></canvas>
+              </div>
+            </div>
+
+            <!-- Friction Circle & 3D Topography -->
+            <div class="physics-widgets-row">
+              <!-- G-G Friction Circle -->
+              <div class="friction-circle-card chamfer-tl-br">
+                <span style="font-family: var(--font-display); font-size: 10px; font-weight: 700; color: var(--color-text-secondary);">G-G FRICTION</span>
+                <div class="friction-circle-viewport">
+                  <canvas id="strategist-friction-canvas"></canvas>
+                </div>
+              </div>
+
+              <!-- 3D Topography & Elevation -->
+              <div class="elevation-profile-card chamfer-tl-br">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-family: var(--font-display); font-size: 10px; font-weight: 700; color: var(--color-text-secondary);">3D TOPOGRAPHY & ELEVATION</span>
+                  <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-gold);">GRADE %</span>
+                </div>
+                <div class="elevation-chart-viewport">
+                  <canvas id="strategist-elevation-canvas"></canvas>
+                </div>
+                <div id="strategist-topography-banner" class="topography-risk-banner risk-warning chamfer-br">
+                  <span id="topography-banner-text">MODERATE UNWEIGHTING: Sustainable lateral G reduced by 8-12%.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Precision Landmark Tuning Sliders -->
+            <div class="landmark-tuning-card chamfer-tl-br">
+              <div class="pit-card-header" style="margin-bottom: 4px;">
+                <h4 class="pit-card-title" style="font-size: 11px;">FINE-TUNING LANDMARK OFFSETS</h4>
+              </div>
+
+              <div class="slider-row">
+                <span class="slider-label">[B] Braking Offset:</span>
+                <input type="range" id="slider-brake-point" class="slider-input" min="-30" max="30" step="1" value="0">
+                <span id="val-brake-point" class="slider-val">0m</span>
+              </div>
+
+              <div class="slider-row">
+                <span class="slider-label">[I] Turn-In Offset:</span>
+                <input type="range" id="slider-turn-in" class="slider-input" min="-30" max="30" step="1" value="-4">
+                <span id="val-turn-in" class="slider-val">-4m</span>
+              </div>
+
+              <div class="slider-row">
+                <span class="slider-label">[A] Apex Depth:</span>
+                <input type="range" id="slider-apex-depth" class="slider-input" min="30" max="85" step="1" value="68">
+                <span id="val-apex-depth" class="slider-val">68%</span>
+              </div>
+
+              <div class="slider-row">
+                <span class="slider-label">[T] TAP (Throttle Onset):</span>
+                <input type="range" id="slider-tap-point" class="slider-input" min="-30" max="30" step="1" value="-8">
+                <span id="val-tap-point" class="slider-val">-8m</span>
+              </div>
+
+              <div class="slider-row">
+                <span class="slider-label">[O] Track-Out Offset:</span>
+                <input type="range" id="slider-track-out" class="slider-input" min="-30" max="30" step="1" value="0">
+                <span id="val-track-out" class="slider-val">0m</span>
+              </div>
+            </div>
+
+            <!-- Skip Barber Racecraft Coaching Tip Card -->
+            <div class="coaching-tip-card chamfer-tl-br">
+              <div class="coaching-icon">
+                <svg class="apex-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"></path></svg>
+              </div>
+              <div class="coaching-content">
+                <span id="strategist-coaching-title" class="coaching-title">TYPE 1 CORNER // EXIT MOMENTUM IS KING</span>
+                <p id="strategist-coaching-body" class="coaching-body">
+                  "Mastering the Art of Race Driving": Delay turn-in slightly to position the car for a late apex. This straightens the exit path, allowing earlier full throttle application and compounding top speed gains down the entire straightaway.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </main>
+      </div>
+    </div> <!-- /#view-circuit-strategist -->
 
   </div> <!-- /.app-container -->
 

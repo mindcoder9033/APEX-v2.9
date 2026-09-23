@@ -1,0 +1,717 @@
+/* ==========================================================================
+   APEX v2.9 - Circuit Strategist CSS
+   Interactive "What-If" Racecraft & Driving Line Studio (F1 Pit-Wall Theme)
+   ========================================================================== */
+
+/* --- Container & Layout --- */
+.view-circuit-strategist {
+  width: 100%;
+  height: calc(100vh - 84px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-md) var(--space-lg);
+  box-sizing: border-box;
+  background-color: var(--color-bg);
+}
+
+.circuit-strategist-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 1920px;
+  margin: 0 auto;
+  min-height: 100%;
+}
+
+/* --- Header Toolbar & Command Strip --- */
+.strategist-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(19, 23, 31, 0.95) 0%, rgba(13, 15, 18, 0.95) 100%);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  position: relative;
+}
+
+.strategist-header-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--color-gold) 0%, var(--color-f1-red) 100%);
+}
+
+.strategist-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.strategist-title-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  color: var(--color-gold);
+}
+
+.strategist-title-text {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.strategist-title-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.5px;
+}
+
+/* Track & Corner Selectors */
+.strategist-selectors-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.strategist-select {
+  background-color: var(--color-surface-input);
+  border: 1px solid var(--color-border-bright);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--trans-fast), box-shadow var(--trans-fast);
+}
+
+.strategist-select:focus {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 8px var(--color-gold-glow);
+}
+
+.corner-nav-btn-group {
+  display: flex;
+  gap: 4px;
+}
+
+.corner-nav-btn {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.corner-nav-btn:hover:not(:disabled) {
+  background: var(--color-surface-input);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.corner-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Header Action Buttons */
+.strategist-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* --- Live Delta Ticker & Key Stats Bar --- */
+.strategist-ticker-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-sm);
+}
+
+.ticker-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ticker-card-highlight {
+  border-color: rgba(255, 184, 0, 0.4);
+  background: linear-gradient(135deg, rgba(255, 184, 0, 0.08) 0%, var(--color-surface-card) 100%);
+}
+
+.ticker-card-highlight::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, transparent 50%, var(--color-gold) 50%);
+  opacity: 0.6;
+}
+
+.ticker-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ticker-value {
+  font-family: var(--font-mono);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ticker-value.gain-positive {
+  color: var(--color-success);
+  text-shadow: 0 0 10px var(--color-success-glow);
+}
+
+.ticker-value.gain-negative {
+  color: var(--color-error);
+}
+
+.ticker-value.gain-gold {
+  color: var(--color-gold);
+  text-shadow: 0 0 10px var(--color-gold-glow);
+}
+
+.ticker-unit {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.ticker-subtext {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* Corner Type Badges */
+.corner-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.corner-type-badge.type-1 {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: rgba(0, 230, 118, 0.4);
+  color: var(--color-success);
+}
+
+.corner-type-badge.type-2 {
+  background: rgba(0, 229, 255, 0.12);
+  border-color: rgba(0, 229, 255, 0.4);
+  color: var(--color-cyan);
+}
+
+.corner-type-badge.type-3 {
+  background: rgba(255, 149, 0, 0.12);
+  border-color: rgba(255, 149, 0, 0.4);
+  color: var(--color-warning);
+}
+
+/* --- Main Workbench 2-Column Split --- */
+.strategist-workbench {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .strategist-workbench {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- LEFT COLUMN: Canvas Track Spline Studio --- */
+.canvas-panel-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+.canvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(13, 15, 18, 0.8);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.canvas-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.canvas-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legend-dot.baseline {
+  background-color: var(--color-cyan);
+  box-shadow: 0 0 6px var(--color-cyan-glow);
+}
+
+.legend-dot.optimal {
+  background-color: var(--color-gold);
+  box-shadow: 0 0 6px var(--color-gold-glow);
+}
+
+.legend-dot.curb {
+  background: repeating-linear-gradient(45deg, #E10600, #E10600 3px, #FFF 3px, #FFF 6px);
+}
+
+/* Canvas Viewport Container */
+.track-canvas-viewport {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  background-color: #050709;
+  background-image: 
+    radial-gradient(circle at center, rgba(255, 184, 0, 0.03) 0%, transparent 70%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 24px 24px, 24px 24px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.track-canvas-viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Canvas Floating Overlay Controls */
+.canvas-floating-toolbar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+  z-index: 10;
+}
+
+.canvas-tool-btn {
+  background: rgba(19, 23, 31, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--color-border-bright);
+  color: var(--color-text-primary);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: all var(--trans-fast);
+}
+
+.canvas-tool-btn:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+}
+
+.canvas-info-hud {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: rgba(13, 15, 18, 0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--color-border);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  display: flex;
+  gap: 16px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.canvas-info-hud span strong {
+  color: var(--color-text-primary);
+}
+
+/* Interactive Landmark Pin Legend Bar below canvas */
+.pins-controller-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}
+
+.pin-badge-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.pin-badge-btn:hover,
+.pin-badge-btn.active {
+  border-color: var(--color-gold);
+  background: rgba(255, 184, 0, 0.1);
+  box-shadow: 0 0 8px var(--color-gold-glow);
+}
+
+.pin-icon-tag {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 10px;
+  color: #000;
+}
+
+.pin-tag-b { background-color: #FF3B30; } /* Brake */
+.pin-tag-i { background-color: #00E5FF; } /* Turn-In */
+.pin-tag-a { background-color: #FFB800; } /* Apex */
+.pin-tag-t { background-color: #00E676; } /* TAP */
+.pin-tag-o { background-color: #D946EF; } /* Track-Out */
+
+/* --- RIGHT COLUMN: Telemetry, Physics, & Strategy Controls --- */
+.strategist-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Strategy Presets Selector */
+.presets-panel-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 6px;
+}
+
+.preset-chip {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.preset-chip:hover {
+  border-color: var(--color-gold);
+  color: var(--color-text-primary);
+  background: rgba(255, 184, 0, 0.05);
+}
+
+.preset-chip.active {
+  background: linear-gradient(135deg, rgba(255, 184, 0, 0.2) 0%, rgba(19, 23, 31, 0.8) 100%);
+  border-color: var(--color-gold);
+  color: var(--color-gold);
+  box-shadow: 0 0 10px var(--color-gold-glow);
+}
+
+/* Synchronized Telemetry Strip */
+.telemetry-strip-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.telemetry-chart-viewport {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  background: #080A0E;
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.telemetry-chart-viewport canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* G-G Friction Circle & Elevation 2-Card Row */
+.physics-widgets-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: var(--space-sm);
+}
+
+@media (max-width: 640px) {
+  .physics-widgets-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.friction-circle-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.friction-circle-viewport {
+  width: 120px;
+  height: 120px;
+  position: relative;
+}
+
+.friction-circle-viewport canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.elevation-profile-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.elevation-chart-viewport {
+  width: 100%;
+  height: 90px;
+  background: #080A0E;
+  border: 1px solid var(--color-border);
+  position: relative;
+}
+
+.elevation-chart-viewport canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.topography-risk-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.topography-risk-banner.risk-critical {
+  background: rgba(255, 59, 48, 0.15);
+  border-color: rgba(255, 59, 48, 0.5);
+  color: #FF6B6B;
+}
+
+.topography-risk-banner.risk-warning {
+  background: rgba(255, 149, 0, 0.15);
+  border-color: rgba(255, 149, 0, 0.5);
+  color: var(--color-warning);
+}
+
+.topography-risk-banner.risk-safe {
+  background: rgba(0, 230, 118, 0.1);
+  border-color: rgba(0, 230, 118, 0.3);
+  color: var(--color-success);
+}
+
+/* Sliders / Precision Landmark Tuning */
+.landmark-tuning-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: var(--color-surface-input);
+  outline: none;
+  border: 1px solid var(--color-border);
+}
+
+.slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--color-gold);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--color-gold-glow);
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%);
+}
+
+.slider-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  text-align: right;
+}
+
+/* Skip Barber Racecraft Coaching Tip Card */
+.coaching-tip-card {
+  background: linear-gradient(135deg, rgba(13, 15, 18, 0.95) 0%, rgba(22, 27, 34, 0.95) 100%);
+  border: 1px solid rgba(255, 184, 0, 0.25);
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  position: relative;
+}
+
+.coaching-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--color-gold);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.coaching-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coaching-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--color-gold);
+}
+
+.coaching-body {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
