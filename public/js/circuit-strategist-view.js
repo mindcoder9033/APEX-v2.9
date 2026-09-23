@@ -10,19 +10,22 @@ import { TOPOGRAPHY_RISK } from './analysis/elevation-dynamics.js';
 import { trackLibraryStore } from './track-library-store.js';
 import { getIcon } from './icons.js';
 
+const STORAGE_PROFILES_KEY = 'apex_circuit_strategy_profiles_v1';
+
 export class CircuitStrategistView {
   constructor() {
     this.engine = new CircuitStrategistEngine();
     this.currentTrack = null;
     this.currentCornerIndex = 0;
     this.activePreset = LINE_ARCHETYPE.LATE_APEX;
+    this.activeProfileId = 'default';
     
     // Landmark Adjustments State
     this.adjustments = {
       deltaBrakeMeters: 0,
-      deltaTurnInMeters: 0,
-      apexDepthPercent: 0.65,
-      deltaTapMeters: -5,
+      deltaTurnInMeters: -4,
+      apexDepthPercent: 0.68,
+      deltaTapMeters: -8,
       deltaTrackOutMeters: 0,
       apexLateralOffset: 0.05, // 0 = inner curb, 1 = outer curb
       archetype: LINE_ARCHETYPE.LATE_APEX
@@ -60,10 +63,22 @@ export class CircuitStrategistView {
     // Header & Selectors
     this.trackSelect = document.getElementById('strategist-track-select');
     this.cornerSelect = document.getElementById('strategist-corner-select');
+    this.profileSelect = document.getElementById('strategist-profile-select');
+    this.btnSaveProfile = document.getElementById('btn-save-strategy-profile');
+    this.btnDeleteProfile = document.getElementById('btn-delete-strategy-profile');
+
     this.btnPrevCorner = document.getElementById('btn-prev-corner');
     this.btnNextCorner = document.getElementById('btn-next-corner');
     this.btnResetStrategist = document.getElementById('btn-reset-strategist');
     this.btnReturnPitwall = document.getElementById('btn-return-pitwall-from-strategist');
+
+    // Save Profile Modal Elements
+    this.modalSaveProfile = document.getElementById('modal-save-strategy-profile');
+    this.inputProfileName = document.getElementById('input-strategy-profile-name');
+    this.inputProfileNotes = document.getElementById('input-strategy-profile-notes');
+    this.btnConfirmSaveProfile = document.getElementById('btn-confirm-save-profile');
+    this.btnCancelSaveProfile = document.getElementById('btn-cancel-save-profile');
+    this.btnCloseSaveProfileModal = document.getElementById('btn-close-save-profile-modal');
 
     // Ticker Elements
     this.tickerCornerType = document.getElementById('ticker-corner-type');
@@ -150,6 +165,46 @@ export class CircuitStrategistView {
       });
     }
 
+    // Profile Select Change
+    if (this.profileSelect) {
+      this.profileSelect.addEventListener('change', (e) => {
+        this.loadProfile(e.target.value);
+      });
+    }
+
+    // Save Profile Modal Trigger
+    if (this.btnSaveProfile) {
+      this.btnSaveProfile.addEventListener('click', () => {
+        this.openSaveProfileModal();
+      });
+    }
+
+    // Delete Profile Button
+    if (this.btnDeleteProfile) {
+      this.btnDeleteProfile.addEventListener('click', () => {
+        this.deleteActiveProfile();
+      });
+    }
+
+    // Save Profile Modal Confirm
+    if (this.btnConfirmSaveProfile) {
+      this.btnConfirmSaveProfile.addEventListener('click', () => {
+        this.handleSaveProfileConfirm();
+      });
+    }
+
+    // Close Save Profile Modal Buttons
+    if (this.btnCancelSaveProfile) {
+      this.btnCancelSaveProfile.addEventListener('click', () => {
+        this.closeSaveProfileModal();
+      });
+    }
+    if (this.btnCloseSaveProfileModal) {
+      this.btnCloseSaveProfileModal.addEventListener('click', () => {
+        this.closeSaveProfileModal();
+      });
+    }
+
     // Reset Button
     if (this.btnResetStrategist) {
       this.btnResetStrategist.addEventListener('click', () => {
@@ -225,6 +280,155 @@ export class CircuitStrategistView {
     });
   }
 
+  // --- Profile Storage & Management ---
+  getStoredProfiles() {
+    try {
+      const data = localStorage.getItem(STORAGE_PROFILES_KEY);
+      return data ? JSON.parse(data) : {};
+    } catch (e) {
+      console.warn('[CIRCUIT STRATEGIST] Error reading profiles from localStorage:', e);
+      return {};
+    }
+  }
+
+  saveStoredProfiles(profilesMap) {
+    try {
+      localStorage.setItem(STORAGE_PROFILES_KEY, JSON.stringify(profilesMap));
+    } catch (e) {
+      console.warn('[CIRCUIT STRATEGIST] Error saving profiles to localStorage:', e);
+    }
+  }
+
+  populateProfileDropdown() {
+    if (!this.profileSelect || !this.currentTrack) return;
+    const trackId = this.currentTrack.trackId;
+    const allProfiles = this.getStoredProfiles();
+    const trackProfiles = allProfiles[trackId] || [];
+
+    this.profileSelect.innerHTML = '';
+    
+    // Default baseline option
+    const defOpt = document.createElement('option');
+    defOpt.value = 'default';
+    defOpt.textContent = '[Baseline Strategy]';
+    this.profileSelect.appendChild(defOpt);
+
+    trackProfiles.forEach(prof => {
+      const opt = document.createElement('option');
+      opt.value = prof.id;
+      opt.textContent = prof.name;
+      this.profileSelect.appendChild(opt);
+    });
+
+    this.profileSelect.value = this.activeProfileId;
+    if (this.btnDeleteProfile) {
+      this.btnDeleteProfile.style.display = this.activeProfileId === 'default' ? 'none' : 'inline-block';
+    }
+  }
+
+  openSaveProfileModal() {
+    if (!this.modalSaveProfile) return;
+    const corner = this.getCurrentCornerData();
+    const presetName = this.activePreset.replace('_', ' ');
+    if (this.inputProfileName) {
+      this.inputProfileName.value = `T${corner.cornerNumber || 1} - ${presetName.toUpperCase()}`;
+    }
+    if (this.inputProfileNotes) {
+      this.inputProfileNotes.value = '';
+    }
+    this.modalSaveProfile.style.display = 'flex';
+  }
+
+  closeSaveProfileModal() {
+    if (this.modalSaveProfile) {
+      this.modalSaveProfile.style.display = 'none';
+    }
+  }
+
+  handleSaveProfileConfirm() {
+    if (!this.currentTrack) return;
+    const name = (this.inputProfileName?.value || '').trim() || 'Custom Strategy';
+    const notes = (this.inputProfileNotes?.value || '').trim();
+    const trackId = this.currentTrack.trackId;
+    const profileId = `strat_${Date.now()}`;
+
+    const newProfile = {
+      id: profileId,
+      name,
+      notes,
+      trackId,
+      cornerIndex: this.currentCornerIndex,
+      archetype: this.adjustments.archetype,
+      adjustments: { ...this.adjustments },
+      timestamp: Date.now()
+    };
+
+    const allProfiles = this.getStoredProfiles();
+    if (!allProfiles[trackId]) allProfiles[trackId] = [];
+    allProfiles[trackId].push(newProfile);
+    this.saveStoredProfiles(allProfiles);
+
+    this.activeProfileId = profileId;
+    this.closeSaveProfileModal();
+    this.populateProfileDropdown();
+
+    if (window.PitToast) {
+      window.PitToast.success(`Strategy "${name}" saved for ${this.currentTrack.trackName}`, 'CIRCUIT STRATEGIST');
+    }
+  }
+
+  loadProfile(profileId) {
+    this.activeProfileId = profileId;
+    if (profileId === 'default') {
+      this.resetAdjustments();
+      return;
+    }
+
+    if (!this.currentTrack) return;
+    const trackId = this.currentTrack.trackId;
+    const allProfiles = this.getStoredProfiles();
+    const trackProfiles = allProfiles[trackId] || [];
+    const prof = trackProfiles.find(p => p.id === profileId);
+
+    if (prof) {
+      this.adjustments = { ...prof.adjustments };
+      this.activePreset = prof.archetype || LINE_ARCHETYPE.LATE_APEX;
+      this.syncSlidersFromAdjustments();
+      
+      if (this.presetChips) {
+        this.presetChips.forEach(c => {
+          if (c.dataset.archetype === this.activePreset) c.classList.add('active');
+          else c.classList.remove('active');
+        });
+      }
+
+      if (this.btnDeleteProfile) {
+        this.btnDeleteProfile.style.display = 'inline-block';
+      }
+
+      this.render();
+      if (window.PitToast) {
+        window.PitToast.info(`Loaded strategy: "${prof.name}"`, 'CIRCUIT STRATEGIST');
+      }
+    }
+  }
+
+  deleteActiveProfile() {
+    if (this.activeProfileId === 'default' || !this.currentTrack) return;
+    const trackId = this.currentTrack.trackId;
+    const allProfiles = this.getStoredProfiles();
+    if (allProfiles[trackId]) {
+      allProfiles[trackId] = allProfiles[trackId].filter(p => p.id !== this.activeProfileId);
+      this.saveStoredProfiles(allProfiles);
+    }
+    this.activeProfileId = 'default';
+    this.resetAdjustments();
+    this.populateProfileDropdown();
+    if (window.PitToast) {
+      window.PitToast.info('Strategy profile deleted', 'CIRCUIT STRATEGIST');
+    }
+  }
+
   initTrackData() {
     const tracks = trackLibraryStore.getAllTracks();
     if (this.trackSelect) {
@@ -257,6 +461,8 @@ export class CircuitStrategistView {
       });
     }
 
+    this.activeProfileId = 'default';
+    this.populateProfileDropdown();
     this.selectCorner(0);
   }
 
@@ -271,6 +477,26 @@ export class CircuitStrategistView {
 
     this.resetAdjustments();
     this.resetCanvasView();
+    this.render();
+  }
+
+  /**
+   * Deep-linking handler for cross-launching from Pit-Wall widgets
+   * @param {string} [trackIdOrName] 
+   * @param {number} [cornerIndex=0] 
+   */
+  loadCornerFromPitWall(trackIdOrName, cornerIndex = 0) {
+    if (trackIdOrName) {
+      const allTracks = trackLibraryStore.getAllTracks();
+      const target = allTracks.find(t => 
+        t.trackId === trackIdOrName || 
+        t.trackName.toLowerCase().includes(String(trackIdOrName).toLowerCase())
+      );
+      if (target) {
+        this.selectTrack(target.trackId);
+      }
+    }
+    this.selectCorner(cornerIndex);
     this.render();
   }
 
@@ -301,23 +527,23 @@ export class CircuitStrategistView {
       this.adjustments.deltaTapMeters = 0;
       this.adjustments.deltaTrackOutMeters = 0;
     } else if (archetype === LINE_ARCHETYPE.DEEP_BRAKE) {
-      this.adjustments.deltaBrakeMeters = 10;
-      this.adjustments.deltaTurnInMeters = 4;
-      this.adjustments.apexDepthPercent = 0.60;
-      this.adjustments.deltaTapMeters = 5;
+      this.adjustments.deltaBrakeMeters = 12;
+      this.adjustments.deltaTurnInMeters = 5;
+      this.adjustments.apexDepthPercent = 0.58;
+      this.adjustments.deltaTapMeters = 6;
       this.adjustments.deltaTrackOutMeters = 0;
     } else if (archetype === LINE_ARCHETYPE.COMPROMISE_S) {
-      this.adjustments.deltaBrakeMeters = -5;
-      this.adjustments.deltaTurnInMeters = -6;
-      this.adjustments.apexDepthPercent = 0.72;
-      this.adjustments.deltaTapMeters = -10;
-      this.adjustments.deltaTrackOutMeters = -5;
-    } else if (archetype === LINE_ARCHETYPE.RAIN_LINE) {
-      this.adjustments.deltaBrakeMeters = -12;
+      this.adjustments.deltaBrakeMeters = -6;
       this.adjustments.deltaTurnInMeters = -8;
-      this.adjustments.apexDepthPercent = 0.55;
+      this.adjustments.apexDepthPercent = 0.74;
+      this.adjustments.deltaTapMeters = -12;
+      this.adjustments.deltaTrackOutMeters = -6;
+    } else if (archetype === LINE_ARCHETYPE.RAIN_LINE) {
+      this.adjustments.deltaBrakeMeters = -14;
+      this.adjustments.deltaTurnInMeters = -10;
+      this.adjustments.apexDepthPercent = 0.54;
       this.adjustments.deltaTapMeters = 0;
-      this.adjustments.deltaTrackOutMeters = 6;
+      this.adjustments.deltaTrackOutMeters = 8;
     }
 
     this.syncSlidersFromAdjustments();
@@ -342,11 +568,15 @@ export class CircuitStrategistView {
   }
 
   resetAdjustments() {
+    this.activeProfileId = 'default';
+    if (this.profileSelect) this.profileSelect.value = 'default';
+    if (this.btnDeleteProfile) this.btnDeleteProfile.style.display = 'none';
+
     this.adjustments = {
       deltaBrakeMeters: 0,
-      deltaTurnInMeters: 0,
-      apexDepthPercent: 0.65,
-      deltaTapMeters: -5,
+      deltaTurnInMeters: -4,
+      apexDepthPercent: 0.68,
+      deltaTapMeters: -8,
       deltaTrackOutMeters: 0,
       apexLateralOffset: 0.05,
       archetype: LINE_ARCHETYPE.LATE_APEX
@@ -391,7 +621,6 @@ export class CircuitStrategistView {
     const samples = [];
     const numSamples = 60;
     const lengthMeters = corner.lengthMeters || 180;
-    const apexDist = lengthMeters * (corner.apexDepthPercent || 0.55);
 
     const isRightHander = corner.turnDirection === 'R' || (corner.cornerNumber % 2 !== 0);
 
@@ -399,28 +628,22 @@ export class CircuitStrategistView {
       const progress = i / (numSamples - 1);
       const dist = progress * lengthMeters;
       
-      // Arc angle: 0 at entry, turn 90 deg (or 110 deg) around apex
       const sweepAngle = (Math.PI * 0.55) * (isRightHander ? 1 : -1);
       const angle = progress * sweepAngle;
       
-      // Arc curve radius ~ 60m
       const r = 60;
       const x = r * Math.sin(angle);
       const y = -r * (1 - Math.cos(angle)) + (progress * 40);
 
-      // Baseline telemetry speed profile
       let speedMps = corner.entrySpeedMps || 42;
       if (progress < 0.45) {
-        // Braking phase
         const t = progress / 0.45;
         speedMps = (corner.entrySpeedMps || 42) + ((corner.apexSpeedMps || 26) - (corner.entrySpeedMps || 42)) * Math.sin(t * Math.PI * 0.5);
       } else {
-        // Acceleration phase
         const t = (progress - 0.45) / 0.55;
         speedMps = (corner.apexSpeedMps || 26) + ((corner.exitSpeedMps || 36) - (corner.apexSpeedMps || 26)) * (t * t);
       }
 
-      // Elevation profile (simulate crest or dip)
       const elevChange = corner.elevationChangeMeters || -1.5;
       const elevation = Math.sin(progress * Math.PI) * elevChange;
       const gradePercent = -Math.cos(progress * Math.PI) * (elevChange / 100);
@@ -550,7 +773,6 @@ export class CircuitStrategistView {
     ctx.save();
     ctx.clearRect(0, 0, w, h);
 
-    // Apply Center & Transform
     const cx = (w / 2) + (this.transform.panX * dpr);
     const cy = (h / 2) + (this.transform.panY * dpr);
     const scale = 2.4 * this.transform.zoom * dpr;
@@ -558,11 +780,10 @@ export class CircuitStrategistView {
     ctx.translate(cx, cy);
     ctx.scale(scale, scale);
 
-    // 1. Draw Track Surface & Boundaries (Ribbon with Width = 12m)
-    const trackWidth = 12; // meters
+    const trackWidth = 12;
     const halfW = trackWidth / 2;
 
-    // Outer & Inner Boundary Paths
+    // Track Ribbon
     ctx.beginPath();
     for (let i = 0; i < samples.length; i++) {
       const s = samples[i];
@@ -598,10 +819,10 @@ export class CircuitStrategistView {
     ctx.lineWidth = 0.8;
     ctx.stroke();
 
-    // 2. Curbs / Kerbing (Red & White Alternating Blocks)
+    // Curbs
     this.drawCurbs(ctx, samples, halfW);
 
-    // 3. Center Guide Line (Dashed)
+    // Center Dashed Line
     ctx.beginPath();
     samples.forEach((s, idx) => {
       if (idx === 0) ctx.moveTo(s.x, s.y);
@@ -613,7 +834,7 @@ export class CircuitStrategistView {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // 4. Baseline Driven Line (Neon Cyan Glow)
+    // Baseline Line (Neon Cyan Glow)
     ctx.beginPath();
     samples.forEach((s, idx) => {
       if (idx === 0) ctx.moveTo(s.x, s.y);
@@ -626,7 +847,7 @@ export class CircuitStrategistView {
     ctx.stroke();
     ctx.shadowBlur = 0;
 
-    // 5. Simulated Optimal Driving Line Spline (Gold / Emerald)
+    // Simulated Optimal Driving Line Spline (Gold)
     const optLine = result.optimalLine || [];
     if (optLine.length > 0) {
       ctx.beginPath();
@@ -642,7 +863,7 @@ export class CircuitStrategistView {
       ctx.shadowBlur = 0;
     }
 
-    // 6. Project & Draw Landmark Control Pins [B], [I], [A], [T], [O]
+    // Control Pins [B], [I], [A], [T], [O]
     this.computeAndDrawPins(ctx, samples, result, cx, cy, scale, dpr);
 
     ctx.restore();
@@ -650,7 +871,6 @@ export class CircuitStrategistView {
 
   drawCurbs(ctx, samples, halfW) {
     const curbW = 1.4;
-    // Inner curb around apex
     const midIdx = Math.floor(samples.length * 0.5);
     const startIdx = Math.max(0, midIdx - 10);
     const endIdx = Math.min(samples.length - 1, midIdx + 10);
@@ -695,7 +915,6 @@ export class CircuitStrategistView {
       const s = pin.sample;
       if (!s) return;
 
-      // Update screen coordinate for hit testing (normalized to canvas CSS pixels)
       const screenX = (cx + s.x * scale) / dpr;
       const screenY = (cy + s.y * scale) / dpr;
       this.pinScreenCoords[pin.id] = {
@@ -709,7 +928,6 @@ export class CircuitStrategistView {
       const isHovered = this.hoveredPin === pin.id;
       const isDragging = this.draggingPin === pin.id;
 
-      // Draw Tether Circle & Glow
       ctx.beginPath();
       ctx.arc(s.x, s.y, (isHovered || isDragging) ? 4.5 : 3.2, 0, Math.PI * 2);
       ctx.fillStyle = pin.color;
@@ -718,14 +936,12 @@ export class CircuitStrategistView {
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Outer Ring
       ctx.beginPath();
       ctx.arc(s.x, s.y, (isHovered || isDragging) ? 6.5 : 5.0, 0, Math.PI * 2);
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Text Tag
       ctx.font = 'bold 3.5px Chakra Petch, sans-serif';
       ctx.fillStyle = '#FFFFFF';
       ctx.textAlign = 'center';
@@ -761,11 +977,10 @@ export class CircuitStrategistView {
 
     if (!samples || samples.length === 0) return;
 
-    // Draw Speed Baseline (Cyan) vs Simulated (Gold)
     const maxSpeed = Math.max(60, (result.simulated.entrySpeedKmh || 120) / 3.6);
     const minSpeed = Math.min(15, (result.baseline.apexSpeedKmh || 40) / 3.6);
 
-    // 1. Throttle (Green) & Brake (Red) Filled Traces in Background
+    // Throttle & Brake Traces
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
@@ -790,7 +1005,7 @@ export class CircuitStrategistView {
     ctx.fillStyle = 'rgba(255, 59, 48, 0.15)';
     ctx.fill();
 
-    // 2. Baseline Speed Curve (Cyan)
+    // Baseline Speed Curve (Cyan)
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
@@ -803,9 +1018,8 @@ export class CircuitStrategistView {
     ctx.lineWidth = 1.6;
     ctx.stroke();
 
-    // 3. Simulated Speed Curve (Gold)
+    // Simulated Speed Curve (Gold)
     ctx.beginPath();
-    const optLine = result.optimalLine || [];
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
       let simSpeed = s.speedMps;
@@ -867,7 +1081,7 @@ export class CircuitStrategistView {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.stroke();
 
-    // Plot baseline samples as faint blue dots
+    // Baseline sample cloud
     samples.forEach(s => {
       const gx = cx + (s.lateralG / 1.3) * r;
       const gy = cy - ((s.brake - s.throttle * 0.7) / 1.3) * r;
@@ -910,7 +1124,6 @@ export class CircuitStrategistView {
 
     if (!samples || samples.length === 0) return;
 
-    // Draw elevation contour
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
@@ -921,7 +1134,6 @@ export class CircuitStrategistView {
     ctx.lineTo(w, h);
     ctx.lineTo(0, h);
     ctx.closePath();
-    ctx.fillStyle = 'linear-gradient(180deg, rgba(255, 184, 0, 0.15) 0%, rgba(13, 15, 18, 0.8) 100%)';
     ctx.fillStyle = 'rgba(255, 184, 0, 0.12)';
     ctx.fill();
 
@@ -936,7 +1148,6 @@ export class CircuitStrategistView {
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Center Zero Datum Line
     ctx.beginPath();
     ctx.moveTo(0, h / 2);
     ctx.lineTo(w, h / 2);
@@ -961,7 +1172,6 @@ export class CircuitStrategistView {
     const pos = this.getCanvasCoords(e);
     this.lastMousePos = pos;
 
-    // Check hit test for pins (radius 18px)
     let clickedPin = null;
     for (const key of Object.keys(this.pinScreenCoords)) {
       const pin = this.pinScreenCoords[key];
@@ -984,9 +1194,7 @@ export class CircuitStrategistView {
 
     if (this.draggingPin) {
       const dx = pos.x - this.lastMousePos.x;
-      const dy = pos.y - this.lastMousePos.y;
       
-      // Update corresponding landmark slider / delta
       if (this.draggingPin === 'B') {
         this.adjustments.deltaBrakeMeters = Math.max(-30, Math.min(30, this.adjustments.deltaBrakeMeters + Math.round(dx * 0.4)));
       } else if (this.draggingPin === 'I') {
@@ -1015,7 +1223,6 @@ export class CircuitStrategistView {
       return;
     }
 
-    // Hover Pin detection
     let hovered = null;
     for (const key of Object.keys(this.pinScreenCoords)) {
       const pin = this.pinScreenCoords[key];

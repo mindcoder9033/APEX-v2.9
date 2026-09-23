@@ -88,18 +88,18 @@
   - `public/js/app.js` (or main client router)
   - `public/js/circuit-strategist-view.js`
   - `public/index.html`
-  - `public/js/components/pit-wall.js`
+  - `public/js/session-manager.js`
 - **Deliverables**:
-  1. Header navigation integration: `CIRCUIT STRATEGIST` tab with hotkey `C` and active tab switching.
-  2. Pit-wall widget hook: "Open in Circuit Strategist" button on Corner Analysis & Braking Zone widgets.
-  3. Preset selector:
+  1. [x] Header navigation integration: `CIRCUIT STRATEGIST` tab with hotkey `C` and active tab switching.
+  2. [x] Pit-wall widget hook: "Open in Circuit Strategist" (`⚡ STRATEGIZE`) button on Corner Analysis & Braking Zone breakdown.
+  3. [x] Preset selector:
      - *Late Apex Exit (Type 1)*
      - *Geometric Radius Benchmark*
      - *Deep Braking / Defense Line (Type 2)*
      - *Linked S-Curve Compromise (Type 3)*
      - *Wet / Low-Grip Line*
-  4. Named Profile Manager: Save, Load, Rename, Delete strategy profiles in `localStorage`.
-  5. Reset button: Revert modifications back to the telemetry baseline lap.
+  4. [x] Named Profile Manager: Save, Load, Rename, Delete strategy profiles in `localStorage`.
+  5. [x] Reset button: Revert modifications back to the telemetry baseline lap.
 
 ### Phase 4: Strategy PDF Export & Reporting
 - **Assigned Agent**: `document-generator` / `frontend-specialist`

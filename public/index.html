@@ -515,6 +515,7 @@
               <th>TAP DELTA</th>
               <th>TRAIL-BRAKE</th>
               <th>GEAR</th>
+              <th>ACTION</th>
             </tr>
           </thead>
           <tbody id="corner-table-body">
@@ -1333,6 +1334,16 @@
             </div>
           </div>
 
+          <!-- Strategy Profile Manager -->
+          <div class="strategist-profile-group chamfer-br">
+            <span class="profile-label-tag">PROFILE:</span>
+            <select id="strategist-profile-select" class="strategist-select" style="min-width: 140px;" title="Select Strategy Profile">
+              <option value="default">[Baseline Strategy]</option>
+            </select>
+            <button id="btn-save-strategy-profile" class="btn-profile-action chamfer-br" title="Save Current Strategy Profile">💾 SAVE</button>
+            <button id="btn-delete-strategy-profile" class="btn-profile-action delete chamfer-br" title="Delete Active Profile">🗑️</button>
+          </div>
+
           <!-- Action Buttons -->
           <div class="strategist-actions-group">
             <button id="btn-reset-strategist" class="btn btn-secondary btn-sm chamfer-br" title="Revert to Baseline Telemetry">
@@ -1831,6 +1842,32 @@
 
       <div class="modal-footer" style="display: flex; justify-content: flex-end;">
         <button id="btn-close-loopback-footer" class="btn btn-primary chamfer-br">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRATEGY PROFILE SAVE MODAL -->
+  <div id="modal-save-strategy-profile" class="strategy-modal-backdrop" style="display: none;">
+    <div class="strategy-modal-card chamfer-tl-br">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <svg class="apex-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-gold)" stroke-width="1.6"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <h3 class="modal-title" style="margin: 0; font-size: 15px; color: var(--color-gold);">Save Racecraft Strategy Profile</h3>
+        </div>
+        <button id="btn-close-save-profile-modal" class="btn btn-secondary btn-icon-xs chamfer-tr" title="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
+        <label for="input-strategy-profile-name" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary);">PROFILE NAME:</label>
+        <input type="text" id="input-strategy-profile-name" class="modal-input" placeholder="e.g. Q3 Late Apex Aggressive" style="padding: 8px 12px; background: var(--color-surface-input); border: 1px solid var(--color-border-bright); color: #FFF; font-family: var(--font-mono); font-size: 12px; outline: none;">
+        
+        <label for="input-strategy-profile-notes" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-secondary); margin-top: 4px;">NOTES / RACECRAFT FOCUS (OPTIONAL):</label>
+        <textarea id="input-strategy-profile-notes" class="modal-input" placeholder="e.g. Delayed turn-in by 4m to maximize straightaway exit momentum" rows="2" style="padding: 8px 12px; background: var(--color-surface-input); border: 1px solid var(--color-border-bright); color: #FFF; font-family: var(--font-sans); font-size: 12px; outline: none; resize: none;"></textarea>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+        <button id="btn-cancel-save-profile" class="btn btn-secondary btn-sm chamfer-br">CANCEL</button>
+        <button id="btn-confirm-save-profile" class="btn btn-primary btn-sm chamfer-br" style="background: var(--color-gold); color: #000; font-weight: 700;">SAVE PROFILE</button>
       </div>
     </div>
   </div>

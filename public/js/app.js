@@ -788,6 +788,18 @@ class ApexApp {
     }
   }
 
+  /**
+   * Cross-launches Circuit Strategist for a specific track and corner
+   * @param {string} [trackId] 
+   * @param {number} [cornerIndex=0] 
+   */
+  openCircuitStrategist(trackId, cornerIndex = 0) {
+    this.switchView('circuit-strategist');
+    if (this.circuitStrategist) {
+      this.circuitStrategist.loadCornerFromPitWall(trackId, cornerIndex);
+    }
+  }
+
   saveSettings() {
     const updated = {
       udpPort: parseInt(this.inputUdpPort.value, 10) || 9999,

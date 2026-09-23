@@ -135,11 +135,99 @@
   cursor: not-allowed;
 }
 
-/* Header Action Buttons */
+/* Header Action Buttons & Profile Manager */
 .strategist-actions-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.strategist-profile-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 2px 6px;
+}
+
+.profile-label-tag {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-gold);
+  letter-spacing: 0.5px;
+}
+
+.btn-profile-action {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.btn-profile-action:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border-bright);
+  color: var(--color-text-primary);
+}
+
+.btn-profile-action.delete:hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* Pit-Wall Cross-Launch Button */
+.btn-strategize-corner {
+  background: rgba(255, 184, 0, 0.12);
+  border: 1px solid rgba(255, 184, 0, 0.35);
+  color: var(--color-gold);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+  white-space: nowrap;
+}
+
+.btn-strategize-corner:hover {
+  background: var(--color-gold);
+  color: #000;
+  box-shadow: 0 0 10px var(--color-gold-glow);
+}
+
+/* Strategy Profile Modal Dialog */
+.strategy-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.strategy-modal-card {
+  background: var(--color-surface-card);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 184, 0, 0.15);
+  width: 90%;
+  max-width: 460px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* --- Live Delta Ticker & Key Stats Bar --- */

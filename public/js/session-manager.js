@@ -783,7 +783,23 @@ export class SessionManager {
             <td style="color: ${Math.abs(tapDist) > (isMetric ? 4.5 : 15) ? 'var(--color-f1-red)' : 'var(--color-text-primary)'}">${tapSign}</td>
             <td style="color: ${trailColor}; font-weight: ${trailPct < 20 || trailPct >= 40 ? 'bold' : 'normal'}">${trailPct}%</td>
             <td>${c.inputs?.gear || '—'}</td>
+            <td>
+              <button class="btn-strategize-corner chamfer-br" data-corner-index="${c.cornerNumber - 1}" title="Analyze & Sculpt Line for Turn ${c.cornerNumber}">⚡ STRATEGIZE</button>
+            </td>
           `;
+
+          const btnStrat = tr.querySelector('.btn-strategize-corner');
+          if (btnStrat) {
+            btnStrat.addEventListener('click', () => {
+              if (window.apexApp && typeof window.apexApp.openCircuitStrategist === 'function') {
+                window.apexApp.openCircuitStrategist(
+                  this.currentStintMetadata?.trackId || this.currentStintMetadata?.trackName,
+                  c.cornerNumber - 1
+                );
+              }
+            });
+          }
+
           this.cornerTableBody.appendChild(tr);
         });
       }
