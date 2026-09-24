@@ -1324,6 +1324,19 @@
             </div>
           </div>
 
+          <!-- Live Telemetry Status & View Mode -->
+          <div class="strategist-live-status-group chamfer-br">
+            <span id="strategist-live-indicator" class="live-indicator-dot idle"></span>
+            <span id="strategist-live-status-text" class="live-status-text">LIVE TELEMETRY: STANDBY</span>
+            <button id="btn-strategist-clear-telemetry" class="btn-toggle-live chamfer-br" title="Clear recorded live telemetry path">↺ CLEAR</button>
+          </div>
+
+          <!-- View Mode Toggle -->
+          <div class="view-mode-toggle-group chamfer-br">
+            <button id="btn-viewmode-corner" class="view-mode-btn active" title="Detailed corner landmark sculpting">CORNER FOCUS</button>
+            <button id="btn-viewmode-circuit" class="view-mode-btn" title="Complete circuit track map & live car blip">FULL CIRCUIT</button>
+          </div>
+
           <!-- Selectors: Circuit & Corner -->
           <div class="strategist-selectors-group">
             <select id="strategist-track-select" class="strategist-select chamfer-br" title="Select Circuit"></select>
@@ -1332,16 +1345,20 @@
               <select id="strategist-corner-select" class="strategist-select" title="Select Corner"></select>
               <button id="btn-next-corner" class="corner-nav-btn chamfer-br" title="Next Corner">NEXT ▶</button>
             </div>
+            <button id="btn-add-manual-corner" class="btn-profile-action chamfer-br" title="Add / mark custom corner at current position">➕ ADD TURN</button>
           </div>
 
-          <!-- Strategy Profile Manager -->
+          <!-- Strategy Profile & JSON Manager -->
           <div class="strategist-profile-group chamfer-br">
             <span class="profile-label-tag">PROFILE:</span>
-            <select id="strategist-profile-select" class="strategist-select" style="min-width: 140px;" title="Select Strategy Profile">
+            <select id="strategist-profile-select" class="strategist-select" style="min-width: 130px;" title="Select Strategy Profile">
               <option value="default">[Baseline Strategy]</option>
             </select>
             <button id="btn-save-strategy-profile" class="btn-profile-action chamfer-br" title="Save Current Strategy Profile">💾 SAVE</button>
             <button id="btn-delete-strategy-profile" class="btn-profile-action delete chamfer-br" title="Delete Active Profile">🗑️</button>
+            <button id="btn-export-strategy-json" class="btn-json-action chamfer-br" title="Export Strategy & Track Geometry JSON">📥 EXPORT JSON</button>
+            <button id="btn-import-strategy-json" class="btn-json-action chamfer-br" title="Import Strategy & Track Geometry JSON">📤 IMPORT JSON</button>
+            <input type="file" id="input-strategy-json-file" accept=".json" style="display: none;">
           </div>
 
           <!-- Action Buttons -->

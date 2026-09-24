@@ -2,11 +2,14 @@
  * APEX Circuit Strategist View
  * Interactive "What-If" Racecraft & Driving Line Studio (Frontend Controller)
  * Grounded in Skip Barber "Going Faster!" racecraft principles.
+ * Supports Live Telemetry Streaming, Dynamic Circuit Map Drawing,
+ * Corner Auto-Detection & Sculpting, and Hybrid Persistence (LocalStorage + JSON/PDF Export).
  */
 
 import { CircuitStrategistEngine, CORNER_STRATEGY_TYPE } from './analysis/circuit-strategist.js';
 import { LINE_ARCHETYPE } from './analysis/optimal-line-engine.js';
 import { TOPOGRAPHY_RISK } from './analysis/elevation-dynamics.js';
+import { CircuitTelemetryMapper } from './analysis/circuit-telemetry-mapper.js';
 import { trackLibraryStore } from './track-library-store.js';
 import { StrategyPdfExporter } from './strategy-pdf-exporter.js';
 import { getIcon } from './icons.js';
@@ -16,11 +19,20 @@ const STORAGE_PROFILES_KEY = 'apex_circuit_strategy_profiles_v1';
 export class CircuitStrategistView {
   constructor() {
     this.engine = new CircuitStrategistEngine();
+    this.telemetryMapper = new CircuitTelemetryMapper();
+
     this.currentTrack = null;
     this.currentCornerIndex = 0;
     this.activePreset = LINE_ARCHETYPE.LATE_APEX;
     this.activeProfileId = 'default';
+    this.viewMode = 'CORNER_FOCUS'; // 'CORNER_FOCUS' or 'FULL_CIRCUIT'
     
+    // Live Telemetry State
+    this.latestLiveSample = null;
+    this.lastPacketTimestamp = 0;
+    this.isLiveSource = true;
+    this.fullCircuitCorners = [];
+
     // Landmark Adjustments State
     this.adjustments = {
       deltaBrakeMeters: 0,
@@ -52,6 +64,9 @@ export class CircuitStrategistView {
       O: { x: 0, y: 0, id: 'O', label: 'Track-Out', color: '#D946EF' }
     };
 
+    // Screen Coords for Full-Circuit Turn Badges
+    this.circuitTurnScreenCoords = [];
+
     this.cacheDom();
     this.bindEvents();
     this.initTrackData();
@@ -61,12 +76,23 @@ export class CircuitStrategistView {
     // Containers
     this.viewContainer = document.getElementById('view-circuit-strategist');
     
+    // Live Status & View Mode
+    this.liveIndicator = document.getElementById('strategist-live-indicator');
+    this.liveStatusText = document.getElementById('strategist-live-status-text');
+    this.btnClearTelemetry = document.getElementById('btn-strategist-clear-telemetry');
+    this.btnViewModeCorner = document.getElementById('btn-viewmode-corner');
+    this.btnViewModeCircuit = document.getElementById('btn-viewmode-circuit');
+
     // Header & Selectors
     this.trackSelect = document.getElementById('strategist-track-select');
     this.cornerSelect = document.getElementById('strategist-corner-select');
     this.profileSelect = document.getElementById('strategist-profile-select');
     this.btnSaveProfile = document.getElementById('btn-save-strategy-profile');
     this.btnDeleteProfile = document.getElementById('btn-delete-strategy-profile');
+    this.btnExportJson = document.getElementById('btn-export-strategy-json');
+    this.btnImportJson = document.getElementById('btn-import-strategy-json');
+    this.inputFileJson = document.getElementById('input-strategy-json-file');
+    this.btnAddManualCorner = document.getElementById('btn-add-manual-corner');
 
     this.btnPrevCorner = document.getElementById('btn-prev-corner');
     this.btnNextCorner = document.getElementById('btn-next-corner');
@@ -141,6 +167,30 @@ export class CircuitStrategistView {
       });
     }
 
+    // View Mode Toggle
+    if (this.btnViewModeCorner) {
+      this.btnViewModeCorner.addEventListener('click', () => {
+        this.setViewMode('CORNER_FOCUS');
+      });
+    }
+    if (this.btnViewModeCircuit) {
+      this.btnViewModeCircuit.addEventListener('click', () => {
+        this.setViewMode('FULL_CIRCUIT');
+      });
+    }
+
+    // Clear Live Telemetry
+    if (this.btnClearTelemetry) {
+      this.btnClearTelemetry.addEventListener('click', () => {
+        this.telemetryMapper.reset();
+        this.latestLiveSample = null;
+        if (this.liveStatusText) {
+          this.liveStatusText.textContent = 'LIVE TELEMETRY: BUFFER CLEARED';
+        }
+        this.render();
+      });
+    }
+
     // Track Select Change
     if (this.trackSelect) {
       this.trackSelect.addEventListener('change', (e) => {
@@ -185,6 +235,34 @@ export class CircuitStrategistView {
     if (this.btnDeleteProfile) {
       this.btnDeleteProfile.addEventListener('click', () => {
         this.deleteActiveProfile();
+      });
+    }
+
+    // JSON Export Button
+    if (this.btnExportJson) {
+      this.btnExportJson.addEventListener('click', () => {
+        this.exportStrategyJson();
+      });
+    }
+
+    // JSON Import Button
+    if (this.btnImportJson && this.inputFileJson) {
+      this.btnImportJson.addEventListener('click', () => {
+        this.inputFileJson.click();
+      });
+      this.inputFileJson.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) {
+          this.importStrategyJson(file);
+          this.inputFileJson.value = '';
+        }
+      });
+    }
+
+    // Add Manual Corner Button
+    if (this.btnAddManualCorner) {
+      this.btnAddManualCorner.addEventListener('click', () => {
+        this.addManualCorner();
       });
     }
 
@@ -245,7 +323,6 @@ export class CircuitStrategistView {
       window.addEventListener('mouseup', () => this.onCanvasMouseUp());
       this.trackCanvas.addEventListener('wheel', (e) => this.onCanvasWheel(e), { passive: false });
 
-      // Touch events for tablets/touchscreens
       this.trackCanvas.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
       this.trackCanvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
       this.trackCanvas.addEventListener('touchend', () => this.onCanvasMouseUp());
@@ -254,13 +331,13 @@ export class CircuitStrategistView {
     // Canvas Floating Zoom Buttons
     if (this.btnZoomIn) {
       this.btnZoomIn.addEventListener('click', () => {
-        this.transform.zoom = Math.min(3.0, this.transform.zoom * 1.25);
+        this.transform.zoom = Math.min(4.0, this.transform.zoom * 1.25);
         this.render();
       });
     }
     if (this.btnZoomOut) {
       this.btnZoomOut.addEventListener('click', () => {
-        this.transform.zoom = Math.max(0.4, this.transform.zoom / 1.25);
+        this.transform.zoom = Math.max(0.3, this.transform.zoom / 1.25);
         this.render();
       });
     }
@@ -275,6 +352,191 @@ export class CircuitStrategistView {
       this.resizeCanvases();
       this.render();
     });
+  }
+
+  setViewMode(mode) {
+    this.viewMode = mode;
+    if (this.btnViewModeCorner) {
+      this.btnViewModeCorner.classList.toggle('active', mode === 'CORNER_FOCUS');
+    }
+    if (this.btnViewModeCircuit) {
+      this.btnViewModeCircuit.classList.toggle('active', mode === 'FULL_CIRCUIT');
+    }
+    this.resetCanvasView();
+    this.render();
+  }
+
+  /**
+   * High-rate (60Hz) live telemetry receiver
+   * @param {Object} sample Telemetry packet
+   * @param {boolean} isRecording Whether stint is recording
+   * @param {Object} sessionContext Session details
+   */
+  onLiveTelemetry(sample, isRecording = false, sessionContext = {}) {
+    if (!sample) return;
+
+    this.latestLiveSample = sample;
+    this.lastPacketTimestamp = Date.now();
+
+    const result = this.telemetryMapper.ingestSample(sample);
+
+    // Update Header Status UI
+    if (this.liveIndicator) {
+      this.liveIndicator.className = 'live-indicator-dot';
+    }
+    if (this.liveStatusText) {
+      const sampleCount = this.telemetryMapper.liveSamples.length;
+      const cornerCount = this.telemetryMapper.corners.length;
+      this.liveStatusText.textContent = `LIVE 60Hz · LAP ${sample.currentLapNum || 1} · ${sampleCount} PTS · ${cornerCount} TURNS`;
+    }
+
+    // If new corners detected or loop closed, auto-update corners if on live track
+    if (result.newCornerDetected || result.lapCompleted) {
+      if (this.currentTrack && this.currentTrack.isLiveTelemetry) {
+        this.updateLiveTrackCorners(this.telemetryMapper.corners);
+      }
+    }
+
+    // Only trigger canvas re-render if view is currently visible
+    if (this.viewContainer && this.viewContainer.style.display !== 'none') {
+      this.render();
+    }
+  }
+
+  updateLiveTrackCorners(corners) {
+    if (!this.currentTrack || !corners || corners.length === 0) return;
+    this.currentTrack.corners = corners.map(c => ({
+      cornerNumber: c.cornerNumber,
+      name: c.cornerName,
+      entrySpeedMps: c.entrySpeedMps,
+      apexSpeedMps: c.apexSpeedMps,
+      exitSpeedMps: c.exitSpeedMps,
+      lengthMeters: Math.max(50, Math.round(c.endDistance - c.startDistance)),
+      followingStraightMeters: 300,
+      precedingStraightMeters: 150,
+      turnDirection: c.direction === 'Right' ? 'R' : 'L'
+    }));
+
+    // Refresh corner dropdown
+    if (this.cornerSelect) {
+      const currentSelected = this.currentCornerIndex;
+      this.cornerSelect.innerHTML = '';
+      this.currentTrack.corners.forEach((corner, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `T${corner.cornerNumber} - ${corner.name} (${Math.round((corner.apexSpeedMps || 25) * 3.6)} km/h)`;
+        this.cornerSelect.appendChild(opt);
+      });
+      this.currentCornerIndex = Math.min(currentSelected, this.currentTrack.corners.length - 1);
+      this.cornerSelect.value = this.currentCornerIndex;
+    }
+  }
+
+  addManualCorner() {
+    const currentSample = this.latestLiveSample || (this.telemetryMapper.liveSamples[this.telemetryMapper.liveSamples.length - 1]);
+    const cornerNum = (this.currentTrack?.corners?.length || 0) + 1;
+    const currentDist = currentSample ? (currentSample.lapDistance || currentSample.dist || 0) : 0;
+    const speed = currentSample ? (currentSample.speed || 30) : 30;
+
+    const newCorner = {
+      cornerNumber: cornerNum,
+      name: `Custom Turn ${cornerNum}`,
+      cornerName: `Custom Turn ${cornerNum}`,
+      direction: 'Right',
+      entrySpeedMps: speed * 1.1,
+      apexSpeedMps: speed * 0.8,
+      exitSpeedMps: speed * 1.05,
+      startDistance: Math.max(0, currentDist - 40),
+      apexDistance: currentDist,
+      endDistance: currentDist + 40,
+      lengthMeters: 80,
+      followingStraightMeters: 250,
+      precedingStraightMeters: 150,
+      turnDirection: 'R'
+    };
+
+    if (!this.currentTrack.corners) this.currentTrack.corners = [];
+    this.currentTrack.corners.push(newCorner);
+    this.telemetryMapper.addOrUpdateCorner(newCorner);
+
+    this.selectTrack(this.currentTrack.trackId);
+    this.selectCorner(this.currentTrack.corners.length - 1);
+
+    if (window.PitToast) {
+      window.PitToast.success(`Added Custom Turn ${cornerNum}`, 'CIRCUIT STRATEGIST');
+    }
+  }
+
+  exportStrategyJson() {
+    if (!this.currentTrack) return;
+    const trackName = this.currentTrack.trackName || 'APEX Telemetry Circuit';
+    const jsonStr = this.telemetryMapper.exportToJson(trackName, {
+      activeProfileId: this.activeProfileId,
+      adjustments: this.adjustments,
+      currentCornerIndex: this.currentCornerIndex
+    });
+
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `apex_strategy_${this.currentTrack.trackId}_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (window.PitToast) {
+      window.PitToast.success('Strategy & Circuit Geometry JSON exported!', 'CIRCUIT STRATEGIST');
+    }
+  }
+
+  importStrategyJson(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const jsonText = e.target.result;
+        const success = this.telemetryMapper.importFromJson(jsonText);
+        if (!success) throw new Error('Invalid strategy JSON format');
+
+        const parsed = JSON.parse(jsonText);
+        const trackName = parsed.trackInfo?.trackName || file.name.replace('.json', '');
+        const trackId = `imported_${Date.now()}`;
+
+        const importedTrack = {
+          trackId: trackId,
+          trackName: trackName,
+          layoutName: 'Imported Telemetry Layout',
+          isLiveTelemetry: true,
+          corners: this.telemetryMapper.corners.map(c => ({
+            cornerNumber: c.cornerNumber,
+            name: c.cornerName,
+            entrySpeedMps: c.entrySpeedMps,
+            apexSpeedMps: c.apexSpeedMps,
+            exitSpeedMps: c.exitSpeedMps,
+            lengthMeters: Math.max(50, Math.round(c.endDistance - c.startDistance)),
+            followingStraightMeters: 300,
+            precedingStraightMeters: 150,
+            turnDirection: c.direction === 'Right' ? 'R' : 'L'
+          }))
+        };
+
+        trackLibraryStore.tracks.push(importedTrack);
+        this.initTrackData();
+        this.selectTrack(trackId);
+
+        if (window.PitToast) {
+          window.PitToast.success(`Imported track & strategy: "${trackName}"`, 'CIRCUIT STRATEGIST');
+        }
+      } catch (err) {
+        console.error('[CIRCUIT STRATEGIST] Import error:', err);
+        if (window.PitToast) {
+          window.PitToast.error('Failed to import strategy JSON', 'CIRCUIT STRATEGIST');
+        }
+      }
+    };
+    reader.readAsText(file);
   }
 
   bindSlider(element, property, valDisplay, unit, formatter, stepMultiplier = 1) {
@@ -442,6 +704,13 @@ export class CircuitStrategistView {
     const tracks = trackLibraryStore.getAllTracks();
     if (this.trackSelect) {
       this.trackSelect.innerHTML = '';
+      
+      // Live Ingest Option
+      const liveOpt = document.createElement('option');
+      liveOpt.value = 'live_telemetry';
+      liveOpt.textContent = '🔴 [LIVE TELEMETRY STREAM] - Dynamic Ingestion';
+      this.trackSelect.appendChild(liveOpt);
+
       tracks.forEach(track => {
         const opt = document.createElement('option');
         opt.value = track.trackId;
@@ -451,12 +720,35 @@ export class CircuitStrategistView {
     }
 
     if (tracks.length > 0) {
-      this.selectTrack(tracks[0].trackId);
+      this.selectTrack('live_telemetry');
     }
   }
 
   selectTrack(trackId) {
-    this.currentTrack = trackLibraryStore.getTrackById(trackId) || trackLibraryStore.getAllTracks()[0];
+    if (trackId === 'live_telemetry') {
+      this.currentTrack = {
+        trackId: 'live_telemetry',
+        trackName: 'Live Telemetry Session',
+        layoutName: 'Dynamic Ingestion',
+        isLiveTelemetry: true,
+        corners: this.telemetryMapper.corners.length > 0 ? this.telemetryMapper.corners.map(c => ({
+          cornerNumber: c.cornerNumber,
+          name: c.cornerName,
+          entrySpeedMps: c.entrySpeedMps,
+          apexSpeedMps: c.apexSpeedMps,
+          exitSpeedMps: c.exitSpeedMps,
+          lengthMeters: Math.max(50, Math.round(c.endDistance - c.startDistance)),
+          followingStraightMeters: 300,
+          precedingStraightMeters: 150,
+          turnDirection: c.direction === 'Right' ? 'R' : 'L'
+        })) : [
+          { cornerNumber: 1, name: 'Turn 1', entrySpeedMps: 45, apexSpeedMps: 28, exitSpeedMps: 38, followingStraightMeters: 300, precedingStraightMeters: 150, turnDirection: 'R' }
+        ]
+      };
+    } else {
+      this.currentTrack = trackLibraryStore.getTrackById(trackId) || trackLibraryStore.getAllTracks()[0];
+    }
+
     if (this.trackSelect) this.trackSelect.value = this.currentTrack.trackId;
 
     // Populate Corner Dropdown
@@ -489,11 +781,6 @@ export class CircuitStrategistView {
     this.render();
   }
 
-  /**
-   * Deep-linking handler for cross-launching from Pit-Wall widgets
-   * @param {string} [trackIdOrName] 
-   * @param {number} [cornerIndex=0] 
-   */
   loadCornerFromPitWall(trackIdOrName, cornerIndex = 0) {
     if (trackIdOrName) {
       const allTracks = trackLibraryStore.getAllTracks();
@@ -623,14 +910,24 @@ export class CircuitStrategistView {
         topographyRisk: TOPOGRAPHY_RISK.MODERATE_UNWEIGHTING
       };
     }
-    return this.currentTrack.corners[this.currentCornerIndex];
+    return this.currentTrack.corners[this.currentCornerIndex] || this.currentTrack.corners[0];
   }
 
   generateSyntheticCornerSamples(corner) {
+    // If live telemetry exists for this corner, use real samples
+    const realCorner = this.telemetryMapper.corners[this.currentCornerIndex];
+    if (realCorner && realCorner.samples && realCorner.samples.length >= 10) {
+      return realCorner.samples.map(s => ({
+        ...s,
+        elevation: s.y || 0,
+        gradePercent: 0,
+        speedMps: s.speed || 30
+      }));
+    }
+
     const samples = [];
     const numSamples = 60;
     const lengthMeters = corner.lengthMeters || 180;
-
     const isRightHander = corner.turnDirection === 'R' || (corner.cornerNumber % 2 !== 0);
 
     for (let i = 0; i < numSamples; i++) {
@@ -771,7 +1068,7 @@ export class CircuitStrategistView {
     }
   }
 
-  // --- Canvas 1: Interactive Track Ribbon & Landmark Spline ---
+  // --- Canvas 1: Interactive Track Ribbon / Full Circuit Map ---
   renderTrackRibbonCanvas(samples, result, corner) {
     if (!this.trackCtx || !this.trackCanvas) return;
     const ctx = this.trackCtx;
@@ -782,6 +1079,16 @@ export class CircuitStrategistView {
     ctx.save();
     ctx.clearRect(0, 0, w, h);
 
+    if (this.viewMode === 'FULL_CIRCUIT') {
+      this.renderFullCircuitMap(ctx, w, h, dpr);
+    } else {
+      this.renderCornerStudio(ctx, w, h, dpr, samples, result, corner);
+    }
+
+    ctx.restore();
+  }
+
+  renderCornerStudio(ctx, w, h, dpr, samples, result, corner) {
     const cx = (w / 2) + (this.transform.panX * dpr);
     const cy = (h / 2) + (this.transform.panY * dpr);
     const scale = 2.4 * this.transform.zoom * dpr;
@@ -874,8 +1181,138 @@ export class CircuitStrategistView {
 
     // Control Pins [B], [I], [A], [T], [O]
     this.computeAndDrawPins(ctx, samples, result, cx, cy, scale, dpr);
+  }
 
-    ctx.restore();
+  renderFullCircuitMap(ctx, w, h, dpr) {
+    const samples = this.telemetryMapper.liveSamples;
+    const bounds = this.telemetryMapper.bounds;
+    this.circuitTurnScreenCoords = [];
+
+    if (!samples || samples.length < 5) {
+      ctx.font = '13px Fira Code, monospace';
+      ctx.fillStyle = '#64748B';
+      ctx.textAlign = 'center';
+      ctx.fillText('Awaiting live telemetry packets to draw circuit layout...', w / 2, h / 2);
+      return;
+    }
+
+    const padding = 60 * dpr;
+    const drawW = w - padding * 2;
+    const drawH = h - padding * 2;
+
+    const scale = Math.min(drawW / bounds.rangeX, drawH / bounds.rangeZ) * this.transform.zoom;
+    const cx = (w / 2) + (this.transform.panX * dpr);
+    const cy = (h / 2) + (this.transform.panY * dpr);
+
+    const worldToScreen = (x, z) => ({
+      x: cx + (x - bounds.centerX) * scale,
+      y: cy + (z - bounds.centerZ) * scale
+    });
+
+    // Draw Track Asphalt Path
+    ctx.beginPath();
+    samples.forEach((s, idx) => {
+      const pt = worldToScreen(s.x, s.z);
+      if (idx === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    });
+    if (this.telemetryMapper.isLoopClosed) {
+      ctx.closePath();
+    }
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 14 * scale * 0.05;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.stroke();
+
+    // Draw Racing Line (Color-coded by speed/g-force)
+    ctx.beginPath();
+    samples.forEach((s, idx) => {
+      const pt = worldToScreen(s.x, s.z);
+      if (idx === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    });
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = 3.0;
+    ctx.shadowColor = 'rgba(0, 229, 255, 0.7)';
+    ctx.shadowBlur = 8;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Start / Finish Line Marker
+    if (samples.length > 0) {
+      const sf = worldToScreen(samples[0].x, samples[0].z);
+      ctx.fillStyle = '#00E676';
+      ctx.beginPath();
+      ctx.arc(sf.x, sf.y, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.font = 'bold 10px Chakra Petch, sans-serif';
+      ctx.fillStyle = '#00E676';
+      ctx.textAlign = 'center';
+      ctx.fillText('S/F', sf.x, sf.y - 10);
+    }
+
+    // Draw Corner Badges (T1, T2, T3...)
+    const corners = this.telemetryMapper.corners;
+    corners.forEach((c, idx) => {
+      const apexSample = samples[c.apexIndex] || samples[Math.floor((c.startIndex + c.endIndex) / 2)] || c.samples?.[0];
+      if (!apexSample) return;
+
+      const pt = worldToScreen(apexSample.x, apexSample.z);
+      this.circuitTurnScreenCoords.push({
+        index: idx,
+        x: pt.x / dpr,
+        y: pt.y / dpr,
+        cornerNumber: c.cornerNumber
+      });
+
+      const isSelected = idx === this.currentCornerIndex;
+
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, isSelected ? 12 : 9, 0, Math.PI * 2);
+      ctx.fillStyle = isSelected ? 'var(--color-gold, #FFB800)' : '#1E293B';
+      ctx.strokeStyle = isSelected ? '#FFFFFF' : '#FFB800';
+      ctx.lineWidth = isSelected ? 2.5 : 1.5;
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = `bold ${isSelected ? 11 : 9}px Chakra Petch, sans-serif`;
+      ctx.fillStyle = isSelected ? '#000000' : '#FFFFFF';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`T${c.cornerNumber}`, pt.x, pt.y);
+    });
+
+    // Draw Animated Live Vehicle Blip
+    if (this.latestLiveSample) {
+      const carPt = worldToScreen(
+        this.latestLiveSample.worldPositionX || this.latestLiveSample.posX || this.latestLiveSample.x || 0,
+        this.latestLiveSample.worldPositionZ || this.latestLiveSample.posZ || this.latestLiveSample.z || 0
+      );
+
+      // Pulsing outer aura
+      ctx.beginPath();
+      ctx.arc(carPt.x, carPt.y, 14, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(225, 6, 0, 0.3)';
+      ctx.fill();
+
+      // Car Core
+      ctx.beginPath();
+      ctx.arc(carPt.x, carPt.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#E10600';
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 1.5;
+      ctx.fill();
+      ctx.stroke();
+
+      // Speed Tag
+      ctx.font = 'bold 10px Fira Code, monospace';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      const spdKmh = Math.round((this.latestLiveSample.speed || this.latestLiveSample.speedMps || 0) * 3.6);
+      ctx.fillText(`${spdKmh} km/h`, carPt.x, carPt.y + 18);
+    }
   }
 
   drawCurbs(ctx, samples, halfW) {
@@ -1181,6 +1618,21 @@ export class CircuitStrategistView {
     const pos = this.getCanvasCoords(e);
     this.lastMousePos = pos;
 
+    // In Full Circuit mode, check for clicking corner badges
+    if (this.viewMode === 'FULL_CIRCUIT') {
+      for (const turnBadge of this.circuitTurnScreenCoords) {
+        const dist = Math.hypot(pos.x - turnBadge.x, pos.y - turnBadge.y);
+        if (dist <= 16) {
+          this.selectCorner(turnBadge.index);
+          this.setViewMode('CORNER_FOCUS');
+          return;
+        }
+      }
+      this.isPanning = true;
+      return;
+    }
+
+    // In Corner Focus mode, check landmark pin hits
     let clickedPin = null;
     for (const key of Object.keys(this.pinScreenCoords)) {
       const pin = this.pinScreenCoords[key];
@@ -1201,7 +1653,7 @@ export class CircuitStrategistView {
   onCanvasMouseMove(e) {
     const pos = this.getCanvasCoords(e);
 
-    if (this.draggingPin) {
+    if (this.draggingPin && this.viewMode === 'CORNER_FOCUS') {
       const dx = pos.x - this.lastMousePos.x;
       
       if (this.draggingPin === 'B') {
@@ -1233,14 +1685,25 @@ export class CircuitStrategistView {
     }
 
     let hovered = null;
-    for (const key of Object.keys(this.pinScreenCoords)) {
-      const pin = this.pinScreenCoords[key];
-      const dist = Math.hypot(pos.x - pin.x, pos.y - pin.y);
-      if (dist <= 18) {
-        hovered = key;
-        break;
+    if (this.viewMode === 'CORNER_FOCUS') {
+      for (const key of Object.keys(this.pinScreenCoords)) {
+        const pin = this.pinScreenCoords[key];
+        const dist = Math.hypot(pos.x - pin.x, pos.y - pin.y);
+        if (dist <= 18) {
+          hovered = key;
+          break;
+        }
+      }
+    } else {
+      for (const turnBadge of this.circuitTurnScreenCoords) {
+        const dist = Math.hypot(pos.x - turnBadge.x, pos.y - turnBadge.y);
+        if (dist <= 16) {
+          hovered = `T${turnBadge.cornerNumber}`;
+          break;
+        }
       }
     }
+
     if (this.hoveredPin !== hovered) {
       this.hoveredPin = hovered;
       if (this.trackCanvas) {
@@ -1258,7 +1721,7 @@ export class CircuitStrategistView {
   onCanvasWheel(e) {
     e.preventDefault();
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    this.transform.zoom = Math.max(0.4, Math.min(3.5, this.transform.zoom * zoomFactor));
+    this.transform.zoom = Math.max(0.3, Math.min(4.0, this.transform.zoom * zoomFactor));
     this.render();
   }
 
@@ -1316,4 +1779,3 @@ export class CircuitStrategistView {
     }
   }
 }
-

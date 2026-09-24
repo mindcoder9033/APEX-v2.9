@@ -563,6 +563,15 @@ class ApexApp {
         });
       }
 
+      // Feed live telemetry to Circuit Strategist View
+      if (this.circuitStrategist) {
+        this.circuitStrategist.onLiveTelemetry(sample, this.session.isRecording, {
+          currentLap: this.session.currentLap,
+          bestLapTime: this.session.bestLapTime,
+          sessionName: this.session.settings?.sessionName || 'Live Sim Session'
+        });
+      }
+
       if (this.rateText) {
         this.rateText.textContent = `${this.wsClient.stats.packetsPerSecond} pkt/s`;
       }

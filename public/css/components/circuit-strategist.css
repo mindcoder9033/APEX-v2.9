@@ -803,3 +803,117 @@
   line-height: 1.4;
   color: var(--color-text-secondary);
 }
+
+/* --- Live Telemetry Streaming Controls & Badges --- */
+.strategist-live-status-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  padding: 4px 10px;
+}
+
+.live-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-f1-red);
+  box-shadow: 0 0 8px var(--color-f1-red);
+  display: inline-block;
+  animation: pulse-live 1.2s infinite alternate ease-in-out;
+}
+
+.live-indicator-dot.idle {
+  background-color: var(--color-text-muted);
+  box-shadow: none;
+  animation: none;
+}
+
+@keyframes pulse-live {
+  0% { transform: scale(0.85); opacity: 0.7; }
+  100% { transform: scale(1.25); opacity: 1.0; }
+}
+
+.live-status-text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: 0.5px;
+}
+
+.btn-toggle-live {
+  background: rgba(225, 6, 0, 0.15);
+  border: 1px solid var(--color-f1-red);
+  color: #FFF;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.btn-toggle-live:hover {
+  background: var(--color-f1-red);
+}
+
+.btn-toggle-live.active {
+  background: var(--color-f1-red);
+  box-shadow: 0 0 10px rgba(225, 6, 0, 0.4);
+}
+
+/* --- View Mode Switcher (Full Circuit vs Corner Focus) --- */
+.view-mode-toggle-group {
+  display: flex;
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border);
+  padding: 2px;
+}
+
+.view-mode-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all var(--trans-fast);
+}
+
+.view-mode-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.view-mode-btn.active {
+  background: var(--color-gold);
+  color: #000;
+  box-shadow: 0 0 8px var(--color-gold-glow);
+}
+
+/* --- JSON Strategy Import / Export Buttons --- */
+.btn-json-action {
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--trans-fast);
+}
+
+.btn-json-action:hover {
+  border-color: var(--color-cyan);
+  color: var(--color-cyan);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.2);
+}
+
