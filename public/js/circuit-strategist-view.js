@@ -4,6 +4,7 @@
  * Grounded in Skip Barber "Going Faster!" racecraft principles.
  * Supports Live Telemetry Streaming, Dynamic Circuit Map Drawing,
  * Corner Auto-Detection & Sculpting, and Hybrid Persistence (LocalStorage + JSON/PDF Export).
+ * 100% Real Telemetry Driven — Zero Mock Data.
  */
 
 import { CircuitStrategistEngine, CORNER_STRATEGY_TYPE } from './analysis/circuit-strategist.js';
@@ -31,7 +32,6 @@ export class CircuitStrategistView {
     this.latestLiveSample = null;
     this.lastPacketTimestamp = 0;
     this.isLiveSource = true;
-    this.fullCircuitCorners = [];
 
     // Landmark Adjustments State
     this.adjustments = {
@@ -185,8 +185,13 @@ export class CircuitStrategistView {
         this.telemetryMapper.reset();
         this.latestLiveSample = null;
         if (this.liveStatusText) {
-          this.liveStatusText.textContent = 'LIVE TELEMETRY: BUFFER CLEARED';
+          this.liveStatusText.textContent = 'LIVE TELEMETRY: STANDBY';
         }
+        if (this.liveIndicator) {
+          this.liveIndicator.className = 'live-indicator-dot idle';
+        }
+        this.currentCornerIndex = 0;
+        this.selectTrack('live_telemetry');
         this.render();
       });
     }
@@ -404,7 +409,7 @@ export class CircuitStrategistView {
   }
 
   updateLiveTrackCorners(corners) {
-    if (!this.currentTrack || !corners || corners.length === 0) return;
+    if (!this.currentTrack || !corners) return;
     this.currentTrack.corners = corners.map(c => ({
       cornerNumber: c.cornerNumber,
       name: c.cornerName,
@@ -421,19 +426,33 @@ export class CircuitStrategistView {
     if (this.cornerSelect) {
       const currentSelected = this.currentCornerIndex;
       this.cornerSelect.innerHTML = '';
-      this.currentTrack.corners.forEach((corner, idx) => {
+      if (this.currentTrack.corners.length === 0) {
         const opt = document.createElement('option');
-        opt.value = idx;
-        opt.textContent = `T${corner.cornerNumber} - ${corner.name} (${Math.round((corner.apexSpeedMps || 25) * 3.6)} km/h)`;
+        opt.value = '';
+        opt.textContent = '[Awaiting Telemetry Turns]';
         this.cornerSelect.appendChild(opt);
-      });
-      this.currentCornerIndex = Math.min(currentSelected, this.currentTrack.corners.length - 1);
-      this.cornerSelect.value = this.currentCornerIndex;
+      } else {
+        this.currentTrack.corners.forEach((corner, idx) => {
+          const opt = document.createElement('option');
+          opt.value = idx;
+          opt.textContent = `T${corner.cornerNumber} - ${corner.name} (${Math.round((corner.apexSpeedMps || 25) * 3.6)} km/h)`;
+          this.cornerSelect.appendChild(opt);
+        });
+        this.currentCornerIndex = Math.min(currentSelected, this.currentTrack.corners.length - 1);
+        this.cornerSelect.value = this.currentCornerIndex;
+      }
     }
   }
 
   addManualCorner() {
     const currentSample = this.latestLiveSample || (this.telemetryMapper.liveSamples[this.telemetryMapper.liveSamples.length - 1]);
+    if (!currentSample) {
+      if (window.PitToast) {
+        window.PitToast.warning('No telemetry packet available to mark corner.', 'CIRCUIT STRATEGIST');
+      }
+      return;
+    }
+
     const cornerNum = (this.currentTrack?.corners?.length || 0) + 1;
     const currentDist = currentSample ? (currentSample.lapDistance || currentSample.dist || 0) : 0;
     const speed = currentSample ? (currentSample.speed || 30) : 30;
@@ -463,7 +482,7 @@ export class CircuitStrategistView {
     this.selectCorner(this.currentTrack.corners.length - 1);
 
     if (window.PitToast) {
-      window.PitToast.success(`Added Custom Turn ${cornerNum}`, 'CIRCUIT STRATEGIST');
+      window.PitToast.success(`Marked Custom Turn ${cornerNum}`, 'CIRCUIT STRATEGIST');
     }
   }
 
@@ -602,7 +621,7 @@ export class CircuitStrategistView {
     const corner = this.getCurrentCornerData();
     const presetName = this.activePreset.replace('_', ' ');
     if (this.inputProfileName) {
-      this.inputProfileName.value = `T${corner.cornerNumber || 1} - ${presetName.toUpperCase()}`;
+      this.inputProfileName.value = corner ? `T${corner.cornerNumber} - ${presetName.toUpperCase()}` : `STRATEGY - ${presetName.toUpperCase()}`;
     }
     if (this.inputProfileNotes) {
       this.inputProfileNotes.value = '';
@@ -719,9 +738,7 @@ export class CircuitStrategistView {
       });
     }
 
-    if (tracks.length > 0) {
-      this.selectTrack('live_telemetry');
-    }
+    this.selectTrack('live_telemetry');
   }
 
   selectTrack(trackId) {
@@ -741,9 +758,7 @@ export class CircuitStrategistView {
           followingStraightMeters: 300,
           precedingStraightMeters: 150,
           turnDirection: c.direction === 'Right' ? 'R' : 'L'
-        })) : [
-          { cornerNumber: 1, name: 'Turn 1', entrySpeedMps: 45, apexSpeedMps: 28, exitSpeedMps: 38, followingStraightMeters: 300, precedingStraightMeters: 150, turnDirection: 'R' }
-        ]
+        })) : []
       };
     } else {
       this.currentTrack = trackLibraryStore.getTrackById(trackId) || trackLibraryStore.getAllTracks()[0];
@@ -752,14 +767,25 @@ export class CircuitStrategistView {
     if (this.trackSelect) this.trackSelect.value = this.currentTrack.trackId;
 
     // Populate Corner Dropdown
-    if (this.cornerSelect && this.currentTrack.corners) {
+    if (this.cornerSelect) {
       this.cornerSelect.innerHTML = '';
-      this.currentTrack.corners.forEach((corner, idx) => {
+      if (!this.currentTrack.corners || this.currentTrack.corners.length === 0) {
         const opt = document.createElement('option');
-        opt.value = idx;
-        opt.textContent = `T${corner.cornerNumber || idx + 1} - ${corner.name || 'Corner'} (${Math.round((corner.apexSpeedMps || 25) * 3.6)} km/h)`;
+        opt.value = '';
+        opt.textContent = '[Awaiting Telemetry Turns]';
         this.cornerSelect.appendChild(opt);
-      });
+        if (this.btnPrevCorner) this.btnPrevCorner.disabled = true;
+        if (this.btnNextCorner) this.btnNextCorner.disabled = true;
+      } else {
+        this.currentTrack.corners.forEach((corner, idx) => {
+          const opt = document.createElement('option');
+          opt.value = idx;
+          opt.textContent = `T${corner.cornerNumber || idx + 1} - ${corner.name || 'Corner'} (${Math.round((corner.apexSpeedMps || 25) * 3.6)} km/h)`;
+          this.cornerSelect.appendChild(opt);
+        });
+        if (this.btnPrevCorner) this.btnPrevCorner.disabled = this.currentCornerIndex <= 0;
+        if (this.btnNextCorner) this.btnNextCorner.disabled = this.currentCornerIndex >= this.currentTrack.corners.length - 1;
+      }
     }
 
     this.activeProfileId = 'default';
@@ -768,7 +794,13 @@ export class CircuitStrategistView {
   }
 
   selectCorner(index) {
-    if (!this.currentTrack || !this.currentTrack.corners || this.currentTrack.corners.length === 0) return;
+    if (!this.currentTrack || !this.currentTrack.corners || this.currentTrack.corners.length === 0) {
+      this.currentCornerIndex = 0;
+      this.resetAdjustments();
+      this.resetCanvasView();
+      this.render();
+      return;
+    }
     const maxIdx = this.currentTrack.corners.length - 1;
     this.currentCornerIndex = Math.max(0, Math.min(maxIdx, index));
     
@@ -897,26 +929,17 @@ export class CircuitStrategistView {
 
   getCurrentCornerData() {
     if (!this.currentTrack || !this.currentTrack.corners || this.currentTrack.corners.length === 0) {
-      return {
-        cornerNumber: 1,
-        name: 'Turn 1',
-        entrySpeedMps: 45,
-        apexSpeedMps: 28,
-        exitSpeedMps: 38,
-        brakePointDist: 80,
-        followingStraightMeters: 350,
-        precedingStraightMeters: 200,
-        elevationChangeMeters: -2.5,
-        topographyRisk: TOPOGRAPHY_RISK.MODERATE_UNWEIGHTING
-      };
+      return null;
     }
-    return this.currentTrack.corners[this.currentCornerIndex] || this.currentTrack.corners[0];
+    return this.currentTrack.corners[this.currentCornerIndex] || null;
   }
 
-  generateSyntheticCornerSamples(corner) {
-    // If live telemetry exists for this corner, use real samples
+  getCornerSamples(corner) {
+    if (!corner) return [];
+
+    // Check if mapper has captured high-rate samples for this corner
     const realCorner = this.telemetryMapper.corners[this.currentCornerIndex];
-    if (realCorner && realCorner.samples && realCorner.samples.length >= 10) {
+    if (realCorner && realCorner.samples && realCorner.samples.length > 0) {
       return realCorner.samples.map(s => ({
         ...s,
         elevation: s.y || 0,
@@ -925,50 +948,20 @@ export class CircuitStrategistView {
       }));
     }
 
-    const samples = [];
-    const numSamples = 60;
-    const lengthMeters = corner.lengthMeters || 180;
-    const isRightHander = corner.turnDirection === 'R' || (corner.cornerNumber % 2 !== 0);
-
-    for (let i = 0; i < numSamples; i++) {
-      const progress = i / (numSamples - 1);
-      const dist = progress * lengthMeters;
-      
-      const sweepAngle = (Math.PI * 0.55) * (isRightHander ? 1 : -1);
-      const angle = progress * sweepAngle;
-      
-      const r = 60;
-      const x = r * Math.sin(angle);
-      const y = -r * (1 - Math.cos(angle)) + (progress * 40);
-
-      let speedMps = corner.entrySpeedMps || 42;
-      if (progress < 0.45) {
-        const t = progress / 0.45;
-        speedMps = (corner.entrySpeedMps || 42) + ((corner.apexSpeedMps || 26) - (corner.entrySpeedMps || 42)) * Math.sin(t * Math.PI * 0.5);
-      } else {
-        const t = (progress - 0.45) / 0.55;
-        speedMps = (corner.apexSpeedMps || 26) + ((corner.exitSpeedMps || 36) - (corner.apexSpeedMps || 26)) * (t * t);
+    // Otherwise check if live samples match distance range
+    if (this.telemetryMapper.liveSamples.length > 0 && corner.startDistance !== undefined && corner.endDistance !== undefined) {
+      const filtered = this.telemetryMapper.liveSamples.filter(s => s.dist >= corner.startDistance && s.dist <= corner.endDistance);
+      if (filtered.length > 0) {
+        return filtered.map(s => ({
+          ...s,
+          elevation: s.y || 0,
+          gradePercent: 0,
+          speedMps: s.speed || 30
+        }));
       }
-
-      const elevChange = corner.elevationChangeMeters || -1.5;
-      const elevation = Math.sin(progress * Math.PI) * elevChange;
-      const gradePercent = -Math.cos(progress * Math.PI) * (elevChange / 100);
-
-      samples.push({
-        dist,
-        x,
-        y,
-        elevation,
-        gradePercent,
-        speedMps,
-        accelZ: gradePercent < -2 ? 0.88 : 1.0,
-        throttle: progress > 0.5 ? Math.min(1.0, (progress - 0.5) * 2.2) : 0,
-        brake: progress < 0.4 ? Math.max(0, 1.0 - (progress / 0.4)) : 0,
-        lateralG: Math.sin(progress * Math.PI) * 1.15 * (isRightHander ? 1 : -1)
-      });
     }
 
-    return samples;
+    return [];
   }
 
   // --- Main Simulation & Render Pipeline ---
@@ -977,16 +970,23 @@ export class CircuitStrategistView {
 
     this.resizeCanvases();
     const corner = this.getCurrentCornerData();
-    const samples = this.generateSyntheticCornerSamples(corner);
+    const samples = this.getCornerSamples(corner);
 
-    // Run Simulation
+    if (!corner || samples.length === 0) {
+      this.clearDashboardTickersStandby();
+      this.renderTrackRibbonCanvas([], null, null);
+      this.clearCanvasesStandby();
+      return;
+    }
+
+    // Run Simulation on Real Telemetry
     const result = this.engine.simulateCorner(
       corner,
       this.adjustments,
       samples,
       {
-        followingStraightMeters: corner.followingStraightMeters || 320,
-        precedingStraightMeters: corner.precedingStraightMeters || 180,
+        followingStraightMeters: corner.followingStraightMeters || 300,
+        precedingStraightMeters: corner.precedingStraightMeters || 150,
         isLinked: corner.isLinked || false
       }
     );
@@ -996,6 +996,46 @@ export class CircuitStrategistView {
     this.renderTelemetryStrip(samples, result);
     this.renderFrictionCircle(samples, result);
     this.renderElevationProfile(samples, result);
+  }
+
+  clearDashboardTickersStandby() {
+    if (this.tickerCornerType) {
+      this.tickerCornerType.className = 'corner-type-badge type-1';
+      this.tickerCornerType.textContent = 'STANDBY // AWAITING TELEMETRY';
+    }
+    if (this.tickerLapDelta) {
+      this.tickerLapDelta.textContent = '-- s';
+      this.tickerLapDelta.className = 'ticker-value gain-positive';
+    }
+    if (this.tickerExitSpeed) {
+      this.tickerExitSpeed.innerHTML = '-- <span class="ticker-unit">km/h</span> <span id="ticker-exit-delta" class="gain-positive" style="font-size: 13px;">--</span>';
+    }
+    if (this.tickerRadius) {
+      this.tickerRadius.textContent = '-- m';
+    }
+    if (this.tickerEffectiveG) {
+      this.tickerEffectiveG.textContent = '-- G';
+    }
+    if (this.topographyBanner && this.topographyText) {
+      this.topographyBanner.className = 'topography-risk-banner risk-safe';
+      this.topographyText.textContent = 'STANDBY: Waiting for live telemetry to analyze topography & normal force.';
+    }
+    if (this.coachingTitle && this.coachingBody) {
+      this.coachingTitle.textContent = 'Skip Barber Racecraft Studio';
+      this.coachingBody.textContent = 'Drive on track or import telemetry JSON to record circuit geometry and simulate optimal driving lines.';
+    }
+  }
+
+  clearCanvasesStandby() {
+    if (this.telemetryCtx && this.telemetryCanvas) {
+      this.telemetryCtx.clearRect(0, 0, this.telemetryCanvas.width, this.telemetryCanvas.height);
+    }
+    if (this.frictionCtx && this.frictionCanvas) {
+      this.frictionCtx.clearRect(0, 0, this.frictionCanvas.width, this.frictionCanvas.height);
+    }
+    if (this.elevationCtx && this.elevationCanvas) {
+      this.elevationCtx.clearRect(0, 0, this.elevationCanvas.width, this.elevationCanvas.height);
+    }
   }
 
   updateDashboardTickers(result, corner) {
@@ -1025,12 +1065,7 @@ export class CircuitStrategistView {
 
     // Exit Speed & Exit Delta
     if (this.tickerExitSpeed) {
-      this.tickerExitSpeed.textContent = `${result.simulated.exitSpeedKmh} km/h`;
-    }
-    if (this.tickerExitDelta) {
-      const delta = result.deltas.exitSpeedKmh;
-      this.tickerExitDelta.textContent = `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} km/h`;
-      this.tickerExitDelta.className = delta >= 0 ? 'gain-positive' : 'gain-negative';
+      this.tickerExitSpeed.innerHTML = `${result.simulated.exitSpeedKmh} <span class="ticker-unit">km/h</span> <span id="ticker-exit-delta" class="${result.deltas.exitSpeedKmh >= 0 ? 'gain-positive' : 'gain-negative'}" style="font-size: 13px;">${result.deltas.exitSpeedKmh >= 0 ? '+' : ''}${result.deltas.exitSpeedKmh.toFixed(1)} km/h</span>`;
     }
 
     // Corner Radius
@@ -1082,7 +1117,14 @@ export class CircuitStrategistView {
     if (this.viewMode === 'FULL_CIRCUIT') {
       this.renderFullCircuitMap(ctx, w, h, dpr);
     } else {
-      this.renderCornerStudio(ctx, w, h, dpr, samples, result, corner);
+      if (!corner || !samples || samples.length === 0) {
+        ctx.font = '13px Fira Code, monospace';
+        ctx.fillStyle = '#64748B';
+        ctx.textAlign = 'center';
+        ctx.fillText('No corner telemetry recorded. Drive on track or select a circuit to sculpt driving line.', w / 2, h / 2);
+      } else {
+        this.renderCornerStudio(ctx, w, h, dpr, samples, result, corner);
+      }
     }
 
     ctx.restore();
@@ -1164,8 +1206,8 @@ export class CircuitStrategistView {
     ctx.shadowBlur = 0;
 
     // Simulated Optimal Driving Line Spline (Gold)
-    const optLine = result.optimalLine || [];
-    if (optLine.length > 0) {
+    const optLine = result ? result.optimalLine : [];
+    if (optLine && optLine.length > 0) {
       ctx.beginPath();
       optLine.forEach((p, idx) => {
         if (idx === 0) ctx.moveTo(p.x, p.y);
@@ -1220,12 +1262,12 @@ export class CircuitStrategistView {
       ctx.closePath();
     }
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 14 * scale * 0.05;
+    ctx.lineWidth = Math.max(2, 14 * scale * 0.05);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // Draw Racing Line (Color-coded by speed/g-force)
+    // Draw Racing Line (Cyan)
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const pt = worldToScreen(s.x, s.z);
@@ -1271,7 +1313,7 @@ export class CircuitStrategistView {
 
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, isSelected ? 12 : 9, 0, Math.PI * 2);
-      ctx.fillStyle = isSelected ? 'var(--color-gold, #FFB800)' : '#1E293B';
+      ctx.fillStyle = isSelected ? '#FFB800' : '#1E293B';
       ctx.strokeStyle = isSelected ? '#FFFFFF' : '#FFB800';
       ctx.lineWidth = isSelected ? 2.5 : 1.5;
       ctx.fill();
@@ -1343,6 +1385,8 @@ export class CircuitStrategistView {
   }
 
   computeAndDrawPins(ctx, samples, result, cx, cy, scale, dpr) {
+    if (!samples || samples.length === 0) return;
+
     const brakeIdx = Math.max(0, Math.min(samples.length - 1, Math.floor(samples.length * 0.12) + Math.round(this.adjustments.deltaBrakeMeters / 4)));
     const turnInIdx = Math.max(0, Math.min(samples.length - 1, Math.floor(samples.length * 0.28) + Math.round(this.adjustments.deltaTurnInMeters / 4)));
     const apexIdx = Math.max(0, Math.min(samples.length - 1, Math.floor(samples.length * this.adjustments.apexDepthPercent)));
@@ -1421,7 +1465,7 @@ export class CircuitStrategistView {
       ctx.stroke();
     }
 
-    if (!samples || samples.length === 0) return;
+    if (!samples || samples.length === 0 || !result) return;
 
     const maxSpeed = Math.max(60, (result.simulated.entrySpeedKmh || 120) / 3.6);
     const minSpeed = Math.min(15, (result.baseline.apexSpeedKmh || 40) / 3.6);
@@ -1430,7 +1474,7 @@ export class CircuitStrategistView {
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
-      const y = h - (s.throttle * (h * 0.45));
+      const y = h - ((s.throttle || 0) * (h * 0.45));
       if (idx === 0) ctx.moveTo(x, h);
       ctx.lineTo(x, y);
     });
@@ -1442,7 +1486,7 @@ export class CircuitStrategistView {
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
-      const y = h - (s.brake * (h * 0.45));
+      const y = h - ((s.brake || 0) * (h * 0.45));
       if (idx === 0) ctx.moveTo(x, h);
       ctx.lineTo(x, y);
     });
@@ -1455,7 +1499,8 @@ export class CircuitStrategistView {
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
-      const norm = (s.speedMps - minSpeed) / (maxSpeed - minSpeed);
+      const speedVal = s.speedMps || s.speed || 0;
+      const norm = (speedVal - minSpeed) / Math.max(1, maxSpeed - minSpeed);
       const y = h - 20 - norm * (h - 40);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -1468,7 +1513,7 @@ export class CircuitStrategistView {
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
-      let simSpeed = s.speedMps;
+      let simSpeed = s.speedMps || s.speed || 0;
       const progress = idx / (samples.length - 1);
       if (progress < 0.4) {
         simSpeed = (result.simulated.entrySpeedKmh / 3.6) - (progress / 0.4) * ((result.simulated.entrySpeedKmh - result.simulated.apexSpeedKmh) / 3.6);
@@ -1476,7 +1521,7 @@ export class CircuitStrategistView {
         const t = (progress - 0.4) / 0.6;
         simSpeed = (result.simulated.apexSpeedKmh / 3.6) + t * ((result.simulated.exitSpeedKmh - result.simulated.apexSpeedKmh) / 3.6);
       }
-      const norm = (simSpeed - minSpeed) / (maxSpeed - minSpeed);
+      const norm = (simSpeed - minSpeed) / Math.max(1, maxSpeed - minSpeed);
       const y = h - 20 - norm * (h - 40);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
@@ -1527,10 +1572,12 @@ export class CircuitStrategistView {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
     ctx.stroke();
 
+    if (!samples || samples.length === 0 || !result) return;
+
     // Baseline sample cloud
     samples.forEach(s => {
-      const gx = cx + (s.lateralG / 1.3) * r;
-      const gy = cy - ((s.brake - s.throttle * 0.7) / 1.3) * r;
+      const gx = cx + ((s.lateralG || 0) / 1.3) * r;
+      const gy = cy - (((s.brake || 0) - (s.throttle || 0) * 0.7) / 1.3) * r;
       ctx.fillStyle = 'rgba(0, 229, 255, 0.25)';
       ctx.fillRect(gx - 1, gy - 1, 2, 2);
     });
@@ -1573,7 +1620,7 @@ export class CircuitStrategistView {
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
-      const y = (h / 2) - (s.elevation * 8);
+      const y = (h / 2) - ((s.elevation || 0) * 8);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -1586,7 +1633,7 @@ export class CircuitStrategistView {
     ctx.beginPath();
     samples.forEach((s, idx) => {
       const x = (idx / (samples.length - 1)) * w;
-      const y = (h / 2) - (s.elevation * 8);
+      const y = (h / 2) - ((s.elevation || 0) * 8);
       if (idx === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -1742,14 +1789,21 @@ export class CircuitStrategistView {
   async exportStrategyPdf() {
     if (!this.currentTrack) return;
     const corner = this.getCurrentCornerData();
-    const samples = this.generateSyntheticCornerSamples(corner);
+    const samples = this.getCornerSamples(corner);
+    if (!corner || samples.length === 0) {
+      if (window.PitToast) {
+        window.PitToast.warning('No corner telemetry recorded to export PDF. Drive a stint or import telemetry JSON first.', 'PDF EXPORTER');
+      }
+      return;
+    }
+
     const simulationResult = this.engine.simulateCorner(
       corner,
       this.adjustments,
       samples,
       {
-        followingStraightMeters: corner.followingStraightMeters || 320,
-        precedingStraightMeters: corner.precedingStraightMeters || 180,
+        followingStraightMeters: corner.followingStraightMeters || 300,
+        precedingStraightMeters: corner.precedingStraightMeters || 150,
         isLinked: corner.isLinked || false
       }
     );
