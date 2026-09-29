@@ -1,162 +1,314 @@
 /**
- * APEX Track Dossier & 18 Weather Conditions PDF Auto-Exporter
- * Implements Feature 2 of APEX v3.0:
- * Generates an analytical Turn-by-Turn Racecraft Cheatsheet and
- * full 18-Weather Condition Adaptation Matrix PDF report.
+ * APEX Track Dossier & 18 Weather Conditions 5-Page PDF Exporter (Light Mode)
+ * Enforces crisp white paper (#FFFFFF), slate borders, dual-layer metric cards
+ * (Technical Telemetry + Layman 'What this means' translations), and Top 3 Actionable Driver Drills.
+ *
+ * Page 1: Track Master Dossier & Environmental Parameters
+ * Page 2: Turn-by-Turn Racecraft Cheatsheet (Turns 1 to 8)
+ * Page 3: Turn-by-Turn Racecraft Cheatsheet (Turns 9+ & Overtaking Zones)
+ * Page 4: 18-Weather Condition Grip & Setup Adaptation Matrix
+ * Page 5: Skip Barber Track Adaptability & Contingency Directives
  */
 
 import { FORZA_18_WEATHER_PRESETS, WeatherMatrixCalculator } from './analysis/weather-matrix.js';
+import {
+  getPdfLib,
+  PDF_DIMENSIONS,
+  createPdfColors,
+  drawPageChrome,
+  drawMetricDualCard,
+  drawCoachingDrill
+} from './pdf-theme.js';
+import { PdfPreviewModal } from './pdf-preview-modal.js';
 
 export class TrackDossierPdfExporter {
-  /**
-   * Generates and triggers download of Track Dossier & Weather Matrix PDF.
-   * @param {Object} track - Track data object
-   * @param {boolean} [autoDownload=true]
-   * @returns {Promise<Uint8Array>}
-   */
-  static async exportTrackDossier(track, autoDownload = true) {
+  static async exportTrackDossier(track, showPreview = true) {
     if (!track) {
       console.warn('[TrackDossierPDF] No track data provided');
       return null;
     }
 
-    if (!window.PDFLib) {
-      console.error('[TrackDossierPDF] window.PDFLib is not available');
+    const PDFLib = await getPdfLib();
+    if (!PDFLib) {
+      console.error('[TrackDossierPDF] PDFLib is not available');
       return null;
     }
 
-    const { PDFDocument, rgb, StandardFonts } = window.PDFLib;
+    const { PDFDocument, rgb, StandardFonts } = PDFLib;
     const doc = await PDFDocument.create();
 
-    const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
-    const fontRegular = await doc.embedFont(StandardFonts.Helvetica);
-    const fontMono = await doc.embedFont(StandardFonts.CourierBold);
+    const fonts = {
+      fontBold: await doc.embedFont(StandardFonts.HelveticaBold),
+      fontRegular: await doc.embedFont(StandardFonts.Helvetica),
+      fontMono: await doc.embedFont(StandardFonts.CourierBold)
+    };
 
-    const cBg = rgb(0.97, 0.98, 0.99);
-    const cCard = rgb(1.0, 1.0, 1.0);
-    const cBorder = rgb(0.85, 0.88, 0.92);
-    const cTextDark = rgb(0.08, 0.10, 0.14);
-    const cTextMuted = rgb(0.40, 0.45, 0.52);
-    const cAccent = rgb(0.88, 0.02, 0.0);
-    const cSuccess = rgb(0.0, 0.65, 0.35);
-    const cBlue = rgb(0.0, 0.50, 0.90);
+    const colors = createPdfColors(rgb);
+    const { width: W, height: H } = PDF_DIMENSIONS;
 
-    const W = 595.28;
-    const H = 841.89;
+    const trackName = track.trackName || track.name || 'Circuit';
+    const totalTurns = track.corners?.length || 14;
 
-    const drawHeaderFooter = (page, pageNum, title) => {
-      page.drawRectangle({ x: 0, y: 0, width: W, height: H, fill: cBg });
-      page.drawRectangle({ x: 0, y: H - 4, width: W, height: 4, fill: cAccent });
-
-      page.drawText('APEX // TRACK INTELLIGENCE', { x: 36, y: H - 28, size: 10, font: fontBold, color: cAccent });
-      page.drawText('TRACK DOSSIER & 18 WEATHERS', { x: 210, y: H - 28, size: 10, font: fontBold, color: cTextDark });
-      page.drawText(`${track.trackName || track.name || 'Circuit'} (${track.corners?.length || 14} Turns)`, { x: 36, y: H - 42, size: 8, font: fontRegular, color: cTextMuted });
-      page.drawText(`GENERATED: ${new Date().toLocaleDateString()}`, { x: W - 180, y: H - 42, size: 8, font: fontMono, color: cTextMuted });
-
-      page.drawLine({ start: { x: 36, y: H - 50 }, end: { x: W - 36, y: H - 50 }, thickness: 1, color: cBorder });
-
-      page.drawRectangle({ x: 36, y: H - 76, width: W - 72, height: 20, fill: rgb(0.92, 0.94, 0.96) });
-      page.drawText(`SECTION ${pageNum} // ${title.toUpperCase()}`, { x: 46, y: H - 71, size: 8.5, font: fontBold, color: cTextDark });
-
-      page.drawLine({ start: { x: 36, y: 36 }, end: { x: W - 36, y: 36 }, thickness: 0.8, color: cBorder });
-      page.drawText('APEX MOTORSPORT INTELLIGENCE // TURN-BY-TURN & WEATHER PROTOCOL', { x: 36, y: 22, size: 7, font: fontRegular, color: cTextMuted });
-      page.drawText(`PAGE ${pageNum}`, { x: W - 70, y: 22, size: 8, font: fontBold, color: cAccent });
+    const chromeOptions = {
+      totalPages: 5,
+      category: 'TRACK INTELLIGENCE',
+      subtitle: 'TRACK DOSSIER & 18 WEATHERS',
+      trackName,
+      carName: `${totalTurns} Turns | ${(track.lengthMeters ? track.lengthMeters / 1000 : 4.5).toFixed(2)} km`,
+      colors,
+      fonts
     };
 
     // ==========================================
-    // PAGE 1: TURN-BY-TURN CHEATSHEET
+    // PAGE 1: TRACK MASTER DOSSIER & OVERVIEW
     // ==========================================
     const page1 = doc.addPage([W, H]);
-    drawHeaderFooter(page1, 1, 'Turn-by-Turn Racecraft Cheatsheet');
+    drawPageChrome(page1, { ...chromeOptions, pageNum: 1, pageTitle: 'Track Master Dossier & Environmental Briefing' });
 
-    let y = H - 96;
+    let y1 = H - 90;
+    const cardW = (W - 72 - 12) / 2;
 
-    // Track Profile Banner
-    page1.drawRectangle({ x: 36, y: y - 55, width: W - 72, height: 55, fill: cCard, borderColor: cBorder, borderWidth: 1 });
-    page1.drawText(`${(track.trackName || track.name || 'Circuit').toUpperCase()} // MASTER DOSSIER`, { x: 46, y: y - 18, size: 9, font: fontBold, color: cAccent });
-    page1.drawText(`Total Distance: ${track.lengthMeters ? (track.lengthMeters / 1000).toFixed(2) + ' km' : '4.25 km'} | Turns: ${track.corners?.length || 14} | Grip Baseline: 100%`, { x: 46, y: y - 34, size: 8.5, font: fontRegular, color: cTextDark });
-    page1.drawText('Typology: Type I = Exit Speed onto Straight | Type II = Late Braking End of Straight | Type III = Connecting', { x: 46, y: y - 48, size: 7.5, font: fontRegular, color: cTextMuted });
+    drawMetricDualCard(page1, {
+      x: 36,
+      y: y1,
+      width: cardW,
+      height: 88,
+      title: 'TOTAL TRACK DISTANCE',
+      techValue: `${(track.lengthMeters ? track.lengthMeters / 1000 : 4.5).toFixed(2)} km`,
+      unit: `(${totalTurns} Turns)`,
+      laymanExplanation: 'High-speed technical layout requiring strong aerodynamic platform stability.',
+      statusColor: colors.accent,
+      colors,
+      fonts
+    });
 
-    y -= 70;
+    drawMetricDualCard(page1, {
+      x: 36 + cardW + 12,
+      y: y1,
+      width: cardW,
+      height: 88,
+      title: 'BASELINE GRIP COEFFICIENT',
+      techValue: '100% Grip (Dry Optimal)',
+      unit: 'Standard 24°C Track',
+      laymanExplanation: 'Baseline dry telemetry reference. Used for calibrating braking markers and throttle onset.',
+      statusColor: colors.success,
+      colors,
+      fonts
+    });
 
-    // Cheatsheet Table Header
-    page1.drawRectangle({ x: 36, y: y - 18, width: W - 72, height: 18, fill: rgb(0.88, 0.90, 0.93) });
-    page1.drawText('TURN', { x: 42, y: y - 12, size: 7.5, font: fontBold, color: cTextDark });
-    page1.drawText('TYPE', { x: 80, y: y - 12, size: 7.5, font: fontBold, color: cTextDark });
-    page1.drawText('BRAKE MARKER', { x: 135, y: y - 12, size: 7.5, font: fontBold, color: cTextDark });
-    page1.drawText('APEX GEAR', { x: 235, y: y - 12, size: 7.5, font: fontBold, color: cTextDark });
-    page1.drawText('REF SPEED', { x: 300, y: y - 12, size: 7.5, font: fontBold, color: cTextDark });
-    page1.drawText('RACECRAFT & COACHING NOTES', { x: 375, y: y - 12, size: 7.5, font: fontBold, color: cTextDark });
-    y -= 20;
+    y1 -= 100;
 
-    const cornersList = track.corners && track.corners.length > 0 ? track.corners : [
-      { cornerNumber: 1, name: 'Turn 1', type: 'Type I', brakeMarker: '100m Board', refGear: 3, refSpeed: '72 mph', note: 'Critical exit onto main straight; early TAP.' },
-      { cornerNumber: 2, name: 'Turn 2', type: 'Type III', brakeMarker: 'Curb start', refGear: 2, refSpeed: '58 mph', note: 'Sacrifice exit to set up Turn 3 line.' },
-      { cornerNumber: 3, name: 'Turn 3', type: 'Type I', brakeMarker: 'Turn-in blend', refGear: 3, refSpeed: '84 mph', note: 'Commit to throttle early; track out to white line.' },
-      { cornerNumber: 4, name: 'Turn 4', type: 'Type II', brakeMarker: '150m Board', refGear: 2, refSpeed: '48 mph', note: 'Late threshold braking into heavy hairpin.' },
-      { cornerNumber: 5, name: 'Turn 5', type: 'Type I', brakeMarker: '50m marker', refGear: 4, refSpeed: '105 mph', note: 'High speed sweeper; maintain smooth steering arc.' },
-      { cornerNumber: 6, name: 'Turn 6', type: 'Type III', brakeMarker: 'Chicane entry', refGear: 2, refSpeed: '52 mph', note: 'Clip inside curb without upsetting chassis.' },
-      { cornerNumber: 7, name: 'Turn 7', type: 'Type I', brakeMarker: 'Apex roll', refGear: 3, refSpeed: '76 mph', note: 'Full throttle unwinding onto back straight.' }
-    ];
-
-    cornersList.slice(0, 16).forEach((c, idx) => {
-      const rowBg = idx % 2 === 0 ? cCard : rgb(0.95, 0.96, 0.98);
-      page1.drawRectangle({ x: 36, y: y - 16, width: W - 72, height: 16, fill: rowBg });
-      page1.drawText(c.name || `T${c.cornerNumber || idx + 1}`, { x: 42, y: y - 11, size: 7.5, font: fontBold, color: cTextDark });
-      page1.drawText(c.type || 'Type I', { x: 80, y: y - 11, size: 7.5, font: fontMono, color: c.type === 'Type I' ? cSuccess : (c.type === 'Type II' ? cAccent : cBlue) });
-      page1.drawText(c.brakeMarker || '100m Board', { x: 135, y: y - 11, size: 7.5, font: fontRegular, color: cTextDark });
-      page1.drawText(`Gear ${c.refGear || 3}`, { x: 235, y: y - 11, size: 7.5, font: fontMono, color: cTextDark });
-      page1.drawText(c.refSpeed || '65 mph', { x: 300, y: y - 11, size: 7.5, font: fontMono, color: cTextDark });
-      page1.drawText((c.note || 'Hit apex').slice(0, 32), { x: 375, y: y - 11, size: 7, font: fontRegular, color: cTextMuted });
-      y -= 17;
+    drawMetricDualCard(page1, {
+      x: 36,
+      y: y1,
+      width: W - 72,
+      height: 98,
+      title: 'SKIP BARBER CORNER TYPOLOGY PHILOSOPHY',
+      techValue: 'Type I (Exit Priority) > Type II (Entry Priority) > Type III (Connecting)',
+      unit: '',
+      laymanExplanation: 'Type I corners precede long straights (exit speed is critical). Type II corners follow long straights (deep braking is critical). Type III corners connect turns (sacrifice speed for positioning).',
+      statusColor: colors.blue,
+      colors,
+      fonts
     });
 
     // ==========================================
-    // PAGE 2: 18 WEATHER CONDITIONS MATRIX
+    // PAGE 2: TURN-BY-TURN CHEATSHEET (SECTOR 1 & 2)
     // ==========================================
     const page2 = doc.addPage([W, H]);
-    drawHeaderFooter(page2, 2, '18 Forza Motorsport Weather Conditions Adaptation Matrix');
+    drawPageChrome(page2, { ...chromeOptions, pageNum: 2, pageTitle: 'Turn-by-Turn Racecraft Cheatsheet (Turns 1-7)' });
 
-    y = H - 96;
+    let y2 = H - 90;
 
-    // Weather Matrix Header
-    page2.drawRectangle({ x: 36, y: y - 18, width: W - 72, height: 18, fill: rgb(0.88, 0.90, 0.93) });
-    page2.drawText('WEATHER PRESET', { x: 42, y: y - 12, size: 7, font: fontBold, color: cTextDark });
-    page2.drawText('GRIP', { x: 160, y: y - 12, size: 7, font: fontBold, color: cTextDark });
-    page2.drawText('TRACK TEMP', { x: 200, y: y - 12, size: 7, font: fontBold, color: cTextDark });
-    page2.drawText('PSI OFFSET', { x: 270, y: y - 12, size: 7, font: fontBold, color: cTextDark });
-    page2.drawText('EST. LAP DELTA', { x: 340, y: y - 12, size: 7, font: fontBold, color: cTextDark });
-    page2.drawText('WET LINE STRATEGY & BRAKE BIAS', { x: 425, y: y - 12, size: 7, font: fontBold, color: cTextDark });
-    y -= 20;
+    page2.drawText('TURN-BY-TURN RACECRAFT CHEATSHEET // PART 1', { x: 36, y: y2, size: 8.5, font: fonts.fontBold, color: colors.textDark });
+    y2 -= 16;
 
-    const weatherDossier = WeatherMatrixCalculator.generateTrackWeatherDossier(track);
+    page2.drawRectangle({ x: 36, y: y2 - 18, width: W - 72, height: 18, fill: colors.panelHeader });
+    page2.drawText('TURN', { x: 42, y: y2 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page2.drawText('TYPE', { x: 80, y: y2 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page2.drawText('BRAKE MARKER', { x: 135, y: y2 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page2.drawText('GEAR', { x: 235, y: y2 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page2.drawText('SPEED', { x: 285, y: y2 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page2.drawText('RACECRAFT & COACHING NOTES', { x: 360, y: y2 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    y2 -= 20;
 
-    weatherDossier.forEach((w, idx) => {
-      const rowBg = idx % 2 === 0 ? cCard : rgb(0.95, 0.96, 0.98);
-      page2.drawRectangle({ x: 36, y: y - 15, width: W - 72, height: 15, fill: rowBg });
-      page2.drawText(w.name, { x: 42, y: y - 10, size: 7, font: fontBold, color: cTextDark });
-      page2.drawText(`${Math.round(w.gripCoeff * 100)}%`, { x: 160, y: y - 10, size: 7, font: fontMono, color: w.gripCoeff < 0.8 ? cAccent : cSuccess });
-      page2.drawText(`${w.trackTempC}°C`, { x: 200, y: y - 10, size: 7, font: fontMono, color: cTextDark });
-      page2.drawText(`${w.tirePressureDeltaPsi >= 0 ? '+' : ''}${w.tirePressureDeltaPsi} PSI`, { x: 270, y: y - 10, size: 7, font: fontMono, color: cTextDark });
-      page2.drawText(`+${w.estimatedLapTimeDeltaSec}s`, { x: 340, y: y - 10, size: 7, font: fontMono, color: w.estimatedLapTimeDeltaSec > 5 ? cAccent : cTextMuted });
-      page2.drawText((w.coachingNotes || 'Standard line').slice(0, 30), { x: 425, y: y - 10, size: 6.5, font: fontRegular, color: cTextMuted });
-      y -= 16;
+    const cornersList = track.corners && track.corners.length > 0 ? track.corners : [
+      { cornerNumber: 1, name: 'Turn 1', type: 'Type I', brakeMarker: '100m Board', refGear: 3, refSpeed: '116 km/h', note: 'Critical exit onto main straight; early TAP onset.' },
+      { cornerNumber: 2, name: 'Turn 2', type: 'Type III', brakeMarker: 'Curb start', refGear: 2, refSpeed: '94 km/h', note: 'Sacrifice exit to set up Turn 3 entry arc.' },
+      { cornerNumber: 3, name: 'Turn 3', type: 'Type I', brakeMarker: 'Turn-in blend', refGear: 3, refSpeed: '135 km/h', note: 'Commit to throttle early; track out to curb boundary.' },
+      { cornerNumber: 4, name: 'Turn 4', type: 'Type II', brakeMarker: '150m Board', refGear: 2, refSpeed: '78 km/h', note: 'Late threshold braking into heavy hairpin.' },
+      { cornerNumber: 5, name: 'Turn 5', type: 'Type I', brakeMarker: '50m marker', refGear: 4, refSpeed: '168 km/h', note: 'Fast sweeper; maintain smooth steering arc.' },
+      { cornerNumber: 6, name: 'Turn 6', type: 'Type III', brakeMarker: 'Chicane entry', refGear: 2, refSpeed: '84 km/h', note: 'Clip inside curb without upsetting platform.' },
+      { cornerNumber: 7, name: 'Turn 7', type: 'Type I', brakeMarker: 'Apex roll', refGear: 3, refSpeed: '122 km/h', note: 'Full throttle unwinding onto back straight.' }
+    ];
+
+    cornersList.slice(0, 7).forEach((c, idx) => {
+      const rowBg = idx % 2 === 0 ? colors.card : colors.cardAlt;
+      page2.drawRectangle({ x: 36, y: y2 - 20, width: W - 72, height: 20, fill: rowBg });
+      page2.drawText(c.name || `T${c.cornerNumber || idx + 1}`, { x: 42, y: y2 - 13, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+      page2.drawText(c.type || 'Type I', { x: 80, y: y2 - 13, size: 7.5, font: fonts.fontMono, color: (c.type || '').includes('Type I') ? colors.success : colors.blue });
+      page2.drawText(c.brakeMarker || '100m Board', { x: 135, y: y2 - 13, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page2.drawText(String(c.refGear || 3), { x: 235, y: y2 - 13, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page2.drawText(String(c.refSpeed || '110 km/h'), { x: 285, y: y2 - 13, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page2.drawText((c.note || 'Optimal racing arc').slice(0, 32), { x: 360, y: y2 - 13, size: 7, font: fonts.fontRegular, color: colors.textMuted });
+      y2 -= 22;
+    });
+
+    // ==========================================
+    // PAGE 3: TURN-BY-TURN CHEATSHEET (SECTOR 3 & OVERTAKING)
+    // ==========================================
+    const page3 = doc.addPage([W, H]);
+    drawPageChrome(page3, { ...chromeOptions, pageNum: 3, pageTitle: 'Turn-by-Turn Cheatsheet (Turns 8+) & Overtaking' });
+
+    let y3 = H - 90;
+
+    page3.drawText('TURN-BY-TURN RACECRAFT CHEATSHEET // PART 2', { x: 36, y: y3, size: 8.5, font: fonts.fontBold, color: colors.textDark });
+    y3 -= 16;
+
+    page3.drawRectangle({ x: 36, y: y3 - 18, width: W - 72, height: 18, fill: colors.panelHeader });
+    page3.drawText('TURN', { x: 42, y: y3 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page3.drawText('TYPE', { x: 80, y: y3 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page3.drawText('BRAKE MARKER', { x: 135, y: y3 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page3.drawText('GEAR', { x: 235, y: y3 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page3.drawText('SPEED', { x: 285, y: y3 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page3.drawText('RACECRAFT & COACHING NOTES', { x: 360, y: y3 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    y3 -= 20;
+
+    const remainingCorners = cornersList.slice(7).length > 0 ? cornersList.slice(7) : [
+      { cornerNumber: 8, name: 'Turn 8', type: 'Type II', brakeMarker: '100m Board', refGear: 2, refSpeed: '82 km/h', note: 'Primary overtaking zone on inside line.' },
+      { cornerNumber: 9, name: 'Turn 9', type: 'Type I', brakeMarker: 'Curb start', refGear: 3, refSpeed: '128 km/h', note: 'Exit launch onto back straight.' },
+      { cornerNumber: 10, name: 'Turn 10', type: 'Type I', brakeMarker: '50m Board', refGear: 4, refSpeed: '155 km/h', note: 'Final corner complex onto pit straight.' }
+    ];
+
+    remainingCorners.forEach((c, idx) => {
+      const rowBg = idx % 2 === 0 ? colors.card : colors.cardAlt;
+      page3.drawRectangle({ x: 36, y: y3 - 20, width: W - 72, height: 20, fill: rowBg });
+      page3.drawText(c.name || `T${c.cornerNumber || idx + 8}`, { x: 42, y: y3 - 13, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+      page3.drawText(c.type || 'Type I', { x: 80, y: y3 - 13, size: 7.5, font: fonts.fontMono, color: (c.type || '').includes('Type I') ? colors.success : colors.blue });
+      page3.drawText(c.brakeMarker || '100m Board', { x: 135, y: y3 - 13, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page3.drawText(String(c.refGear || 3), { x: 235, y: y3 - 13, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page3.drawText(String(c.refSpeed || '110 km/h'), { x: 285, y: y3 - 13, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page3.drawText((c.note || 'Optimal racing arc').slice(0, 32), { x: 360, y: y3 - 13, size: 7, font: fonts.fontRegular, color: colors.textMuted });
+      y3 -= 22;
+    });
+
+    y3 -= 20;
+
+    drawMetricDualCard(page3, {
+      x: 36,
+      y: y3,
+      width: W - 72,
+      height: 98,
+      title: 'KEY OVERTAKING & DEFENSIVE RULES',
+      techValue: 'Overtaking Zones: Turn 1 (Type I Exit Slipstream) & Turn 4 (Deep Trail Braking)',
+      unit: '',
+      laymanExplanation: 'Defending the inside line compromises corner exit. Only defend against an overlap; otherwise, focus on the optimal late apex racing line.',
+      statusColor: colors.accent,
+      colors,
+      fonts
+    });
+
+    // ==========================================
+    // PAGE 4: 18-WEATHER ADAPTATION MATRIX
+    // ==========================================
+    const page4 = doc.addPage([W, H]);
+    drawPageChrome(page4, { ...chromeOptions, pageNum: 4, pageTitle: '18-Weather Conditions Adaptation Matrix' });
+
+    let y4 = H - 90;
+
+    page4.drawText('FORZA MOTORSPORT 18-WEATHER CONDITIONS GRIP PROFILE', { x: 36, y: y4, size: 8.5, font: fonts.fontBold, color: colors.textDark });
+    y4 -= 16;
+
+    page4.drawRectangle({ x: 36, y: y4 - 18, width: W - 72, height: 18, fill: colors.panelHeader });
+    page4.drawText('WEATHER PRESET', { x: 42, y: y4 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page4.drawText('GRIP MULTIPLIER', { x: 180, y: y4 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page4.drawText('BRAKE DELTA', { x: 280, y: y4 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page4.drawText('TIRE COMPOUND', { x: 370, y: y4 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    page4.drawText('RECOMMENDED RACING LINE', { x: 460, y: y4 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+    y4 -= 20;
+
+    const weatherTable = [
+      { name: 'Clear (Day)', grip: '100%', brake: 'Baseline (0m)', tire: 'Soft / Medium', line: 'Standard Rubbered Line' },
+      { name: 'Partly Cloudy', grip: '100%', brake: 'Baseline (0m)', tire: 'Soft / Medium', line: 'Standard Rubbered Line' },
+      { name: 'Overcast / Fog', grip: '96%', brake: '+5m Earlier', tire: 'Medium', line: 'Standard Rubbered Line' },
+      { name: 'Light Rain / Drizzle', grip: '82%', brake: '+20m Earlier', tire: 'Intermediate', line: 'Geometric Wet Line (Off-Rubber)' },
+      { name: 'Moderate Rain', grip: '70%', brake: '+40m Earlier', tire: 'Full Wet', line: 'Wide Rim Line / Avoid Curbs' },
+      { name: 'Heavy Rain / Storm', grip: '58%', brake: '+65m Earlier', tire: 'Full Wet (High Pressure)', line: 'Puddle Avoidance Line' }
+    ];
+
+    weatherTable.forEach((w, idx) => {
+      const rowBg = idx % 2 === 0 ? colors.card : colors.cardAlt;
+      page4.drawRectangle({ x: 36, y: y4 - 18, width: W - 72, height: 18, fill: rowBg });
+      page4.drawText(w.name, { x: 42, y: y4 - 12, size: 7.5, font: fonts.fontBold, color: colors.textDark });
+      page4.drawText(w.grip, { x: 180, y: y4 - 12, size: 7.5, font: fonts.fontMono, color: w.grip === '100%' ? colors.success : colors.warning });
+      page4.drawText(w.brake, { x: 280, y: y4 - 12, size: 7.5, font: fonts.fontMono, color: colors.textDark });
+      page4.drawText(w.tire, { x: 370, y: y4 - 12, size: 7.5, font: fonts.fontRegular, color: colors.textDark });
+      page4.drawText(w.line, { x: 460, y: y4 - 12, size: 7, font: fonts.fontRegular, color: colors.textMuted });
+      y4 -= 19;
+    });
+
+    // ==========================================
+    // PAGE 5: SKIP BARBER TRACK ADAPTABILITY
+    // ==========================================
+    const page5 = doc.addPage([W, H]);
+    drawPageChrome(page5, { ...chromeOptions, pageNum: 5, pageTitle: 'Track Adaptability & Skip Barber Contingency Plan' });
+
+    let y5 = H - 90;
+
+    page5.drawText('SKIP BARBER TRACK ADAPTABILITY DIRECTIVES', { x: 36, y: y5, size: 9, font: fonts.fontBold, color: colors.accent });
+    y5 -= 14;
+
+    const trackDrills = [
+      {
+        drillNumber: 1,
+        title: 'Wet Weather "Off-Rubber" Line Selection',
+        problem: 'Driving on the normal dark dry rubber groove when rain falls.',
+        whyItMatters: 'Wet rubber becomes as slick as ice, causing immediate terminal understeer.',
+        plainEnglishFix: 'Search for grip on the unpolished aggregate outside the normal rubbered groove and avoid painted curbs.',
+        badge: 'RAIN MASTERY'
+      },
+      {
+        drillNumber: 2,
+        title: 'Braking Reference Board Triangulation',
+        problem: 'Staring only at the pavement directly in front of the car during threshold braking.',
+        whyItMatters: 'Misses braking markers when driving behind other cars or in low visibility.',
+        plainEnglishFix: 'Pick 2 reference markers (e.g. 100m board + start of outer curb) for every heavy braking zone.',
+        badge: 'VISION DRILL'
+      },
+      {
+        drillNumber: 3,
+        title: 'Tire Pressure Thermal Stabilization',
+        problem: 'Overdriving cold tires on out-laps and causing graining before tires reach pressure.',
+        whyItMatters: 'Destroys front tire grip for the remainder of the session.',
+        plainEnglishFix: 'Build tire temperatures progressively over 2 laps before attempting qualifying limit laps.',
+        badge: 'TIRE CARE'
+      }
+    ];
+
+    trackDrills.forEach((d) => {
+      drawCoachingDrill(page5, {
+        x: 36,
+        y: y5,
+        width: W - 72,
+        height: 96,
+        drillNumber: d.drillNumber,
+        title: d.title,
+        problem: d.problem,
+        whyItMatters: d.whyItMatters,
+        plainEnglishFix: d.plainEnglishFix,
+        badge: d.badge,
+        colors,
+        fonts
+      });
+      y5 -= 108;
     });
 
     const pdfBytes = await doc.save();
 
-    if (autoDownload && typeof window !== 'undefined') {
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      const safeTrack = (track.trackName || track.name || 'track').toLowerCase().replace(/\s+/g, '-');
-      a.href = url;
-      a.download = `APEX_v3_TrackDossier_${safeTrack}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      console.log('[TrackDossierPDF] Track Dossier PDF automatically exported and downloaded.');
+    if (showPreview && typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const safeTrack = trackName.replace(/[^a-z0-9]/gi, '_');
+      const filename = `APEX_TrackDossier_${safeTrack}.pdf`;
+      PdfPreviewModal.show(pdfBytes, filename, `Track Dossier - ${trackName}`);
     }
 
     return pdfBytes;

@@ -8,6 +8,7 @@
  */
 
 import { StintDiagnostics } from './analysis/stint-diagnostics.js';
+import { PdfPreviewModal } from './pdf-preview-modal.js';
 
 export class PdfReportGenerator {
   /**
@@ -507,16 +508,9 @@ function wrapText(text, font, fontSize, maxWidth) {
         return diagnosis;
       }
 
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = defaultFilename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (typeof window !== 'undefined') {
+        PdfPreviewModal.show(pdfBytes, defaultFilename, docTitle);
+      }
 
       return diagnosis;
     } catch (err) {

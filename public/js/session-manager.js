@@ -523,29 +523,29 @@ export class SessionManager {
 
           // 1. Process & Save into Pit Wall Vault
           globalPitWallHub.processAndSaveStint(rawStint).then(async (savedStint) => {
-            // 2. Feature 1: Auto-Export 5-Page Stint Review PDF
+            // 2. Feature 1: Generate 5-Page Stint Review PDF
             try {
-              await StintReview5PagePdfExporter.export5PageReview(savedStint, true);
+              await StintReview5PagePdfExporter.export5PageReview(savedStint, false);
             } catch (p1Err) {
-              console.warn('[AUTO-EXPORT] Stint Review 5-Page PDF error:', p1Err);
+              console.warn('[PDF-ENGINE] Stint Review 5-Page PDF error:', p1Err);
             }
 
-            // 3. Feature 2: Auto-Export Track Dossier PDF
+            // 3. Feature 2: Generate Track Dossier PDF
             try {
               const currentTrack = trackLibraryStore.getTrack(this.currentStintMetadata?.trackId || this.currentStintMetadata?.trackName) || {
                 trackName: rawStint.trackName,
                 corners: rawStint.corners
               };
-              await TrackDossierPdfExporter.exportTrackDossier(currentTrack, true);
+              await TrackDossierPdfExporter.exportTrackDossier(currentTrack, false);
             } catch (p2Err) {
-              console.warn('[AUTO-EXPORT] Track Dossier PDF error:', p2Err);
+              console.warn('[PDF-ENGINE] Track Dossier PDF error:', p2Err);
             }
 
             // 4. Feature 5: Career Mode Progression & Milestones
             try {
               const unlocked = globalCareerStore.processStint(savedStint);
               if (window.PitToast) {
-                window.PitToast.success('Stint Saved // 5-Page PDF & Track Dossier Exported Automatically', 'PIT WALL');
+                window.PitToast.success('Stint Saved // 5-Page Dossier Generated', 'PIT WALL');
                 if (unlocked && unlocked.length > 0) {
                   unlocked.forEach(m => {
                     window.PitToast.info(`Career Milestone: ${m.title}`, 'CAREER UNLOCKED');

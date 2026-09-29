@@ -1,0 +1,179 @@
+/* ==========================================================================
+   APEX In-App PDF Preview Modal - Clean Motorsport Aesthetic
+   ========================================================================== */
+
+.apex-pdf-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apex-pdf-modal-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.apex-pdf-modal-window {
+  width: 92vw;
+  max-width: 1100px;
+  height: 90vh;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(226, 232, 240, 0.8);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: scale(0.96) translateY(10px);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apex-pdf-modal-backdrop.is-open .apex-pdf-modal-window {
+  transform: scale(1) translateY(0);
+}
+
+/* Modal Header Bar */
+.apex-pdf-modal-header {
+  height: 60px;
+  background: #0f172a;
+  border-bottom: 2px solid #e10600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  color: #ffffff;
+  user-select: none;
+}
+
+.apex-pdf-modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.apex-pdf-modal-badge {
+  background: #e10600;
+  color: #ffffff;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.apex-pdf-modal-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f8fafc;
+}
+
+.apex-pdf-modal-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Header Actions */
+.apex-pdf-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.apex-pdf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 6px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.apex-pdf-btn-save {
+  background: #e10600;
+  color: #ffffff;
+  border-color: #dc2626;
+}
+
+.apex-pdf-btn-save:hover {
+  background: #b91c1c;
+  box-shadow: 0 4px 12px rgba(225, 6, 0, 0.35);
+}
+
+.apex-pdf-btn-print {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+.apex-pdf-btn-print:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+.apex-pdf-btn-close {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid transparent;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.apex-pdf-btn-close:hover {
+  background: #334155;
+  color: #ffffff;
+}
+
+/* Modal Body / Viewer */
+.apex-pdf-modal-body {
+  flex: 1;
+  background: #f1f5f9;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.apex-pdf-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #ffffff;
+}
+
+.apex-pdf-modal-footer-notice {
+  height: 30px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8F0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 11px;
+  color: #64748b;
+  font-family: 'JetBrains Mono', monospace;
+}
