@@ -333,3 +333,56 @@ export function drawCoachingDrill(page, options = {}) {
     color: colors.textDark
   });
 }
+
+/**
+ * Triggers direct browser download or native desktop save without print modals.
+ * @param {Uint8Array|Blob} pdfBytes
+ * @param {string} filename
+ * @param {Object} options
+ */
+export async function downloadPdfDirect(pdfBytes, filename = 'APEX_Report.pdf', options = {}) {
+  if (typeof window === 'undefined') return;
+
+  const driverName = options.driverName || 'APEX Driver';
+
+  if (window.apexDesktop?.saveFile) {
+    let binary = '';
+    const len = pdfBytes.byteLength || 0;
+    const chunkSize = 8192;
+    for (let i = 0; i < len; i += chunkSize) {
+      const chunk = pdfBytes.subarray(i, Math.min(i + chunkSize, len));
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    const base64 = btoa(binary);
+
+    // Auto-archive automatically to Documents/APEX/user/
+    window.apexDesktop.autoArchive?.({ fileName: filename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
+
+    // Native save dialog
+    await window.apexDesktop.saveFile({
+      title: 'Save APEX Telemetry PDF',
+      suggestedName: filename,
+      filters: [{ name: 'PDF Document (*.pdf)', extensions: ['pdf'] }],
+      data: base64,
+      encoding: 'base64'
+    });
+    return;
+  }
+
+  const blob = (pdfBytes instanceof Blob)
+    ? pdfBytes
+    : new Blob([pdfBytes], { type: 'application/pdf' });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+  if (window.PitToast && typeof window.PitToast.success === 'function') {
+    window.PitToast.success(`Downloaded ${filename}`, 'PDF DOWNLOAD COMPLETE');
+  }
+}

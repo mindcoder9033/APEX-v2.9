@@ -10,7 +10,8 @@ import {
   createPdfColors,
   drawPageChrome,
   drawMetricDualCard,
-  drawCoachingDrill
+  drawCoachingDrill,
+  downloadPdfDirect
 } from './pdf-theme.js';
 
 export class StrategyPdfExporter {
@@ -139,7 +140,7 @@ export class StrategyPdfExporter {
     };
   }
 
-  static async exportStrategyDossier(options = {}, autoDownload = false) {
+  static async exportStrategyDossier(options = {}, showPreview = true) {
     const PDFLib = await this.getPdfLib();
     if (!PDFLib) {
       console.error('[StrategyPdfExporter] PDFLib not available');
@@ -392,6 +393,13 @@ export class StrategyPdfExporter {
     });
 
     const pdfBytes = await doc.save();
+
+    if (showPreview && typeof window !== 'undefined' && typeof document !== 'undefined') {
+      const safeTrack = data.trackName.replace(/[^a-z0-9]/gi, '_');
+      const filename = `APEX_StrategyDossier_${safeTrack}.pdf`;
+      await downloadPdfDirect(pdfBytes, filename, { driverName: data.driverName });
+    }
+
     return pdfBytes;
   }
 }

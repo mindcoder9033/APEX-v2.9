@@ -17,9 +17,9 @@ import {
   createPdfColors,
   drawPageChrome,
   drawMetricDualCard,
-  drawCoachingDrill
+  drawCoachingDrill,
+  downloadPdfDirect
 } from './pdf-theme.js';
-import { PdfPreviewModal } from './pdf-preview-modal.js';
 
 export class TrackDossierPdfExporter {
   static async exportTrackDossier(track, showPreview = true) {
@@ -308,7 +308,7 @@ export class TrackDossierPdfExporter {
     if (showPreview && typeof window !== 'undefined' && typeof document !== 'undefined') {
       const safeTrack = trackName.replace(/[^a-z0-9]/gi, '_');
       const filename = `APEX_TrackDossier_${safeTrack}.pdf`;
-      PdfPreviewModal.show(pdfBytes, filename, `Track Dossier - ${trackName}`);
+      await downloadPdfDirect(pdfBytes, filename);
     }
 
     return pdfBytes;

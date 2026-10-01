@@ -17,9 +17,9 @@ import {
   createPdfColors,
   drawPageChrome,
   drawMetricDualCard,
-  drawCoachingDrill
+  drawCoachingDrill,
+  downloadPdfDirect
 } from './pdf-theme.js';
-import { PdfPreviewModal } from './pdf-preview-modal.js';
 
 export class SkillsCoachPdfExporter {
   /**
@@ -485,7 +485,7 @@ export class SkillsCoachPdfExporter {
     if (showPreview && typeof window !== 'undefined' && typeof document !== 'undefined') {
       const safeName = debrief.driverName.replace(/[^a-zA-Z0-9]/g, '_');
       const filename = `APEX_SkillsDebrief_${safeName}_Ch${debrief.chapter.chapterNumber}.pdf`;
-      PdfPreviewModal.show(pdfBytes, filename, `Skills Coach - Chapter ${debrief.chapter.chapterNumber}`);
+      await downloadPdfDirect(pdfBytes, filename, { driverName: debrief.driverName });
     }
 
     return pdfBytes;

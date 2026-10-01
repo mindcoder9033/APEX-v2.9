@@ -18,9 +18,9 @@ import {
   createPdfColors,
   drawPageChrome,
   drawMetricDualCard,
-  drawCoachingDrill
+  drawCoachingDrill,
+  downloadPdfDirect
 } from './pdf-theme.js';
-import { PdfPreviewModal } from './pdf-preview-modal.js';
 
 export class StrategyPdfExporter {
   static async getPdfLib() {
@@ -406,7 +406,7 @@ export class StrategyPdfExporter {
     if (showPreview && typeof window !== 'undefined' && typeof document !== 'undefined') {
       const safeTrack = data.trackName.replace(/[^a-z0-9]/gi, '_');
       const filename = `APEX_StrategyDossier_${safeTrack}.pdf`;
-      PdfPreviewModal.show(pdfBytes, filename, `Strategy Dossier - ${data.trackName}`);
+      await downloadPdfDirect(pdfBytes, filename, { driverName: data.driverName });
     }
 
     return pdfBytes;

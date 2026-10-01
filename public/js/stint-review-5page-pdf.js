@@ -21,9 +21,9 @@ import {
   drawPageChrome,
   drawMetricDualCard,
   drawCoachingDrill,
-  wrapText
+  wrapText,
+  downloadPdfDirect
 } from './pdf-theme.js';
-import { PdfPreviewModal } from './pdf-preview-modal.js';
 
 export class StintReview5PagePdfExporter {
   /**
@@ -410,11 +410,11 @@ export class StintReview5PagePdfExporter {
     // Save PDF Bytes
     const pdfBytes = await doc.save();
 
-    // In-App Modal Preview (NO automatic download)
+    // Direct PDF Download without print modals
     if (showPreview && typeof window !== 'undefined' && typeof document !== 'undefined') {
       const safeTrack = (stint.trackName || 'circuit').toLowerCase().replace(/\s+/g, '-');
       const filename = `APEX_StintReview_${safeTrack}_${Date.now()}.pdf`;
-      PdfPreviewModal.show(pdfBytes, filename, `Stint Review - ${trackName}`);
+      await downloadPdfDirect(pdfBytes, filename, { driverName: stint.driverName });
     }
 
     return pdfBytes;

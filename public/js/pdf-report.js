@@ -8,7 +8,7 @@
  */
 
 import { StintDiagnostics } from './analysis/stint-diagnostics.js';
-import { PdfPreviewModal } from './pdf-preview-modal.js';
+import { downloadPdfDirect } from './pdf-theme.js';
 
 export class PdfReportGenerator {
   /**
@@ -481,36 +481,11 @@ function wrapText(text, font, fontSize, maxWidth) {
         color: rgb(0.55, 0.6, 0.7)
       });
 
-      // Trigger client-side PDF download or native Electron export
+      // Trigger client-side direct PDF download or native Electron export
       const pdfBytes = await doc.save();
       const defaultFilename = `APEX_Stint_Debrief_${diagnosis.stintId}_${Date.now()}.pdf`;
 
-      if (typeof window !== 'undefined' && window.apexDesktop?.saveFile) {
-        let binary = '';
-        const len = pdfBytes.byteLength;
-        const chunkSize = 8192;
-        for (let i = 0; i < len; i += chunkSize) {
-          const chunk = pdfBytes.subarray(i, Math.min(i + chunkSize, len));
-          binary += String.fromCharCode.apply(null, chunk);
-        }
-        const base64 = btoa(binary);
-
-        // Auto-archive automatically to Documents/APEX/user/
-        window.apexDesktop.autoArchive?.({ fileName: defaultFilename, data: base64, encoding: 'base64', extension: 'pdf', driverName });
-
-        await window.apexDesktop.saveFile({
-          title: 'Save APEX Stint Debrief PDF',
-          suggestedName: defaultFilename,
-          filters: [{ name: 'PDF Document (*.pdf)', extensions: ['pdf'] }],
-          data: base64,
-          encoding: 'base64'
-        });
-        return diagnosis;
-      }
-
-      if (typeof window !== 'undefined') {
-        PdfPreviewModal.show(pdfBytes, defaultFilename, docTitle);
-      }
+      await downloadPdfDirect(pdfBytes, defaultFilename, { driverName });
 
       return diagnosis;
     } catch (err) {
