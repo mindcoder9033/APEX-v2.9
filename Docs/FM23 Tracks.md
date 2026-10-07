@@ -53,6 +53,9 @@ Forza Motorsport (2023) features **29 locations** with a total of **71+ layouts*
 *   **Sports Car Circuit**: 3.862 km (2.40 mi) [[147]]
 *   **Short Circuit**: 3.635 km (2.258 mi) [[149]]
 
+### Mount Panorama Circuit
+*   **Bathurst Circuit**: 6.213 km (3.861 mi)
+
 ### Mugello Circuit
 *   **Full Circuit**: 5.245 km (3.259 mi) [[139]]
 *   **Club Circuit**: ~2.28 km (1.416 mi) [[143]]

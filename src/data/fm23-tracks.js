@@ -103,6 +103,13 @@ export const FM23_TRACKS = [
     ]
   },
   {
+    name: 'Mount Panorama Circuit',
+    type: 'Real',
+    layouts: [
+      { name: 'Bathurst Circuit', length: '6.213 km' }
+    ]
+  },
+  {
     name: 'Mugello Circuit',
     type: 'Real',
     layouts: [

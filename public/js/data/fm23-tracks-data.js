@@ -104,6 +104,13 @@ export const FM23_TRACKS = [
     ]
   },
   {
+    name: 'Mount Panorama Circuit',
+    category: 'Real Tracks',
+    layouts: [
+      'Bathurst Circuit'
+    ]
+  },
+  {
     name: 'Mugello Circuit',
     category: 'Real Tracks',
     layouts: [
