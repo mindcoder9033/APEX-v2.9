@@ -173,7 +173,7 @@ android/
   - **Output:** Kotlin logic for out-lap filtering, flying lap detection, lap time calculation, and corner boundary tagging (Entry, Apex Vmin, Exit).
   - **Verify:** Mathematical parity test against known recorded lap data.
 
-- **Task 3.2**: Implement `FrictionCircleCalculator` and `TrailBrakingEvaluator`.
+- **Task 3.2** [COMPLETED]: Implement `FrictionCircleCalculator` and `TrailBrakingEvaluator`.
   - **Agent:** `mobile-developer`
   - **Skills:** `clean-code`
   - **Priority:** P1

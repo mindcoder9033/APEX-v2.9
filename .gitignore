@@ -42,3 +42,13 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+
+# Android & Gradle Build Artifacts
+.gradle/
+**/android/.gradle/
+**/build/
+*.iml
+local.properties
+.cxx/
+captures/
+.externalNativeBuild/
