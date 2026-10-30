@@ -138,7 +138,7 @@ android/
 ---
 
 ### Phase 2: Core Network Engine & Binary Parser
-- **Task 2.1**: Implement `TelemetrySample` data model and zero-copy `TelemetryParser`.
+- **Task 2.1** [COMPLETED]: Implement `TelemetrySample` data model and zero-copy `TelemetryParser`.
   - **Agent:** `mobile-developer`
   - **Skills:** `clean-code`
   - **Priority:** P1
