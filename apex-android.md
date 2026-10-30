@@ -119,7 +119,7 @@ android/
 ## 3. Phased Task Breakdown
 
 ### Phase 1: Gradle Scaffolding & System Configuration
-- **Task 1.1**: Initialize `./android` Gradle root and `app` module with Kotlin DSL, Android Gradle Plugin (AGP), Jetpack Compose, Room SQLite, and Coroutines.
+- **Task 1.1** [COMPLETED]: Initialize `./android` Gradle root and `app` module with Kotlin DSL, Android Gradle Plugin (AGP), Jetpack Compose, Room SQLite, and Coroutines.
   - **Agent:** `mobile-developer`
   - **Skills:** `clean-code`
   - **Priority:** P0 (Blocker)
