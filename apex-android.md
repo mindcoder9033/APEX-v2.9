@@ -165,7 +165,7 @@ android/
 ---
 
 ### Phase 3: "Going Faster!" Racecraft Engine & Tiered Storage
-- **Task 3.1**: Implement `LapSegmenter` and `CornerDetector`.
+- **Task 3.1** [COMPLETED]: Implement `LapSegmenter` and `CornerDetector`.
   - **Agent:** `mobile-developer`
   - **Skills:** `clean-code`
   - **Priority:** P1
