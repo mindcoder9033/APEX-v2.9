@@ -154,7 +154,7 @@ android/
   - **Output:** Non-blocking `DatagramChannel` receiver on `Dispatchers.IO` emitting samples via Kotlin `SharedFlow` / `Channel`.
   - **Verify:** Socket bind verification and packet throughput loop testing.
 
-- **Task 2.3**: Implement `TelemetryService` and `NetworkStateMonitor`.
+- **Task 2.3** [COMPLETED]: Implement `TelemetryService` and `NetworkStateMonitor`.
   - **Agent:** `mobile-developer`
   - **Skills:** `mobile-design`
   - **Priority:** P1
