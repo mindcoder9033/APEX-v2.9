@@ -146,7 +146,7 @@ android/
   - **Output:** `TelemetrySample.kt` and `TelemetryParser.kt` using `java.nio.ByteBuffer` (little-endian) with packet size validation.
   - **Verify:** Unit test parsing simulated 311-byte and 331-byte byte arrays matching desktop parser test vectors.
 
-- **Task 2.2**: Implement `CircularRingBuffer` and `TelemetryUdpReceiver`.
+- **Task 2.2** [COMPLETED]: Implement `CircularRingBuffer` and `TelemetryUdpReceiver`.
   - **Agent:** `mobile-developer`
   - **Skills:** `clean-code`
   - **Priority:** P1
