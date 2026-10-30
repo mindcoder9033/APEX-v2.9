@@ -127,7 +127,7 @@ android/
   - **Output:** Functional Gradle build files in `./android` (`build.gradle.kts`, `settings.gradle.kts`, `app/build.gradle.kts`, `AndroidManifest.xml`).
   - **Verify:** Gradle sync and validation check without syntax errors.
 
-- **Task 1.2**: Configure `AndroidManifest.xml` with permissions (`INTERNET`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`).
+- **Task 1.2** [COMPLETED]: Configure `AndroidManifest.xml` with permissions (`INTERNET`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`, `WAKE_LOCK`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`).
   - **Agent:** `mobile-developer`
   - **Skills:** `mobile-design`
   - **Priority:** P0
