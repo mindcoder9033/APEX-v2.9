@@ -298,7 +298,9 @@ export class MockTelemetryGenerator {
 }
 
 if (process.argv[1] && process.argv[1].endsWith('mock-telemetry-feed.js')) {
-  const generator = new MockTelemetryGenerator();
+  const targetHost = process.argv[2] || process.env.TARGET_HOST || '127.0.0.1';
+  const targetPort = parseInt(process.argv[3] || process.env.TARGET_PORT || '9999', 10);
+  const generator = new MockTelemetryGenerator({ host: targetHost, port: targetPort });
   generator.start();
 
   process.on('SIGINT', () => {
